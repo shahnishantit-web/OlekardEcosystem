@@ -1,0 +1,3 @@
+# Validation
+Use running PHP8.4 API container and PostgreSQL, no database resets. Apply only feature migration. Run scoped Pest AdminFxManagementTest and E29 regression after reviewing fixtures; unit FX provider tests. Run admin Jest p1022, TypeScript, scoped ESLint, Playwright p1022 with local fixtures and inspect resulting desktop/mobile screenshots.
+Exercise: maker submits status/rate; assert old state unchanged; checker approves/applies; exact replay returns same request/rate; conflicting replay fails; unauthorized/self-approval denied. Provider unavailable returns explicit503, never manual rate relabeled provider. Inject approved test provider only in tests; verify revert and manual lock. History includes source and UTC and paginated older rates.

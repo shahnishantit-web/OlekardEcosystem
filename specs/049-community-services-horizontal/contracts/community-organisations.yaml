@@ -1,0 +1,401 @@
+openapi: "3.1.0"
+info:
+  title: Community Services — Organisation Management
+  version: "1.0.0"
+  description: >
+    HZ02 Organisation Onboarding and Verification.
+    All routes require authenticated Platform Admin or Organiser Admin.
+    Tenant isolation: Organiser Admin is scoped to own organisation only.
+
+paths:
+  /v1/community/organisations:
+    get:
+      operationId: listOrganisations
+      summary: List organisations
+      tags: [Organisations]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, submitted, under_review, changes_requested, approved, suspended, archived]
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 25
+            maximum: 100
+      responses:
+        "200":
+          description: Paginated organisation list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganisationListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorised"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+    post:
+      operationId: createOrganisation
+      summary: Create organisation (Platform Admin)
+      tags: [Organisations]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrganisationRequest"
+      responses:
+        "201":
+          description: Organisation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganisationResponse"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /v1/community/organisations/{id}:
+    get:
+      operationId: getOrganisation
+      summary: Get organisation detail
+      tags: [Organisations]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrganisationId"
+      responses:
+        "200":
+          description: Organisation detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganisationDetailResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    patch:
+      operationId: updateOrganisation
+      summary: Update organisation details
+      tags: [Organisations]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrganisationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOrganisationRequest"
+      responses:
+        "200":
+          description: Updated organisation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganisationDetailResponse"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /v1/community/organisations/{id}/status:
+    post:
+      operationId: transitionOrganisationStatus
+      summary: Transition organisation status (Platform Admin)
+      tags: [Organisations]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrganisationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StatusTransitionRequest"
+      responses:
+        "200":
+          description: Status transitioned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganisationDetailResponse"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /v1/community/organisations/{id}/payout-destination:
+    put:
+      operationId: updatePayoutDestination
+      summary: Update payout destination (triggers re-verification workflow)
+      tags: [Organisations]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrganisationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePayoutDestinationRequest"
+      responses:
+        "200":
+          description: Payout destination update initiated; status pending_verification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PayoutDestinationResponse"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    OrganisationId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    Organisation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        external_ref:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [charity, event_organiser, community_group, cooperative]
+        status:
+          type: string
+          enum: [draft, submitted, under_review, changes_requested, approved, suspended, archived, rejected, cancelled]
+        operating_countries:
+          type: array
+          items:
+            type: string
+            minLength: 2
+            maxLength: 2
+        verified_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    OrganisationListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Organisation"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    OrganisationDetailResponse:
+      type: object
+      properties:
+        data:
+          allOf:
+            - $ref: "#/components/schemas/Organisation"
+            - type: object
+              properties:
+                payout_destination:
+                  $ref: "#/components/schemas/PayoutDestination"
+                status_history:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/StatusHistoryEntry"
+
+    OrganisationResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Organisation"
+
+    CreateOrganisationRequest:
+      type: object
+      required: [name, type, operating_countries]
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        type:
+          type: string
+          enum: [charity, event_organiser, community_group, cooperative]
+        registration_number:
+          type: string
+          maxLength: 100
+          nullable: true
+        operating_countries:
+          type: array
+          items:
+            type: string
+          minItems: 1
+
+    UpdateOrganisationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        registration_number:
+          type: string
+          nullable: true
+        operating_countries:
+          type: array
+          items:
+            type: string
+
+    StatusTransitionRequest:
+      type: object
+      required: [to_status]
+      properties:
+        to_status:
+          type: string
+          enum: [submitted, under_review, changes_requested, approved, suspended, archived, rejected, cancelled]
+        reason:
+          type: string
+          maxLength: 1000
+
+    UpdatePayoutDestinationRequest:
+      type: object
+      required: [type, provider, encrypted_reference]
+      properties:
+        type:
+          type: string
+          enum: [bank_account, mobile_money, wallet]
+        provider:
+          type: string
+        encrypted_reference:
+          type: string
+          description: Client-encrypted reference; decrypted server-side
+
+    PayoutDestination:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        provider:
+          type: string
+        masked_reference:
+          type: string
+        status:
+          type: string
+          enum: [pending_verification, verified, deprecated]
+        verified_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    PayoutDestinationResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/PayoutDestination"
+
+    StatusHistoryEntry:
+      type: object
+      properties:
+        from_status:
+          type: string
+        to_status:
+          type: string
+        reason:
+          type: string
+          nullable: true
+        occurred_at:
+          type: string
+          format: date-time
+
+    PaginationMeta:
+      type: object
+      properties:
+        next_cursor:
+          type: string
+          nullable: true
+        per_page:
+          type: integer
+        total:
+          type: integer
+
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, correlation_id]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            correlation_id:
+              type: string
+              format: uuid
+            details:
+              type: object
+              nullable: true
+
+  responses:
+    Unauthorised:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    Forbidden:
+      description: Insufficient permissions or wrong tenant scope
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    NotFound:
+      description: Resource not found or not in scope
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    ValidationError:
+      description: Input validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    Conflict:
+      description: State conflict (concurrent edit, idempotency key mismatch)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"

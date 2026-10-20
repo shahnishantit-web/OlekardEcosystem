@@ -1,0 +1,10 @@
+{
+  "float_balance_minor_units": 5000000,
+  "float_currency_code": "BWP",
+  "low_float_threshold_minor_units": 500000,
+  "today_cash_in_count": 12,
+  "today_cash_in_amount_minor_units": 1200000,
+  "today_cash_out_count": 8,
+  "today_cash_out_amount_minor_units": 900000,
+  "updated_at": "2026-10-05T08:30:00Z"
+}

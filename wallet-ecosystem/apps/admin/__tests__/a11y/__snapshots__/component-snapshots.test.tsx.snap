@@ -1,0 +1,519 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Admin UI component snapshots — design token consistency Badge (error) renders consistently 1`] = `
+<span
+  aria-label="Blocked"
+  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-ok-error-bg text-ok-error-fg border border-ok-error-border "
+>
+  Blocked
+</span>
+`;
+
+exports[`Admin UI component snapshots — design token consistency Badge (success) renders consistently 1`] = `
+<span
+  aria-label="Active"
+  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-ok-success-bg text-ok-success-fg border border-ok-success-border "
+>
+  Active
+</span>
+`;
+
+exports[`Admin UI component snapshots — design token consistency Badge (warning) renders consistently 1`] = `
+<span
+  aria-label="Pending"
+  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-ok-warning-bg text-ok-warning-fg border border-ok-warning-border "
+>
+  Pending
+</span>
+`;
+
+exports[`Admin UI component snapshots — design token consistency Button (disabled) renders consistently 1`] = `
+<button
+  aria-busy="false"
+  aria-disabled="true"
+  class="inline-flex items-center justify-center px-3 rounded-lg font-medium transition-colors focus-visible:outline-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] sm:min-h-[35px] text-sm bg-ok-primary-dark text-white hover:bg-ok-primary border border-ok-primary-dark hover:border-ok-primary "
+  disabled=""
+>
+  Submit
+</button>
+`;
+
+exports[`Admin UI component snapshots — design token consistency Button (variant=secondary) renders consistently 1`] = `
+<button
+  aria-busy="false"
+  aria-disabled="false"
+  class="inline-flex items-center justify-center px-3 rounded-lg font-medium transition-colors focus-visible:outline-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] sm:min-h-[35px] text-sm border border-ok-border-strong bg-ok-surface text-text-primary hover:bg-ok-hover-bg "
+>
+  Cancel
+</button>
+`;
+
+exports[`Admin UI component snapshots — design token consistency Button renders consistently 1`] = `
+<button
+  aria-busy="false"
+  aria-disabled="false"
+  class="inline-flex items-center justify-center px-3 rounded-lg font-medium transition-colors focus-visible:outline-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] sm:min-h-[35px] text-sm bg-ok-primary-dark text-white hover:bg-ok-primary border border-ok-primary-dark hover:border-ok-primary "
+>
+  Submit
+</button>
+`;
+
+exports[`Admin UI component snapshots — design token consistency Card renders consistently 1`] = `
+<article
+  aria-label="Account summary"
+  class="rounded-[11px] border border-ok-card-border bg-ok-card-bg shadow-[var(--ok-card-shadow,0_1px_3px_rgba(32,38,54,0.04))] p-4 "
+>
+  <p>
+    Balance: 0
+  </p>
+</article>
+`;
+
+exports[`Admin UI component snapshots — design token consistency Confirmation (open) renders consistently 1`] = `
+<div
+  aria-labelledby="dialog-title"
+  aria-modal="true"
+  role="dialog"
+  tabindex="-1"
+>
+  <h2
+    id="dialog-title"
+  >
+    Delete record
+  </h2>
+  <div>
+    <p
+      class="text-sm text-text-secondary mb-6"
+    >
+      This cannot be undone.
+    </p>
+    <div
+      class="flex justify-end gap-3"
+    >
+      <button
+        aria-busy="false"
+        aria-disabled="false"
+        class="inline-flex items-center justify-center px-3 rounded-lg font-medium transition-colors focus-visible:outline-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] sm:min-h-[35px] text-sm border border-ok-border-strong bg-ok-surface text-text-primary hover:bg-ok-hover-bg "
+      >
+        Cancel
+      </button>
+      <button
+        aria-busy="false"
+        aria-disabled="false"
+        class="inline-flex items-center justify-center px-3 rounded-lg font-medium transition-colors focus-visible:outline-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] sm:min-h-[35px] text-sm bg-ok-error-fg text-white hover:opacity-90 border border-ok-error-fg "
+      >
+        Confirm
+      </button>
+    </div>
+  </div>
+  <button
+    aria-label="Close dialog"
+    type="button"
+  >
+    Close
+  </button>
+</div>
+`;
+
+exports[`Admin UI component snapshots — design token consistency Dialog (open) renders consistently 1`] = `
+<div
+  aria-labelledby="dialog-title"
+  aria-modal="true"
+  role="dialog"
+  tabindex="-1"
+>
+  <h2
+    id="dialog-title"
+  >
+    Confirm action
+  </h2>
+  <div>
+    <p>
+      Are you sure?
+    </p>
+  </div>
+  <button
+    aria-label="Close dialog"
+    type="button"
+  >
+    Close
+  </button>
+</div>
+`;
+
+exports[`Admin UI component snapshots — design token consistency Empty renders consistently 1`] = `
+<div
+  class="flex flex-col items-center justify-center py-12 px-6 text-center"
+  role="status"
+>
+  <div
+    aria-hidden="true"
+    class="mb-4 w-10 h-10 rounded-full bg-ok-hover-bg flex items-center justify-center"
+  >
+    <svg
+      class="text-text-secondary"
+      fill="none"
+      height="18"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="1.8"
+      viewBox="0 0 24 24"
+      width="18"
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="10"
+      />
+      <line
+        x1="12"
+        x2="12"
+        y1="8"
+        y2="12"
+      />
+      <line
+        x1="12"
+        x2="12.01"
+        y1="16"
+        y2="16"
+      />
+    </svg>
+  </div>
+  <h3
+    class="text-sm font-semibold text-text-primary mb-1"
+  >
+    No results
+  </h3>
+  <p
+    class="text-sm text-text-secondary max-w-xs leading-relaxed"
+  >
+    Try adjusting your filters
+  </p>
+</div>
+`;
+
+exports[`Admin UI component snapshots — design token consistency ErrorState renders consistently 1`] = `
+<div
+  class="flex flex-col items-center justify-center py-12 text-center px-4"
+  role="alert"
+>
+  <div
+    aria-hidden="true"
+    class="mb-4 w-10 h-10 rounded-full bg-ok-error-bg flex items-center justify-center flex-shrink-0"
+  >
+    <svg
+      class="text-ok-error-fg"
+      fill="none"
+      height="18"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="1.8"
+      viewBox="0 0 24 24"
+      width="18"
+    >
+      <path
+        d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+      />
+      <line
+        x1="12"
+        x2="12"
+        y1="9"
+        y2="13"
+      />
+      <line
+        x1="12"
+        x2="12.01"
+        y1="17"
+        y2="17"
+      />
+    </svg>
+  </div>
+  <h3
+    class="text-sm font-semibold text-text-primary mb-1"
+  >
+    Something went wrong
+  </h3>
+  <p
+    class="text-sm text-text-secondary max-w-xs leading-relaxed mb-6"
+  >
+    Failed to load data
+  </p>
+  <button
+    class="px-4 py-2 rounded-lg border border-ok-border text-sm font-medium text-text-primary hover:bg-ok-hover-bg focus-visible:outline-2 transition-colors"
+    style="min-height: 36px;"
+    type="button"
+  >
+    Try again
+  </button>
+</div>
+`;
+
+exports[`Admin UI component snapshots — design token consistency Input (with error) renders consistently 1`] = `
+<div
+  class="flex flex-col gap-1"
+>
+  <label
+    class="text-sm font-medium text-text-primary"
+    for=":r1:"
+  >
+    Email
+  </label>
+  <input
+    aria-describedby=":r1:-error"
+    aria-invalid="true"
+    class="border rounded-lg px-3 h-[35px] text-sm text-text-primary bg-ok-input-bg placeholder:text-text-secondary/70 focus:outline-none focus:border-ok-primary focus:ring-1 focus:ring-ok-focus-ring transition-colors border-ok-error-fg "
+    id=":r1:"
+    type="email"
+  />
+  <p
+    class="text-xs text-error-primary"
+    id=":r1:-error"
+    role="alert"
+  >
+    Invalid email address
+  </p>
+</div>
+`;
+
+exports[`Admin UI component snapshots — design token consistency Input renders consistently 1`] = `
+<div
+  class="flex flex-col gap-1"
+>
+  <label
+    class="text-sm font-medium text-text-primary"
+    for=":r0:"
+  >
+    Email
+  </label>
+  <input
+    aria-invalid="false"
+    class="border rounded-lg px-3 h-[35px] text-sm text-text-primary bg-ok-input-bg placeholder:text-text-secondary/70 focus:outline-none focus:border-ok-primary focus:ring-1 focus:ring-ok-focus-ring transition-colors border-ok-input-border "
+    id=":r0:"
+    type="email"
+  />
+</div>
+`;
+
+exports[`Admin UI component snapshots — design token consistency Loading renders consistently 1`] = `
+<div
+  aria-label="Fetching data"
+  aria-live="polite"
+  role="status"
+>
+  <span
+    class="sr-only"
+  >
+    Fetching data
+  </span>
+</div>
+`;
+
+exports[`Admin UI component snapshots — design token consistency Navigation renders consistently 1`] = `
+<nav
+  aria-label="Main navigation"
+>
+  <ul
+    class="flex flex-col gap-1"
+  >
+    <li>
+      <a
+        aria-current="page"
+        class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors focus-visible:outline-2 bg-ok-nav-active text-brand-primary"
+        href="/dashboard"
+        style="min-height: 44px;"
+      >
+        Dashboard
+      </a>
+    </li>
+    <li>
+      <a
+        class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors focus-visible:outline-2 text-text-secondary hover:text-text-primary hover:bg-neutral-100"
+        href="/users"
+        style="min-height: 44px;"
+      >
+        Users
+      </a>
+    </li>
+  </ul>
+</nav>
+`;
+
+exports[`Admin UI component snapshots — design token consistency Select renders consistently 1`] = `
+<div
+  class="flex flex-col gap-1"
+>
+  <label
+    class="text-sm font-medium text-text-primary"
+    for=":r2:"
+  >
+    Country
+  </label>
+  <select
+    aria-invalid="false"
+    class="border rounded-lg px-3 h-[35px] text-sm text-text-primary bg-ok-input-bg focus:outline-none focus:border-ok-primary focus:ring-1 focus:ring-ok-focus-ring transition-colors border-ok-input-border "
+    id=":r2:"
+  >
+    <option
+      value="ng"
+    >
+      Nigeria
+    </option>
+    <option
+      value="gh"
+    >
+      Ghana
+    </option>
+  </select>
+</div>
+`;
+
+exports[`Admin UI component snapshots — design token consistency Sheet (open) renders consistently 1`] = `
+<div
+  aria-hidden="true"
+  style="position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5);"
+/>
+`;
+
+exports[`Admin UI component snapshots — design token consistency Table (empty) renders consistently 1`] = `
+<div
+  class="overflow-x-auto"
+>
+  <table
+    class="w-full text-sm text-left border-collapse"
+  >
+    <caption
+      class="sr-only"
+    >
+      Empty table
+    </caption>
+    <thead>
+      <tr
+        class="border-b border-ok-border border-t border-ok-border bg-neutral-50"
+      >
+        <th
+          class="px-4 py-3 font-medium text-text-secondary"
+          scope="col"
+        >
+          Name
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td
+          class="px-4 py-8 text-center text-text-secondary"
+          colspan="1"
+        >
+          No users found
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+`;
+
+exports[`Admin UI component snapshots — design token consistency Table (with data) renders consistently 1`] = `
+<div
+  class="overflow-x-auto"
+>
+  <table
+    class="w-full text-sm text-left border-collapse"
+  >
+    <caption
+      class="sr-only"
+    >
+      User list
+    </caption>
+    <thead>
+      <tr
+        class="border-b border-ok-border border-t border-ok-border bg-neutral-50"
+      >
+        <th
+          class="px-4 py-3 font-medium text-text-secondary"
+          scope="col"
+        >
+          Name
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        class="border-b border-[#f0f1f4] hover:bg-ok-hover-bg"
+      >
+        <td
+          class="px-4 py-3 text-text-primary"
+        >
+          Alice
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+`;
+
+exports[`Admin UI component snapshots — design token consistency Tabs renders consistently 1`] = `
+<div>
+  <div
+    aria-label="Tabs"
+    role="tablist"
+  >
+    <button
+      aria-controls="panel-overview"
+      aria-selected="true"
+      id="tab-overview"
+      role="tab"
+      tabindex="0"
+    >
+      Overview
+    </button>
+    <button
+      aria-controls="panel-details"
+      aria-selected="false"
+      id="tab-details"
+      role="tab"
+      tabindex="-1"
+    >
+      Details
+    </button>
+  </div>
+  <div
+    aria-labelledby="tab-overview"
+    id="panel-overview"
+    role="tabpanel"
+  >
+    <p>
+      Overview content
+    </p>
+  </div>
+  <div
+    aria-labelledby="tab-details"
+    hidden=""
+    id="panel-details"
+    role="tabpanel"
+  >
+    <p>
+      Details content
+    </p>
+  </div>
+</div>
+`;
+
+exports[`Admin UI component snapshots — design token consistency Toast renders consistently 1`] = `
+<div
+  aria-atomic="true"
+  aria-live="polite"
+  role="status"
+>
+  <p>
+    Action completed
+  </p>
+  <button
+    aria-label="Dismiss notification"
+    type="button"
+  >
+    ×
+  </button>
+</div>
+`;

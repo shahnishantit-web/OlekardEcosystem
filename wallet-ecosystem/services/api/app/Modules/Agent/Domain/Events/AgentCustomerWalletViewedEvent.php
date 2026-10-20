@@ -1,0 +1,35 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Agent\Domain\Events;
+
+use App\Modules\Platform\Domain\Contracts\IntegrationEventInterface;
+
+final readonly class AgentCustomerWalletViewedEvent implements IntegrationEventInterface
+{
+    public function __construct(
+        public string $agentId,
+        public string $customerId,
+        public string $actorId,
+        public string $walletId,
+        public string $occurredAt,
+        public string $correlationId,
+    ) {}
+
+    public function eventName(): string     { return 'agent.customer.wallet_viewed'; }
+    public function occurredAt(): string    { return $this->occurredAt; }
+    public function correlationId(): string { return $this->correlationId; }
+
+    public function toArray(): array
+    {
+        return [
+            'agent_id'       => $this->agentId,
+            'customer_id'    => $this->customerId,
+            'actor_id'       => $this->actorId,
+            'wallet_id'      => $this->walletId,
+            'occurred_at'    => $this->occurredAt,
+            'correlation_id' => $this->correlationId,
+        ];
+    }
+}

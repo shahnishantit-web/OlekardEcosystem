@@ -1,0 +1,7 @@
+{
+  "@@locale": "en",
+  "appTitle": "Agent Portal",
+  "@appTitle": {
+    "description": "Application title"
+  }
+}

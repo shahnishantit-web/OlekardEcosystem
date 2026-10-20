@@ -1,0 +1,484 @@
+openapi: 3.1.0
+info:
+  title: Reconciliation Matching & Exceptions API
+  version: 1.0.0
+  description: |
+    E20 Reconciliation & Settlement — Matching and exception management endpoints.
+    Covers US-RECON-003–007 (provider matching + exceptions) and US-RECON-009–011 (bank matching).
+
+servers:
+  - url: /v1/reconciliation
+
+security:
+  - bearerAuth: []
+
+paths:
+  /batches/{id}/match:
+    post:
+      operationId: triggerBatchMatching
+      summary: Trigger matching for a batch (US-RECON-003, US-RECON-009)
+      tags: [matching]
+      description: |
+        Manually triggers (or re-triggers) the three-pass matching algorithm for a batch.
+        Matching normally runs automatically when a batch is created; this endpoint allows
+        re-matching after exceptions are resolved. Returns 409 if batch is currently processing.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '202':
+          description: Matching job queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchStatusResponse'
+        '409':
+          description: Batch already processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /batches/{id}/items:
+    get:
+      operationId: listBatchItems
+      summary: List reconciliation items in a batch
+      tags: [matching]
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, matched, unmatched, exception]
+        - name: item_type
+          in: query
+          schema:
+            type: string
+            enum: [provider_transaction, bank_transaction]
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Paginated item list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemListResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /batches/{id}/unmatched:
+    get:
+      operationId: listUnmatchedItems
+      summary: List unmatched items in a batch (US-RECON-005, US-RECON-010, US-RECON-011)
+      tags: [matching]
+      description: |
+        Returns items with status=unmatched. Unmatched deposits (bank_transaction with
+        no internal match) and unmatched withdrawals are differentiated by item metadata.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - name: item_type
+          in: query
+          schema:
+            type: string
+            enum: [provider_transaction, bank_transaction]
+      responses:
+        '200':
+          description: Unmatched items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemListResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /items/{id}/mark-reconciled:
+    post:
+      operationId: markItemReconciled
+      summary: Manually mark an item as reconciled (US-RECON-004)
+      tags: [matching]
+      description: |
+        Allows an authorized admin to manually mark an item as reconciled after
+        reviewing it. Requires reconciliation.write permission. Records an audit event.
+        Returns 409 if item is already reconciled.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                  minLength: 10
+                  maxLength: 2000
+                internal_transaction_id:
+                  type: string
+                  format: uuid
+                  description: Optionally link to an internal transaction when manually reconciling
+      responses:
+        '200':
+          description: Item marked reconciled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemResponse'
+        '409':
+          description: Item already reconciled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /exceptions:
+    get:
+      operationId: listExceptions
+      summary: List reconciliation exceptions (US-RECON-006)
+      tags: [exceptions]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, investigating, resolved, written_off]
+        - name: exception_type
+          in: query
+          schema:
+            type: string
+            enum: [unmatched_provider, unmatched_bank, amount_mismatch, duplicate]
+        - name: assigned_to
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Paginated exception list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /exceptions/{id}:
+    get:
+      operationId: getException
+      summary: Get exception detail
+      tags: [exceptions]
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Exception detail with linked item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /exceptions/{id}/resolve:
+    post:
+      operationId: resolveException
+      summary: Resolve a reconciliation exception (US-RECON-007)
+      tags: [exceptions]
+      description: |
+        Resolves or writes off an exception. Returns 409 if exception is already resolved/written_off.
+        Requires reconciliation.write permission. Records audit event.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [resolution_type, resolution]
+              properties:
+                resolution_type:
+                  type: string
+                  enum: [manually_matched, written_off, reversed, duplicate_confirmed]
+                resolution:
+                  type: string
+                  minLength: 10
+                  maxLength: 2000
+                internal_transaction_id:
+                  type: string
+                  format: uuid
+                  description: Required when resolution_type=manually_matched
+      responses:
+        '200':
+          description: Exception resolved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDetailResponse'
+        '409':
+          description: Exception already resolved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+
+  schemas:
+    ErrorEnvelope:
+      type: object
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+    BatchStatusResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              type: string
+
+    ItemSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        batch_id:
+          type: string
+          format: uuid
+        item_type:
+          type: string
+          enum: [provider_transaction, bank_transaction]
+        provider_reference:
+          type: string
+        internal_transaction_id:
+          type: string
+          format: uuid
+          nullable: true
+        amount:
+          type: string
+        currency_code:
+          type: string
+        transaction_date:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [pending, matched, unmatched, exception]
+        match_confidence:
+          type: integer
+          minimum: 0
+          maximum: 100
+        matched_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ItemResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/ItemSummary'
+
+    ItemListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemSummary'
+        meta:
+          type: object
+          properties:
+            current_page:
+              type: integer
+            per_page:
+              type: integer
+            total:
+              type: integer
+            last_page:
+              type: integer
+
+    ExceptionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        item_id:
+          type: string
+          format: uuid
+        batch_id:
+          type: string
+          format: uuid
+        exception_type:
+          type: string
+          enum: [unmatched_provider, unmatched_bank, amount_mismatch, duplicate]
+        status:
+          type: string
+          enum: [open, investigating, resolved, written_off]
+        assigned_to:
+          type: string
+          format: uuid
+          nullable: true
+        opened_at:
+          type: string
+          format: date-time
+        resolved_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ExceptionDetailResponse:
+      type: object
+      properties:
+        data:
+          allOf:
+            - $ref: '#/components/schemas/ExceptionSummary'
+            - type: object
+              properties:
+                item:
+                  $ref: '#/components/schemas/ItemSummary'
+                resolved_by:
+                  type: string
+                  format: uuid
+                  nullable: true
+                resolution:
+                  type: string
+                  nullable: true
+                resolution_type:
+                  type: string
+                  nullable: true
+
+    ExceptionListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExceptionSummary'
+        meta:
+          type: object
+          properties:
+            current_page:
+              type: integer
+            per_page:
+              type: integer
+            total:
+              type: integer
+            last_page:
+              type: integer

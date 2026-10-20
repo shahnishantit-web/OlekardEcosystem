@@ -1,0 +1,366 @@
+[
+  {
+    "pattern": "/admin-portal/transactions/[id]",
+    "sourceRoute": "/admin-portal/transactions",
+    "route": "/admin-portal/transactions/b11a73ba-ec9e-4049-ad7d-7954af47bc28",
+    "landed": "/admin-portal/transactions",
+    "parentResponses": [
+      {
+        "url": "/v1/admin-app/transactions",
+        "status": 200
+      }
+    ],
+    "parentPayloads": [],
+    "parentErrors": [],
+    "parentText": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nOperations\n/\nTransactions\n⌘K\nA\nadmin@olekard.local\nTransaction Management\nExport CSV\nSearch\nType\nAll types\nTransfer\nAgent Cash-In\nAgent Cash-Out\nFunding\nWithdrawal\nBill Payment\nStatus\nAll statuses\nPending\nCompleted\nFailed\nReversed\nCurrency\nAll currencies\nBWP\nUSD\nZAR\nFrom\nTo\nMin (BWP)\nMax (BWP)\nSearch\nREFERENCE\tTYPE\tAMOUNT\tSTATUS\tUSER\tDATE\tACTIONS\nQA-b11a73baec9e4049ad7d7954af47bc28\tWithdrawal\tBWP 12.34\tCOMPLETED\t\t10/16/2026, 5:45:11 PM\tView\nQA-9c9f28b878eb4097ab5fa8aca40b96cf\tWithdrawal\tBWP 12.34\tCOMPLETED\t\t10/16/2026, 5:45:11 PM\tView\nQA-edfc3891acc149f7a2a478b323d9f65c\tWithdrawal\tBWP 12.34\tCOMPLETED\t\t10/16/2026, 5:45:11 PM\tView\nQA-4520f0f7da4a4d98b9db77d37fd83d1b\tWithdrawal\tBWP 12.34\tCOM",
+    "checkedAt": "2026-10-17T12:52:10.320Z"
+  },
+  {
+    "pattern": "/kyc/[id]",
+    "sourceRoute": "/kyc",
+    "route": "/kyc/d026a4eb-0e40-4fa7-a67b-d815f021ad16",
+    "landed": "/kyc",
+    "parentResponses": [
+      {
+        "url": "/v1/admin-app/kyc",
+        "status": 200
+      },
+      {
+        "url": "/v1/admin-app/kyc",
+        "status": 200
+      },
+      {
+        "url": "/v1/admin-app/kyc",
+        "status": 200
+      }
+    ],
+    "parentPayloads": [
+      {
+        "url": "/v1/admin-app/kyc",
+        "count": 1,
+        "ids": [
+          "d026a4eb-0e40-4fa7-a67b-d815f021ad16"
+        ]
+      },
+      {
+        "url": "/v1/admin-app/kyc",
+        "count": 1,
+        "ids": [
+          "d026a4eb-0e40-4fa7-a67b-d815f021ad16"
+        ]
+      },
+      {
+        "url": "/v1/admin-app/kyc",
+        "count": 1,
+        "ids": [
+          "d026a4eb-0e40-4fa7-a67b-d815f021ad16"
+        ]
+      }
+    ],
+    "parentErrors": [],
+    "parentText": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nOperations\n/\nKYC Reviews\n⌘K\nA\nadmin@olekard.local\nadmin@olekard.local\nadmin@olekard.local\nSign out\nKYC Review Queue\nStatus\nAll\nPending\nUnder Review\nEscalated\nApproved\nRejected\nTier\nAll\nTier 1\nTier 2\nTier 3\n\nTier is not recorded on KYC cases.\n\nFrom\nTo\nApply\nUSER NAME\tPHONE\tKYC TYPE\tTIER\tRisk Score\tSTATUS\tSubmitted ↓\tACTIONS\nBrowser QA Admin\t+26700000000\tUnknown\tNot recorded\t—\tPENDING REVIEW\t10/17/2026\tView\nPage 1 of 1 · 1 total\nPrevious\nNext",
+    "checkedAt": "2026-10-17T12:57:09.769Z"
+  },
+  {
+    "pattern": "/admin-portal/agents/[id]",
+    "sourceRoute": "/admin-portal/agents",
+    "route": "/admin-portal/agents/ebea74a5-b8ac-4d29-9c8e-f35b82626bd6",
+    "landed": "/admin-portal/agents",
+    "parentResponses": [
+      {
+        "url": "/v1/admin-app/agents",
+        "status": 200
+      },
+      {
+        "url": "/v1/admin-app/agents",
+        "status": 200
+      }
+    ],
+    "parentPayloads": [],
+    "parentErrors": [],
+    "parentText": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nOperations\n/\nAgents\n⌘K\nA\nadmin@olekard.local\nAgents\nSearch\nStatus\nAll Statuses\nPending Approval\nActive\nSuspended\nTerminated\nRegion\nClear Filters\nAGENT NAME\tCODE / BUSINESS\tSTATUS\tFLOAT BALANCE\tREGION\tJOINED\t\n\t+26778225413\tSUSPENDED\tBWP 0.00\t—\t10/16/2026\tView\n\t+26776917510\tSUSPENDED\tBWP 0.00\t—\t10/16/2026\tView\n\t+26777594695\tSUSPENDED\tBWP 0.00\t—\t10/16/2026\tView\n\t+26776758500\tACTIVE\tBWP 0.00\t—\t10/16/2026\tView\nTest Agent\t+26771000002\tACTIVE\tBWP 0.00\t—\t10/10/2026\tView\n\t+26771234567\tACTIVE\tBWP -11.00\t—\t9/24/2026\tView",
+    "checkedAt": "2026-10-17T12:51:23.532Z"
+  },
+  {
+    "pattern": "/admin-portal/roles/[id]",
+    "sourceRoute": "/admin-portal/roles",
+    "route": "/admin-portal/roles/a300dd8f-5b8b-4637-bbae-9ae12a332d0f",
+    "landed": "/admin-portal/roles",
+    "parentResponses": [
+      {
+        "url": "/v1/admin-app/roles",
+        "status": 200
+      }
+    ],
+    "parentPayloads": [],
+    "parentErrors": [],
+    "parentText": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nManagement\n/\nRoles\n⌘K\nA\nadmin@olekard.local\nRoles & Permissions\nCreate Role\nNAME\tTYPE\tPERMISSIONS\tACTIONS\nbrowser_qa_1792241114861\tCUSTOM\t0\tManage\nbrowser_qa_1792225817726\tCUSTOM\t0\tManage\nbrowser_qa_1792224459769\tCUSTOM\t0\tManage\nbrowser_qa_1792222123753\tCUSTOM\t0\tManage\nbrowser_qa_1792158445112\tCUSTOM\t0\tManage\ntest-config-01a144eb8735723c8e6badc6ee268e27\tCUSTOM\t2\tManage\ntest-config-01a144eb86fd72bc94c09af97fb8c7be\tCUSTOM\t3\tManage\ntest-config-01a144eb857d70709fcfdfd7e871b06c\tCUSTOM\t2\tManage\ntest-config-01a144eb8536703c88882b331d460791\tCUSTOM\t3\tManage\ntest-config-01a144eb8382702096ce26e0ee46e4cb\tCUSTOM\t2\tManage\ntest-config-01a144eb83487025b83188e0b70cb0e2\tCUSTOM\t3\tManage\ntest-config-01a144eb",
+    "checkedAt": "2026-10-17T12:51:51.312Z"
+  },
+  {
+    "pattern": "/admin-portal/users/[id]",
+    "sourceRoute": "/admin-portal/users",
+    "route": "/admin-portal/users/303a0ea8-1d03-4b25-832f-ab4907f3a2f5",
+    "landed": "/admin-portal/users",
+    "parentResponses": [
+      {
+        "url": "/v1/admin/users",
+        "status": 200
+      },
+      {
+        "url": "/v1/admin/users",
+        "status": 200
+      }
+    ],
+    "parentPayloads": [],
+    "parentErrors": [],
+    "parentText": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nOperations\n/\nUsers\n⌘K\nA\nadmin@olekard.local\nUser Management\nExport CSV\nSearch\nStatus\nAll\nActive\nSuspended\nClosed\nKYC\nAll\nVerified\nPending\nFailed\nCreated from\nCreated to\nSearch\nNAME\tEMAIL\tPHONE\tKYC STATUS\tACCOUNT STATUS\tCREATED\tACTIONS\n—\t\t—\t—\tACTIVE\t10/16/2026\tView\n—\t\t—\t—\tACTIVE\t10/16/2026\tView\n—\t\t—\t—\tACTIVE\t10/16/2026\tView\n—\t\t—\t—\tACTIVE\t10/16/2026\tView\n—\t\t—\t—\tACTIVE\t10/16/2026\tView\n—\t\t—\t—\tACTIVE\t10/16/2026\tView\n—\t\t—\t—\tACTIVE\t10/16/2026\tView\n—\t\t—\t—\tACTIVE\t10/16/2026\tView\n—\t\t—\t—\tACTIVE\t10/16/2026\tView\n—\t\t—\t—\tACTIVE\t10/16/2026\tView\n—\t\t—\t—\tACTIVE\t10/16/2026\tView\n—\t\t—\t—\tACTIVE\t10/16/2026\tView\n—\t\t—\t—\tACTIVE\t10/16/2026\tView\n—\t\t—\t—\tACTIVE\t10/16/2026\tView\n—\t\t—\t—\tACTIVE\t10/16/2026\tView\n—\t\t—\t—\tACTIV",
+    "checkedAt": "2026-10-17T12:52:33.777Z"
+  },
+  {
+    "pattern": "/admin-portal/wallets/[id]",
+    "sourceRoute": "/admin-portal/wallets",
+    "route": "/admin-portal/wallets/fe1d5886-4d8f-4d70-af9d-81772be07718",
+    "landed": "/admin-portal/wallets",
+    "parentResponses": [
+      {
+        "url": "/v1/admin-app/wallets",
+        "status": 200
+      }
+    ],
+    "parentPayloads": [],
+    "parentErrors": [],
+    "parentText": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nOperations\n/\nWallets\n⌘K\nA\nadmin@olekard.local\nWallet Management\nSearch\nStatus\nAll Statuses\nActive\nFrozen\nClosed\nCurrency\nAll Currencies\nBWP\nUSD\nZAR\nSearch\nWALLET ID\tOWNER\tCURRENCY\tBALANCE\tSTATUS\tCREATED\tACTIONS\nWLT-AGENT-TEST-01\t\tBWP\t0.00\tACTIVE\t9/24/2026\tView\nWLT-QA-4225BF3E\t\tBWP\t0.00\tACTIVE\t10/16/2026\tView\nWLT-QA-CEC2D0A1\t\tBWP\t0.00\tACTIVE\t10/16/2026\tView\nWLT-QA-1FF996A7\t\tBWP\t0.00\tACTIVE\t10/16/2026\tView\nWLT-QA-9EC7D7ED\t\tBWP\t0.00\tACTIVE\t10/16/2026\tView\nWLT-QA-0C1532AC\t\tBWP\t0.00\tACTIVE\t10/16/2026\tView\nWLT-QA-07791791\t\tBWP\t0.00\tACTIVE\t10/16/2026\tView\nWLT-QA-5FBB07BE\t\tBWP\t0.00\tACTIVE\t10/16/2026\tView\nWLT-QA-10D3AC2C\t\tBWP\t0.00\tACTIVE\t10/16/2026\tView\nWLT-QA-F42E805C\t\tBWP\t0.00\tACTIVE\t10/16/2026\t",
+    "checkedAt": "2026-10-17T12:52:57.113Z"
+  },
+  {
+    "pattern": "/agents/[id]",
+    "sourceRoute": "/agents",
+    "route": null,
+    "landed": "/dashboard",
+    "parentResponses": [],
+    "parentPayloads": [],
+    "parentErrors": [],
+    "parentText": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n⌘K\nA\nadmin@olekard.local\n\nOPERATIONS / DASHBOARD\n\nBusiness overview\n\nKey metrics and activity across the OleKard ecosystem\n\nLast 7 days\nLast 30 days\nLast 90 days\n↗ Export report\nTransaction Volume\nLast 7 days\nOperational Activity\nRecent transactions\nView all →\nAll\nCompleted\nPending\nFailed\nQuick actions\n\nFrequently used operations\n\nManage customers\nReview KYC requests\nManage agents\nView transactions\nReconciliation\nFee rules",
+    "checkedAt": "2026-10-17T13:08:55.102Z"
+  },
+  {
+    "pattern": "/configuration/approvals/[id]",
+    "sourceRoute": "/configuration/approvals",
+    "route": "/configuration/approvals/d026a4eb-0e40-4fa7-a67b-d815f021ad11",
+    "landed": "/configuration/approvals",
+    "parentResponses": [
+      {
+        "url": "/v1/admin/configuration/change-requests",
+        "status": 200
+      },
+      {
+        "url": "/v1/admin/configuration/change-requests",
+        "status": 200
+      }
+    ],
+    "parentPayloads": [],
+    "parentErrors": [],
+    "parentText": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nManagement\n/\nConfiguration\n⌘K\nA\nadmin@olekard.local\nadmin@olekard.local\nadmin@olekard.local\nSign out\nPending Approvals\nConfig Key\tDomain\tMaker\tSubmitted\tAge\noperational_policy.browser_qa_detail_fixture\toperational policy\t01a0d2ba…\t10/17/2026\tLess than 1h",
+    "checkedAt": "2026-10-17T12:54:30.879Z"
+  },
+  {
+    "pattern": "/configuration/[domain]/[key]",
+    "sourceRoute": "/configuration",
+    "route": "/configuration/operational_policy/browser_qa_detail_fixture",
+    "landed": "/configuration",
+    "parentResponses": [
+      {
+        "url": "/v1/admin/configuration/keys",
+        "status": 200
+      },
+      {
+        "url": "/v1/admin/configuration/keys",
+        "status": 200
+      }
+    ],
+    "parentPayloads": [],
+    "parentErrors": [],
+    "parentText": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nManagement\n/\nConfiguration\n⌘K\nA\nadmin@olekard.local\nadmin@olekard.local\nadmin@olekard.local\nSign out\nConfiguration Management\nAll\nFinancial Policy\nOperational Policy\nGeographic\nKey\tDomain\tCurrent Value\tLast Modified\tPending\noperational_policy.browser_qa_detail_fixture\toperational policy\t\"inert\"\t10/17/2026\tPending",
+    "checkedAt": "2026-10-17T12:55:02.851Z"
+  },
+  {
+    "pattern": "/fees/rules/[id]",
+    "sourceRoute": "/fees/rules",
+    "route": "/fees/rules/d026a4eb-0e40-4fa7-a67b-d815f021ad13",
+    "landed": "/fees/rules",
+    "parentResponses": [
+      {
+        "url": "/v1/fees/rules",
+        "status": 200
+      },
+      {
+        "url": "/v1/fees/rules",
+        "status": 200
+      }
+    ],
+    "parentPayloads": [],
+    "parentErrors": [],
+    "parentText": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nOperations\n/\nFee Rules\n⌘K\nA\nadmin@olekard.local\nadmin@olekard.local\nadmin@olekard.local\nSign out\nFee Rules\nCreate Rule\nAll transaction types\ntransfer\nfunding\nwithdrawal\nbill payment\nqr payment\ncash in\ncash out\nsettlement\nAll statuses\nActive\nExpired\nDeactivated\nSuperseded\nFee rules list\nTransaction Type\tFee Type\tFee\tSubject\tStatus\tValid From\ntransfer\tfixed\tBWP 0.01 (fixed)\tglobal\tDEACTIVATED\t10/17/2024",
+    "checkedAt": "2026-10-17T12:55:27.618Z"
+  },
+  {
+    "pattern": "/integrations/providers/[id]/health",
+    "sourceRoute": "/integrations/providers",
+    "route": "/integrations/providers/d026a4eb-0e40-4fa7-a67b-d815f021ad14/health",
+    "landed": "/integrations/providers",
+    "parentResponses": [
+      {
+        "url": "/v1/admin/integrations/providers",
+        "status": 200
+      },
+      {
+        "url": "/v1/admin/integrations/providers",
+        "status": 200
+      }
+    ],
+    "parentPayloads": [],
+    "parentErrors": [],
+    "parentText": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nManagement\n/\nIntegrations\n⌘K\nA\nadmin@olekard.local\nadmin@olekard.local\nadmin@olekard.local\nSign out\nIntegrations\n\nProvider health and partner API access.\n\nRefresh\nProvider health\nPartners\nAPI clients\nWebhooks\nProvider type\nAll types\notp\nsms\nemail\nkyc\npayment\nbank\nmobile_money\nPartner\tType\tConfiguration\tHealth\tLast checked\tActions\nBrowser QA Provider\tbank\tinactive\tDegraded\t10/17/2026, 6:16:57 PM\t\nView Health\nNew API Client\nSet Default\nActivate\nPrevious\nPage 1 of 1\nNext",
+    "checkedAt": "2026-10-17T12:56:02.791Z"
+  },
+  {
+    "pattern": "/integrations/[id]",
+    "sourceRoute": "/integrations/clients",
+    "route": "/integrations/clients",
+    "landed": "/integrations/clients",
+    "parentResponses": [
+      {
+        "url": "/v1/admin/integrations/api-clients",
+        "status": 200
+      }
+    ],
+    "parentPayloads": [],
+    "parentErrors": [],
+    "parentText": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nManagement\n/\nIntegrations\n⌘K\nA\nadmin@olekard.local\nadmin@olekard.local\nadmin@olekard.local\nSign out\nAPI clients\n\nManage partner credentials and source IP access.\n\nNew API Client\nProvider health\nPartners\nAPI clients\nWebhooks\n\nLoading API clients",
+    "checkedAt": "2026-10-17T12:56:31.560Z"
+  },
+  {
+    "pattern": "/qa/runs/[id]",
+    "sourceRoute": "/qa",
+    "route": "/qa/runs/d026a4eb-0e40-4fa7-a67b-d815f021ad01",
+    "landed": "/qa",
+    "parentResponses": [
+      {
+        "url": "/v1/qa/dashboard",
+        "status": 200
+      },
+      {
+        "url": "/v1/qa/dashboard",
+        "status": 200
+      }
+    ],
+    "parentPayloads": [],
+    "parentErrors": [],
+    "parentText": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nManagement\n/\nQA Dashboard\n⌘K\nA\nadmin@olekard.local\nadmin@olekard.local\nadmin@olekard.local\nSign out\nQA & Validation Dashboard\nRefresh",
+    "checkedAt": "2026-10-17T12:57:35.761Z"
+  },
+  {
+    "pattern": "/reconciliation/batches/[id]",
+    "sourceRoute": "/reconciliation/batches",
+    "route": "/reconciliation/batches/d026a4eb-0e40-4fa7-a67b-d815f021ad17",
+    "landed": "/reconciliation/batches",
+    "parentResponses": [
+      {
+        "url": "/v1/admin-app/reconciliation",
+        "status": 200
+      }
+    ],
+    "parentPayloads": [],
+    "parentErrors": [],
+    "parentText": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nOperations\n/\nReconciliation\n⌘K\nA\nadmin@olekard.local\nReconciliation Batches\nRefresh\nAll statuses\nRunning\nCompleted\nFailed\n\n1 batch found\n\nPeriod\tCurrency\tTotal\tMatched\tUnmatched\tDiscrepancy\tStatus\t\n2026-10-17 → 2026-10-17\tBWP\t0\t0\t0\tBWP 0.00\tCOMPLETED\tView",
+    "checkedAt": "2026-10-17T12:57:58.561Z"
+  },
+  {
+    "pattern": "/reconciliation/settlements/[id]",
+    "sourceRoute": "/reconciliation/settlements",
+    "route": "/reconciliation/settlements/d026a4eb-0e40-4fa7-a67b-d815f021ad18",
+    "landed": "/reconciliation/settlements",
+    "parentResponses": [
+      {
+        "url": "/v1/admin-app/settlement",
+        "status": 200
+      }
+    ],
+    "parentPayloads": [],
+    "parentErrors": [],
+    "parentText": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nSettlements\n⌘K\nA\nadmin@olekard.local\nSettlement History\nRefresh\nAll statuses\nPending Approval\nApproved\nExecuted\nRejected\nFailed\n\n1 settlement found\n\nDate\tCurrency\tTotal Amount\tNet Position\tProvider\tReference\tStatus\t\n2026-10-17\tBWP\tBWP 0.00\tBWP 0.00\tQA\t—\tDRAFT\tView",
+    "checkedAt": "2026-10-17T12:58:26.111Z"
+  },
+  {
+    "pattern": "/reports/[id]",
+    "sourceRoute": "/reports",
+    "route": "/reports/d026a4eb-0e40-4fa7-a67b-d815f021ad19",
+    "landed": "/reports",
+    "parentResponses": [
+      {
+        "url": "/v1/reports/jobs",
+        "status": 200
+      },
+      {
+        "url": "/v1/reports/jobs",
+        "status": 200
+      }
+    ],
+    "parentPayloads": [],
+    "parentErrors": [],
+    "parentText": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nManagement\n/\nReports\n⌘K\nA\nadmin@olekard.local\nadmin@olekard.local\nadmin@olekard.local\nSign out\nReports\nNew Report\nRequest New Report\nReport Type\nTransaction Summary\nWallet Balances\nAgent Commissions\nKYC Status\nReconciliation\nUser Report\nAgent Report\nSettlement Report\nRisk Report\nFinancial Summary\nPeriod Start\nPeriod End\nFormat\nCSV\nXLSX\nRequest Report\nAll types\nWallet Report\nTransaction Report\nUser Report\nAgent Report\nCommission Report\nKYC Report\nReconciliation Report\nSettlement Report\nRisk Report\nFinancial Summary\nAll statuses\nRequested\nProcessing\nComplete\nFailed\nType\tStatus\tRow Count\tCreated\tActions\nbrowser_qa_report\tCOMPLETE\t0\t10/17/2026, 6:16:57 PM\tView",
+    "checkedAt": "2026-10-17T12:58:56.062Z"
+  },
+  {
+    "pattern": "/security/alerts/[id]",
+    "sourceRoute": "/security/dashboard",
+    "route": "/security/alerts/d026a4eb-0e40-4fa7-a67b-d815f021ad20",
+    "landed": "/security/dashboard",
+    "parentResponses": [
+      {
+        "url": "/v1/admin/security/alerts",
+        "status": 200
+      },
+      {
+        "url": "/v1/admin/security/alerts",
+        "status": 200
+      }
+    ],
+    "parentPayloads": [],
+    "parentErrors": [],
+    "parentText": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nManagement\n/\nSecurity\n⌘K\nA\nadmin@olekard.local\nadmin@olekard.local\nadmin@olekard.local\nSign out\nRisk alert queue\n\nTriage fraud and AML alerts, review evidence, and record investigation decisions.\n\nSecurity findings\nSeverity\nAll severities\nCritical\nHigh\nMedium\nLow\nStatus\nOpen\nIn Review\nResolved\nSeverity\tType\tAlert\tEntity\tCreated\tAssigned To\nLOW\tpattern\tBrowser QA alert fixture\tqa_fixture: d026a4eb-0e40-4fa7-a67b-d815f021ad20\t10/17/2026, 6:16:57 PM\tUnassigned\nPrevious\nPage 1 of 1\nNext",
+    "checkedAt": "2026-10-17T12:59:30.348Z"
+  },
+  {
+    "pattern": "/security/findings/[id]",
+    "sourceRoute": "/security/findings",
+    "route": "/security/findings/d026a4eb-0e40-4fa7-a67b-d815f021ad21",
+    "landed": "/security/findings",
+    "parentResponses": [
+      {
+        "url": "/v1/security/findings",
+        "status": 200
+      },
+      {
+        "url": "/v1/security/findings",
+        "status": 200
+      }
+    ],
+    "parentPayloads": [],
+    "parentErrors": [],
+    "parentText": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nManagement\n/\nVulnerabilities\n⌘K\nA\nadmin@olekard.local\nadmin@olekard.local\nadmin@olekard.local\nSign out\nSecurity findings\nFindings overview\nSeverity\nAll severities\nCritical\nHigh\nMedium\nLow\nInfo\nStatus\nAll statuses\nOpen\nAcknowledged\nIn Remediation\nSuppressed\nResolved\nVerified\nCVE ID\tSeverity\tComponent\tFinding\tStatus\tDiscovered\tActions\n—\tINFO\tQA fixture only\tBrowser QA finding fixture\tOpen\t10/17/2026, 6:16:57 PM\t\nAcknowledge\nResolve\nSuppress\nPrevious\nPage 1 of 1\nNext",
+    "checkedAt": "2026-10-17T12:59:57.800Z"
+  },
+  {
+    "pattern": "/support/cases/[id]",
+    "sourceRoute": "/support/cases",
+    "route": "/support/cases/d026a4eb-0e40-4fa7-a67b-d815f021ad22",
+    "landed": "/support/cases",
+    "parentResponses": [],
+    "parentPayloads": [],
+    "parentErrors": [],
+    "parentText": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nManagement\n/\nSupport & Disputes\n⌘K\nA\nadmin@olekard.local\nadmin@olekard.local\nadmin@olekard.local\nSign out\nSupport & Disputes\n\nTriage cases, investigate evidence and track escalations.\n\nType\nAll\nSupport\nDispute\nStatus\nAll\nOpen\nIn Progress\nEscalated\nResolved\nPriority\nAll\nlow\nmedium\nhigh\ncritical\nFrom date\nTo date\nLoading support cases",
+    "checkedAt": "2026-10-17T13:00:56.018Z"
+  }
+]

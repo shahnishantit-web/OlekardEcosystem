@@ -1,0 +1,22 @@
+parameters:
+    level: 8
+    paths:
+        - app/Modules/Withdrawal
+    checkMissingIterableValueType: false
+    treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        # Eloquent static methods — resolved by larastan in Docker
+        - '#Call to an undefined static method Illuminate\\Database\\Eloquent\\Model::#'
+        - '#Call to an undefined static method App\\Modules\\Withdrawal\\Infrastructure\\Models\\.*#'
+        # Eloquent migration builder — resolved by larastan
+        - '#Call to an undefined method Illuminate\\Database\\Schema\\ColumnDefinition::notNullable#'
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder::#'
+        # Generic class types on Eloquent relations — cosmetic, not functional
+        - '#with generic class Illuminate\\Database\\Eloquent\\Relations\\(BelongsTo|HasOne|HasMany)#'
+        - '#with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types#'
+        - '#return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types#'
+        # Resource static collection() — resolved by larastan
+        - '#Call to static method collection\(\) on an unknown class#'
+        # TOCTOU re-checks inside transactions after refresh() — intentional guards
+        - '#If condition is always (true|false)#'

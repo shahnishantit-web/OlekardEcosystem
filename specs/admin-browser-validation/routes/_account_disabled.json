@@ -1,0 +1,16 @@
+{
+  "route": "/account-disabled",
+  "landed": "/account-disabled",
+  "status": 200,
+  "headings": [
+    "Account disabled"
+  ],
+  "errors": [],
+  "api": [],
+  "failed": [],
+  "links": [
+    "/login"
+  ],
+  "overflow": false,
+  "text": "OK\nOleKard\nAccount disabled\n\nYour admin account has been disabled. Please contact your system administrator for assistance.\n\nBack to sign in\n\nAuthorized personnel only. All sessions are logged and monitored."
+}

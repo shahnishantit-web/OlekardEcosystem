@@ -1,0 +1,398 @@
+openapi: "3.1.0"
+info:
+  title: Community Services — Refunds, Reversals and Disputes
+  version: "1.0.0"
+  description: >
+    HZ08 Refunds, Reversals and Dispute Handling.
+    Cumulative refunds cannot exceed captured amount minus prior refunds.
+    Self-approval is rejected (approved_by must differ from requested_by).
+    Failed refunds display as failed — not completed.
+    Idempotency-Key required on all write operations.
+
+paths:
+  /v1/community/orders/{order_id}/refunds:
+    post:
+      operationId: requestRefund
+      summary: Request a refund on an order
+      tags: [Refunds]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefundRequest"
+      responses:
+        "201":
+          description: Refund request submitted for review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefundRequestResponse"
+        "409":
+          description: Concurrent refund would exceed captured amount
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+    get:
+      operationId: listRefundRequests
+      summary: List refund requests for an order
+      tags: [Refunds]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200":
+          description: Refund request list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefundRequestListResponse"
+
+  /v1/community/admin/refunds:
+    get:
+      operationId: adminListRefunds
+      summary: Admin — list all refund requests (scoped to organisation)
+      tags: [Admin, Refunds]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organisation_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: cursor
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated refund list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefundRequestListResponse"
+
+  /v1/community/admin/refunds/{id}/approve:
+    post:
+      operationId: approveRefund
+      summary: Approve a refund request (Finance Approver, ≠ requester)
+      tags: [Admin, Refunds]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RefundId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Refund approved and processing initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefundRequestResponse"
+        "403":
+          description: Self-approval rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Would exceed captured amount
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /v1/community/admin/refunds/{id}/reject:
+    post:
+      operationId: rejectRefund
+      summary: Reject a refund request
+      tags: [Admin, Refunds]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RefundId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Refund rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefundRequestResponse"
+
+  /v1/community/admin/orders/{order_id}/dispute-hold:
+    post:
+      operationId: createDisputeHold
+      summary: Place a dispute hold on order funds
+      tags: [Admin, Disputes]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DisputeHoldRequest"
+      responses:
+        "201":
+          description: Dispute hold created; payout blocked until resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DisputeHoldResponse"
+
+  /v1/community/admin/dispute-holds/{id}/resolve:
+    post:
+      operationId: resolveDisputeHold
+      summary: Resolve a dispute hold
+      tags: [Admin, Disputes]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [resolution_notes]
+              properties:
+                resolution_notes:
+                  type: string
+      responses:
+        "200":
+          description: Hold resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DisputeHoldResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    OrderId:
+      name: order_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    RefundId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 128
+
+  schemas:
+    RefundRequestSchema:
+      type: object
+      required: [amount, currency, reason]
+      properties:
+        amount:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Minor units (e.g. thebe)
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        reason:
+          type: string
+          maxLength: 1000
+
+    RefundRequest:
+      allOf:
+        - $ref: "#/components/schemas/RefundRequestSchema"
+
+    RefundRequestItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        external_ref:
+          type: string
+        order_id:
+          type: string
+          format: uuid
+        amount:
+          type: integer
+          format: int64
+          description: Minor units
+        currency:
+          type: string
+        reason:
+          type: string
+        status:
+          type: string
+          enum: [pending_review, approved, processing, completed, failed, rejected]
+        requested_by:
+          type: string
+          format: uuid
+        approved_by:
+          type: string
+          format: uuid
+          nullable: true
+        rejection_reason:
+          type: string
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    RefundRequestResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/RefundRequestItem"
+
+    RefundRequestListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/RefundRequestItem"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    DisputeHoldRequest:
+      type: object
+      required: [amount, currency, reason]
+      properties:
+        amount:
+          type: integer
+          format: int64
+          minimum: 1
+        currency:
+          type: string
+        reason:
+          type: string
+
+    DisputeHoldItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        order_id:
+          type: string
+          format: uuid
+        amount:
+          type: integer
+          format: int64
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [active, resolved, released]
+        reason:
+          type: string
+        raised_by:
+          type: string
+          format: uuid
+        resolved_by:
+          type: string
+          format: uuid
+          nullable: true
+        resolution_notes:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        resolved_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    DisputeHoldResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/DisputeHoldItem"
+
+    PaginationMeta:
+      type: object
+      properties:
+        next_cursor:
+          type: string
+          nullable: true
+        per_page:
+          type: integer
+
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, correlation_id]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            correlation_id:
+              type: string
+              format: uuid
+
+  responses:
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"

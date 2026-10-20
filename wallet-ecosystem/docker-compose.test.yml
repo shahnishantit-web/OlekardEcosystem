@@ -1,0 +1,61 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: wallet_ecosystem_test
+      POSTGRES_USER: wallet_app
+      POSTGRES_PASSWORD: ""
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wallet_app -d wallet_ecosystem_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - wallet_test
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save "" --loglevel warning
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - wallet_test
+
+  api:
+    build:
+      context: services/api
+      target: test
+    env_file:
+      - services/api/.env.testing
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: wallet_ecosystem_test
+      DB_PASSWORD: "test"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    volumes:
+      - ./services/api:/var/www/html
+      - test_vendor:/var/www/html/vendor
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["tail", "-f", "/dev/null"]
+    networks:
+      - wallet_test
+
+volumes:
+  postgres_test_data:
+  test_vendor:
+
+networks:
+  wallet_test:
+    driver: bridge

@@ -1,0 +1,70 @@
+{
+  "pattern": "/kyc/[id]",
+  "route": "/kyc/d026a4eb-0e40-4fa7-a67b-d815f021ad16",
+  "landed": "/kyc/d026a4eb-0e40-4fa7-a67b-d815f021ad16",
+  "errors": [],
+  "failures": [],
+  "detailResponses": [
+    {
+      "url": "/v1/admin-app/kyc/d026a4eb-0e40-4fa7-a67b-d815f021ad16",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "d026a4eb-0e40-4fa7-a67b-d815f021ad16",
+          "kyc_submission_id": "d026a4eb-0e40-4fa7-a67b-d815f021ad16",
+          "user_id": "01a0d2ba-3aee-7347-b52d-5802bab17ef6",
+          "user_name": "Browser QA Admin",
+          "user_full_name": "Browser QA Admin",
+          "user_phone_number": "+26700000000",
+          "requested_tier": null,
+          "tier_applied": null,
+          "current_tier": null,
+          "risk_score": null,
+          "status": "pending_review",
+          "document_type": "unknown",
+          "kyc_type": "unknown",
+          "document_urls": [],
+          "document_front_url": null,
+          "document_back_url": null,
+          "submitted_at": "2026-10-17 12:46:57+00",
+          "reviewed_at": null,
+          "reviewed_by": null,
+          "rejection_reason": null,
+          "personal_info": null,
+          "verification_results": []
+        }
+      }
+    },
+    {
+      "url": "/v1/admin-app/kyc/d026a4eb-0e40-4fa7-a67b-d815f021ad16",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "d026a4eb-0e40-4fa7-a67b-d815f021ad16",
+          "kyc_submission_id": "d026a4eb-0e40-4fa7-a67b-d815f021ad16",
+          "user_id": "01a0d2ba-3aee-7347-b52d-5802bab17ef6",
+          "user_name": "Browser QA Admin",
+          "user_full_name": "Browser QA Admin",
+          "user_phone_number": "+26700000000",
+          "requested_tier": null,
+          "tier_applied": null,
+          "current_tier": null,
+          "risk_score": null,
+          "status": "pending_review",
+          "document_type": "unknown",
+          "kyc_type": "unknown",
+          "document_urls": [],
+          "document_front_url": null,
+          "document_back_url": null,
+          "submitted_at": "2026-10-17 12:46:57+00",
+          "reviewed_at": null,
+          "reviewed_by": null,
+          "rejection_reason": null,
+          "personal_info": null,
+          "verification_results": []
+        }
+      }
+    }
+  ],
+  "text": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nOperations\n/\nKYC Reviews\n⌘K\nA\nadmin@olekard.local\nKYC Submission Detail\n← Back\nBrowser QA Admin\n\n+26700000000\n\nPENDING REVIEW\nTIER APPLIED\nNot recorded\nDOCUMENT TYPE\nUnknown\nSUBMITTED\n10/17/2026, 6:16:57 PM\nApprove\nReject"
+}

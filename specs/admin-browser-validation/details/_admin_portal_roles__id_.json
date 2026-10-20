@@ -1,0 +1,24 @@
+{
+  "pattern": "/admin-portal/roles/[id]",
+  "route": "/admin-portal/roles/a300dd8f-5b8b-4637-bbae-9ae12a332d0f",
+  "landed": "/admin-portal/roles/a300dd8f-5b8b-4637-bbae-9ae12a332d0f",
+  "errors": [],
+  "failures": [],
+  "detailResponses": [
+    {
+      "url": "/v1/admin-app/roles/a300dd8f-5b8b-4637-bbae-9ae12a332d0f",
+      "status": 200,
+      "body": {
+        "data": {
+          "role_id": "a300dd8f-5b8b-4637-bbae-9ae12a332d0f",
+          "role_name": "browser_qa_1792241114861",
+          "permission_slugs": [],
+          "user_count": 0,
+          "is_system_role": false,
+          "created_at": "2026-10-17T12:45:24Z"
+        }
+      }
+    }
+  ],
+  "text": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nManagement\n/\nRoles\n⌘K\nA\nadmin@olekard.local\nRole: browser_qa_1792241114861\n← Back\nROLE NAME\nbrowser_qa_1792241114861\nTYPE\nCUSTOM\nPERMISSIONS\n0\nPermission Matrix\nSave Permissions\nSECURITY\nView security policies\nPropose security policies\nView security events\nExport security events\nManage risk investigations\nRequest and approve AML account freezes\nView risk alert investigations\nRead security findings\nManage security findings\nMULTI-CURRENCY\nManage currencies\nConfigure exchange rates\nCONFIGURATION\nApprove configuration changes\nView Configuration\nSubmit Config Changes\nApprove Config Changes\nSUPPORT\nsupport investigate\nsupport assign\nsupport resolve\ndispute approve\ndispute reject\ndispute refund\ndispute escalate\nINTEGRATIONS\nManage integrations and API credentials\nNOTIFICATIONS\ntemplates read notifications\ntemplates write notifications\nlog read notifications\nretry notifications\nrules read notifications\nrules write notifications\nDASHBOARD\nView Operational Dashboard\nView Financial Dashboard\nView Risk Dashboard\nUSERS\nRead Users\nManage Users\nROLES\nManage Roles\nKYC\nReview KYC\nApprove KYC\nReject KYC\nWALLETS\nRead Wallets\nFreeze Wallets\nUnfreeze Wallets\nTRANSACTIONS\nRead Transactions\nInvestigate Transactions\nReverse Transactions\nAGENTS\nApprove Agents\nManage Agents\nFLOAT\nManage Agent Float\nRECONCILIATION\nView Reconciliation\nSETTLEMENT\nView Settlement\nAUDIT\nView Audit Log\nCOMPLIANCE\nView Compliance Dashboard\nConfigure Compliance\nREPORTS\nView Reports\nGenerate Reports\nSchedule Reports"
+}

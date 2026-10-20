@@ -1,0 +1,16 @@
+{
+  "route": "/account-locked",
+  "landed": "/account-locked",
+  "status": 200,
+  "headings": [
+    "Account locked"
+  ],
+  "errors": [],
+  "api": [],
+  "failed": [],
+  "links": [
+    "/login"
+  ],
+  "overflow": false,
+  "text": "OK\nOleKard\nAccount locked\n\nYour account has been locked. Contact your administrator.\n\nBack to sign in\n\nAuthorized personnel only. All sessions are logged and monitored."
+}

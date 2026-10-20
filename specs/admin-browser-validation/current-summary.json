@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-18",
+  "pageRoutes": 94,
+  "unmatchedStaticGetHelpers": 0,
+  "permissions": 190,
+  "grants": 190,
+  "missingDefinitions": [],
+  "missingGrants": [],
+  "liveRequests": 127,
+  "statuses": {
+    "200": 124,
+    "404": 2,
+    "422": 1
+  },
+  "ledgerJournals": 16,
+  "ledgerLines": 32,
+  "frontend": {
+    "suites": 52,
+    "tests": 778,
+    "snapshots": 21,
+    "status": "pass"
+  },
+  "typescript": "pass",
+  "scopedLint": "pass",
+  "browserVisualVerification": "unavailable",
+  "testDatabase": "olekard_admin_repair_tests_20261018",
+  "backend": {
+    "tests": 30,
+    "assertions": 127,
+    "status": "pass"
+  }
+}

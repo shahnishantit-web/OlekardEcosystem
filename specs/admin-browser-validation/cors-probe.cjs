@@ -1,0 +1,1 @@
+(async()=>{const r=await fetch('http://localhost:8001/v1/admin-app/roles',{method:'OPTIONS',headers:{Origin:'http://localhost:3030','Access-Control-Request-Method':'GET','Access-Control-Request-Headers':'authorization,content-type,x-correlation-id'}});console.log(r.status,Object.fromEntries([...r.headers].filter(([k])=>k.startsWith('access-control'))));})();

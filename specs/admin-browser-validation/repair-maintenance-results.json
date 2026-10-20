@@ -1,0 +1,168 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\node_modules\\playwright\\cli.js",
+      "test",
+      "--config",
+      "playwright.audit-maintenance.config.ts"
+    ],
+    "configFile": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\playwright.audit-maintenance.config.ts",
+    "rootDir": "C:/Projects/OleKardEcosystem/wallet-ecosystem/apps/admin/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Projects/OleKardEcosystem/wallet-ecosystem/apps/admin/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Projects/OleKardEcosystem/wallet-ecosystem/apps/admin/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "p2001-maintenance.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "",
+        "testDir": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e",
+        "snapshotDir": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e",
+        "testIgnore": [],
+        "testMatch": "p2001-maintenance.spec.ts",
+        "timeout": 60000,
+        "use": {
+          "baseURL": "http://localhost:3024",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": ""
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../../../specs/admin-browser-validation/repair-maintenance-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.0",
+    "workers": 1,
+    "webServer": {
+      "command": "node node_modules/next/dist/bin/next start -p 3024",
+      "url": "http://localhost:3024/unsupported-browser",
+      "timeout": 120000,
+      "reuseExistingServer": false,
+      "env": {
+        "MAINTENANCE_MODE": "true",
+        "MAINTENANCE_RETURN_AT": "2026-10-17T10:00:00Z",
+        "MAINTENANCE_BYPASS_SECRET": "browser-test-maintenance-secret-at-least32chars"
+      }
+    }
+  },
+  "suites": [
+    {
+      "title": "p2001-maintenance.spec.ts",
+      "file": "p2001-maintenance.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "maintenance intercepts navigation and securely bypasses only maintenance",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1085,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:26:51.828Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "343b82dbf3a215f04ae4-307c078e196a57297e43",
+          "file": "p2001-maintenance.spec.ts",
+          "line": 5,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-16T06:26:50.770Z",
+    "duration": 2758.4139999999998,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

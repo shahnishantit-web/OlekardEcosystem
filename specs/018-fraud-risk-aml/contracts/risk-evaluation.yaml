@@ -1,0 +1,574 @@
+openapi: "3.1.0"
+info:
+  title: Risk Evaluation API
+  description: Synchronous pre-transaction risk evaluation (US-RISK-001 through US-RISK-009)
+  version: "1.0.0"
+
+tags:
+  - name: evaluation
+    description: Pre-transaction risk evaluation endpoints
+
+paths:
+  /v1/risk/evaluate-transaction-risk:
+    post:
+      tags: [evaluation]
+      operationId: evaluateTransactionRisk
+      summary: Evaluate overall transaction risk (US-RISK-001)
+      description: |
+        Synchronous evaluation of a proposed transaction against all active rules.
+        Returns allow/block/review decision. Must complete in <200ms p99.
+        Idempotent — same idempotency_key returns same result.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRiskRequest'
+      responses:
+        "200":
+          description: Risk decision returned (including block — HTTP 200 with decision=block)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskEvaluationResponse'
+        "409":
+          description: Idempotency key conflict — different payload for same key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/risk/evaluate-transaction-velocity:
+    post:
+      tags: [evaluation]
+      operationId: evaluateTransactionVelocity
+      summary: Evaluate velocity risk only (US-RISK-002)
+      description: |
+        Evaluates velocity rules — count and cumulative-amount within configured
+        rolling windows (24h, 30d). Used by async listeners; also callable directly.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VelocityRiskRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskEvaluationResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/risk/evaluate-amount-threshold:
+    post:
+      tags: [evaluation]
+      operationId: evaluateAmountThreshold
+      summary: Evaluate per-transaction and daily/monthly amount limits (US-RISK-003)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AmountThresholdRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskEvaluationResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/risk/evaluate-device-risk:
+    post:
+      tags: [evaluation]
+      operationId: evaluateDeviceRisk
+      summary: Evaluate risk signal from device context (US-RISK-004)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceRiskRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskEvaluationResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/risk/evaluate-ip-risk:
+    post:
+      tags: [evaluation]
+      operationId: evaluateIpRisk
+      summary: Evaluate risk signal from IP address (US-RISK-005)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IpRiskRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskEvaluationResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/risk/evaluate-beneficiary-risk:
+    post:
+      tags: [evaluation]
+      operationId: evaluateBeneficiaryRisk
+      summary: Evaluate risk signal from beneficiary profile (US-RISK-006)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BeneficiaryRiskRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskEvaluationResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/risk/allow-transaction:
+    post:
+      tags: [evaluation]
+      operationId: allowTransaction
+      summary: Explicitly allow a transaction under manual review (US-RISK-007)
+      description: Officer action to clear a transaction flagged for manual review.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManualDecisionRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManualDecisionResponse'
+        "404":
+          description: Evaluation record not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "409":
+          description: Decision already made for this evaluation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/risk/block-transaction:
+    post:
+      tags: [evaluation]
+      operationId: blockTransaction
+      summary: Explicitly block a transaction under manual review (US-RISK-008)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManualDecisionRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManualDecisionResponse'
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/risk/send-transaction-for-manual-review:
+    post:
+      tags: [evaluation]
+      operationId: sendTransactionForManualReview
+      summary: Route an evaluation for manual review (US-RISK-009)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendForReviewRequest'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskAlertResponse'
+        "409":
+          description: Already under review
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid auth token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Authenticated but lacks required permission
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    TransactionRiskRequest:
+      type: object
+      required: [idempotency_key, transaction_reference, transaction_type, amount, currency, customer_id]
+      properties:
+        idempotency_key:
+          type: string
+          maxLength: 128
+        transaction_reference:
+          type: string
+          maxLength: 128
+        transaction_type:
+          type: string
+          enum: [funding, transfer, withdrawal, bill_payment, qr_payment]
+        amount:
+          type: string
+          description: Decimal amount as string; avoids floating-point precision issues
+          example: "500.00"
+        currency:
+          type: string
+          enum: [BWP]
+          default: BWP
+        customer_id:
+          type: string
+          format: uuid
+        wallet_id:
+          type: string
+          format: uuid
+          nullable: true
+        agent_id:
+          type: string
+          format: uuid
+          nullable: true
+        beneficiary_id:
+          type: string
+          format: uuid
+          nullable: true
+        device_id:
+          type: string
+          nullable: true
+        ip_address:
+          type: string
+          nullable: true
+        kyc_tier:
+          type: string
+          enum: [basic, standard, enhanced]
+          nullable: true
+
+    VelocityRiskRequest:
+      type: object
+      required: [customer_id, transaction_type, amount, currency]
+      properties:
+        customer_id:
+          type: string
+          format: uuid
+        agent_id:
+          type: string
+          format: uuid
+          nullable: true
+        wallet_id:
+          type: string
+          format: uuid
+          nullable: true
+        transaction_type:
+          type: string
+          enum: [funding, transfer, withdrawal, bill_payment, qr_payment]
+        amount:
+          type: string
+        currency:
+          type: string
+          default: BWP
+
+    AmountThresholdRequest:
+      type: object
+      required: [customer_id, amount, currency, limit_type]
+      properties:
+        customer_id:
+          type: string
+          format: uuid
+        agent_id:
+          type: string
+          format: uuid
+          nullable: true
+        wallet_id:
+          type: string
+          format: uuid
+          nullable: true
+        amount:
+          type: string
+        currency:
+          type: string
+          default: BWP
+        limit_type:
+          type: string
+          enum: [per_transaction, daily, monthly]
+
+    DeviceRiskRequest:
+      type: object
+      required: [device_id, customer_id]
+      properties:
+        device_id:
+          type: string
+        customer_id:
+          type: string
+          format: uuid
+        is_new_device:
+          type: boolean
+          default: false
+        device_trust_score:
+          type: number
+          minimum: 0
+          maximum: 100
+          nullable: true
+
+    IpRiskRequest:
+      type: object
+      required: [ip_address, customer_id]
+      properties:
+        ip_address:
+          type: string
+        customer_id:
+          type: string
+          format: uuid
+
+    BeneficiaryRiskRequest:
+      type: object
+      required: [beneficiary_id, customer_id]
+      properties:
+        beneficiary_id:
+          type: string
+          format: uuid
+        customer_id:
+          type: string
+          format: uuid
+        is_new_beneficiary:
+          type: boolean
+          default: false
+
+    ManualDecisionRequest:
+      type: object
+      required: [evaluation_id, rationale]
+      properties:
+        evaluation_id:
+          type: string
+          format: uuid
+        rationale:
+          type: string
+          minLength: 10
+          maxLength: 2000
+
+    SendForReviewRequest:
+      type: object
+      required: [evaluation_id, reason]
+      properties:
+        evaluation_id:
+          type: string
+          format: uuid
+        reason:
+          type: string
+          minLength: 10
+
+    RiskEvaluationResponse:
+      type: object
+      properties:
+        evaluation_id:
+          type: string
+          format: uuid
+        decision:
+          type: string
+          enum: [allow, block, review]
+        risk_level:
+          type: string
+          enum: [low, medium, high, critical]
+        overall_score:
+          type: number
+          description: Aggregated risk score 0.00-100.00
+        rules_applied:
+          type: array
+          items:
+            type: object
+            properties:
+              rule_id:
+                type: string
+                format: uuid
+              rule_name:
+                type: string
+              triggered:
+                type: boolean
+              score_contribution:
+                type: number
+        evaluation_ms:
+          type: integer
+          description: Wall-clock evaluation duration in milliseconds
+        evaluated_at:
+          type: string
+          format: date-time
+
+    ManualDecisionResponse:
+      type: object
+      properties:
+        decision_id:
+          type: string
+          format: uuid
+        evaluation_id:
+          type: string
+          format: uuid
+        decision:
+          type: string
+          enum: [allow, block]
+        decided_by:
+          type: string
+          format: uuid
+        decided_at:
+          type: string
+          format: date-time
+
+    RiskAlertResponse:
+      type: object
+      properties:
+        alert_id:
+          type: string
+          format: uuid
+        alert_number:
+          type: integer
+        status:
+          type: string
+        severity:
+          type: string
+        sla_due_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string

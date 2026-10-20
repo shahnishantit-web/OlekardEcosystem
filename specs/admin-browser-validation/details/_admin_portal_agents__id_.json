@@ -1,0 +1,68 @@
+{
+  "pattern": "/admin-portal/agents/[id]",
+  "route": "/admin-portal/agents/ebea74a5-b8ac-4d29-9c8e-f35b82626bd6",
+  "landed": "/admin-portal/agents/ebea74a5-b8ac-4d29-9c8e-f35b82626bd6",
+  "errors": [],
+  "failures": [],
+  "detailResponses": [
+    {
+      "url": "/v1/admin-app/agents/ebea74a5-b8ac-4d29-9c8e-f35b82626bd6",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "ebea74a5-b8ac-4d29-9c8e-f35b82626bd6",
+          "agent_id": "ebea74a5-b8ac-4d29-9c8e-f35b82626bd6",
+          "user_id": "46eef2f8-0ec5-4d17-bb80-25d5da23c327",
+          "full_name": "",
+          "phone_number": "+26778225413",
+          "business_name": null,
+          "agent_status": "suspended",
+          "status": "suspended",
+          "created_at": "2026-10-16 11:20:32+00",
+          "approved_at": "2026-10-16 11:20:32+00",
+          "approved_by": "71be5d49-3c3c-4a42-a4ed-7328b3ec7e5b",
+          "float_balance_minor_units": 0,
+          "float_currency": "BWP",
+          "float_limit_minor_units": 5000000,
+          "commission_rate": 0,
+          "total_cash_in_today_minor_units": 0,
+          "total_cash_out_today_minor_units": 0,
+          "location": null,
+          "rejection_reason": null,
+          "suspension_reason": "Second verification",
+          "suspended_at": "2026-10-16 11:20:32+00"
+        }
+      }
+    },
+    {
+      "url": "/v1/admin-app/agents/ebea74a5-b8ac-4d29-9c8e-f35b82626bd6",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "ebea74a5-b8ac-4d29-9c8e-f35b82626bd6",
+          "agent_id": "ebea74a5-b8ac-4d29-9c8e-f35b82626bd6",
+          "user_id": "46eef2f8-0ec5-4d17-bb80-25d5da23c327",
+          "full_name": "",
+          "phone_number": "+26778225413",
+          "business_name": null,
+          "agent_status": "suspended",
+          "status": "suspended",
+          "created_at": "2026-10-16 11:20:32+00",
+          "approved_at": "2026-10-16 11:20:32+00",
+          "approved_by": "71be5d49-3c3c-4a42-a4ed-7328b3ec7e5b",
+          "float_balance_minor_units": 0,
+          "float_currency": "BWP",
+          "float_limit_minor_units": 5000000,
+          "commission_rate": 0,
+          "total_cash_in_today_minor_units": 0,
+          "total_cash_out_today_minor_units": 0,
+          "location": null,
+          "rejection_reason": null,
+          "suspension_reason": "Second verification",
+          "suspended_at": "2026-10-16 11:20:32+00"
+        }
+      }
+    }
+  ],
+  "text": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nOperations\n/\nAgents\n⌘K\nA\nadmin@olekard.local\nAgents\n/\nAgent\nAgent\nAGENT ID\nebea74a5-b8ac-4d29-9c8e-f35b82626bd6\nSTATUS\nSUSPENDED\nFULL NAME\nAgent\nPHONE\n+26778225413\nBUSINESS\n—\nREGION\n—\nAPPROVED AT\n10/16/2026, 4:50:32 PM\nAPPROVED BY\n71be5d49-3c3c-4a42-a4ed-7328b3ec7e5b\nUSER\n46eef2f8…\nJOINED\n10/16/2026\nReactivate Agent\nFloat Balance\n\nCURRENT BALANCE\n\nBWP 0.00\n\nFLOAT LIMIT\n\nBWP 50,000.00\n\nUTILIZATION\n\n0.0%\n\nPerformance Metrics\n\nCOMMISSION RATE\n\n0.00%\n\nCASH-IN TODAY\n\nBWP 0.00\n\nCASH-OUT TODAY\n\nBWP 0.00\n\nTX COUNT (30D)\n\n—\n\nSuspension Reason\n\nSecond verification\n\nSuspended: 10/16/2026, 4:50:32 PM"
+}

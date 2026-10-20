@@ -1,0 +1,393 @@
+openapi: 3.1.0
+info:
+  title: Reconciliation Import API
+  version: 1.0.0
+  description: |
+    E20 Reconciliation & Settlement — Import endpoints.
+    Covers US-RECON-001 (provider file), US-RECON-002 (provider API), US-RECON-008 (bank statement).
+
+servers:
+  - url: /v1/reconciliation
+
+security:
+  - bearerAuth: []
+
+paths:
+  /batches:
+    get:
+      operationId: listReconciliationBatches
+      summary: List reconciliation batches
+      tags: [batches]
+      parameters:
+        - name: source_type
+          in: query
+          schema:
+            type: string
+            enum: [provider_file, provider_api, bank_statement]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, processing, matched, completed, failed]
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Paginated batch list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /batches/file:
+    post:
+      operationId: importProviderFile
+      summary: Import provider transaction file (US-RECON-001)
+      tags: [batches]
+      description: |
+        Upload a provider transaction file. The file is stored, a ReconciliationBatch record is
+        created (idempotent — same source_reference + batch_date returns existing batch),
+        and async matching is queued.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [idempotency_key, batch_date, file]
+              properties:
+                idempotency_key:
+                  type: string
+                  maxLength: 128
+                batch_date:
+                  type: string
+                  format: date
+                provider_code:
+                  type: string
+                  maxLength: 50
+                  description: Optional provider identifier (config-driven)
+                file:
+                  type: string
+                  format: binary
+                  description: Provider transaction file (CSV or adapter-supported format)
+      responses:
+        '201':
+          description: Batch created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResponse'
+        '200':
+          description: Idempotent — returning existing batch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /batches/api:
+    post:
+      operationId: receiveProviderTransactionApi
+      summary: Receive provider transactions via API/webhook (US-RECON-002)
+      tags: [batches]
+      description: |
+        Accepts a push of provider transactions as JSON. Uses HMAC-SHA256 signature
+        verification (X-Provider-Signature header). Exempt from standard identity.auth;
+        uses reconciliation.webhook_auth middleware.
+      security:
+        - webhookHmac: []
+      parameters:
+        - name: X-Provider-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+          description: HMAC-SHA256 signature of request body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idempotency_key, batch_date, transactions]
+              properties:
+                idempotency_key:
+                  type: string
+                  maxLength: 128
+                batch_date:
+                  type: string
+                  format: date
+                provider_code:
+                  type: string
+                  maxLength: 50
+                transactions:
+                  type: array
+                  minItems: 1
+                  maxItems: 5000
+                  items:
+                    $ref: '#/components/schemas/ProviderTransactionInput'
+      responses:
+        '201':
+          description: Batch created and queued for matching
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResponse'
+        '200':
+          description: Idempotent — returning existing batch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResponse'
+        '401':
+          description: Invalid or missing HMAC signature
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /batches/bank-statement:
+    post:
+      operationId: importBankStatement
+      summary: Import bank statement (US-RECON-008)
+      tags: [batches]
+      description: |
+        Upload a bank statement file. Creates a ReconciliationBatch with source_type=bank_statement.
+        Same idempotency pattern as file import.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [idempotency_key, batch_date, file]
+              properties:
+                idempotency_key:
+                  type: string
+                  maxLength: 128
+                batch_date:
+                  type: string
+                  format: date
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Bank statement batch created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResponse'
+        '200':
+          description: Idempotent — returning existing batch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /batches/{id}:
+    get:
+      operationId: getReconciliationBatch
+      summary: Get batch detail with item counts
+      tags: [batches]
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Batch detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+    webhookHmac:
+      type: apiKey
+      in: header
+      name: X-Provider-Signature
+
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+
+  schemas:
+    ErrorEnvelope:
+      type: object
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+    ProviderTransactionInput:
+      type: object
+      required: [provider_reference, amount, currency_code, transaction_date]
+      properties:
+        provider_reference:
+          type: string
+          maxLength: 256
+        amount:
+          type: string
+          pattern: '^\d+(\.\d{1,4})?$'
+        currency_code:
+          type: string
+          enum: [BWP]
+        transaction_date:
+          type: string
+          format: date
+        metadata:
+          type: object
+
+    BatchSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        source_type:
+          type: string
+          enum: [provider_file, provider_api, bank_statement]
+        source_reference:
+          type: string
+        batch_date:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [draft, processing, matched, completed, failed]
+        total_count:
+          type: integer
+        matched_count:
+          type: integer
+        unmatched_count:
+          type: integer
+        exception_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    BatchDetailResponse:
+      type: object
+      properties:
+        data:
+          allOf:
+            - $ref: '#/components/schemas/BatchSummary'
+            - type: object
+              properties:
+                submitted_by:
+                  type: string
+                  format: uuid
+                processed_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+                metadata:
+                  type: object
+
+    BatchResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/BatchSummary'
+
+    BatchListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/BatchSummary'
+        meta:
+          type: object
+          properties:
+            current_page:
+              type: integer
+            per_page:
+              type: integer
+            total:
+              type: integer
+            last_page:
+              type: integer

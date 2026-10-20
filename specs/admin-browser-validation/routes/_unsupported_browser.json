@@ -1,0 +1,19 @@
+{
+  "route": "/unsupported-browser",
+  "landed": "/unsupported-browser",
+  "status": 200,
+  "headings": [
+    "Unsupported browser"
+  ],
+  "errors": [],
+  "api": [],
+  "failed": [],
+  "links": [
+    "https://www.google.com/chrome/",
+    "https://www.microsoft.com/edge/download",
+    "https://www.mozilla.org/firefox/new/",
+    "https://www.apple.com/safari/"
+  ],
+  "overflow": false,
+  "text": "OleKard / Admin\n\nUnsupported browser\n\nThis browser cannot securely run OleKard Admin. Open this address in a current supported browser, or install one using an official link below.\n\nGoogle Chrome\nMicrosoft Edge\nMozilla Firefox\nApple Safari\n\nNo account changes have been made. Contact your IT team if you cannot install a supported browser."
+}

@@ -1,0 +1,1679 @@
+openapi: "3.1.0"
+info:
+  title: E01 Identity & Authentication API
+  version: "1.0"
+  description: |
+    Covers all Identity, Authentication, Session, Device, PIN, MFA, Step-Up,
+    Service Token, and Admin (Roles / Permissions / Users) endpoints.
+
+    Authentication model:
+      - Public endpoints: no auth required (rate-limited by throttle:identity-public)
+      - Authenticated endpoints: Bearer JWT in Authorization header
+      - Admin endpoints: Bearer JWT + actor_type == admin + required permission
+      - Service endpoints: X-Service-Secret header + Idempotency-Key
+
+    All state-changing public/service endpoints require Idempotency-Key.
+
+servers:
+  - url: /v1
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:    { type: string }
+            message: { type: string }
+
+    Pagination:
+      type: object
+      properties:
+        next_cursor:  { type: string, nullable: true }
+        has_more:     { type: boolean }
+
+    UserProfile:
+      type: object
+      properties:
+        id:             { type: string, format: uuid }
+        mobile_number:  { type: string }
+        email:          { type: string, format: email, nullable: true }
+        actor_type:     { type: string, enum: [CUSTOMER, AGENT, ADMIN] }
+        status:         { type: string, enum: [pending, active, locked, suspended, inactive] }
+        created_at:     { type: string, format: date-time }
+        updated_at:     { type: string, format: date-time }
+
+    Session:
+      type: object
+      properties:
+        id:            { type: string, format: uuid }
+        device_id:     { type: string, format: uuid, nullable: true }
+        ip_address:    { type: string, nullable: true }
+        user_agent:    { type: string, nullable: true }
+        last_active_at: { type: string, format: date-time }
+        created_at:    { type: string, format: date-time }
+
+    Device:
+      type: object
+      properties:
+        id:           { type: string, format: uuid }
+        fingerprint:  { type: string }
+        name:         { type: string, nullable: true }
+        status:       { type: string, enum: [pending, trusted, blocked, removed] }
+        last_seen_at: { type: string, format: date-time, nullable: true }
+        created_at:   { type: string, format: date-time }
+
+    Role:
+      type: object
+      properties:
+        id:          { type: string, format: uuid }
+        name:        { type: string }
+        description: { type: string, nullable: true }
+        created_at:  { type: string, format: date-time }
+
+    Permission:
+      type: object
+      properties:
+        id:          { type: string, format: uuid }
+        name:        { type: string }
+        description: { type: string, nullable: true }
+
+    TokenPair:
+      type: object
+      properties:
+        access_token:  { type: string }
+        refresh_token: { type: string }
+        token_type:    { type: string, enum: [Bearer] }
+        expires_in:    { type: integer, description: seconds until access token expiry }
+
+paths:
+  # ────────────────────────────────────────────────────────────────────────────
+  # Registration & OTP (Phase 5)
+  # ────────────────────────────────────────────────────────────────────────────
+
+  /auth/register:
+    post:
+      operationId: registerUser
+      summary: Register a new user
+      description: |
+        Creates a new user account (CUSTOMER or AGENT actor type) and sends an OTP
+        to the provided mobile number. Responds immediately — OTP delivery is async.
+      tags: [Registration]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mobile_number, actor_type]
+              properties:
+                mobile_number: { type: string, example: "+254712345678" }
+                email:         { type: string, format: email, nullable: true }
+                actor_type:    { type: string, enum: [CUSTOMER, AGENT] }
+      responses:
+        "201":
+          description: User registered; OTP dispatched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      user_id: { type: string, format: uuid }
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: Mobile number already registered
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /auth/otp/verify:
+    post:
+      operationId: verifyOtp
+      summary: Verify OTP
+      description: |
+        Verifies the one-time password sent during registration or a reset flow.
+        On success returns a short-lived setup_token used to set the initial PIN.
+      tags: [Registration]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, otp]
+              properties:
+                user_id: { type: string, format: uuid }
+                otp:     { type: string, minLength: 4, maxLength: 8 }
+      responses:
+        "200":
+          description: OTP verified; setup token issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      setup_token: { type: string }
+        "422":
+          description: Invalid or expired OTP
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /auth/otp/resend:
+    post:
+      operationId: resendOtp
+      summary: Resend OTP
+      description: |
+        Triggers a new OTP dispatch. Returns 200 regardless of whether the mobile
+        number exists (enumeration protection).
+      tags: [Registration]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mobile_number]
+              properties:
+                mobile_number: { type: string }
+      responses:
+        "200":
+          description: OTP dispatch triggered (or silently skipped if user not found)
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Authentication / Login (Phase 6)
+  # ────────────────────────────────────────────────────────────────────────────
+
+  /auth/login:
+    post:
+      operationId: loginWithPin
+      summary: Login with PIN
+      description: |
+        Authenticates a user with mobile number + PIN.
+        On success returns access + refresh token pair.
+        If a new device_fingerprint is detected, returns DEVICE_VERIFICATION_REQUIRED
+        with no tokens.
+        If MFA is enabled, returns an mfa_token for the /auth/mfa/verify flow.
+      tags: [Authentication]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mobile_number, pin]
+              properties:
+                mobile_number:      { type: string }
+                pin:                { type: string, minLength: 4, maxLength: 8 }
+                device_fingerprint: { type: string, nullable: true }
+      responses:
+        "200":
+          description: Login successful or next-step challenge required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    oneOf:
+                      - $ref: "#/components/schemas/TokenPair"
+                      - type: object
+                        properties:
+                          next_step:  { type: string, enum: [DEVICE_VERIFICATION_REQUIRED, MFA_REQUIRED] }
+                          mfa_token:  { type: string, nullable: true }
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "423":
+          description: Account locked
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /auth/login/biometric/challenge:
+    get:
+      operationId: biometricChallenge
+      summary: Get biometric challenge nonce
+      description: Returns a server-generated nonce for biometric assertion signing.
+      tags: [Authentication]
+      security: []
+      responses:
+        "200":
+          description: Challenge nonce
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      challenge: { type: string }
+                      expires_in: { type: integer }
+
+  /auth/login/biometric:
+    post:
+      operationId: loginWithBiometric
+      summary: Login with biometric assertion
+      description: |
+        Verifies a biometric signature against the stored public key for the given device.
+        Returns a token pair on success.
+      tags: [Authentication]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [device_id, assertion]
+              properties:
+                device_id:  { type: string, format: uuid }
+                assertion:  { type: string, description: Base64-encoded FIDO2/biometric assertion }
+                challenge:  { type: string }
+      responses:
+        "200":
+          description: Biometric login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/TokenPair" }
+        "401":
+          description: Invalid assertion or challenge
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # JWKS (Phase 7)
+  # ────────────────────────────────────────────────────────────────────────────
+
+  /.well-known/jwks.json:
+    get:
+      operationId: getJwks
+      summary: JSON Web Key Set
+      description: Public keys used to verify platform-issued JWTs. Cache per Cache-Control header.
+      tags: [Infrastructure]
+      security: []
+      responses:
+        "200":
+          description: JWKS document
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  keys:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        kty: { type: string }
+                        use: { type: string }
+                        kid: { type: string }
+                        n:   { type: string }
+                        e:   { type: string }
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Token Lifecycle (Phase 8)
+  # ────────────────────────────────────────────────────────────────────────────
+
+  /auth/token/refresh:
+    post:
+      operationId: refreshToken
+      summary: Refresh access token
+      description: |
+        Rotates the refresh token family. Presenting an already-used refresh token
+        is treated as a replay attack: all sessions in the token family are revoked and
+        Identity.Session.AllTerminated is emitted.
+      tags: [Session]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token: { type: string }
+      responses:
+        "200":
+          description: New token pair issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/TokenPair" }
+        "401":
+          description: Invalid, expired, or already-rotated refresh token
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Session Management (Phase 8–9)
+  # ────────────────────────────────────────────────────────────────────────────
+
+  /auth/sessions:
+    get:
+      operationId: listSessions
+      summary: List active sessions
+      description: Returns all active sessions for the authenticated user.
+      tags: [Session]
+      responses:
+        "200":
+          description: Sessions list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Session" }
+    delete:
+      operationId: logoutAll
+      summary: Terminate all sessions
+      description: Revokes all active sessions for the authenticated user (global logout).
+      tags: [Session]
+      responses:
+        "204":
+          description: All sessions terminated
+
+  /auth/logout:
+    post:
+      operationId: logout
+      summary: Logout current session
+      description: Revokes the session associated with the presented Bearer token.
+      tags: [Session]
+      responses:
+        "204":
+          description: Session revoked
+
+  /auth/sessions/{id}:
+    delete:
+      operationId: revokeSession
+      summary: Revoke a specific session
+      description: Revokes a specific session by ID. User may only revoke their own sessions.
+      tags: [Session]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Session revoked
+        "404":
+          description: Session not found or not owned by caller
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Device Verification & Management (Phase 9 + E03)
+  # ────────────────────────────────────────────────────────────────────────────
+
+  /auth/devices/verify:
+    post:
+      operationId: verifyDevice
+      summary: Verify a new device via OTP
+      description: |
+        Confirms device ownership by verifying an OTP sent to the user's registered
+        mobile number. On success the device is trusted.
+      tags: [Device]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, otp, device_fingerprint]
+              properties:
+                user_id:            { type: string, format: uuid }
+                otp:                { type: string }
+                device_fingerprint: { type: string }
+      responses:
+        "200":
+          description: Device verified and trusted
+        "422":
+          description: Invalid or expired OTP
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /auth/devices/register:
+    post:
+      operationId: registerDevice
+      summary: Register a device (authenticated)
+      description: |
+        Associates a device fingerprint with the authenticated user.
+        Requires Idempotency-Key header.
+      tags: [Device]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fingerprint]
+              properties:
+                fingerprint: { type: string }
+                name:        { type: string, nullable: true }
+      responses:
+        "201":
+          description: Device registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/Device" }
+        "409":
+          description: Device already registered
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /auth/devices:
+    get:
+      operationId: listAuthDevices
+      summary: List authenticated user's devices
+      tags: [Device]
+      responses:
+        "200":
+          description: Device list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Device" }
+
+  /auth/devices/{id}:
+    delete:
+      operationId: revokeAuthDevice
+      summary: Revoke a device (authenticated)
+      tags: [Device]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Device revoked
+        "404":
+          description: Device not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /devices/fingerprint:
+    post:
+      operationId: computeDeviceFingerprint
+      summary: Compute device fingerprint
+      description: Server-side computation of a canonical device fingerprint from supplied attributes.
+      tags: [Device]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                attributes: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          description: Fingerprint
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      fingerprint: { type: string }
+
+  /devices:
+    get:
+      operationId: listDevices
+      summary: List devices (E03)
+      tags: [Device]
+      responses:
+        "200":
+          description: Devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Device" }
+    post:
+      operationId: registerDeviceE03
+      summary: Register device (E03)
+      description: Requires Idempotency-Key header.
+      tags: [Device]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fingerprint]
+              properties:
+                fingerprint: { type: string }
+                name:        { type: string, nullable: true }
+      responses:
+        "201":
+          description: Device registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/Device" }
+
+  /devices/{id}:
+    get:
+      operationId: getDevice
+      summary: Get device by ID (E03)
+      tags: [Device]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Device detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/Device" }
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+    delete:
+      operationId: removeDevice
+      summary: Remove device (E03)
+      tags: [Device]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Device removed
+
+  /devices/{id}/trust:
+    post:
+      operationId: trustDevice
+      summary: Trust a device (E03)
+      description: Requires Idempotency-Key header.
+      tags: [Device]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Device trusted
+
+  /devices/{id}/acknowledge:
+    post:
+      operationId: acknowledgeDevice
+      summary: Acknowledge a device (E03)
+      description: Requires Idempotency-Key header.
+      tags: [Device]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Device acknowledged
+
+  /devices/{id}/block:
+    post:
+      operationId: blockDevice
+      summary: Block a device (E03)
+      description: Requires Idempotency-Key header.
+      tags: [Device]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Device blocked
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # PIN & Credential Management (Phase 11)
+  # ────────────────────────────────────────────────────────────────────────────
+
+  /auth/pin/set:
+    post:
+      operationId: setPin
+      summary: Set initial PIN
+      description: |
+        Sets the user's PIN. Accepts either:
+        - X-Setup-Token header (unauthenticated, post-OTP-verify flow), or
+        - Bearer JWT (re-set while authenticated).
+      tags: [PIN]
+      security: []
+      parameters:
+        - name: X-Setup-Token
+          in: header
+          required: false
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pin]
+              properties:
+                pin:         { type: string, minLength: 4, maxLength: 8 }
+                setup_token: { type: string, nullable: true, description: "Alternative to X-Setup-Token header" }
+      responses:
+        "200":
+          description: PIN set
+        "422":
+          description: Weak PIN or missing auth
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /auth/pin/change:
+    post:
+      operationId: changePin
+      summary: Change PIN (authenticated)
+      description: Requires current PIN and new PIN. Bearer JWT required.
+      tags: [PIN]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [current_pin, new_pin]
+              properties:
+                current_pin: { type: string }
+                new_pin:     { type: string }
+      responses:
+        "200":
+          description: PIN changed
+        "422":
+          description: Incorrect current PIN or weak new PIN
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /auth/pin/reset/initiate:
+    post:
+      operationId: initiatePinReset
+      summary: Initiate PIN reset
+      description: Sends an OTP to the registered mobile number for PIN reset.
+      tags: [PIN]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mobile_number]
+              properties:
+                mobile_number: { type: string }
+      responses:
+        "200":
+          description: OTP dispatched (or silently skipped for unknown number)
+
+  /auth/pin/reset/complete:
+    post:
+      operationId: completePinReset
+      summary: Complete PIN reset
+      description: Verifies OTP and sets the new PIN.
+      tags: [PIN]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mobile_number, otp, new_pin]
+              properties:
+                mobile_number: { type: string }
+                otp:           { type: string }
+                new_pin:       { type: string }
+      responses:
+        "200":
+          description: PIN reset complete
+        "422":
+          description: Invalid OTP or weak PIN
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /auth/pin/unblock:
+    post:
+      operationId: unblockPin
+      summary: Unblock PIN (self-service)
+      description: Unblocks PIN after lockout using an OTP.
+      tags: [PIN]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mobile_number, otp]
+              properties:
+                mobile_number: { type: string }
+                otp:           { type: string }
+      responses:
+        "200":
+          description: PIN unblocked
+        "422":
+          description: Invalid OTP
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # MFA Enrollment & Verification (Phase 12)
+  # ────────────────────────────────────────────────────────────────────────────
+
+  /auth/mfa/verify:
+    post:
+      operationId: verifyMfa
+      summary: Complete MFA challenge
+      description: |
+        Presents an MFA code against a pending mfa_token issued during login.
+        On success returns the full token pair.
+      tags: [MFA]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mfa_token, code]
+              properties:
+                mfa_token: { type: string }
+                code:      { type: string }
+      responses:
+        "200":
+          description: MFA verified; token pair issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/TokenPair" }
+        "422":
+          description: Invalid code or expired mfa_token
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /auth/mfa/enroll/totp:
+    post:
+      operationId: enrollTotp
+      summary: Initiate TOTP enrollment
+      description: Returns a TOTP secret and QR code URL for the authenticator app.
+      tags: [MFA]
+      responses:
+        "200":
+          description: TOTP provisioning URI
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      secret:           { type: string }
+                      provisioning_uri: { type: string }
+
+  /auth/mfa/enroll/totp/confirm:
+    post:
+      operationId: confirmTotpEnrollment
+      summary: Confirm TOTP enrollment
+      description: Verifies the first TOTP code from the authenticator app to complete enrollment.
+      tags: [MFA]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string }
+      responses:
+        "200":
+          description: TOTP enrollment confirmed
+        "422":
+          description: Invalid TOTP code
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /auth/mfa/enroll/fido2:
+    post:
+      operationId: enrollFido2
+      summary: Initiate FIDO2 enrollment
+      description: Returns a WebAuthn registration options object.
+      tags: [MFA]
+      responses:
+        "200":
+          description: FIDO2 registration options
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+
+  /auth/mfa/enroll/fido2/confirm:
+    post:
+      operationId: confirmFido2Enrollment
+      summary: Confirm FIDO2 enrollment
+      tags: [MFA]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [attestation]
+              properties:
+                attestation: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          description: FIDO2 enrollment confirmed
+        "422":
+          description: Invalid attestation
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /auth/mfa/disable:
+    post:
+      operationId: disableMfa
+      summary: Disable MFA
+      description: Removes MFA from the account. Requires a valid MFA code for confirmation.
+      tags: [MFA]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string }
+      responses:
+        "200":
+          description: MFA disabled
+        "422":
+          description: Invalid code
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Step-Up Authentication (Phase 13)
+  # ────────────────────────────────────────────────────────────────────────────
+
+  /auth/step-up/initiate:
+    post:
+      operationId: initiateStepUp
+      summary: Initiate step-up authentication
+      description: |
+        Issues an MFA challenge for elevated actions (e.g., high-value transfers).
+        Returns a challenge ID used in the /verify call.
+      tags: [StepUp]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scope]
+              properties:
+                scope:  { type: string, enum: [transfer, withdrawal, settings_change] }
+                reason: { type: string, nullable: true }
+      responses:
+        "200":
+          description: Step-up challenge issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      mfa_challenge_id: { type: string, format: uuid }
+                      expires_in:       { type: integer }
+
+  /auth/step-up/verify:
+    post:
+      operationId: verifyStepUp
+      summary: Verify step-up challenge
+      description: |
+        Presents the MFA code against the challenge. On success returns a short-lived
+        step-up token scoped to the requested action.
+      tags: [StepUp]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mfa_challenge_id, code]
+              properties:
+                mfa_challenge_id: { type: string, format: uuid }
+                code:             { type: string }
+      responses:
+        "200":
+          description: Step-up token issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      step_up_token: { type: string }
+                      expires_in:    { type: integer }
+        "422":
+          description: Invalid code or expired challenge
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Service Identity (Phase 14)
+  # ────────────────────────────────────────────────────────────────────────────
+
+  /auth/service/token:
+    post:
+      operationId: issueServiceToken
+      summary: Issue a service token
+      description: |
+        Authenticates a backend service via X-Service-Secret header and issues a
+        short-lived JWT scoped to the service identity. Idempotency-Key required.
+      tags: [ServiceToken]
+      security: []
+      parameters:
+        - name: X-Service-Secret
+          in: header
+          required: true
+          schema: { type: string }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [service_name]
+              properties:
+                service_name: { type: string }
+                scopes:
+                  type: array
+                  items: { type: string }
+      responses:
+        "200":
+          description: Service token issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      access_token: { type: string }
+                      expires_in:   { type: integer }
+        "401":
+          description: Invalid service secret
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Admin: Session Management
+  # ────────────────────────────────────────────────────────────────────────────
+
+  /admin/sessions/{session_id}/revoke:
+    post:
+      operationId: adminRevokeSession
+      summary: Admin revoke a user session
+      description: Requires session.admin.revoke permission.
+      tags: [Admin]
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Session revoked
+        "404":
+          description: Session not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Admin: Platform Configuration
+  # ────────────────────────────────────────────────────────────────────────────
+
+  /admin/platform/configuration/security:
+    get:
+      operationId: listSecurityConfig
+      summary: List security configuration policies
+      description: Requires configuration.policy.view permission.
+      tags: [Admin]
+      responses:
+        "200":
+          description: Security configuration map
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+
+  /admin/platform/configuration/security/{key}:
+    put:
+      operationId: updateSecurityConfig
+      summary: Update a security configuration policy
+      description: Requires configuration.policy.update permission. Idempotency-Key required.
+      tags: [Admin]
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema: { type: string }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [value]
+              properties:
+                value: {}
+      responses:
+        "200":
+          description: Configuration updated
+        "404":
+          description: Unknown configuration key
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Admin: Roles (E04)
+  # ────────────────────────────────────────────────────────────────────────────
+
+  /admin/roles:
+    get:
+      operationId: listRoles
+      summary: List admin roles
+      description: Requires admin.role.read permission.
+      tags: [Admin]
+      responses:
+        "200":
+          description: Roles list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Role" }
+    post:
+      operationId: createRole
+      summary: Create a role
+      description: Requires admin.role.create permission.
+      tags: [Admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:        { type: string }
+                description: { type: string, nullable: true }
+      responses:
+        "201":
+          description: Role created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/Role" }
+        "422":
+          description: Validation error or duplicate name
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /admin/roles/{id}:
+    get:
+      operationId: getRole
+      summary: Get role by ID
+      description: Requires admin.role.read permission.
+      tags: [Admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Role detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/Role" }
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+    delete:
+      operationId: deleteRole
+      summary: Delete a role
+      description: Requires admin.role.manage permission.
+      tags: [Admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Role deleted
+        "409":
+          description: Role has active assignments
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /admin/roles/{id}/permissions:
+    post:
+      operationId: addPermissionToRole
+      summary: Add permission to role
+      description: Requires admin.role.manage permission.
+      tags: [Admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [permission_id]
+              properties:
+                permission_id: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Permission added
+
+  /admin/roles/{id}/permissions/{permissionId}:
+    delete:
+      operationId: removePermissionFromRole
+      summary: Remove permission from role
+      description: Requires admin.role.manage permission.
+      tags: [Admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: permissionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Permission removed
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Admin: Permissions (E04)
+  # ────────────────────────────────────────────────────────────────────────────
+
+  /admin/permissions:
+    get:
+      operationId: listPermissions
+      summary: List all permissions
+      description: Requires admin.permission.read permission.
+      tags: [Admin]
+      responses:
+        "200":
+          description: Permissions list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Permission" }
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Admin: Users (E04)
+  # ────────────────────────────────────────────────────────────────────────────
+
+  /admin/users:
+    get:
+      operationId: listAdminUsers
+      summary: List admin users
+      description: Requires admin.user.read permission.
+      tags: [Admin]
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [pending, active, locked, suspended, inactive] }
+        - name: cursor
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: User list with pagination
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/UserProfile" }
+                  meta: { $ref: "#/components/schemas/Pagination" }
+    post:
+      operationId: createAdminUser
+      summary: Create an admin user
+      description: Requires admin.user.create permission. Idempotency-Key required.
+      tags: [Admin]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mobile_number, email]
+              properties:
+                mobile_number: { type: string }
+                email:         { type: string, format: email }
+                role_ids:
+                  type: array
+                  items: { type: string, format: uuid }
+      responses:
+        "201":
+          description: Admin user created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/UserProfile" }
+        "409":
+          description: Mobile or email already exists
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /admin/users/{id}:
+    get:
+      operationId: getAdminUser
+      summary: Get admin user by ID
+      description: Requires admin.user.read permission.
+      tags: [Admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: User detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/UserProfile" }
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /admin/users/{id}/status:
+    patch:
+      operationId: updateAdminUserStatus
+      summary: Update admin user status
+      description: Requires admin.user.deactivate permission.
+      tags: [Admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [active, suspended, inactive] }
+                reason: { type: string, nullable: true }
+      responses:
+        "200":
+          description: Status updated
+        "422":
+          description: Invalid status transition
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /admin/users/{id}/roles:
+    get:
+      operationId: listUserRoles
+      summary: List roles assigned to a user
+      description: Requires admin.user.read permission.
+      tags: [Admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Role list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Role" }
+    post:
+      operationId: assignRoleToUser
+      summary: Assign role to user
+      description: Requires admin.role.assign permission.
+      tags: [Admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role_id]
+              properties:
+                role_id: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Role assigned
+
+  /admin/users/{id}/roles/{roleId}:
+    delete:
+      operationId: removeRoleFromUser
+      summary: Remove role from user
+      description: Requires admin.role.assign permission.
+      tags: [Admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: roleId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Role removed
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Admin: Device Management (E03)
+  # ────────────────────────────────────────────────────────────────────────────
+
+  /admin/users/{userId}/devices:
+    get:
+      operationId: adminListUserDevices
+      summary: List devices for a user (admin)
+      description: Requires device.admin.read permission.
+      tags: [Admin]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Device list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Device" }
+
+  /admin/devices/{id}/security-events:
+    get:
+      operationId: adminGetDeviceSecurityEvents
+      summary: Get security events for a device (admin)
+      description: Requires device.admin.read permission.
+      tags: [Admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Security events list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        event_type: { type: string }
+                        occurred_at: { type: string, format: date-time }
+                        ip_address: { type: string, nullable: true }
+
+  /admin/devices/{id}:
+    delete:
+      operationId: adminRemoveDevice
+      summary: Remove a device (admin)
+      description: Requires device.admin.remove permission.
+      tags: [Admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Device removed
+
+  /admin/devices/{id}/block:
+    post:
+      operationId: adminBlockDevice
+      summary: Block a device (admin)
+      description: Requires device.admin.block permission.
+      tags: [Admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string, nullable: true }
+      responses:
+        "200":
+          description: Device blocked
+
+  /admin/devices/{id}/unblock:
+    post:
+      operationId: adminUnblockDevice
+      summary: Unblock a device (admin)
+      description: Requires device.admin.unblock permission.
+      tags: [Admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Device unblocked
+
+tags:
+  - name: Registration
+    description: User registration and OTP flows
+  - name: Authentication
+    description: Login flows (PIN, biometric, MFA)
+  - name: Session
+    description: Session lifecycle and token rotation
+  - name: Device
+    description: Device registration and trust management
+  - name: PIN
+    description: PIN set, change, reset, and unblock
+  - name: MFA
+    description: MFA enrollment and verification (TOTP, FIDO2)
+  - name: StepUp
+    description: Step-up authentication for elevated actions
+  - name: ServiceToken
+    description: Machine-to-machine service identity tokens
+  - name: Infrastructure
+    description: Platform infrastructure endpoints (JWKS)
+  - name: Admin
+    description: Admin-only management endpoints (roles, users, devices, sessions, config)

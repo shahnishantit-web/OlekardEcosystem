@@ -1,0 +1,106 @@
+{
+  "pattern": "/integrations/[id]",
+  "route": "/integrations/clients",
+  "landed": "/integrations/clients",
+  "errors": [],
+  "failures": [],
+  "detailResponses": [
+    {
+      "url": "/v1/admin/integrations/providers",
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "id": "d026a4eb-0e40-4fa7-a67b-d815f021ad14",
+            "provider_type": "bank",
+            "provider_slug": "browser-qa-provider",
+            "display_name": "Browser QA Provider",
+            "status": "inactive",
+            "is_default": false,
+            "health": "degraded",
+            "last_checked_at": "2026-10-17T12:46:57+00:00"
+          }
+        ],
+        "meta": {
+          "current_page": 1,
+          "last_page": 1,
+          "total": 1
+        }
+      }
+    },
+    {
+      "url": "/v1/admin/integrations/api-clients",
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "id": "d026a4eb-0e40-4fa7-a67b-d815f021ad24",
+            "name": "Browser QA API client",
+            "api_key_prefix": "bqa_2026",
+            "status": "inactive",
+            "permissions": [],
+            "ip_whitelist": [],
+            "integration_id": "d026a4eb-0e40-4fa7-a67b-d815f021ad14",
+            "rate_limit_per_minute": 1,
+            "last_used_at": null,
+            "revoked_at": null
+          }
+        ],
+        "meta": {
+          "current_page": 1,
+          "last_page": 1,
+          "total": 1
+        }
+      }
+    },
+    {
+      "url": "/v1/admin/integrations/providers",
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "id": "d026a4eb-0e40-4fa7-a67b-d815f021ad14",
+            "provider_type": "bank",
+            "provider_slug": "browser-qa-provider",
+            "display_name": "Browser QA Provider",
+            "status": "inactive",
+            "is_default": false,
+            "health": "degraded",
+            "last_checked_at": "2026-10-17T12:46:57+00:00"
+          }
+        ],
+        "meta": {
+          "current_page": 1,
+          "last_page": 1,
+          "total": 1
+        }
+      }
+    },
+    {
+      "url": "/v1/admin/integrations/api-clients",
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "id": "d026a4eb-0e40-4fa7-a67b-d815f021ad24",
+            "name": "Browser QA API client",
+            "api_key_prefix": "bqa_2026",
+            "status": "inactive",
+            "permissions": [],
+            "ip_whitelist": [],
+            "integration_id": "d026a4eb-0e40-4fa7-a67b-d815f021ad14",
+            "rate_limit_per_minute": 1,
+            "last_used_at": null,
+            "revoked_at": null
+          }
+        ],
+        "meta": {
+          "current_page": 1,
+          "last_page": 1,
+          "total": 1
+        }
+      }
+    }
+  ],
+  "text": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nManagement\n/\nIntegrations\n⌘K\nA\nadmin@olekard.local\nAPI clients\n\nManage partner credentials and source IP access.\n\nNew API Client\nProvider health\nPartners\nAPI clients\nWebhooks\n\nName\tKey prefix\tStatus\tPermissions\tIP whitelist\tRequests/min\tLast used\tActions\nBrowser QA API client\tbqa_2026\tinactive\tNone\tAny source\t1\tNever\t\nRotate\nRevoke\nActivate\nPrevious\nPage 1 of 1\nNext"
+}

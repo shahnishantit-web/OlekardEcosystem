@@ -1,0 +1,17 @@
+{
+  "route": "/401",
+  "landed": "/401",
+  "status": 401,
+  "headings": [
+    "Sign in required"
+  ],
+  "errors": [],
+  "api": [],
+  "failed": [],
+  "links": [
+    "/login",
+    "/"
+  ],
+  "overflow": false,
+  "text": "OK\nOleKard\n\nERROR 401\n\nSign in required\n\nYour session is unavailable or has expired. Sign in to continue.\n\nSign in\nReturn to home\n\nAuthorized personnel only. All sessions are logged and monitored."
+}

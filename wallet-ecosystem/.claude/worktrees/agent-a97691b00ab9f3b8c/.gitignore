@@ -1,0 +1,53 @@
+# Environment files — never commit real secrets
+.env
+.env.local
+.env.*.local
+*.env.local
+
+# Laravel
+vendor/
+services/api/storage/logs/
+services/api/storage/framework/cache/
+services/api/storage/framework/sessions/
+services/api/storage/framework/views/
+services/api/bootstrap/cache/
+services/api/.env
+services/api/.env.local
+
+# Node / Next.js
+node_modules/
+apps/admin/.next/
+apps/admin/out/
+apps/admin/.env.local
+
+# Flutter / Dart
+apps/customer/.dart_tool/
+apps/customer/build/
+apps/agent/.dart_tool/
+apps/agent/build/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+
+# Design system build output
+packages/design-system/build/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Test coverage
+coverage/
+*.lcov
+
+# Build artifacts
+dist/
+*.log
+
+# Docker
+docker-compose.override.yml.local

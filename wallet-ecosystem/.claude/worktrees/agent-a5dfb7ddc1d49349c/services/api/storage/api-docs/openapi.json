@@ -1,0 +1,77 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Wallet Ecosystem API",
+        "description": "Platform Foundation API — infrastructure and cross-cutting contracts",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/",
+            "description": "Current environment"
+        }
+    ],
+    "paths": {
+        "/health": {
+            "get": {
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Liveness probe — is the process running?",
+                "operationId": "2a007bfae4b70c134872703d65f3f9f9",
+                "responses": {
+                    "200": {
+                        "description": "Process is alive"
+                    }
+                }
+            }
+        },
+        "/ready": {
+            "get": {
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Readiness probe — can the service handle traffic?",
+                "operationId": "ff88156d757b6dd3935c6b836d1f32e3",
+                "responses": {
+                    "200": {
+                        "description": "Service is ready"
+                    },
+                    "503": {
+                        "description": "Service is not ready"
+                    }
+                }
+            }
+        },
+        "/startup": {
+            "get": {
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Startup probe — has the service finished initializing?",
+                "operationId": "b52ade0b51b42f1b037d1719f917cd43",
+                "responses": {
+                    "200": {
+                        "description": "Startup complete"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Health",
+            "description": "Health"
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "sanctum": {
+                "type": "apiKey",
+                "description": "Bearer token from Laravel Sanctum. Format: Bearer <token>",
+                "name": "Authorization",
+                "in": "header"
+            }
+        }
+    }
+}

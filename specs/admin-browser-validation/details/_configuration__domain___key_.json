@@ -1,0 +1,132 @@
+{
+  "pattern": "/configuration/[domain]/[key]",
+  "route": "/configuration/operational_policy/browser_qa_detail_fixture",
+  "landed": "/configuration/operational_policy/browser_qa_detail_fixture",
+  "errors": [],
+  "failures": [],
+  "detailResponses": [
+    {
+      "url": "/v1/admin/configuration/keys/operational_policy.browser_qa_detail_fixture/versions",
+      "status": 200,
+      "body": {
+        "success": true,
+        "data": {
+          "current_page": 1,
+          "data": [],
+          "first_page_url": "http://localhost:8001/v1/admin/configuration/keys/operational_policy.browser_qa_detail_fixture/versions?page=1",
+          "from": null,
+          "last_page": 1,
+          "last_page_url": "http://localhost:8001/v1/admin/configuration/keys/operational_policy.browser_qa_detail_fixture/versions?page=1",
+          "links": [
+            {
+              "url": null,
+              "label": "&laquo; Previous",
+              "active": false
+            },
+            {
+              "url": "http://localhost:8001/v1/admin/configuration/keys/operational_policy.browser_qa_detail_fixture/versions?page=1",
+              "label": "1",
+              "active": true
+            },
+            {
+              "url": null,
+              "label": "Next &raquo;",
+              "active": false
+            }
+          ],
+          "next_page_url": null,
+          "path": "http://localhost:8001/v1/admin/configuration/keys/operational_policy.browser_qa_detail_fixture/versions",
+          "per_page": 20,
+          "prev_page_url": null,
+          "to": null,
+          "total": 0
+        },
+        "error": null,
+        "correlation_id": "35dde749-7e4a-4f13-bd34-b6e4d47c68a3",
+        "meta": null
+      }
+    },
+    {
+      "url": "/v1/admin/configuration/keys/operational_policy.browser_qa_detail_fixture",
+      "status": 200,
+      "body": {
+        "success": true,
+        "data": {
+          "config_key": "operational_policy.browser_qa_detail_fixture",
+          "domain": "operational_policy",
+          "current_value": "inert",
+          "value_type": "string",
+          "status": "active",
+          "description": "browser-qa-20261017 inert detail fixture",
+          "updated_at": "2026-10-17 12:46:57",
+          "pending_change_request_id": "d026a4eb-0e40-4fa7-a67b-d815f021ad11"
+        },
+        "error": null,
+        "correlation_id": "a595ce60-b75c-4647-99ed-2b981d56c55b",
+        "meta": null
+      }
+    },
+    {
+      "url": "/v1/admin/configuration/keys/operational_policy.browser_qa_detail_fixture/versions",
+      "status": 200,
+      "body": {
+        "success": true,
+        "data": {
+          "current_page": 1,
+          "data": [],
+          "first_page_url": "http://localhost:8001/v1/admin/configuration/keys/operational_policy.browser_qa_detail_fixture/versions?page=1",
+          "from": null,
+          "last_page": 1,
+          "last_page_url": "http://localhost:8001/v1/admin/configuration/keys/operational_policy.browser_qa_detail_fixture/versions?page=1",
+          "links": [
+            {
+              "url": null,
+              "label": "&laquo; Previous",
+              "active": false
+            },
+            {
+              "url": "http://localhost:8001/v1/admin/configuration/keys/operational_policy.browser_qa_detail_fixture/versions?page=1",
+              "label": "1",
+              "active": true
+            },
+            {
+              "url": null,
+              "label": "Next &raquo;",
+              "active": false
+            }
+          ],
+          "next_page_url": null,
+          "path": "http://localhost:8001/v1/admin/configuration/keys/operational_policy.browser_qa_detail_fixture/versions",
+          "per_page": 20,
+          "prev_page_url": null,
+          "to": null,
+          "total": 0
+        },
+        "error": null,
+        "correlation_id": "6a4fbcf6-051b-4e18-a9f3-b2683e9e41e2",
+        "meta": null
+      }
+    },
+    {
+      "url": "/v1/admin/configuration/keys/operational_policy.browser_qa_detail_fixture",
+      "status": 200,
+      "body": {
+        "success": true,
+        "data": {
+          "config_key": "operational_policy.browser_qa_detail_fixture",
+          "domain": "operational_policy",
+          "current_value": "inert",
+          "value_type": "string",
+          "status": "active",
+          "description": "browser-qa-20261017 inert detail fixture",
+          "updated_at": "2026-10-17 12:46:57",
+          "pending_change_request_id": "d026a4eb-0e40-4fa7-a67b-d815f021ad11"
+        },
+        "error": null,
+        "correlation_id": "6801b03a-08f9-49bc-9098-2c56fbf63f90",
+        "meta": null
+      }
+    }
+  ],
+  "text": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nManagement\n/\nConfiguration\n⌘K\nA\nadmin@olekard.local\noperational_policy.browser_qa_detail_fixture\n\nbrowser-qa-20261017 inert detail fixture\n\noperational policy\nPending Change\nCurrent Value\n\"inert\"\nView Pending Change Request →\nEdit Configuration Value\n\nA change is pending approval for this key. View pending change\n\nVersion History\n\nNo version history."
+}

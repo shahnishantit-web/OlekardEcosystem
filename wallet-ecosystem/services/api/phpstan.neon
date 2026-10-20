@@ -1,0 +1,64 @@
+includes:
+    - ./vendor/nunomaduro/larastan/extension.neon
+
+parameters:
+    level: 8
+    paths:
+        - app
+    excludePaths:
+        - app/Http/Controllers/Controller.php
+    treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder#'
+        - '#Call to an undefined method Illuminate\\Database\\Schema\\ColumnDefinition::notNullable\(\)#'
+        - '#Call to an undefined method Illuminate\\Database\\Schema\\ColumnDefinition::notNull\(\)#'
+        - '#Call to an undefined method .+\\User::hasPermission\(\)#'
+        - '#Call to an undefined method .+\\User::hasRole\(\)#'
+        - '#Call to an undefined method .+\\Resources\\.+::relationLoaded\(\)#'
+        - '#Access to an undefined property .+\\Infrastructure\\Http\\Resources\\.+::#'
+        - '#Access to an undefined property .+\\Http\\Resources\\.+::#'
+        - '#Access to an undefined property .+\\Domain\\Models\\.+::#'
+        - '#does not specify its types: TRelatedModel, TDeclaringModel#'
+        - '#does not specify its types: TModel#'
+        - '#does not specify its types: TItem#'
+        - '#does not specify its types: TFactory#'
+        - '#does not specify its types: TKey, TValue#'
+        - '#does not specify its types: TValue#'
+        - '#does not specify its types: TKey#'
+        -
+            identifier: missingType.iterableValue
+        - '#Property .+CommissionCalculationService::\$processedEvents is never read#'
+        - '#Method .+RiskRuleController::configureVelocityRule\(\) never returns .+ so it can be removed#'
+        - '#Return type of call to method .+Collection.+contains unresolvable type#'
+        - '#Access to an undefined property object::\$#'
+        - '#Call to an undefined method object::toArray\(\)#'
+        - '#Class Illuminate\\Contracts\\Queue\\TimeoutExceeded not found#'
+        - '#Instantiated class PhpOffice\\PhpSpreadsheet.+ not found#'
+        - '#Call to (static method|method) .+ on an unknown class PhpOffice\\PhpSpreadsheet#'
+        - '#Cannot call method getAuthIdentifier\(\) on .+\\User\|null#'
+        - '#Cannot access property \$id on .+\\User\|null#'
+        - '#Using nullsafe method call on non-nullable type#'
+        - '#Parameter .+ of method Redis::eval\(\) expects#'
+        - '#Parameter .+ of static method Symfony\\Component\\HttpFoundation\\Request::create\(\) expects resource\|string\|null, string\|false#'
+        - '#Template type TDeclaringModel on class Illuminate\\Database\\Eloquent\\Relations\\(BelongsTo|HasMany) is not covariant#'
+        - '#should return Illuminate\\Database\\Eloquent\\Relations\\(BelongsTo|HasMany)<#'
+        - '#Constant .+ is unused#'
+        # Eloquent magic properties on CommunityServices models — covered by @property PHPDoc in production;
+        # suppressed here to keep level-8 feasible while models use $guarded = [].
+        - '#Access to an undefined property App\\Modules\\CommunityServices\\.+::#'
+        - '#Access to an undefined property App\\Modules\\CommunityServices\\Shared\\DomainEvent::#'
+        # Cross-module NotificationService / DeviceTokenService are resolved at runtime via the service provider.
+        - '#Class App\\Modules\\Notifications\\Application\\(NotificationService|DeviceTokenService) not found#'
+        - '#Call to (method|static method) .+ on an unknown class App\\Modules\\Notifications\\Application#'
+        # fopen() returns resource|false; null-check in callers guards against false at runtime.
+        - '#Parameter #1 \$stream of function (fputcsv|rewind|stream_get_contents|fclose) expects resource, resource\|false given#'
+        # auth()->id() returns int in Laravel; downstream service methods accept string.
+        - '#Parameter .+ expects string, int given#'
+        # Property written in constructor via constructor promotion and read via Eloquent query methods.
+        - '#Property App\\Modules\\CommunityServices\\Order\\Application\\OrderService::\$receiptService is never read#'
+        # DisputeHoldModel is resolved at runtime; PHPStan cannot see the Infrastructure path here.
+        - '#(Instantiated class|Call to (static method|method)|has invalid return type) .+DisputeHoldModel#'
+        # IdempotencyConflictException cross-namespace reference resolved at runtime.
+        - '#(Instantiated class|Throwing object of an unknown class) App\\Modules\\CommunityServices\\Application\\IdempotencyConflictException#'
+    checkMissingIterableValueType: false

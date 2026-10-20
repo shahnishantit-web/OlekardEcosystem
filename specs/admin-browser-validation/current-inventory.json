@@ -1,0 +1,5256 @@
+{
+    "routes": [
+        {
+            "uri": "/v1/configuration/values/{key}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Http\\Middleware\\CorrelationIdMiddleware"
+            ]
+        },
+        {
+            "uri": "/v1/configuration/values",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Http\\Middleware\\CorrelationIdMiddleware",
+                "identity.require-permission:configuration.policy.update"
+            ]
+        },
+        {
+            "uri": "/v1/configuration/values/{id}/activate",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Http\\Middleware\\CorrelationIdMiddleware",
+                "identity.require-permission:configuration.policy.update"
+            ]
+        },
+        {
+            "uri": "/v1/admin/configuration/keys",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Http\\Middleware\\CorrelationIdMiddleware",
+                "identity.require-permission:configuration.policy.view"
+            ]
+        },
+        {
+            "uri": "/v1/admin/configuration/keys/{key}/versions",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Http\\Middleware\\CorrelationIdMiddleware",
+                "identity.require-permission:configuration.policy.view"
+            ]
+        },
+        {
+            "uri": "/v1/admin/configuration/keys/{key}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Http\\Middleware\\CorrelationIdMiddleware",
+                "identity.require-permission:configuration.policy.view"
+            ]
+        },
+        {
+            "uri": "/v1/admin/configuration/change-requests",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Http\\Middleware\\CorrelationIdMiddleware",
+                "identity.require-permission:configuration.policy.view"
+            ]
+        },
+        {
+            "uri": "/v1/admin/configuration/change-requests",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Http\\Middleware\\CorrelationIdMiddleware",
+                "identity.require-permission:configuration.policy.update"
+            ]
+        },
+        {
+            "uri": "/v1/admin/configuration/change-requests/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Http\\Middleware\\CorrelationIdMiddleware",
+                "identity.require-permission:configuration.policy.view"
+            ]
+        },
+        {
+            "uri": "/v1/admin/configuration/change-requests/{id}/approve",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Http\\Middleware\\CorrelationIdMiddleware",
+                "identity.require-permission:configuration.approve"
+            ]
+        },
+        {
+            "uri": "/v1/admin/configuration/change-requests/{id}/reject",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Http\\Middleware\\CorrelationIdMiddleware",
+                "identity.require-permission:configuration.approve"
+            ]
+        },
+        {
+            "uri": "/v1/admin/configuration/change-requests/{id}/withdraw",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Http\\Middleware\\CorrelationIdMiddleware",
+                "identity.require-permission:configuration.policy.update"
+            ]
+        },
+        {
+            "uri": "/v1/operations/dead-letter",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:operations.dead_letter.manage"
+            ]
+        },
+        {
+            "uri": "/v1/operations/dead-letter/stats",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:operations.dead_letter.manage"
+            ]
+        },
+        {
+            "uri": "/v1/operations/dead-letter/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:operations.dead_letter.manage"
+            ]
+        },
+        {
+            "uri": "/v1/operations/dead-letter/{id}/replay",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:operations.dead_letter.manage"
+            ]
+        },
+        {
+            "uri": "/v1/operations/dead-letter/{id}/dismiss",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:operations.dead_letter.manage"
+            ]
+        },
+        {
+            "uri": "/v1/operations/ledger-integrity/snapshots",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:operations.dead_letter.manage"
+            ]
+        },
+        {
+            "uri": "/v1/users/profile",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "profile.latency:profile.api",
+                "identity.auth",
+                "throttle:profile-user"
+            ]
+        },
+        {
+            "uri": "/v1/users/profile/personal",
+            "methods": [
+                "PUT"
+            ],
+            "middleware": [
+                "profile.latency:profile.api",
+                "identity.auth",
+                "throttle:profile-user"
+            ]
+        },
+        {
+            "uri": "/v1/admin/users/{user_id}/profile",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "profile.latency:profile.api",
+                "identity.auth",
+                "throttle:profile-admin",
+                "profile.permission:profile.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/profile/dashboard/summary",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "profile.latency:profile.api",
+                "identity.auth",
+                "throttle:profile-admin",
+                "profile.permission:profile.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/users/{user_id}/profile/personal",
+            "methods": [
+                "PUT"
+            ],
+            "middleware": [
+                "profile.latency:profile.api",
+                "identity.auth",
+                "throttle:profile-admin",
+                "profile.permission:profile.update"
+            ]
+        },
+        {
+            "uri": "/v1/users/profile/photo",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "profile.latency:profile.api",
+                "identity.auth",
+                "throttle:profile-photo"
+            ]
+        },
+        {
+            "uri": "/v1/users/profile/status",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "profile.latency:profile.api",
+                "identity.auth",
+                "throttle:profile-user"
+            ]
+        },
+        {
+            "uri": "/v1/admin/users/{user_id}/profile/status",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "profile.latency:profile.api",
+                "identity.auth",
+                "throttle:profile-admin",
+                "profile.permission:profile.read"
+            ]
+        },
+        {
+            "uri": "/v1/users/profile/closure/request",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "profile.latency:profile.api",
+                "identity.auth",
+                "throttle:profile-user"
+            ]
+        },
+        {
+            "uri": "/v1/users/profile/closure/request",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "profile.latency:profile.api",
+                "identity.auth",
+                "throttle:profile-user"
+            ]
+        },
+        {
+            "uri": "/v1/admin/users/{user_id}/cancel-closure",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "profile.latency:profile.api",
+                "identity.auth",
+                "throttle:profile-admin",
+                "profile.permission:account.reactivate"
+            ]
+        },
+        {
+            "uri": "/v1/admin/users/{user_id}/close",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "profile.latency:profile.api",
+                "identity.auth",
+                "throttle:profile-admin",
+                "profile.permission:account.close"
+            ]
+        },
+        {
+            "uri": "/v1/users/profile/email/change",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "profile.latency:profile.api",
+                "identity.auth",
+                "throttle:profile-contact-change"
+            ]
+        },
+        {
+            "uri": "/v1/users/profile/email/verify",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "profile.latency:profile.api",
+                "identity.auth",
+                "throttle:profile-contact-change"
+            ]
+        },
+        {
+            "uri": "/v1/users/profile/mobile/change",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "profile.latency:profile.api",
+                "identity.auth",
+                "throttle:profile-contact-change"
+            ]
+        },
+        {
+            "uri": "/v1/users/profile/mobile/verify",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "profile.latency:profile.api",
+                "identity.auth",
+                "throttle:profile-contact-change"
+            ]
+        },
+        {
+            "uri": "/v1/users/profile/data-export",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "profile.latency:profile.api",
+                "identity.auth",
+                "throttle:profile-user"
+            ]
+        },
+        {
+            "uri": "/v1/users/profile/data-export/{export_id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "profile.latency:profile.api",
+                "identity.auth",
+                "throttle:profile-user"
+            ]
+        },
+        {
+            "uri": "/v1/customer/auth/register/initiate",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public"
+            ]
+        },
+        {
+            "uri": "/v1/customer/auth/register/verify",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public"
+            ]
+        },
+        {
+            "uri": "/v1/customer/auth/register/complete",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public"
+            ]
+        },
+        {
+            "uri": "/v1/customer/auth/login",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public"
+            ]
+        },
+        {
+            "uri": "/v1/customer/auth/login/verify",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public"
+            ]
+        },
+        {
+            "uri": "/v1/agent/auth/login",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public"
+            ]
+        },
+        {
+            "uri": "/v1/auth/register",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public"
+            ]
+        },
+        {
+            "uri": "/v1/auth/otp/verify",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public",
+                "identity.latency:otp_verify"
+            ]
+        },
+        {
+            "uri": "/v1/auth/otp/resend",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public"
+            ]
+        },
+        {
+            "uri": "/v1/auth/login",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public",
+                "identity.latency:login"
+            ]
+        },
+        {
+            "uri": "/v1/auth/login/biometric/challenge",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "throttle:identity-public"
+            ]
+        },
+        {
+            "uri": "/v1/auth/login/biometric",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public"
+            ]
+        },
+        {
+            "uri": "/v1/.well-known/jwks.json",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": []
+        },
+        {
+            "uri": "/v1/auth/token/refresh",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-refresh",
+                "identity.latency:token_refresh"
+            ]
+        },
+        {
+            "uri": "/v1/auth/devices/verify",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public"
+            ]
+        },
+        {
+            "uri": "/v1/auth/sessions",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/auth/logout",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/auth/sessions",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/auth/sessions/{id}",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/auth/devices/register",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/auth/devices",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/auth/devices/{id}",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/admin/auth/forgot-password",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public"
+            ]
+        },
+        {
+            "uri": "/v1/admin/auth/reset-password",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public"
+            ]
+        },
+        {
+            "uri": "/v1/admin/auth/verify-email",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public"
+            ]
+        },
+        {
+            "uri": "/v1/admin/auth/resend-verification",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public"
+            ]
+        },
+        {
+            "uri": "/v1/admin/auth/change-password",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth",
+                "identity.require-actor-type:admin"
+            ]
+        },
+        {
+            "uri": "/v1/admin/sessions",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:session.admin.revoke"
+            ]
+        },
+        {
+            "uri": "/v1/admin/sessions/{session_id}/revoke",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:session.admin.revoke"
+            ]
+        },
+        {
+            "uri": "/v1/admin/platform/configuration/security",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:configuration.policy.view"
+            ]
+        },
+        {
+            "uri": "/v1/admin/platform/configuration/security/{key}",
+            "methods": [
+                "PUT"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:configuration.policy.update",
+                "App\\Http\\Middleware\\IdempotencyMiddleware"
+            ]
+        },
+        {
+            "uri": "/v1/admin/roles",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:admin.role.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/roles/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:admin.role.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/roles",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:admin.role.create"
+            ]
+        },
+        {
+            "uri": "/v1/admin/roles/{id}",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:admin.role.manage"
+            ]
+        },
+        {
+            "uri": "/v1/admin/roles/{id}/permissions",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:admin.role.manage"
+            ]
+        },
+        {
+            "uri": "/v1/admin/roles/{id}/permissions/{permissionId}",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:admin.role.manage"
+            ]
+        },
+        {
+            "uri": "/v1/admin/permissions",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:admin.permission.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/users",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:admin.user.create",
+                "App\\Http\\Middleware\\IdempotencyMiddleware"
+            ]
+        },
+        {
+            "uri": "/v1/admin/users",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/users/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:admin.user.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/users/{id}/status",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:admin.user.deactivate"
+            ]
+        },
+        {
+            "uri": "/v1/admin/users/{id}/roles",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:admin.user.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/users/{id}/roles",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:admin.role.assign"
+            ]
+        },
+        {
+            "uri": "/v1/admin/users/{id}/roles/{roleId}",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:admin.role.assign"
+            ]
+        },
+        {
+            "uri": "/v1/auth/pin/set",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public",
+                "identity.auth.optional"
+            ]
+        },
+        {
+            "uri": "/v1/auth/pin/reset/initiate",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public"
+            ]
+        },
+        {
+            "uri": "/v1/auth/pin/reset/complete",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public"
+            ]
+        },
+        {
+            "uri": "/v1/auth/pin/unblock",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public"
+            ]
+        },
+        {
+            "uri": "/v1/auth/pin/change",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/auth/mfa/verify",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-public"
+            ]
+        },
+        {
+            "uri": "/v1/auth/mfa/methods",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/auth/mfa/enroll/totp",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/auth/mfa/enroll/totp/confirm",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/auth/mfa/enroll/fido2",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/auth/mfa/enroll/fido2/confirm",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/auth/mfa/recovery-codes",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/auth/mfa/disable",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/auth/step-up/initiate",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/auth/step-up/verify",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/auth/service/token",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "App\\Http\\Middleware\\IdempotencyMiddleware"
+            ]
+        },
+        {
+            "uri": "/v1/devices/fingerprint",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/devices",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/devices/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/devices",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/devices/{id}/trust",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/devices/{id}/acknowledge",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/devices/{id}/block",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/devices/{id}",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "throttle:identity-auth",
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/admin/users/{userId}/devices",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:device.admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/devices/{id}/security-events",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:device.admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/devices/{id}",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:device.admin.remove"
+            ]
+        },
+        {
+            "uri": "/v1/admin/devices/{id}/block",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:device.admin.block"
+            ]
+        },
+        {
+            "uri": "/v1/admin/devices/{id}/unblock",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "throttle:identity-admin",
+                "identity.auth",
+                "identity.require-actor-type:admin",
+                "identity.require-permission:device.admin.unblock"
+            ]
+        },
+        {
+            "uri": "/v1/wallets",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:wallet.create"
+            ]
+        },
+        {
+            "uri": "/v1/wallets/my",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:wallet.read"
+            ]
+        },
+        {
+            "uri": "/v1/wallets/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:wallet.read"
+            ]
+        },
+        {
+            "uri": "/v1/wallets/{id}/status",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:wallet.status.manage"
+            ]
+        },
+        {
+            "uri": "/v1/wallets/{id}/freeze",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:wallet.freeze"
+            ]
+        },
+        {
+            "uri": "/v1/wallets/{id}/unfreeze",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:wallet.unfreeze"
+            ]
+        },
+        {
+            "uri": "/v1/wallets/{id}/close",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:wallet.close"
+            ]
+        },
+        {
+            "uri": "/v1/wallets/{id}/limits",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:wallet.read"
+            ]
+        },
+        {
+            "uri": "/v1/wallets/{id}/limits",
+            "methods": [
+                "PUT"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:wallet.limits.manage"
+            ]
+        },
+        {
+            "uri": "/v1/wallets/{id}/pockets",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:wallet.read"
+            ]
+        },
+        {
+            "uri": "/v1/wallets/{id}/pockets",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:wallet.pocket.create"
+            ]
+        },
+        {
+            "uri": "/v1/wallets/{id}/pockets/{code}/balance",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:wallet.balance.read"
+            ]
+        },
+        {
+            "uri": "/v1/wallets/{id}/status-history",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:wallet.read"
+            ]
+        },
+        {
+            "uri": "/v1/ledger/entries/debit",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ledger.post"
+            ]
+        },
+        {
+            "uri": "/v1/ledger/entries/credit",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ledger.post"
+            ]
+        },
+        {
+            "uri": "/v1/ledger/entries/fee",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ledger.post"
+            ]
+        },
+        {
+            "uri": "/v1/ledger/entries/revenue",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ledger.post"
+            ]
+        },
+        {
+            "uri": "/v1/ledger/entries/commission",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ledger.post"
+            ]
+        },
+        {
+            "uri": "/v1/ledger/entries/{id}/reverse",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ledger.entry.reverse"
+            ]
+        },
+        {
+            "uri": "/v1/ledger/accounts/{reference}/balance",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ledger.read"
+            ]
+        },
+        {
+            "uri": "/v1/ledger/accounts/{reference}/entries",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ledger.read"
+            ]
+        },
+        {
+            "uri": "/v1/ledger/journals/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ledger.read"
+            ]
+        },
+        {
+            "uri": "/v1/ledger/journals",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ledger.read"
+            ]
+        },
+        {
+            "uri": "/v1/ledger/accounts",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ledger.account.register"
+            ]
+        },
+        {
+            "uri": "/v1/kyc/cases",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:kyc.case.create"
+            ]
+        },
+        {
+            "uri": "/v1/kyc/cases/{id}/personal-information",
+            "methods": [
+                "PUT"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:kyc.case.update"
+            ]
+        },
+        {
+            "uri": "/v1/kyc/cases/{id}/documents",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:kyc.case.update"
+            ]
+        },
+        {
+            "uri": "/v1/kyc/cases/{id}/submit",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:kyc.case.update"
+            ]
+        },
+        {
+            "uri": "/v1/kyc/cases/{id}/resubmit",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:kyc.case.update"
+            ]
+        },
+        {
+            "uri": "/v1/kyc/cases/my",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:kyc.case.read"
+            ]
+        },
+        {
+            "uri": "/v1/kyc/cases/{id}/reverify",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:kyc.case.manage"
+            ]
+        },
+        {
+            "uri": "/v1/kyc/documents/validate-format",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:kyc.case.update"
+            ]
+        },
+        {
+            "uri": "/v1/kyc/documents/validate-expiry",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:kyc.case.update"
+            ]
+        },
+        {
+            "uri": "/v1/kyc/cases",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:kyc.case.review"
+            ]
+        },
+        {
+            "uri": "/v1/kyc/cases/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:kyc.case.read"
+            ]
+        },
+        {
+            "uri": "/v1/kyc/cases/{id}/approve",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:kyc.case.approve"
+            ]
+        },
+        {
+            "uri": "/v1/kyc/cases/{id}/reject",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:kyc.case.review"
+            ]
+        },
+        {
+            "uri": "/v1/kyc/cases/{id}/request-info",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:kyc.case.review"
+            ]
+        },
+        {
+            "uri": "/v1/risk/evaluate-transaction-risk",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.evaluate"
+            ]
+        },
+        {
+            "uri": "/v1/risk/evaluate-transaction-velocity",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.evaluate"
+            ]
+        },
+        {
+            "uri": "/v1/risk/evaluate-amount-threshold",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.evaluate"
+            ]
+        },
+        {
+            "uri": "/v1/risk/evaluate-device-risk",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.evaluate"
+            ]
+        },
+        {
+            "uri": "/v1/risk/evaluate-ip-risk",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.evaluate"
+            ]
+        },
+        {
+            "uri": "/v1/risk/evaluate-beneficiary-risk",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.evaluate"
+            ]
+        },
+        {
+            "uri": "/v1/risk/allow-transaction",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.manage_alerts"
+            ]
+        },
+        {
+            "uri": "/v1/risk/block-transaction",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.manage_alerts"
+            ]
+        },
+        {
+            "uri": "/v1/risk/send-transaction-for-manual-review",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.evaluate"
+            ]
+        },
+        {
+            "uri": "/v1/risk/detect-unusual-transaction-pattern",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.evaluate"
+            ]
+        },
+        {
+            "uri": "/v1/risk/detect-rapid-fund-movement",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.evaluate"
+            ]
+        },
+        {
+            "uri": "/v1/risk/detect-repeated-failed-authentication",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.evaluate"
+            ]
+        },
+        {
+            "uri": "/v1/risk/rules",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.configure_rules"
+            ]
+        },
+        {
+            "uri": "/v1/risk/configure-per-transaction-limit",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.configure_rules"
+            ]
+        },
+        {
+            "uri": "/v1/risk/configure-daily-limit",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.configure_rules"
+            ]
+        },
+        {
+            "uri": "/v1/risk/configure-monthly-limit",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.configure_rules"
+            ]
+        },
+        {
+            "uri": "/v1/risk/configure-customer-limits",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.configure_rules"
+            ]
+        },
+        {
+            "uri": "/v1/risk/configure-agent-limits",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.configure_rules"
+            ]
+        },
+        {
+            "uri": "/v1/risk/configure-wallet-limits",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.configure_rules"
+            ]
+        },
+        {
+            "uri": "/v1/risk/alerts",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.manage_alerts"
+            ]
+        },
+        {
+            "uri": "/v1/risk/alerts",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.view_alerts"
+            ]
+        },
+        {
+            "uri": "/v1/risk/alerts/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.view_alerts"
+            ]
+        },
+        {
+            "uri": "/v1/risk/investigate-risk-alert",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.manage_alerts"
+            ]
+        },
+        {
+            "uri": "/v1/risk/resolve-risk-alert",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.manage_alerts"
+            ]
+        },
+        {
+            "uri": "/v1/risk/freeze-account-due-to-risk",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.freeze_account"
+            ]
+        },
+        {
+            "uri": "/v1/risk/lift-account-hold",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.freeze_account"
+            ]
+        },
+        {
+            "uri": "/v1/risk/sars",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.file_sar"
+            ]
+        },
+        {
+            "uri": "/v1/risk/sars/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.file_sar"
+            ]
+        },
+        {
+            "uri": "/v1/risk/sars/{id}/approve",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.file_sar"
+            ]
+        },
+        {
+            "uri": "/v1/risk/sars/{id}/submit",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.file_sar"
+            ]
+        },
+        {
+            "uri": "/v1/risk/watchlist",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.configure_rules"
+            ]
+        },
+        {
+            "uri": "/v1/risk/watchlist/{id}",
+            "methods": [
+                "PUT"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.configure_rules"
+            ]
+        },
+        {
+            "uri": "/v1/risk/watchlist/{id}",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:risk.configure_rules"
+            ]
+        },
+        {
+            "uri": "/v1/admin/security/alerts",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:security.alerts.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/security/alerts/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:security.alerts.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/security/alerts/{id}/{action}",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:security.alerts.read",
+                "identity.require-permission:risk.manage_alerts"
+            ]
+        },
+        {
+            "uri": "/v1/admin/security/alerts/{id}/freeze-requests",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:security.alerts.read",
+                "identity.require-permission:risk.freeze_account"
+            ]
+        },
+        {
+            "uri": "/v1/admin/security/alerts/{id}/freeze-requests/{requestId}/approve",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:security.alerts.read",
+                "identity.require-permission:risk.freeze_account"
+            ]
+        },
+        {
+            "uri": "/v1/admin/security/findings",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:security.findings.read"
+            ]
+        },
+        {
+            "uri": "/v1/agent-applications",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent.application.create"
+            ]
+        },
+        {
+            "uri": "/v1/agent-applications/{id}/personal-information",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent.application.read"
+            ]
+        },
+        {
+            "uri": "/v1/agent-applications/{id}/business-information",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent.application.read"
+            ]
+        },
+        {
+            "uri": "/v1/agent-applications/{id}/documents",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent.application.read"
+            ]
+        },
+        {
+            "uri": "/v1/agent-applications/{id}/kyc",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent.application.read"
+            ]
+        },
+        {
+            "uri": "/v1/agent-applications/{id}/approve",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent.approve"
+            ]
+        },
+        {
+            "uri": "/v1/agent-applications/{id}/reject",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent.reject"
+            ]
+        },
+        {
+            "uri": "/v1/agents/{id}/suspend",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent.suspend"
+            ]
+        },
+        {
+            "uri": "/v1/agents/{id}/reactivate",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent.reactivate"
+            ]
+        },
+        {
+            "uri": "/v1/agents/{id}/customers",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent.customer.search"
+            ]
+        },
+        {
+            "uri": "/v1/agents/{id}/customers",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent.customer.register"
+            ]
+        },
+        {
+            "uri": "/v1/agents/{id}/customers/{cid}/kyc",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent.customer.kyc.initiate"
+            ]
+        },
+        {
+            "uri": "/v1/agents/{id}/customers/{cid}/wallet",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent.customer.wallet.read"
+            ]
+        },
+        {
+            "uri": "/v1/agents/{id}/customers/{cid}/transactions",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent.customer.transactions.read"
+            ]
+        },
+        {
+            "uri": "/v1/notifications/inbox",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:notifications.inbox.read"
+            ]
+        },
+        {
+            "uri": "/v1/notifications/inbox/unread-count",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:notifications.inbox.read"
+            ]
+        },
+        {
+            "uri": "/v1/notifications/inbox/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:notifications.inbox.read"
+            ]
+        },
+        {
+            "uri": "/v1/notifications/inbox/read",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:notifications.inbox.read"
+            ]
+        },
+        {
+            "uri": "/v1/notifications/preferences",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:notifications.preferences.manage"
+            ]
+        },
+        {
+            "uri": "/v1/notifications/preferences",
+            "methods": [
+                "PUT"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:notifications.preferences.manage"
+            ]
+        },
+        {
+            "uri": "/v1/admin/notifications/templates",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:notifications.templates.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/notifications/templates",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:notifications.templates.write"
+            ]
+        },
+        {
+            "uri": "/v1/admin/notifications/templates/preview",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:notifications.templates.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/notifications/templates/test",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:notifications.templates.write",
+                "throttle:5,1"
+            ]
+        },
+        {
+            "uri": "/v1/admin/notifications/log",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:notifications.log.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/notifications/retry/{id}",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:notifications.retry",
+                "throttle:20,1"
+            ]
+        },
+        {
+            "uri": "/v1/admin/notifications/rules",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:notifications.rules.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/notifications/rules",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:notifications.rules.write"
+            ]
+        },
+        {
+            "uri": "/v1/agents/{agentId}/float-wallet",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent_float.wallet.create",
+                "idempotency:require"
+            ]
+        },
+        {
+            "uri": "/v1/agents/{agentId}/float-wallet",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent_float.wallet.view"
+            ]
+        },
+        {
+            "uri": "/v1/agents/{agentId}/float-wallet/fund",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent_float.wallet.fund",
+                "idempotency:require"
+            ]
+        },
+        {
+            "uri": "/v1/agents/{agentId}/float-wallet/limits",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent_float.limits.manage"
+            ]
+        },
+        {
+            "uri": "/v1/agents/{agentId}/float-wallet/limits",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent_float.limits.view"
+            ]
+        },
+        {
+            "uri": "/v1/agents/{agentId}/float-wallet/transactions",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent_float.transactions.view"
+            ]
+        },
+        {
+            "uri": "/v1/agents/{agentId}/customers/{customerId}/cash-in",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent_float.cash_in",
+                "idempotency:require"
+            ]
+        },
+        {
+            "uri": "/v1/agents/{agentId}/customers/{customerId}/cash-out",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:agent_float.cash_out",
+                "idempotency:require"
+            ]
+        },
+        {
+            "uri": "/v1/commission-rules",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:commission.rules.view"
+            ]
+        },
+        {
+            "uri": "/v1/commission-rules",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:commission.rules.create"
+            ]
+        },
+        {
+            "uri": "/v1/commission-rules/{ruleId}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:commission.rules.view"
+            ]
+        },
+        {
+            "uri": "/v1/commission-rules/{ruleId}",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:commission.rules.update"
+            ]
+        },
+        {
+            "uri": "/v1/commission-rules/{ruleId}",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:commission.rules.delete"
+            ]
+        },
+        {
+            "uri": "/v1/agents/{agentId}/commissions",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/agents/{agentId}/commissions/pending",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/agents/{agentId}/commission-tier",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:commission.tier.manage"
+            ]
+        },
+        {
+            "uri": "/v1/commissions/{commissionId}/reverse",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:commission.reverse",
+                "idempotency:require"
+            ]
+        },
+        {
+            "uri": "/v1/commission-payouts",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:commission.payout.approve"
+            ]
+        },
+        {
+            "uri": "/v1/commission-payouts/{payoutId}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:commission.payout.approve"
+            ]
+        },
+        {
+            "uri": "/v1/commission-payouts/{payoutId}",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:commission.payout.cancel"
+            ]
+        },
+        {
+            "uri": "/v1/commissions/report",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:commission.report.view"
+            ]
+        },
+        {
+            "uri": "/v1/admin/customers",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/customers/{userId}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/dashboard",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/dashboard/users",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/dashboard/wallets",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/dashboard/transactions",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/dashboard/failures",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/dashboard/kyc",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/dashboard/agents",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/dashboard/risk",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/users/{userId}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/users/{userId}/suspend",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.write"
+            ]
+        },
+        {
+            "uri": "/v1/admin/users/{userId}/reactivate",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.write"
+            ]
+        },
+        {
+            "uri": "/v1/admin/users/{userId}/reset-auth",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.write"
+            ]
+        },
+        {
+            "uri": "/v1/admin/users/{userId}/sessions",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/users/{userId}/sessions/{sessionId}",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.write"
+            ]
+        },
+        {
+            "uri": "/v1/admin/wallets",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/wallets/{walletId}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/wallets/{walletId}/freeze",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.freeze_wallet"
+            ]
+        },
+        {
+            "uri": "/v1/admin/wallets/{walletId}/unfreeze",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.freeze_wallet"
+            ]
+        },
+        {
+            "uri": "/v1/admin/wallets/{walletId}/ledger",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/wallets/{walletId}/adjustments",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.write"
+            ]
+        },
+        {
+            "uri": "/v1/admin/adjustments/{adjustmentId}/approve",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.approve_adjustment"
+            ]
+        },
+        {
+            "uri": "/v1/admin/adjustments/{adjustmentId}/reject",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.approve_adjustment"
+            ]
+        },
+        {
+            "uri": "/v1/admin/transactions",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/transactions/export",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.export_transactions"
+            ]
+        },
+        {
+            "uri": "/v1/admin/transactions/exports/{jobId}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/transactions/{transactionId}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/transactions/{transactionId}/investigate",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/transactions/{transactionId}/reverse",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.reverse_transaction"
+            ]
+        },
+        {
+            "uri": "/v1/admin/transactions/{transactionId}/refund",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.refund_transaction"
+            ]
+        },
+        {
+            "uri": "/v1/reconciliation/batches/api",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "reconciliation.webhook_auth"
+            ]
+        },
+        {
+            "uri": "/v1/reconciliation/batches",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reconciliation.read"
+            ]
+        },
+        {
+            "uri": "/v1/reconciliation/batches/{batchId}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reconciliation.read"
+            ]
+        },
+        {
+            "uri": "/v1/reconciliation/batches/file",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reconciliation.write"
+            ]
+        },
+        {
+            "uri": "/v1/reconciliation/batches/bank-statement",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reconciliation.write"
+            ]
+        },
+        {
+            "uri": "/v1/reconciliation/batches/{batchId}/items",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reconciliation.read"
+            ]
+        },
+        {
+            "uri": "/v1/reconciliation/batches/{batchId}/unmatched",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reconciliation.read"
+            ]
+        },
+        {
+            "uri": "/v1/reconciliation/batches/{batchId}/match",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reconciliation.write"
+            ]
+        },
+        {
+            "uri": "/v1/reconciliation/items/{itemId}/mark-reconciled",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reconciliation.write"
+            ]
+        },
+        {
+            "uri": "/v1/reconciliation/exceptions",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reconciliation.read"
+            ]
+        },
+        {
+            "uri": "/v1/reconciliation/exceptions/{exceptionId}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reconciliation.read"
+            ]
+        },
+        {
+            "uri": "/v1/reconciliation/exceptions/{exceptionId}/resolve",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reconciliation.write"
+            ]
+        },
+        {
+            "uri": "/v1/reconciliation/settlements",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reconciliation.read"
+            ]
+        },
+        {
+            "uri": "/v1/reconciliation/settlements/{settlementId}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reconciliation.read"
+            ]
+        },
+        {
+            "uri": "/v1/reconciliation/settlements",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reconciliation.write"
+            ]
+        },
+        {
+            "uri": "/v1/reconciliation/settlements/{settlementId}/submit",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reconciliation.write"
+            ]
+        },
+        {
+            "uri": "/v1/reconciliation/settlements/{settlementId}/approve",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reconciliation.approve_settlement"
+            ]
+        },
+        {
+            "uri": "/v1/reconciliation/settlements/{settlementId}/reject",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reconciliation.approve_settlement"
+            ]
+        },
+        {
+            "uri": "/v1/reconciliation/settlements/{settlementId}/execute",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reconciliation.execute_settlement"
+            ]
+        },
+        {
+            "uri": "/v1/fees/rules",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:fees.rules.view"
+            ]
+        },
+        {
+            "uri": "/v1/fees/rules",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:fees.rules.create",
+                "App\\Http\\Middleware\\IdempotencyMiddleware"
+            ]
+        },
+        {
+            "uri": "/v1/fees/rules/{ruleId}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:fees.rules.view"
+            ]
+        },
+        {
+            "uri": "/v1/fees/rules/{ruleId}",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:fees.rules.update",
+                "App\\Http\\Middleware\\IdempotencyMiddleware"
+            ]
+        },
+        {
+            "uri": "/v1/fees/rules/{ruleId}",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:fees.rules.delete"
+            ]
+        },
+        {
+            "uri": "/v1/fees/calculate",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:fees.calculate"
+            ]
+        },
+        {
+            "uri": "/v1/support/tickets",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:support.create",
+                "App\\Http\\Middleware\\IdempotencyMiddleware"
+            ]
+        },
+        {
+            "uri": "/v1/support/tickets",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:support.create"
+            ]
+        },
+        {
+            "uri": "/v1/support/tickets/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:support.create"
+            ]
+        },
+        {
+            "uri": "/v1/support/tickets/{id}/assign",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:support.assign"
+            ]
+        },
+        {
+            "uri": "/v1/support/tickets/{id}/status",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:support.create"
+            ]
+        },
+        {
+            "uri": "/v1/support/tickets/{id}/notes",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:support.create"
+            ]
+        },
+        {
+            "uri": "/v1/disputes",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:dispute.raise",
+                "App\\Http\\Middleware\\IdempotencyMiddleware"
+            ]
+        },
+        {
+            "uri": "/v1/disputes",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:dispute.raise"
+            ]
+        },
+        {
+            "uri": "/v1/disputes/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:dispute.raise"
+            ]
+        },
+        {
+            "uri": "/v1/disputes/{id}/reason",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:dispute.raise"
+            ]
+        },
+        {
+            "uri": "/v1/disputes/{id}/evidence",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:dispute.raise",
+                "App\\Http\\Middleware\\IdempotencyMiddleware"
+            ]
+        },
+        {
+            "uri": "/v1/disputes/{id}/evidence/{evidenceId}/signed-url",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:dispute.raise"
+            ]
+        },
+        {
+            "uri": "/v1/disputes/{id}/investigate",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:support.investigate"
+            ]
+        },
+        {
+            "uri": "/v1/disputes/{id}/approve",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:dispute.approve",
+                "App\\Http\\Middleware\\IdempotencyMiddleware"
+            ]
+        },
+        {
+            "uri": "/v1/disputes/{id}/confirm-approval",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:dispute.approve",
+                "App\\Http\\Middleware\\IdempotencyMiddleware"
+            ]
+        },
+        {
+            "uri": "/v1/disputes/{id}/reject",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:dispute.reject",
+                "App\\Http\\Middleware\\IdempotencyMiddleware"
+            ]
+        },
+        {
+            "uri": "/v1/disputes/{id}/refund",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:dispute.refund",
+                "App\\Modules\\Support\\Infrastructure\\Http\\Middleware\\RefundStepUpMiddleware"
+            ]
+        },
+        {
+            "uri": "/v1/disputes/{id}/confirm-refund",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:dispute.refund",
+                "App\\Modules\\Support\\Infrastructure\\Http\\Middleware\\RefundStepUpMiddleware"
+            ]
+        },
+        {
+            "uri": "/v1/disputes/{id}/escalate",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:dispute.escalate"
+            ]
+        },
+        {
+            "uri": "/v1/admin/support/summary",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:support.investigate"
+            ]
+        },
+        {
+            "uri": "/v1/admin/support/cases",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:support.investigate"
+            ]
+        },
+        {
+            "uri": "/v1/admin/support/cases/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:support.investigate"
+            ]
+        },
+        {
+            "uri": "/v1/admin/support/cases/{id}",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:support.investigate"
+            ]
+        },
+        {
+            "uri": "/v1/admin/support/cases/{id}/resolve",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:support.investigate",
+                "identity.require-permission:support.resolve"
+            ]
+        },
+        {
+            "uri": "/v1/admin/support/cases/{id}/refund",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:support.investigate",
+                "identity.require-permission:dispute.refund",
+                "throttle:10,1"
+            ]
+        },
+        {
+            "uri": "/v1/admin/support/cases/{id}/attachments",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:support.investigate",
+                "throttle:10,1"
+            ]
+        },
+        {
+            "uri": "/v1/admin/support/cases/{id}/attachments/{entryId}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:support.investigate"
+            ]
+        },
+        {
+            "uri": "/v1/audit/events",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:audit.read"
+            ]
+        },
+        {
+            "uri": "/v1/audit/events/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:audit.read"
+            ]
+        },
+        {
+            "uri": "/v1/compliance/dashboard",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:compliance.read"
+            ]
+        },
+        {
+            "uri": "/v1/compliance/status/{userId}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:compliance.read"
+            ]
+        },
+        {
+            "uri": "/v1/compliance/history/{userId}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:compliance.read"
+            ]
+        },
+        {
+            "uri": "/v1/compliance/transactions",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:compliance.read"
+            ]
+        },
+        {
+            "uri": "/v1/compliance/reports",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:compliance.report"
+            ]
+        },
+        {
+            "uri": "/v1/compliance/reports/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:compliance.report"
+            ]
+        },
+        {
+            "uri": "/v1/compliance/sars",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:compliance.report"
+            ]
+        },
+        {
+            "uri": "/v1/compliance/sars/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:compliance.report"
+            ]
+        },
+        {
+            "uri": "/v1/compliance/retention-policies",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:compliance.config"
+            ]
+        },
+        {
+            "uri": "/v1/compliance/retention-policies",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:compliance.config"
+            ]
+        },
+        {
+            "uri": "/v1/compliance/retention-policies/{id}",
+            "methods": [
+                "PUT"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:compliance.config"
+            ]
+        },
+        {
+            "uri": "/v1/reports/jobs",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/reports/jobs",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/reports/jobs/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/reports/jobs/{id}",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/reports/jobs/{jobId}/exports",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/reports/exports/{exportId}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/reports/exports/{exportId}/regenerate-link",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:admin.write"
+            ]
+        },
+        {
+            "uri": "/v1/reports/schedules",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reports.schedule"
+            ]
+        },
+        {
+            "uri": "/v1/reports/schedules",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reports.schedule"
+            ]
+        },
+        {
+            "uri": "/v1/reports/schedules/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reports.schedule"
+            ]
+        },
+        {
+            "uri": "/v1/reports/schedules/{id}",
+            "methods": [
+                "PUT"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reports.schedule"
+            ]
+        },
+        {
+            "uri": "/v1/reports/schedules/{id}",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reports.schedule"
+            ]
+        },
+        {
+            "uri": "/v1/reports/schedules/{id}/runs",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:reports.schedule"
+            ]
+        },
+        {
+            "uri": "/v1/reports/catalogue",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/webhooks/{providerSlug}",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "integration.correlation-id",
+                "integration.rate-limit"
+            ]
+        },
+        {
+            "uri": "/v1/integrations/clients",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/integrations/clients",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/integrations/clients/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/integrations/clients/{id}/rotate-secret",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/integrations/clients/{id}/status",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/integrations/providers",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/integrations/providers",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/integrations/providers/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/integrations/providers/{id}",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/integrations/providers/{id}/status",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/integrations/providers/{id}/set-default",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/integrations/providers/call-logs",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/integrations/providers/call-logs/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/integrations/webhooks",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/integrations/webhooks/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/integrations/webhooks/{id}/requeue",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/admin/integrations/api-clients",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/admin/integrations/api-clients",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/admin/integrations/api-clients/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/admin/integrations/api-clients/{id}/rotate",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage",
+                "throttle:10,1"
+            ]
+        },
+        {
+            "uri": "/v1/admin/integrations/api-clients/{id}",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/admin/integrations/providers",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/admin/integrations/providers/{id}/health",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/admin/webhooks/deliveries",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage"
+            ]
+        },
+        {
+            "uri": "/v1/admin/webhooks/deliveries/{id}/retry",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:integrations.manage",
+                "throttle:20,1"
+            ]
+        },
+        {
+            "uri": "/v1/security/dashboard",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:security.findings.read"
+            ]
+        },
+        {
+            "uri": "/v1/security/findings",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:security.findings.read"
+            ]
+        },
+        {
+            "uri": "/v1/security/findings/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:security.findings.read"
+            ]
+        },
+        {
+            "uri": "/v1/security/findings",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:security.findings.write"
+            ]
+        },
+        {
+            "uri": "/v1/security/findings/{id}/status",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:security.findings.write"
+            ]
+        },
+        {
+            "uri": "/v1/admin/platform/security-config",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:security.config.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/platform/security-config",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:security.config.write"
+            ]
+        },
+        {
+            "uri": "/v1/admin/platform/security-config/{id}/approve",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:security.config.write",
+                "identity.require-permission:configuration.approve"
+            ]
+        },
+        {
+            "uri": "/v1/admin/security/findings/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:security.findings.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin/security/findings/{id}",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:security.findings.write"
+            ]
+        },
+        {
+            "uri": "/v1/admin/security/events/export",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:security.events.export"
+            ]
+        },
+        {
+            "uri": "/v1/admin/security/events",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:security.events.read"
+            ]
+        },
+        {
+            "uri": "/v1/multi-currency/currencies",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/multi-currency/wallets",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.create_wallet"
+            ]
+        },
+        {
+            "uri": "/v1/multi-currency/wallets",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.view_balances"
+            ]
+        },
+        {
+            "uri": "/v1/multi-currency/wallets/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.view_balances"
+            ]
+        },
+        {
+            "uri": "/v1/multi-currency/wallets/{id}/transfers",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.transfer"
+            ]
+        },
+        {
+            "uri": "/v1/multi-currency/fx-fee",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth"
+            ]
+        },
+        {
+            "uri": "/v1/multi-currency/fx-quotes",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.convert"
+            ]
+        },
+        {
+            "uri": "/v1/multi-currency/fx-quotes/{id}/confirm",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.convert"
+            ]
+        },
+        {
+            "uri": "/v1/multi-currency/fx-transactions",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.view_balances"
+            ]
+        },
+        {
+            "uri": "/v1/multi-currency/fx-transactions/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.view_balances"
+            ]
+        },
+        {
+            "uri": "/v1/admin/multi-currency/currencies",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.manage_currencies"
+            ]
+        },
+        {
+            "uri": "/v1/admin/multi-currency/currencies",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.manage_currencies"
+            ]
+        },
+        {
+            "uri": "/v1/admin/multi-currency/currencies/{code}",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.manage_currencies"
+            ]
+        },
+        {
+            "uri": "/v1/admin/multi-currency/fx-rates",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.configure_rate"
+            ]
+        },
+        {
+            "uri": "/v1/admin/multi-currency/fx-rates",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.configure_rate"
+            ]
+        },
+        {
+            "uri": "/v1/admin/multi-currency/fx-rates/{id}/activate",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.configure_rate",
+                "identity.require-permission:configuration.approve"
+            ]
+        },
+        {
+            "uri": "/v1/admin/currencies",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.manage_currencies"
+            ]
+        },
+        {
+            "uri": "/v1/admin/currencies/{code}",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.manage_currencies"
+            ]
+        },
+        {
+            "uri": "/v1/admin/currencies/{code}/activate/{request}",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.manage_currencies",
+                "identity.require-permission:configuration.approve"
+            ]
+        },
+        {
+            "uri": "/v1/admin/fx/rates",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.configure_rate"
+            ]
+        },
+        {
+            "uri": "/v1/admin/fx/rates",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.configure_rate"
+            ]
+        },
+        {
+            "uri": "/v1/admin/fx/rates/{id}/activate",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.configure_rate",
+                "identity.require-permission:configuration.approve"
+            ]
+        },
+        {
+            "uri": "/v1/admin/fx/rates/{pair}/history",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:multi_currency.configure_rate"
+            ]
+        },
+        {
+            "uri": "/v1/ops/health",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": []
+        },
+        {
+            "uri": "/v1/ops/health/ready",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": []
+        },
+        {
+            "uri": "/v1/ops/health/live",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": []
+        },
+        {
+            "uri": "/v1/admin/ops/logs",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ops.view_logs"
+            ]
+        },
+        {
+            "uri": "/v1/admin/ops/metrics",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ops.view_metrics"
+            ]
+        },
+        {
+            "uri": "/v1/admin/ops/providers",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ops.view_health"
+            ]
+        },
+        {
+            "uri": "/v1/admin/ops/providers/{providerType}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ops.view_health"
+            ]
+        },
+        {
+            "uri": "/v1/admin/ops/providers/{providerType}/history",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ops.view_health"
+            ]
+        },
+        {
+            "uri": "/v1/admin/ops/alert-rules",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ops.manage_alerts"
+            ]
+        },
+        {
+            "uri": "/v1/admin/ops/alert-rules",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ops.manage_alerts"
+            ]
+        },
+        {
+            "uri": "/v1/admin/ops/alert-rules/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ops.manage_alerts"
+            ]
+        },
+        {
+            "uri": "/v1/admin/ops/alert-rules/{id}",
+            "methods": [
+                "PUT"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ops.manage_alerts"
+            ]
+        },
+        {
+            "uri": "/v1/admin/ops/alert-rules/{id}",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ops.manage_alerts"
+            ]
+        },
+        {
+            "uri": "/v1/admin/ops/alerts",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ops.manage_alerts"
+            ]
+        },
+        {
+            "uri": "/v1/admin/ops/backup-jobs",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ops.manage_backup"
+            ]
+        },
+        {
+            "uri": "/v1/admin/ops/backup-jobs",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ops.manage_backup"
+            ]
+        },
+        {
+            "uri": "/v1/admin/ops/backup-jobs/{id}/verify",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ops.manage_backup"
+            ]
+        },
+        {
+            "uri": "/v1/admin/ops/dr/status",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ops.manage_backup"
+            ]
+        },
+        {
+            "uri": "/v1/admin/ops/dr/tests",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ops.manage_backup"
+            ]
+        },
+        {
+            "uri": "/v1/admin/ops/deployments/versions",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ops.manage_deployments"
+            ]
+        },
+        {
+            "uri": "/v1/admin/ops/deployments/rollbacks",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ops.manage_deployments"
+            ]
+        },
+        {
+            "uri": "/v1/admin/ops/deployments/rollback",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "identity.require-permission:ops.manage_deployments"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/dashboard/operational",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.dashboard.operational"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/dashboard/financial",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.dashboard.financial"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/dashboard/risk",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.dashboard.risk"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/users",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.users.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/users/{user_id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.users.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/users/{user_id}/status",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.users.write",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\RequireIdempotencyKey"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/roles",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.roles.manage"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/roles",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.roles.manage",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\RequireIdempotencyKey"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/roles/{role_id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.roles.manage"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/roles/{role_id}/permissions",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.roles.manage",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\RequireIdempotencyKey"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/users/{user_id}/roles",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.roles.manage",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\RequireIdempotencyKey"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/kyc",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.kyc.review"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/kyc/{kyc_submission_id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.kyc.review"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/kyc/{kyc_submission_id}/approve",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.kyc.approve",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\RequireIdempotencyKey"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/kyc/{kyc_submission_id}/reject",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.kyc.reject",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\RequireIdempotencyKey"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/wallets",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.wallets.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/wallets/{wallet_id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.wallets.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/wallets/{wallet_id}/ledger",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.wallets.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/wallets/{wallet_id}/freeze",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.wallets.freeze",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\RequireIdempotencyKey"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/wallets/{wallet_id}/unfreeze",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.wallets.unfreeze",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\RequireIdempotencyKey"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/transactions",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.transactions.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/transactions/{transaction_id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.transactions.investigate"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/transactions/{transaction_id}/reverse",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.transactions.reverse",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\RequireIdempotencyKey"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/agents",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.agents.manage"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/agents/{agent_id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.agents.manage"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/agents/{agent_id}/approve",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.agents.approve",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\RequireIdempotencyKey"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/agents/{agent_id}/status",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.agents.manage",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\RequireIdempotencyKey"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/float",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.float.manage"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/float/{agent_id}/adjust",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.float.manage",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\RequireIdempotencyKey"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/reconciliation",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.reconciliation.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/reconciliation/{batch_id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.reconciliation.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/settlement",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.settlement.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/settlement/{settlement_id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.settlement.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/settlement/{settlement_id}/approve",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.settlement.read",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\RequireIdempotencyKey"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/audit",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.audit.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/reports",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.reports.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/reports",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.reports.read",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\RequireIdempotencyKey"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/reports/{report_id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:adminapp.reports.read"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/approvals/{approval_id}/approve",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\RequireIdempotencyKey"
+            ]
+        },
+        {
+            "uri": "/v1/admin-app/approvals/{approval_id}/reject",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\RequireIdempotencyKey"
+            ]
+        },
+        {
+            "uri": "/v1/qa/{category}",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:qa.execute"
+            ]
+        },
+        {
+            "uri": "/v1/qa/runs",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:qa.execute"
+            ]
+        },
+        {
+            "uri": "/v1/qa/runs/{id}",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:qa.execute"
+            ]
+        },
+        {
+            "uri": "/v1/qa/dashboard",
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "middleware": [
+                "identity.auth",
+                "App\\Modules\\AdminApp\\Infrastructure\\Http\\Middleware\\AddCorrelationIdHeader",
+                "identity.require-permission:qa.execute"
+            ]
+        }
+    ],
+    "permission_count": 190,
+    "grant_count": 190,
+    "missing_definitions": [],
+    "missing_grants": [],
+    "counts": {
+        "admin.admin_actions": 0,
+        "admin.admin_wallet_adjustments": 0,
+        "agent.agent_applications": 2,
+        "agent.agent_customer_relationships": 0,
+        "agent.agent_documents": 0,
+        "agent.agent_status_history": 4,
+        "agent.agents": 2,
+        "agent.float_limits": 0,
+        "agent.float_transactions": 0,
+        "agent.float_wallets": 1,
+        "audit.audit_events": 5,
+        "audit.audit_events_archive": 0,
+        "audit.compliance_history": 0,
+        "audit.compliance_reports": 0,
+        "audit.compliance_status": 0,
+        "audit.retention_policies": 0,
+        "audit.suspicious_activity_reports": 0,
+        "commission.commission_payouts": 6,
+        "commission.commission_rules": 3,
+        "commission.commissions": 9,
+        "commission.processed_events": 8,
+        "fees.fee_rules": 1,
+        "fees.fees": 0,
+        "fees.pricing_versions": 0,
+        "funding.bank_reconciliations": 0,
+        "funding.funding_provider_callbacks": 0,
+        "funding.funding_receipts": 0,
+        "funding.funding_transactions": 0,
+        "funding.unmatched_deposits": 0,
+        "identity.admin_email_verification_tokens": 0,
+        "identity.admin_password_reset_tokens": 0,
+        "identity.credentials": 3,
+        "identity.device_security_events": 3,
+        "identity.device_trust_history": 0,
+        "identity.devices": 15,
+        "identity.otp_challenges": 9,
+        "identity.permissions": 190,
+        "identity.role_permissions": 305,
+        "identity.roles": 77,
+        "identity.sessions": 116,
+        "identity.user_roles": 3,
+        "identity.users": 80,
+        "integration.admin_actions": 0,
+        "integration.admin_retry_intents": 0,
+        "integration.api_client_key_rotations": 0,
+        "integration.api_clients": 0,
+        "integration.integrations": 1,
+        "integration.provider_call_logs": 0,
+        "integration.webhook_events": 0,
+        "integration.webhook_processing_attempts": 0,
+        "kyc.kyc_cases": 1,
+        "kyc.kyc_documents": 0,
+        "kyc.kyc_personal_info": 0,
+        "kyc.kyc_verification_results": 0,
+        "ledger.journal_lines": 32,
+        "ledger.journals": 16,
+        "ledger.ledger_accounts": 3,
+        "multi_currency.currencies": 6,
+        "multi_currency.currency_change_applications": 0,
+        "multi_currency.currency_wallets": 0,
+        "multi_currency.fx_quotes": 0,
+        "multi_currency.fx_rates": 0,
+        "multi_currency.fx_transactions": 0,
+        "multi_currency.same_currency_transfers": 0,
+        "notification.admin_actions": 0,
+        "notification.admin_outbox": 0,
+        "notification.admin_rules": 1,
+        "notification.notification_deliveries": 1,
+        "notification.notification_preferences": 1,
+        "notification.notification_templates": 14,
+        "notification.notifications": 1,
+        "ops.alert_rules": 1,
+        "ops.alerts": 0,
+        "ops.backup_jobs": 0,
+        "ops.deployment_rollbacks": 0,
+        "ops.deployment_versions": 0,
+        "ops.health_snapshots": 0,
+        "ops.log_entries": 0,
+        "ops.provider_health_checks": 0,
+        "ops.provider_statuses": 0,
+        "ops.service_metrics": 0,
+        "platform.audit_events": 634,
+        "platform.cache": 0,
+        "platform.cache_locks": 0,
+        "platform.configuration_approvals": 0,
+        "platform.configuration_audit": 0,
+        "platform.configuration_change_requests": 0,
+        "platform.configuration_values": 76,
+        "platform.configuration_versions": 0,
+        "platform.configurations": 76,
+        "platform.dead_letter_items": 0,
+        "platform.failed_jobs": 0,
+        "platform.idempotency_records": 24,
+        "platform.job_batches": 0,
+        "platform.jobs": 0,
+        "platform.ledger_integrity_snapshots": 0,
+        "platform.migrations": 232,
+        "platform.outbox_events": 169,
+        "platform.password_reset_tokens": 0,
+        "platform.pending_admin_actions": 0,
+        "platform.sessions": 0,
+        "platform.users": 1,
+        "profile.account_status_history": 0,
+        "profile.data_exports": 0,
+        "profile.user_profiles": 5,
+        "qa.test_cases": 144,
+        "qa.test_results": 0,
+        "qa.test_runs": 0,
+        "qr.qr_codes": 0,
+        "qr.qr_payment_receipts": 0,
+        "qr.qr_payment_transactions": 0,
+        "reconciliation.cache": 0,
+        "reconciliation.cache_locks": 0,
+        "reconciliation.failed_jobs": 0,
+        "reconciliation.job_batches": 0,
+        "reconciliation.jobs": 0,
+        "reconciliation.migrations": 10,
+        "reconciliation.password_reset_tokens": 0,
+        "reconciliation.reconciliation_batches": 1,
+        "reconciliation.reconciliation_exceptions": 0,
+        "reconciliation.reconciliation_items": 0,
+        "reconciliation.sessions": 0,
+        "reconciliation.settlement_batches": 1,
+        "reconciliation.settlement_items": 0,
+        "reconciliation.users": 0,
+        "reporting.report_definitions": 10,
+        "reporting.report_exports": 0,
+        "reporting.report_jobs": 0,
+        "reporting.report_schedules": 1,
+        "reporting.schedule_runs": 0,
+        "risk.account_holds": 0,
+        "risk.alert_freeze_requests": 0,
+        "risk.alert_links": 0,
+        "risk.alert_notes": 0,
+        "risk.investigation_actions": 0,
+        "risk.investigation_outbox": 0,
+        "risk.risk_alert_events": 0,
+        "risk.risk_alerts": 1,
+        "risk.risk_decisions": 0,
+        "risk.risk_evaluations": 0,
+        "risk.risk_events": 0,
+        "risk.risk_rules": 0,
+        "risk.suspicious_activity_reports": 0,
+        "risk.watchlist_entries": 0,
+        "risk.watchlist_matches": 0,
+        "security.finding_mutations": 0,
+        "security.vulnerability_findings": 1,
+        "service.service_provider_callbacks": 0,
+        "service.service_receipts": 0,
+        "service.service_transactions": 0,
+        "service.services": 0,
+        "support.admin_case_entries": 0,
+        "support.admin_cases": 1,
+        "support.dispute_evidence": 0,
+        "support.disputes": 0,
+        "support.support_tickets": 1,
+        "support.ticket_notes": 0,
+        "transaction.reversal_audit_log": 0,
+        "transaction.reversals": 0,
+        "transaction.transaction_projections": 1,
+        "transaction.transaction_receipts": 0,
+        "transaction.transaction_status_history": 0,
+        "transfer.transfer_receipts": 0,
+        "transfer.transfer_transactions": 0,
+        "wallet.currencies": 6,
+        "wallet.currency_pockets": 1,
+        "wallet.wallet_holds": 0,
+        "wallet.wallet_limits": 0,
+        "wallet.wallet_status_history": 0,
+        "wallet.wallets": 1,
+        "withdrawal.withdrawal_provider_callbacks": 0,
+        "withdrawal.withdrawal_receipts": 0,
+        "withdrawal.withdrawal_transactions": 0
+    },
+    "samples": {
+        "admin": "01a0d2ba-3aee-7347-b52d-5802bab17ef6",
+        "wallet": "fe1d5886-4d8f-4d70-af9d-81772be07718",
+        "agent": "4196cf5c-871c-4a1f-8526-a72e906d3106",
+        "role": "a2d0840f-9a11-4b79-8132-0a5873a01448",
+        "kyc": "460661f1-e0c2-58cb-a56c-278f4e40c889",
+        "transaction": "33b2b513-e19e-5b00-a147-891b6b185e82",
+        "finding": "5f0fe20c-429f-5224-b0cb-0bf4a39b4bef",
+        "alert": "90443150-ed98-5d12-8ad0-881b65c97328",
+        "case": "f0877561-1dd2-5bb4-96e7-c5f6702709f0",
+        "batch": "10042cc2-9d1d-598e-919d-6924562d9db1",
+        "settlement": "e807c4bd-9d38-5665-9cad-ebe1d95d8216",
+        "device": "a2d2562e-c2e1-4137-b5ae-ce93fc568894",
+        "report": null,
+        "qa": null,
+        "customer": "01a11b20-5132-7162-8696-ff5cd9cdc1ab"
+    }
+}

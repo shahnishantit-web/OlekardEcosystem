@@ -1,0 +1,26 @@
+{
+  "data": [
+    {
+      "id": "ntf_01J8XYZABC000001",
+      "title": "Float Approved",
+      "body": "Your float top-up request of BWP 2,000 has been approved.",
+      "type": "float_approved",
+      "is_read": false,
+      "created_at": "2026-10-05T08:00:00Z",
+      "data": {"reference": "FT-2026-000001"}
+    },
+    {
+      "id": "ntf_01J8XYZABC000002",
+      "title": "Commission Credited",
+      "body": "BWP 1.25 commission credited for cash-in CI-2026-000001.",
+      "type": "commission_credited",
+      "is_read": true,
+      "created_at": "2026-10-05T09:31:00Z",
+      "data": {"reference": "CI-2026-000001"}
+    }
+  ],
+  "current_page": 1,
+  "total": 2,
+  "last_page": 1,
+  "unread_count": 1
+}

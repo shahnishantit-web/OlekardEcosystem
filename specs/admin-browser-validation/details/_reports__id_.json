@@ -1,0 +1,32 @@
+{
+  "pattern": "/reports/[id]",
+  "route": "/reports/d026a4eb-0e40-4fa7-a67b-d815f021ad19",
+  "landed": "/reports/d026a4eb-0e40-4fa7-a67b-d815f021ad19",
+  "errors": [],
+  "failures": [],
+  "detailResponses": [
+    {
+      "url": "/v1/reports/jobs/d026a4eb-0e40-4fa7-a67b-d815f021ad19",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "d026a4eb-0e40-4fa7-a67b-d815f021ad19",
+          "report_type": "browser_qa_report",
+          "status": "complete",
+          "row_count": 0,
+          "failure_reason": null,
+          "as_of_at": "2026-10-17T12:46:57+00:00",
+          "created_at": "2026-10-17T12:46:57+00:00",
+          "started_at": "2026-10-17T12:46:57+00:00",
+          "completed_at": "2026-10-17T12:46:57+00:00",
+          "filters": [],
+          "result_data": {
+            "rows": [],
+            "qa_fixture": true
+          }
+        }
+      }
+    }
+  ],
+  "text": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nManagement\n/\nReports\n⌘K\nA\nadmin@olekard.local\nReport Job\nType\nbrowser_qa_report\nStatus\nCOMPLETE\nRow Count\n0\nFilters\n[]\nCreated\n10/17/2026, 6:16:57 PM\nAs Of\n10/17/2026, 6:16:57 PM\nCompleted\n10/17/2026, 6:16:57 PM\nExport CSV\nExport Excel"
+}

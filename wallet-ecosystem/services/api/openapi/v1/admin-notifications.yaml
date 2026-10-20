@@ -1,0 +1,191 @@
+openapi: 3.0.3
+info:
+  title: OleKard Admin Notification Management
+  version: 1.0.0
+servers:
+  - url: /v1/admin/notifications
+security:
+  - bearerAuth: []
+paths:
+  /templates:
+    get:
+      operationId: listAdminNotificationTemplates
+      description: Requires notifications.templates.read. Existing shared-copy templates grouped by event key, supported channel, and nullable language.
+      responses:
+        '200':
+          description: Template data array with id, key, category, subject_template, body_template, supported_channels, variables, active, language and revision.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Template'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    patch:
+      operationId: editAdminNotificationTemplate
+      description: Requires notifications.templates.write. Updates shared subject/body and optional language metadata; stale revision returns 409.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/Copy'
+                - type: object
+                  required: [id, revision]
+                  properties:
+                    id: {type: string, format: uuid}
+                    revision: {type: integer, minimum: 1}
+                    language: {type: string, nullable: true, maxLength: 35}
+      responses:
+        '200': {description: Updated template in data}
+        '409': {description: Reload required because revision changed}
+        '422': {description: Invalid content, language tag or identifier}
+  /templates/preview:
+    post:
+      operationId: previewAdminNotificationTemplate
+      description: Requires notifications.templates.read. Literal text substitution only; missing variables become '[Unknown]'. Sample content is not audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/Copy'
+                - $ref: '#/components/schemas/Variables'
+      responses:
+        '200': {description: data contains subject and body strings; UI must render as text}
+        '422': {description: Invalid copy or non-string variable}
+  /templates/test:
+    post:
+      operationId: testAdminNotificationTemplate
+      description: Requires notifications.templates.write. Rate limited to 5/min. Uses saved template; recipient is always authenticated actor. request_id deduplicates creation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/Variables'
+                - type: object
+                  required: [id, request_id]
+                  properties:
+                    id: {type: string, format: uuid}
+                    request_id: {type: string, format: uuid}
+      responses:
+        '202': {description: Queued notification id/status}
+        '409': {description: Request identifier already belongs to another recipient}
+        '429': {description: Test send rate limit reached}
+  /log:
+    get:
+      operationId: listAdminNotificationDeliveries
+      description: Requires notifications.log.read. Recipient is a user UUID; message content and contact addresses excluded. sent includes delivered; failed includes permanently_failed.
+      parameters:
+        - {name: channel, in: query, schema: {type: string, enum: [email, sms, push, in_app]}}
+        - {name: status, in: query, schema: {type: string, enum: [queued, sent, delivered, failed, permanently_failed, bounced]}}
+        - {name: from, in: query, description: Inclusive UTC date, schema: {type: string, format: date}}
+        - {name: to, in: query, description: Inclusive UTC date, schema: {type: string, format: date}}
+        - {name: page, in: query, schema: {type: integer, minimum: 1, maximum: 100000}}
+      responses:
+        '200':
+          description: Paginated 25-row delivery list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: {type: string, format: uuid}
+                        recipient: {type: string, format: uuid}
+                        channel: {type: string}
+                        event: {type: string}
+                        status: {type: string}
+                        timestamp: {type: string, format: date-time}
+                        last_attempt_at: {type: string, format: date-time, nullable: true}
+                        attempt_count: {type: integer}
+                  meta:
+                    type: object
+                    properties:
+                      current_page: {type: integer}
+                      last_page: {type: integer}
+                      total: {type: integer}
+        '422': {description: Invalid filters or reversed date range}
+  /retry/{id}:
+    post:
+      operationId: retryAdminNotificationDelivery
+      description: Requires notifications.retry; rate limited 20/min. Existing failed/permanently_failed row only; durable outbox queues original channel job. Worker serialization/completed guards apply to automatic and manual retry.
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '202': {description: Existing delivery id and queued status}
+        '404': {description: Unknown delivery}
+        '409': {description: Delivery is queued or complete; cannot retry}
+        '429': {description: Retry request rate limit reached}
+  /rules:
+    get:
+      operationId: listAdminNotificationRules
+      description: Requires notifications.rules.read. Derived template/channel rows; absent optional state defaults enabled; mandatory rows locked enabled.
+      responses:
+        '200': {description: data array with template_id, event, channel, enabled, mandatory, revision}
+    patch:
+      operationId: updateAdminNotificationRule
+      description: Requires notifications.rules.write. Saves rule and durable NOTIFICATION_RULE_UPDATED with stable event_id, actor and correlation. New optional notifications snapshot rule channels immediately. Existing queued snapshots and mandatory notifications unchanged. Consumers deduplicate event_id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [template_id, channel, enabled, revision]
+              properties:
+                template_id: {type: string, format: uuid}
+                channel: {type: string, enum: [email, sms, push, in_app]}
+                enabled: {type: boolean}
+                revision: {type: integer, minimum: 0}
+      responses:
+        '200': {description: Updated rule payload}
+        '409': {description: Stale revision}
+        '422': {description: Mandatory disable or unsupported template channel}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer}
+  responses:
+    Unauthorized: {description: Authentication required}
+    Forbidden: {description: Required server-side permission missing}
+  schemas:
+    Copy:
+      type: object
+      required: [subject_template, body_template]
+      properties:
+        subject_template: {type: string, minLength: 1, maxLength: 500}
+        body_template: {type: string, minLength: 1, maxLength: 20000}
+    Variables:
+      type: object
+      properties:
+        variables:
+          type: object
+          maxProperties: 50
+          additionalProperties: {type: string, nullable: true, maxLength: 2000}
+    Template:
+      allOf:
+        - $ref: '#/components/schemas/Copy'
+        - type: object
+          properties:
+            id: {type: string, format: uuid}
+            key: {type: string}
+            category: {type: string}
+            supported_channels: {type: array, items: {type: string}}
+            variables: {type: object}
+            active: {type: boolean}
+            language: {type: string, nullable: true}
+            revision: {type: integer}

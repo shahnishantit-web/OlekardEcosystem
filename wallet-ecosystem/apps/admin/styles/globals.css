@@ -1,0 +1,168 @@
+@import '../../../packages/design-system/build/css/tokens.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Admin shell layout tokens ──────────────────────────────────────────── */
+:root {
+  --sidebar-expanded:  252px;
+  --sidebar-collapsed: 70px;
+  --header-height:     66px;
+  --content-padding-x: 32px;
+  --content-padding-y: 32px;
+}
+
+/* ── Admin light-theme design tokens (authoritative: olekard_admin_wireframe.html)
+   Using html[data-theme="admin"] for higher specificity than the dark-teal
+   [data-theme="admin"] block in packages/design-system/build/css/tokens.css */
+html[data-theme="admin"] {
+  /* Brand — Indigo Blue */
+  --color-brand-primary: #596fb6;
+
+  /* Page backgrounds */
+  --color-bg-primary:   #f7f8fb;
+  --color-bg-secondary: #ffffff;
+
+  /* Typography */
+  --color-text-primary:   #202636;
+  --color-text-secondary: #788194;
+
+  /* Neutral palette */
+  --color-neutral-50:  #fbfbfd;
+  --color-neutral-100: #f7f8fb;
+  --color-neutral-200: #e8ebf1;
+  --color-neutral-300: #dfe3eb;
+  --color-neutral-400: #c2c9d6;
+  --color-neutral-500: #98a1af;
+  --color-neutral-600: #788194;
+  --color-neutral-700: #596477;
+  --color-neutral-800: #3d4658;
+  --color-neutral-900: #202636;
+
+  /* Primary actions */
+  --ok-primary:       #596fb6;
+  --ok-primary-dark:  #435b9e;
+  --ok-primary-light: #eef1fb;
+
+  /* Layout surfaces */
+  --ok-background: #f7f8fb;
+  --ok-surface:    #ffffff;
+  --ok-accent:     #596fb6;
+
+  /* Sidebar & navigation */
+  --ok-sidebar-bg:       #fbfbfd;
+  --ok-sidebar-border:   #e8ebf1;
+  --ok-nav-text:         #596477;
+  --ok-nav-hover:        #f0f1f5;
+  --ok-nav-active:       #eef1fb;
+  --ok-nav-active-fg:    #435a9d;
+
+  /* Header */
+  --ok-header-bg:     #ffffff;
+  --ok-header-border: #e8ebf1;
+
+  /* Cards */
+  --ok-card-bg:     #ffffff;
+  --ok-card-border: #e8ebf1;
+  --ok-card-shadow: 0 1px 3px rgba(32, 38, 54, 0.04);
+
+  /* Borders */
+  --ok-border:        #e8ebf1;
+  --ok-border-strong: #dfe3eb;
+
+  /* Text */
+  --ok-text-primary:   #202636;
+  --ok-text-secondary: #788194;
+  --ok-text-muted:     #98a1af;
+
+  /* Semantic colours */
+  --ok-success-bg:  #eaf8f1;
+  --ok-success-fg:  #16845e;
+  --ok-success-border: #b6e8d0;
+  --ok-warning-bg:  #fff6e7;
+  --ok-warning-fg:  #a77625;
+  --ok-warning-border: #f2dcac;
+  --ok-error-bg:    #fff0f0;
+  --ok-error-fg:    #c94d52;
+  --ok-error-border: #f1c4c6;
+  --ok-info-bg:     #eef1fb;
+  --ok-info-fg:     #435a9d;
+  --ok-info-border: #cbd4e8;
+
+  /* Legacy aliases kept for backward-compat */
+  --ok-success: #16845e;
+  --ok-warning: #a77625;
+  --ok-error:   #c94d52;
+  --ok-info:    #435a9d;
+
+  /* Charts */
+  --ok-chart-primary:   #6179b9;
+  --ok-chart-secondary: #6f83be;
+  --ok-chart-grid:      #e9edf4;
+
+  /* Focus & interaction */
+  --ok-focus-ring:    #99adeb;
+  --ok-input-bg:      #ffffff;
+  --ok-input-border:  #dfe3eb;
+  --ok-hover-bg:      #f8f9fc;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-feature-settings: 'cv11', 'ss01';
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* Reduced motion — WCAG 2.3.3 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus visible — WCAG 2.4.7 */
+:focus-visible {
+  outline: 3px solid var(--ok-focus-ring, var(--color-brand-primary));
+  outline-offset: 2px;
+}
+
+
+/* AdminShell sidebar width transition */
+.sidebar-transition {
+  transition-property: width;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-transition {
+    transition: none;
+  }
+}
+

@@ -1,0 +1,676 @@
+openapi: "3.1.0"
+info:
+  title: Risk Detection & Alert Management API
+  description: |
+    Pattern detection (US-RISK-016 through US-RISK-018), alert lifecycle
+    (US-RISK-019 through US-RISK-021), and account freeze (US-RISK-022)
+  version: "1.0.0"
+
+tags:
+  - name: detection
+    description: Async pattern detection endpoints
+  - name: alerts
+    description: Risk alert lifecycle management
+
+paths:
+  /v1/risk/detect-unusual-transaction-pattern:
+    post:
+      tags: [detection]
+      operationId: detectUnusualTransactionPattern
+      summary: Trigger unusual pattern detection for a subject (US-RISK-016)
+      description: |
+        Asynchronous — queued analysis. Returns 202 Accepted immediately.
+        Results are surfaced as RiskAlert records when a pattern is confirmed.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatternDetectionRequest'
+      responses:
+        "202":
+          description: Pattern analysis queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetectionQueuedResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/risk/detect-rapid-fund-movement:
+    post:
+      tags: [detection]
+      operationId: detectRapidFundMovement
+      summary: Trigger rapid fund movement analysis (US-RISK-017)
+      description: |
+        Detects layering behaviour: funds received and re-dispatched within a
+        configurable window (default 24h). Asynchronous — returns 202.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatternDetectionRequest'
+      responses:
+        "202":
+          description: Analysis queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetectionQueuedResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/risk/detect-repeated-failed-authentication:
+    post:
+      tags: [detection]
+      operationId: detectRepeatedFailedAuthentication
+      summary: Record an auth failure and evaluate if threshold is exceeded (US-RISK-018)
+      description: |
+        Synchronous — evaluates against the auth-failure-count rule immediately.
+        If threshold is exceeded, creates a RiskAlert.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthFailureRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthFailureResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/risk/create-risk-alert:
+    post:
+      tags: [alerts]
+      operationId: createRiskAlert
+      summary: Manually create a risk alert (US-RISK-019)
+      description: |
+        Officers can create alerts manually in addition to auto-generated alerts.
+        Idempotent by (alert_type, subject_id, correlation_id).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAlertRequest'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertDetailResponse'
+        "409":
+          description: Alert already exists for this correlation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/risk/alerts:
+    get:
+      tags: [alerts]
+      operationId: listAlerts
+      summary: List risk alerts with filtering
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [open, under_investigation, escalated, resolved_true_positive, resolved_false_positive, closed]
+        - in: query
+          name: severity
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - in: query
+          name: subject_id
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: assigned_to
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertListResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/risk/alerts/{id}:
+    get:
+      tags: [alerts]
+      operationId: getAlert
+      summary: Get a single alert with full details
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertDetailResponse'
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/risk/investigate-risk-alert:
+    post:
+      tags: [alerts]
+      operationId: investigateRiskAlert
+      summary: Assign and begin investigation of an alert (US-RISK-020)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvestigateAlertRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertDetailResponse'
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "409":
+          description: Optimistic lock conflict — version mismatch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/risk/resolve-risk-alert:
+    post:
+      tags: [alerts]
+      operationId: resolveRiskAlert
+      summary: Resolve an alert with a final determination (US-RISK-021)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveAlertRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertDetailResponse'
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "409":
+          description: Optimistic lock conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/risk/freeze-account-due-to-risk:
+    post:
+      tags: [alerts]
+      operationId: freezeAccountDueToRisk
+      summary: Place an account hold to freeze transactions (US-RISK-022)
+      description: |
+        Privileged action requiring maker-checker when configured.
+        Creates an AccountHold record. Does not modify the ledger.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreezeAccountRequest'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountHoldResponse'
+        "404":
+          description: Subject not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "409":
+          description: Account already frozen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid auth token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Lacks required permission
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    PatternDetectionRequest:
+      type: object
+      required: [subject_type, subject_id]
+      properties:
+        subject_type:
+          type: string
+          enum: [customer, agent, wallet]
+        subject_id:
+          type: string
+          format: uuid
+        lookback_days:
+          type: integer
+          default: 30
+          description: Override default lookback window; configurable per rule
+
+    AuthFailureRequest:
+      type: object
+      required: [subject_type, subject_id, device_id]
+      properties:
+        subject_type:
+          type: string
+          enum: [customer, agent]
+        subject_id:
+          type: string
+          format: uuid
+        device_id:
+          type: string
+        ip_address:
+          type: string
+          nullable: true
+        failure_reason:
+          type: string
+          enum: [wrong_pin, wrong_password, biometric_failed, otp_expired, otp_wrong]
+
+    CreateAlertRequest:
+      type: object
+      required: [alert_type, severity, subject_type, subject_id, title, description]
+      properties:
+        alert_type:
+          type: string
+          maxLength: 100
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+        subject_type:
+          type: string
+          enum: [customer, agent, wallet]
+        subject_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        event_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Link existing RiskEvent records to this alert
+        correlation_id:
+          type: string
+          nullable: true
+
+    InvestigateAlertRequest:
+      type: object
+      required: [alert_id, version]
+      properties:
+        alert_id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          description: Optimistic lock version from last GET
+        assigned_to:
+          type: string
+          format: uuid
+          nullable: true
+          description: Officer ID; defaults to caller if null
+        notes:
+          type: string
+          nullable: true
+
+    ResolveAlertRequest:
+      type: object
+      required: [alert_id, version, decision, rationale]
+      properties:
+        alert_id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+        decision:
+          type: string
+          enum: [clear, escalate, freeze_account, file_sar, false_positive]
+        rationale:
+          type: string
+          minLength: 20
+          maxLength: 2000
+        checker_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Required for freeze_account and file_sar decisions
+
+    FreezeAccountRequest:
+      type: object
+      required: [subject_type, subject_id, reason, alert_id]
+      properties:
+        subject_type:
+          type: string
+          enum: [customer, agent]
+        subject_id:
+          type: string
+          format: uuid
+        wallet_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: If null, all wallets are frozen
+        hold_type:
+          type: string
+          enum: [risk_freeze, compliance_hold, aml_investigation]
+          default: risk_freeze
+        reason:
+          type: string
+          minLength: 10
+        alert_id:
+          type: string
+          format: uuid
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        checker_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    DetectionQueuedResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          description: Queue job ID for tracking
+        subject_id:
+          type: string
+          format: uuid
+        queued_at:
+          type: string
+          format: date-time
+
+    AuthFailureResponse:
+      type: object
+      properties:
+        failure_count:
+          type: integer
+          description: Current count within the evaluation window
+        threshold:
+          type: integer
+          description: Configured threshold for this subject
+        alert_created:
+          type: boolean
+        alert_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    AlertListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertSummary'
+        meta:
+          type: object
+          properties:
+            total:
+              type: integer
+            page:
+              type: integer
+            per_page:
+              type: integer
+
+    AlertSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        alert_number:
+          type: integer
+        alert_type:
+          type: string
+        status:
+          type: string
+        severity:
+          type: string
+        subject_type:
+          type: string
+        subject_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        assigned_to:
+          type: string
+          format: uuid
+          nullable: true
+        sla_due_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    AlertDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/AlertSummary'
+        - type: object
+          properties:
+            description:
+              type: string
+            version:
+              type: integer
+            events:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  event_type:
+                    type: string
+                  severity:
+                    type: string
+                  detected_at:
+                    type: string
+                    format: date-time
+            decisions:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  decision:
+                    type: string
+                  rationale:
+                    type: string
+                  decided_by:
+                    type: string
+                    format: uuid
+                  decided_at:
+                    type: string
+                    format: date-time
+            resolved_at:
+              type: string
+              format: date-time
+              nullable: true
+            resolution_notes:
+              type: string
+              nullable: true
+            updated_at:
+              type: string
+              format: date-time
+
+    AccountHoldResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        subject_type:
+          type: string
+        subject_id:
+          type: string
+          format: uuid
+        wallet_id:
+          type: string
+          format: uuid
+          nullable: true
+        hold_type:
+          type: string
+        status:
+          type: string
+        placed_by:
+          type: string
+          format: uuid
+        placed_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+        errors:
+          type: object

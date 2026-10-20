@@ -1,0 +1,98 @@
+{
+  "pattern": "/admin-portal/wallets/[id]",
+  "route": "/admin-portal/wallets/fe1d5886-4d8f-4d70-af9d-81772be07718",
+  "landed": "/admin-portal/wallets/fe1d5886-4d8f-4d70-af9d-81772be07718",
+  "errors": [],
+  "failures": [],
+  "detailResponses": [
+    {
+      "url": "/v1/admin-app/wallets",
+      "status": 200
+    },
+    {
+      "url": "/v1/admin-app/wallets/fe1d5886-4d8f-4d70-af9d-81772be07718",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "fe1d5886-4d8f-4d70-af9d-81772be07718",
+          "user_id": "594dde0f-8ef6-4b11-b61b-5ea86d313db5",
+          "wallet_id": "fe1d5886-4d8f-4d70-af9d-81772be07718",
+          "wallet_number": "WLT-AGENT-TEST-01",
+          "owner_user_id": "594dde0f-8ef6-4b11-b61b-5ea86d313db5",
+          "owner_name": "",
+          "wallet_type": "customer",
+          "status": "active",
+          "balance_minor_units": 0,
+          "currency_code": "BWP",
+          "currency": "BWP",
+          "created_at": "2026-09-24 10:17:11+00",
+          "frozen_at": null,
+          "frozen_by": null,
+          "freeze_reason": null
+        }
+      }
+    },
+    {
+      "url": "/v1/admin-app/wallets/fe1d5886-4d8f-4d70-af9d-81772be07718/ledger",
+      "status": 200,
+      "body": {
+        "data": {
+          "data": [
+            {
+              "id": "01a0d35a-1c8f-704f-985f-269c5ad862dd",
+              "type": "commission",
+              "direction": "debit",
+              "amount_minor_units": 200,
+              "running_balance_minor_units": null,
+              "reference": "commission_reversal_clawback:a2d279fa-e841-4cbe-83b0-ed81ccc09042",
+              "posted_at": "2026-09-24 12:18:13+00"
+            },
+            {
+              "id": "01a0d34c-0701-71b2-8984-a7d04f1a6655",
+              "type": "commission",
+              "direction": "credit",
+              "amount_minor_units": 300,
+              "running_balance_minor_units": null,
+              "reference": "commission_payout:a2d281c5-ee22-439a-ac89-0f6211022871",
+              "posted_at": "2026-09-24 12:02:50+00"
+            },
+            {
+              "id": "01a0d329-9510-730a-bc2a-e0e7413ecff9",
+              "type": "commission",
+              "direction": "credit",
+              "amount_minor_units": 300,
+              "running_balance_minor_units": null,
+              "reference": "commission_payout:a2d27c3d-fc48-4637-94c6-f55d089d273c",
+              "posted_at": "2026-09-24 11:25:12+00"
+            },
+            {
+              "id": "01a0d328-1b9f-73ef-aa35-e9a10312c810",
+              "type": "commission",
+              "direction": "credit",
+              "amount_minor_units": 300,
+              "running_balance_minor_units": null,
+              "reference": "commission_payout:a2d27baa-ab26-4d8a-a808-6c82807caaa0",
+              "posted_at": "2026-09-24 11:23:36+00"
+            },
+            {
+              "id": "01a0d327-0ec2-7339-8ee3-75ffa1565bc5",
+              "type": "commission",
+              "direction": "credit",
+              "amount_minor_units": 400,
+              "running_balance_minor_units": null,
+              "reference": "commission_payout:a2d27b41-89ff-47e0-8220-8297e6da6d11",
+              "posted_at": "2026-09-24 11:22:27+00"
+            }
+          ],
+          "meta": {
+            "current_page": 1,
+            "per_page": 20,
+            "total": 5,
+            "last_page": 1
+          }
+        }
+      }
+    }
+  ],
+  "text": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nOperations\n/\nWallets\n⌘K\nA\nadmin@olekard.local\nWallets\n/\nWLT-AGENT-TEST-01\nWLT-AGENT-TEST-01\nWALLET ID\nWLT-AGENT-TEST-01\nSTATUS\nACTIVE\nOWNER\nCURRENCY\nBWP\nBALANCE\nBWP 0.00\nCREATED\n9/24/2026\nFreeze Wallet\nBalance Adjustment\nLedger Entries\nDATE\tTYPE\tREFERENCE\tAMOUNT\tRUNNING BALANCE\n9/24/2026, 5:48:13 PM\tCommission\tcommission_reversal_clawback:a2d279fa-e841-4cbe-83b0-ed81ccc09042\t−2.00\t—\n9/24/2026, 5:32:50 PM\tCommission\tcommission_payout:a2d281c5-ee22-439a-ac89-0f6211022871\t+3.00\t—\n9/24/2026, 4:55:12 PM\tCommission\tcommission_payout:a2d27c3d-fc48-4637-94c6-f55d089d273c\t+3.00\t—\n9/24/2026, 4:53:36 PM\tCommission\tcommission_payout:a2d27baa-ab26-4d8a-a808-6c82807caaa0\t+3.00\t—\n9/24/2026, 4:52:27 PM\tCommission\tcommission_payout:a2d27b41-89ff-47e0-8220-8297e6da6d11\t+4.00\t—\nPage 1 of 1 · 5 entries\nPrevious\nNext"
+}

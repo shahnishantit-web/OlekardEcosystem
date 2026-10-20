@@ -1,0 +1,685 @@
+openapi: 3.1.0
+info:
+  title: E29 — Multi-Currency Wallet API
+  version: "1.0"
+  description: |
+    Multi-currency wallet management, FX rate configuration, FX quote/conversion flow,
+    and same-currency transfers.
+    Covers US-MCW-001 through US-MCW-009.
+
+    ## Security
+    All endpoints require a valid JWT bearer token (issued by the Identity service).
+    Admin endpoints additionally require an admin actor type and specific permission slugs.
+
+    ## FX Conversion Flow
+    1. `GET /v1/multi-currency/fx-fee-preview` — preview fee without persisting
+    2. `POST /v1/multi-currency/fx-quotes` — lock a rate for 60 seconds (returns quote)
+    3. `POST /v1/multi-currency/fx-quotes/{id}/confirm` — execute the conversion synchronously
+
+paths:
+
+  # ── Currencies ─────────────────────────────────────────────────────────────
+
+  /v1/multi-currency/currencies:
+    get:
+      operationId: listCurrencies
+      summary: List active currencies
+      tags: [currencies]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Active currencies
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrencyListResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/admin/multi-currency/currencies:
+    get:
+      operationId: adminListCurrencies
+      summary: List all currencies (active + inactive)
+      tags: [admin-currencies]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: All currencies
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrencyListResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: adminCreateCurrency
+      summary: Create or upsert a currency
+      tags: [admin-currencies]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCurrencyRequest'
+      responses:
+        "201":
+          description: Currency created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrencyResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+
+  /v1/admin/multi-currency/currencies/{code}:
+    patch:
+      operationId: adminUpdateCurrency
+      summary: Update currency (activate/deactivate, rename)
+      tags: [admin-currencies]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Z]{3}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCurrencyRequest'
+      responses:
+        "200":
+          description: Currency updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrencyResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+
+  # ── Currency Wallets ────────────────────────────────────────────────────────
+
+  /v1/multi-currency/wallets:
+    get:
+      operationId: listCurrencyWallets
+      summary: List customer's currency wallets with balances
+      tags: [currency-wallets]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Currency wallets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrencyWalletListResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createCurrencyWallet
+      summary: Create a new currency wallet (US-MCW-001)
+      tags: [currency-wallets]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCurrencyWalletRequest'
+      responses:
+        "201":
+          description: Currency wallet created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrencyWalletResponse'
+        "409":
+          $ref: '#/components/responses/Conflict'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+
+  /v1/multi-currency/wallets/{id}:
+    get:
+      operationId: getCurrencyWallet
+      summary: Get a single currency wallet with balance
+      tags: [currency-wallets]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WalletId'
+      responses:
+        "200":
+          description: Currency wallet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrencyWalletResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /v1/multi-currency/wallets/{id}/transfer:
+    post:
+      operationId: sameCurrencyTransfer
+      summary: Transfer between same-currency wallets (US-MCW-004)
+      tags: [currency-wallets]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WalletId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SameCurrencyTransferRequest'
+      responses:
+        "200":
+          description: Transfer completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SameCurrencyTransferResponse'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+
+  # ── FX Rates (Admin) ────────────────────────────────────────────────────────
+
+  /v1/admin/multi-currency/fx-rates:
+    get:
+      operationId: adminListFxRates
+      summary: List FX rates (active by default)
+      tags: [admin-fx-rates]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: active_only
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        "200":
+          description: FX rates
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FxRateListResponse'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: adminSubmitFxRate
+      summary: Submit a new FX rate (supersedes current rate for the pair) (US-MCW-005)
+      tags: [admin-fx-rates]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitFxRateRequest'
+      responses:
+        "201":
+          description: FX rate submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FxRateResponse'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+
+  # ── FX Fee Preview ──────────────────────────────────────────────────────────
+
+  /v1/multi-currency/fx-fee-preview:
+    get:
+      operationId: previewFxFee
+      summary: Preview FX fee without locking a rate (US-MCW-006)
+      tags: [fx-quotes]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: from_currency_code
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Z]{3}$'
+        - name: to_currency_code
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Z]{3}$'
+        - name: from_amount
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d+(\.\d{1,8})?$'
+      responses:
+        "200":
+          description: Fee preview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FxFeePreviewResponse'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+
+  # ── FX Quotes ───────────────────────────────────────────────────────────────
+
+  /v1/multi-currency/fx-quotes:
+    post:
+      operationId: requestFxQuote
+      summary: Request a locked FX quote (60-second TTL) (US-MCW-007 Phase 1)
+      tags: [fx-quotes]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FxQuoteRequest'
+      responses:
+        "201":
+          description: FX quote issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FxQuoteResponse'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+
+  /v1/multi-currency/fx-quotes/{id}/confirm:
+    post:
+      operationId: confirmFxQuote
+      summary: Confirm and execute a quoted FX conversion (US-MCW-007 Phase 2 + US-MCW-008)
+      tags: [fx-quotes]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idempotency_key]
+              properties:
+                idempotency_key:
+                  type: string
+                  maxLength: 255
+      responses:
+        "200":
+          description: FX conversion completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FxTransactionResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+
+  # ── FX Transaction History ──────────────────────────────────────────────────
+
+  /v1/multi-currency/fx-transactions:
+    get:
+      operationId: listFxTransactions
+      summary: List customer's FX conversion history (US-MCW-009)
+      tags: [fx-transactions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: from_currency
+          in: query
+          schema: { type: string, pattern: '^[A-Z]{3}$' }
+        - name: to_currency
+          in: query
+          schema: { type: string, pattern: '^[A-Z]{3}$' }
+        - name: from_date
+          in: query
+          schema: { type: string, format: date }
+        - name: to_date
+          in: query
+          schema: { type: string, format: date }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+      responses:
+        "200":
+          description: FX transaction list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FxTransactionListResponse'
+
+  /v1/multi-currency/fx-transactions/{id}:
+    get:
+      operationId: getFxTransaction
+      summary: Get a single FX transaction
+      tags: [fx-transactions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: FX transaction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FxTransactionResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+# ── Components ─────────────────────────────────────────────────────────────────
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 255
+    WalletId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: Unauthenticated
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Conflict:
+      description: Resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    ValidationError:
+      description: Validation / domain error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+
+  schemas:
+    ErrorEnvelope:
+      type: object
+      properties:
+        success:        { type: boolean, example: false }
+        data:           { nullable: true }
+        correlation_id: { type: string, format: uuid }
+        error:
+          type: object
+          properties:
+            code:    { type: string }
+            message: { type: string }
+            details: { type: object }
+
+    Currency:
+      type: object
+      properties:
+        code:           { type: string, example: BWP }
+        name:           { type: string, example: 'Botswana Pula' }
+        symbol:         { type: string, example: P }
+        decimal_places: { type: integer, example: 2 }
+        is_active:      { type: boolean }
+
+    CurrencyWallet:
+      type: object
+      properties:
+        id:            { type: string, format: uuid }
+        currency_code: { type: string, example: BWP }
+        balance:       { type: string, example: '1000.00' }
+        symbol:        { type: string, example: P }
+        is_active:     { type: boolean }
+
+    FxRate:
+      type: object
+      properties:
+        id:                 { type: string, format: uuid }
+        from_currency_code: { type: string }
+        to_currency_code:   { type: string }
+        rate:               { type: string }
+        spread:             { type: string }
+        effective_from:     { type: string, format: date-time }
+        effective_to:       { type: string, format: date-time, nullable: true }
+
+    FxQuote:
+      type: object
+      properties:
+        id:                 { type: string, format: uuid }
+        from_currency_code: { type: string }
+        to_currency_code:   { type: string }
+        from_amount:        { type: string }
+        to_amount:          { type: string }
+        fee_amount:         { type: string }
+        rate:               { type: string }
+        spread:             { type: string }
+        status:             { type: string, enum: [quoted, confirmed, expired, cancelled] }
+        expires_at:         { type: string, format: date-time }
+        fx_transaction_id:  { type: string, format: uuid, nullable: true }
+
+    FxTransaction:
+      type: object
+      properties:
+        id:                 { type: string, format: uuid }
+        from_currency_code: { type: string }
+        to_currency_code:   { type: string }
+        from_amount:        { type: string }
+        to_amount:          { type: string }
+        fee_amount:         { type: string }
+        rate:               { type: string }
+        status:             { type: string, enum: [completed, failed] }
+        fx_quote_id:        { type: string, format: uuid }
+        completed_at:       { type: string, format: date-time, nullable: true }
+
+    # ── Request schemas ────────────────────────────────────────────────────────
+
+    CreateCurrencyRequest:
+      type: object
+      required: [code, name, symbol, decimal_places, is_active]
+      properties:
+        code:           { type: string, pattern: '^[A-Z]{3}$' }
+        name:           { type: string, maxLength: 100 }
+        symbol:         { type: string, maxLength: 10 }
+        decimal_places: { type: integer, minimum: 0, maximum: 8 }
+        is_active:      { type: boolean }
+
+    UpdateCurrencyRequest:
+      type: object
+      properties:
+        name:           { type: string, maxLength: 100 }
+        symbol:         { type: string, maxLength: 10 }
+        decimal_places: { type: integer, minimum: 0, maximum: 8 }
+        is_active:      { type: boolean }
+
+    CreateCurrencyWalletRequest:
+      type: object
+      required: [currency_code]
+      properties:
+        currency_code: { type: string, pattern: '^[A-Z]{3}$' }
+
+    SameCurrencyTransferRequest:
+      type: object
+      required: [to_wallet_id, amount]
+      properties:
+        to_wallet_id: { type: string, format: uuid }
+        amount:       { type: string, pattern: '^\d+\.\d{2}$', example: '50.00' }
+
+    SubmitFxRateRequest:
+      type: object
+      required: [from_currency_code, to_currency_code, rate, spread]
+      properties:
+        from_currency_code: { type: string, pattern: '^[A-Z]{3}$' }
+        to_currency_code:   { type: string, pattern: '^[A-Z]{3}$' }
+        rate:               { type: string, pattern: '^\d+(\.\d+)?$' }
+        spread:             { type: string, pattern: '^0(\.\d+)?$' }
+        effective_from:     { type: string, format: date-time }
+
+    FxQuoteRequest:
+      type: object
+      required: [from_currency_code, to_currency_code, from_amount]
+      properties:
+        from_currency_code: { type: string, pattern: '^[A-Z]{3}$' }
+        to_currency_code:   { type: string, pattern: '^[A-Z]{3}$' }
+        from_amount:        { type: string, pattern: '^\d+(\.\d+)?$' }
+
+    # ── Response schemas ───────────────────────────────────────────────────────
+
+    CurrencyListResponse:
+      type: object
+      properties:
+        success:        { type: boolean }
+        data:           { type: array, items: { $ref: '#/components/schemas/Currency' } }
+        correlation_id: { type: string }
+
+    CurrencyResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:    { $ref: '#/components/schemas/Currency' }
+
+    CurrencyWalletListResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:    { type: array, items: { $ref: '#/components/schemas/CurrencyWallet' } }
+
+    CurrencyWalletResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:    { $ref: '#/components/schemas/CurrencyWallet' }
+
+    SameCurrencyTransferResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: object
+          properties:
+            transfer_id:    { type: string, format: uuid }
+            status:         { type: string, example: completed }
+            amount:         { type: string }
+            currency_code:  { type: string }
+            from_wallet_id: { type: string, format: uuid }
+            to_wallet_id:   { type: string, format: uuid }
+
+    FxRateListResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:    { type: array, items: { $ref: '#/components/schemas/FxRate' } }
+
+    FxRateResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:    { $ref: '#/components/schemas/FxRate' }
+
+    FxFeePreviewResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: object
+          properties:
+            from_amount:     { type: string }
+            fee_amount:      { type: string }
+            net_from_amount: { type: string }
+            to_amount:       { type: string }
+            rate:            { type: string }
+            spread:          { type: string }
+
+    FxQuoteResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:    { $ref: '#/components/schemas/FxQuote' }
+
+    FxTransactionResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:    { $ref: '#/components/schemas/FxTransaction' }
+
+    FxTransactionListResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: object
+          properties:
+            data:         { type: array, items: { $ref: '#/components/schemas/FxTransaction' } }
+            current_page: { type: integer }
+            last_page:    { type: integer }
+            per_page:     { type: integer }
+            total:        { type: integer }

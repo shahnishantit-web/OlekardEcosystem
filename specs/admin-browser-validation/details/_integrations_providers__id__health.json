@@ -1,0 +1,294 @@
+{
+  "pattern": "/integrations/providers/[id]/health",
+  "route": "/integrations/providers/d026a4eb-0e40-4fa7-a67b-d815f021ad14/health",
+  "landed": "/integrations/providers/d026a4eb-0e40-4fa7-a67b-d815f021ad14/health",
+  "errors": [],
+  "failures": [],
+  "detailResponses": [
+    {
+      "url": "/v1/admin/integrations/providers/d026a4eb-0e40-4fa7-a67b-d815f021ad14/health",
+      "status": 200,
+      "body": {
+        "data": {
+          "integration_id": "d026a4eb-0e40-4fa7-a67b-d815f021ad14",
+          "display_name": "Browser QA Provider",
+          "health": "degraded",
+          "last_checked_at": "2026-10-17T12:46:57+00:00",
+          "sample_count": 1,
+          "buckets": [
+            {
+              "hour": "2026-10-16T13:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-16T14:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-16T15:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-16T16:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-16T17:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-16T18:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-16T19:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-16T20:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-16T21:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-16T22:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-16T23:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T00:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T01:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T02:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T03:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T04:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T05:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T06:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T07:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T08:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T09:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T10:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T11:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T12:00:00+00:00",
+              "samples": 1,
+              "uptime_percent": 0
+            }
+          ],
+          "recent_errors": [
+            {
+              "timestamp": "2026-10-17T12:46:57+00:00",
+              "status": "degraded",
+              "message": "Provider probe timed out"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "url": "/v1/admin/integrations/providers/d026a4eb-0e40-4fa7-a67b-d815f021ad14/health",
+      "status": 200,
+      "body": {
+        "data": {
+          "integration_id": "d026a4eb-0e40-4fa7-a67b-d815f021ad14",
+          "display_name": "Browser QA Provider",
+          "health": "degraded",
+          "last_checked_at": "2026-10-17T12:46:57+00:00",
+          "sample_count": 1,
+          "buckets": [
+            {
+              "hour": "2026-10-16T13:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-16T14:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-16T15:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-16T16:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-16T17:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-16T18:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-16T19:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-16T20:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-16T21:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-16T22:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-16T23:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T00:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T01:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T02:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T03:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T04:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T05:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T06:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T07:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T08:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T09:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T10:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T11:00:00+00:00",
+              "samples": 0,
+              "uptime_percent": null
+            },
+            {
+              "hour": "2026-10-17T12:00:00+00:00",
+              "samples": 1,
+              "uptime_percent": 0
+            }
+          ],
+          "recent_errors": [
+            {
+              "timestamp": "2026-10-17T12:46:57+00:00",
+              "status": "degraded",
+              "message": "Provider probe timed out"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "text": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nManagement\n/\nIntegrations\n⌘K\nA\nadmin@olekard.local\nBrowser QA Provider health\n\nObserved uptime over the last 24 UTC hourly buckets.\n\nProvider health\nPartners\nAPI clients\nWebhooks\n\nDegraded\n\nLast checked: 10/17/2026, 6:16:57 PM\n\n1 probe samples. Missing observations are unknown and are not counted as healthy.\n\n100%\n50%\n0%\n13:00\n17:00\n21:00\n01:00\n05:00\n09:00\nView chart data\nRecent error log\nTimestamp\tStatus\tError\n10/17/2026, 6:16:57 PM\tdegraded\tProvider probe timed out"
+}

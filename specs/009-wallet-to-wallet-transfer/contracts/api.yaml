@@ -1,0 +1,690 @@
+openapi: "3.1.0"
+info:
+  title: "E09 Wallet-to-Wallet Transfer API"
+  version: "1.0.0"
+  description: >
+    Internal REST contract for the P2P transfer feature.
+    All amounts are integers in minor units (e.g., BWP 500.00 = 50000).
+    All IDs are UUID v7 strings.
+    All timestamps are ISO 8601 UTC.
+    Financial mutations require the Idempotency-Key header.
+
+servers:
+  - url: /api/v1
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 255
+      description: Unique key for idempotent financial mutations. Must be unique per operation.
+
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    # ── Standard envelopes ─────────────────────────────────────────────────────
+
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: INSUFFICIENT_BALANCE
+        message:
+          type: string
+          example: Sender wallet does not have sufficient balance.
+        details:
+          type: object
+          additionalProperties: true
+
+    # ── Transfer domain objects ────────────────────────────────────────────────
+
+    TransferSummary:
+      type: object
+      required: [id, transfer_reference, status, gross_amount, fee_amount,
+                 net_amount, currency_code, sender_display_name,
+                 recipient_display_name, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        transfer_reference:
+          type: string
+          pattern: "^TXF-[A-Z2-9]{10}$"
+          example: TXF-B3C7QXMPYZ
+        status:
+          type: string
+          enum: [pending, completed, failed, cancelled]
+        failure_reason:
+          type: string
+          nullable: true
+          enum:
+            - INSUFFICIENT_BALANCE
+            - DAILY_LIMIT_EXCEEDED
+            - RISK_REJECTED
+            - RECIPIENT_WALLET_SUSPENDED
+            - SYSTEM_ERROR
+        gross_amount:
+          type: integer
+          minimum: 1
+          example: 50000
+        fee_amount:
+          type: integer
+          minimum: 0
+          example: 500
+        net_amount:
+          type: integer
+          minimum: 1
+          example: 49500
+        currency_code:
+          type: string
+          pattern: "^[A-Z]{3}$"
+          example: BWP
+        sender_display_name:
+          type: string
+          example: "Kagiso M."
+        recipient_display_name:
+          type: string
+          example: "Thabo N."
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Only present when status is pending
+
+    TransferReceipt:
+      type: object
+      required: [id, receipt_reference, transfer_reference, sender_display_name,
+                 recipient_display_name, currency_code, gross_amount, fee_amount,
+                 net_amount, issued_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        receipt_reference:
+          type: string
+          format: uuid
+        transfer_reference:
+          type: string
+          example: TXF-B3C7QXMPYZ
+        sender_display_name:
+          type: string
+        recipient_display_name:
+          type: string
+        currency_code:
+          type: string
+        gross_amount:
+          type: integer
+        fee_amount:
+          type: integer
+        net_amount:
+          type: integer
+        issued_at:
+          type: string
+          format: date-time
+
+    PaginationMeta:
+      type: object
+      required: [total, page, per_page, pages]
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        per_page:
+          type: integer
+        pages:
+          type: integer
+
+paths:
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Recipient Lookup
+  # FR-E09-006, FR-E09-007, FR-E09-008, FR-E09-009, FR-E09-010
+  # ────────────────────────────────────────────────────────────────────────────
+  /transfers/recipient-lookup:
+    post:
+      operationId: recipientLookup
+      summary: Look up and validate a transfer recipient
+      description: >
+        Resolves a recipient by phone number or wallet number.
+        Returns a short-lived lookup_token (TTL: 300 s, single-use) that
+        must be passed to POST /transfers.
+        Does NOT create any transaction.
+      security:
+        - bearerAuth: []
+      x-permission: transfer.initiate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phone_number:
+                  type: string
+                  description: E.164 format. Provide either phone_number OR wallet_number, not both.
+                  example: "+26771234567"
+                wallet_number:
+                  type: string
+                  example: "OLK-0001234"
+              oneOf:
+                - required: [phone_number]
+                - required: [wallet_number]
+      responses:
+        "200":
+          description: Recipient found and eligible
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [lookup_token, display_name, currency_code, expires_at]
+                    properties:
+                      lookup_token:
+                        type: string
+                        format: uuid
+                        description: Opaque UUID; pass to POST /transfers as lookup_token
+                      display_name:
+                        type: string
+                        example: "Thabo N."
+                      currency_code:
+                        type: string
+                        example: BWP
+                      expires_at:
+                        type: string
+                        format: date-time
+        "404":
+          description: RECIPIENT_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: RECIPIENT_WALLET_INACTIVE | SELF_TRANSFER_NOT_ALLOWED | validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Rate limit exceeded (SR-E09-007)
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Transfer Initiation
+  # FR-E09-011 — FR-E09-023
+  # ────────────────────────────────────────────────────────────────────────────
+  /transfers:
+    post:
+      operationId: initiateTransfer
+      summary: Initiate a pending transfer
+      description: >
+        Creates a TransferTransaction in `pending` status with fee quoted.
+        Requires a valid lookup_token from POST /transfers/recipient-lookup.
+        The transfer must be confirmed via POST /transfers/{id}/confirm.
+      security:
+        - bearerAuth: []
+      x-permission: transfer.initiate
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lookup_token, wallet_id, gross_amount, currency_code]
+              properties:
+                lookup_token:
+                  type: string
+                  format: uuid
+                  description: Token from POST /transfers/recipient-lookup
+                wallet_id:
+                  type: string
+                  format: uuid
+                  description: Sender's source wallet UUID (must be owned by authenticated customer)
+                gross_amount:
+                  type: integer
+                  minimum: 1
+                  description: Total amount to debit from sender's pocket (inclusive of fee)
+                currency_code:
+                  type: string
+                  pattern: "^[A-Z]{3}$"
+      responses:
+        "201":
+          description: Transfer created in pending status
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/TransferSummary"
+        "403":
+          description: FORBIDDEN — wallet_id not owned by sender
+        "422":
+          description: >
+            AMOUNT_BELOW_MINIMUM | AMOUNT_ABOVE_MAXIMUM | DAILY_LIMIT_EXCEEDED |
+            INSUFFICIENT_BALANCE | CURRENCY_MISMATCH | WALLET_POCKET_NOT_FOUND |
+            INVALID_LOOKUP_TOKEN | SELF_TRANSFER_NOT_ALLOWED | MISSING_IDEMPOTENCY_KEY |
+            RISK_REJECTED | validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    get:
+      operationId: listTransfers
+      summary: List own transfers (sender or recipient)
+      security:
+        - bearerAuth: []
+      x-permission: transfer.read
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, completed, failed, cancelled]
+        - name: from_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        "200":
+          description: Paginated list of transfers
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TransferSummary"
+                  meta:
+                    $ref: "#/components/schemas/PaginationMeta"
+
+  /transfers/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Transfer transaction UUID
+    get:
+      operationId: getTransfer
+      summary: Get transfer detail
+      security:
+        - bearerAuth: []
+      x-permission: transfer.read
+      responses:
+        "200":
+          description: Transfer detail
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/TransferSummary"
+        "404":
+          description: Not found or not authorized
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Transfer Confirmation
+  # FR-E09-024 — FR-E09-035
+  # ────────────────────────────────────────────────────────────────────────────
+  /transfers/{id}/confirm:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: confirmTransfer
+      summary: Confirm transfer with PIN (synchronously completes)
+      description: >
+        Verifies transaction PIN, re-validates fee/limits/balance atomically,
+        posts double-entry journal, creates receipt, and transitions to completed.
+        All processing is synchronous — the response contains the completed transfer.
+      security:
+        - bearerAuth: []
+      x-permission: transfer.initiate
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [transaction_pin]
+              properties:
+                transaction_pin:
+                  type: string
+                  description: Customer's 4-6 digit transaction PIN (never stored or logged)
+                  writeOnly: true
+      responses:
+        "200":
+          description: Transfer completed or idempotent replay of already-completed transfer
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    allOf:
+                      - $ref: "#/components/schemas/TransferSummary"
+                      - type: object
+                        properties:
+                          receipt:
+                            $ref: "#/components/schemas/TransferReceipt"
+        "409":
+          description: FEE_MISMATCH — fee rate changed since initiation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - type: object
+                    properties:
+                      details:
+                        type: object
+                        properties:
+                          new_fee_amount:
+                            type: integer
+                          new_net_amount:
+                            type: integer
+                          new_fee_rate_bps:
+                            type: integer
+        "422":
+          description: >
+            INVALID_PIN | TRANSFER_NOT_MODIFIABLE | MISSING_IDEMPOTENCY_KEY |
+            INSUFFICIENT_BALANCE | DAILY_LIMIT_EXCEEDED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Transfer not found or not owned by sender
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Cancellation
+  # FR-E09-043 — FR-E09-045
+  # ────────────────────────────────────────────────────────────────────────────
+  /transfers/{id}/cancel:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: cancelTransfer
+      summary: Cancel a pending transfer
+      description: >
+        Transitions a pending transfer to cancelled.
+        Only allowed when status = pending.
+        No ledger entries are created.
+      security:
+        - bearerAuth: []
+      x-permission: transfer.initiate
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Transfer cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/TransferSummary"
+        "422":
+          description: TRANSFER_NOT_CANCELLABLE (status is not pending)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found or not owned
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Receipts
+  # FR-E09-038, FR-E09-039
+  # ────────────────────────────────────────────────────────────────────────────
+  /transfers/{id}/receipt:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getReceiptByTransactionId
+      summary: Get receipt by transaction ID
+      security:
+        - bearerAuth: []
+      x-permission: transfer.read
+      responses:
+        "200":
+          description: Transfer receipt
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/TransferReceipt"
+        "404":
+          description: No receipt for this transfer (not yet completed, or failed/cancelled)
+
+  /transfers/receipts/{receipt_reference}:
+    parameters:
+      - name: receipt_reference
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getReceiptByReference
+      summary: Get receipt by receipt_reference
+      security:
+        - bearerAuth: []
+      x-permission: transfer.read
+      responses:
+        "200":
+          description: Transfer receipt
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/TransferReceipt"
+        "404":
+          description: Receipt not found or caller not authorized
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Admin Endpoints
+  # FR-E09-053, FR-E09-054
+  # ────────────────────────────────────────────────────────────────────────────
+  /admin/transfers:
+    get:
+      operationId: adminListTransfers
+      summary: "Admin: list all transfers"
+      security:
+        - bearerAuth: []
+      x-permission: transfer.admin
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, completed, failed, cancelled]
+        - name: sender_customer_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: recipient_customer_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: currency_code
+          in: query
+          schema:
+            type: string
+        - name: from_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        "200":
+          description: Paginated list of all transfers
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: "#/components/schemas/TransferSummary"
+                        - type: object
+                          properties:
+                            ledger_journal_id:
+                              type: string
+                              nullable: true
+                            correlation_id:
+                              type: string
+                              format: uuid
+                            fee_rate_bps:
+                              type: integer
+                  meta:
+                    $ref: "#/components/schemas/PaginationMeta"
+
+  /admin/transfers/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: adminGetTransfer
+      summary: "Admin: get transfer detail"
+      security:
+        - bearerAuth: []
+      x-permission: transfer.admin
+      responses:
+        "200":
+          description: Full transfer detail including ledger_journal_id, correlation_id, fee_rate_bps
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    allOf:
+                      - $ref: "#/components/schemas/TransferSummary"
+                      - type: object
+                        properties:
+                          ledger_journal_id:
+                            type: string
+                            nullable: true
+                          correlation_id:
+                            type: string
+                            format: uuid
+                          fee_rate_bps:
+                            type: integer
+                          sender_pocket_ledger_ref:
+                            type: string
+                          recipient_pocket_ledger_ref:
+                            type: string
+        "404":
+          description: Transfer not found

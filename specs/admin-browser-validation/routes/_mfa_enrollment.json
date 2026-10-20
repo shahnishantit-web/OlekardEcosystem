@@ -1,0 +1,14 @@
+{
+  "route": "/mfa-enrollment",
+  "landed": "/mfa-enrollment",
+  "status": 200,
+  "headings": [
+    "Set up two-factor authentication"
+  ],
+  "errors": [],
+  "api": [],
+  "failed": [],
+  "links": [],
+  "overflow": false,
+  "text": "OK\n\nOleKard\n\nADMIN PLATFORM\n\nSet up two-factor authentication\n\nYour organisation requires MFA. Choose a method to protect your account.\n\nAuthenticator app\n\nUse Google Authenticator, Authy, or any TOTP app.\n\nSecurity key or passkey\n\nUse a hardware key (YubiKey) or built-in biometrics (Touch ID, Windows Hello).\n\nAuthorized personnel only. All sessions are logged and monitored."
+}

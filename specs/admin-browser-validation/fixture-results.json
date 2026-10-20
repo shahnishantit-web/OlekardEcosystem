@@ -1,0 +1,1260 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config",
+      "playwright.audit-fixtures.config.ts"
+    ],
+    "configFile": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\playwright.audit-fixtures.config.ts",
+    "rootDir": "C:/Projects/OleKardEcosystem/wallet-ecosystem/apps/admin/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Projects/OleKardEcosystem/wallet-ecosystem/apps/admin/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Projects/OleKardEcosystem/wallet-ecosystem/apps/admin/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "admin-fixture-*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "",
+        "testDir": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e",
+        "snapshotDir": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e",
+        "testIgnore": [],
+        "testMatch": "admin-fixture-*.spec.ts",
+        "timeout": 60000,
+        "use": {
+          "baseURL": "http://localhost:3030",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": ""
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../../../specs/admin-browser-validation/fixture-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "admin-fixture-p1018-security.spec.ts",
+      "file": "admin-fixture-p1018-security.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "risk queue and complete investigation workflow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 9177,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T05:52:10.786Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fbeb13f2d53479fd9e41-60567db0dc7271b9d10e",
+          "file": "admin-fixture-p1018-security.spec.ts",
+          "line": 90,
+          "column": 5
+        },
+        {
+          "title": "freeze dialog keyboard flow and separate checker approval",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2911,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T05:52:20.146Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fbeb13f2d53479fd9e41-c502d7ea408409cfd7f4",
+          "file": "admin-fixture-p1018-security.spec.ts",
+          "line": 118,
+          "column": 5
+        },
+        {
+          "title": "findings lifecycle overview and denied route",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4889,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T05:52:23.079Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fbeb13f2d53479fd9e41-b823162888c07a594ec9",
+          "file": "admin-fixture-p1018-security.spec.ts",
+          "line": 141,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "admin-fixture-p1019-notifications.spec.ts",
+      "file": "admin-fixture-p1019-notifications.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "templates edit preview keyboard and self-test",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2148,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T05:52:28.007Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3cbd9f5103d3c4348647-894247636bf77b76891a",
+          "file": "admin-fixture-p1019-notifications.spec.ts",
+          "line": 48,
+          "column": 5
+        },
+        {
+          "title": "delivery filters retry and narrow layout",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 1244,
+                  "error": {
+                    "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3030/notifications/log\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/notifications/log\", waiting until \"load\"\u001b[22m\n",
+                    "stack": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3030/notifications/log\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/notifications/log\", waiting until \"load\"\u001b[22m\n\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1019-notifications.spec.ts:72:16",
+                    "location": {
+                      "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1019-notifications.spec.ts",
+                      "column": 16,
+                      "line": 72
+                    },
+                    "snippet": "  70 |     await session(context);\n  71 |     const queries = await mockApi(page);\n> 72 |     await page.goto('/notifications/log');\n     |                ^\n  73 |     await page.getByLabel('Channel', { exact: true }).selectOption('email');\n  74 |     await page.getByLabel('Status', { exact: true }).selectOption('failed');\n  75 |     await page.getByLabel('From date (UTC)').fill('2026-10-15');"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1019-notifications.spec.ts",
+                        "column": 16,
+                        "line": 72
+                      },
+                      "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3030/notifications/log\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/notifications/log\", waiting until \"load\"\u001b[22m\n\n\n  70 |     await session(context);\n  71 |     const queries = await mockApi(page);\n> 72 |     await page.goto('/notifications/log');\n     |                ^\n  73 |     await page.getByLabel('Channel', { exact: true }).selectOption('email');\n  74 |     await page.getByLabel('Status', { exact: true }).selectOption('failed');\n  75 |     await page.getByLabel('From date (UTC)').fill('2026-10-15');\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1019-notifications.spec.ts:72:16"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T05:52:30.188Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results\\admin-fixture-p1019-notifi-4defd-ers-retry-and-narrow-layout\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1019-notifications.spec.ts",
+                    "column": 16,
+                    "line": 72
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "3cbd9f5103d3c4348647-7b23eb5af297d2a7a6b4",
+          "file": "admin-fixture-p1019-notifications.spec.ts",
+          "line": 69,
+          "column": 5
+        },
+        {
+          "title": "optional rules toggle mandatory locked and route denied",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 1193,
+                  "error": {
+                    "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/notifications/rules\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/notifications/rules\", waiting until \"load\"\u001b[22m\n",
+                    "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/notifications/rules\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/notifications/rules\", waiting until \"load\"\u001b[22m\n\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1019-notifications.spec.ts:95:16",
+                    "location": {
+                      "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1019-notifications.spec.ts",
+                      "column": 16,
+                      "line": 95
+                    },
+                    "snippet": "  93 |     await session(context);\n  94 |     await mockApi(page);\n> 95 |     await page.goto('/notifications/rules');\n     |                ^\n  96 |     await expect(page.getByRole('switch', { name: 'security.suspicious_activity email' })).toBeDisabled();\n  97 |     await page.getByRole('switch', { name: 'operations.service_notice email' }).click();\n  98 |     await expect(page.getByRole('switch', { name: 'operations.service_notice email' })).toHaveAttribute('aria-checked', 'false');"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1019-notifications.spec.ts",
+                        "column": 16,
+                        "line": 95
+                      },
+                      "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/notifications/rules\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/notifications/rules\", waiting until \"load\"\u001b[22m\n\n\n  93 |     await session(context);\n  94 |     await mockApi(page);\n> 95 |     await page.goto('/notifications/rules');\n     |                ^\n  96 |     await expect(page.getByRole('switch', { name: 'security.suspicious_activity email' })).toBeDisabled();\n  97 |     await page.getByRole('switch', { name: 'operations.service_notice email' }).click();\n  98 |     await expect(page.getByRole('switch', { name: 'operations.service_notice email' })).toHaveAttribute('aria-checked', 'false');\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1019-notifications.spec.ts:95:16"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T05:52:31.952Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results\\admin-fixture-p1019-notifi-2c9f4-ory-locked-and-route-denied\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1019-notifications.spec.ts",
+                    "column": 16,
+                    "line": 95
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "3cbd9f5103d3c4348647-84050744a52e2ab51d22",
+          "file": "admin-fixture-p1019-notifications.spec.ts",
+          "line": 92,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "admin-fixture-p1020-integrations.spec.ts",
+      "file": "admin-fixture-p1020-integrations.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "partner client create secret once rotate and revoke",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 1195,
+                  "error": {
+                    "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/integrations/providers\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/integrations/providers\", waiting until \"load\"\u001b[22m\n",
+                    "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/integrations/providers\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/integrations/providers\", waiting until \"load\"\u001b[22m\n\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1020-integrations.spec.ts:49:16",
+                    "location": {
+                      "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1020-integrations.spec.ts",
+                      "column": 16,
+                      "line": 49
+                    },
+                    "snippet": "  47 |     await session(context);\n  48 |     await mockApi(page);\n> 49 |     await page.goto('/integrations/providers');\n     |                ^\n  50 |     await page.getByRole('link', { name: 'New API Client', exact: true }).click();\n  51 |     await page.getByLabel('Client name', { exact: true }).fill('Partner reporting app');\n  52 |     await page.getByLabel('Permissions', { exact: true }).fill('integrations.manage');"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1020-integrations.spec.ts",
+                        "column": 16,
+                        "line": 49
+                      },
+                      "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/integrations/providers\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/integrations/providers\", waiting until \"load\"\u001b[22m\n\n\n  47 |     await session(context);\n  48 |     await mockApi(page);\n> 49 |     await page.goto('/integrations/providers');\n     |                ^\n  50 |     await page.getByRole('link', { name: 'New API Client', exact: true }).click();\n  51 |     await page.getByLabel('Client name', { exact: true }).fill('Partner reporting app');\n  52 |     await page.getByLabel('Permissions', { exact: true }).fill('integrations.manage');\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1020-integrations.spec.ts:49:16"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T05:52:33.757Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results\\admin-fixture-p1020-integr-5f1fc-cret-once-rotate-and-revoke\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1020-integrations.spec.ts",
+                    "column": 16,
+                    "line": 49
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "0d9c40377e40bac0c214-dafa35c4f028410c8720",
+          "file": "admin-fixture-p1020-integrations.spec.ts",
+          "line": 46,
+          "column": 5
+        },
+        {
+          "title": "callback filters retry and responsive log",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 1203,
+                  "error": {
+                    "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/integrations/webhooks\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/integrations/webhooks\", waiting until \"load\"\u001b[22m\n",
+                    "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/integrations/webhooks\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/integrations/webhooks\", waiting until \"load\"\u001b[22m\n\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1020-integrations.spec.ts:72:16",
+                    "location": {
+                      "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1020-integrations.spec.ts",
+                      "column": 16,
+                      "line": 72
+                    },
+                    "snippet": "  70 |     await session(context);\n  71 |     const queries = await mockApi(page);\n> 72 |     await page.goto('/integrations/webhooks');\n     |                ^\n  73 |     await page.getByLabel('Webhook status').selectOption('failed');\n  74 |     await page.getByLabel('Event type', { exact: true }).fill('payment.completed');\n  75 |     await expect.poll(() => queries.some(q => q.includes('status=failed') && q.includes('event_type=payment.completed'))).toBeTruthy();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1020-integrations.spec.ts",
+                        "column": 16,
+                        "line": 72
+                      },
+                      "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/integrations/webhooks\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/integrations/webhooks\", waiting until \"load\"\u001b[22m\n\n\n  70 |     await session(context);\n  71 |     const queries = await mockApi(page);\n> 72 |     await page.goto('/integrations/webhooks');\n     |                ^\n  73 |     await page.getByLabel('Webhook status').selectOption('failed');\n  74 |     await page.getByLabel('Event type', { exact: true }).fill('payment.completed');\n  75 |     await expect.poll(() => queries.some(q => q.includes('status=failed') && q.includes('event_type=payment.completed'))).toBeTruthy();\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1020-integrations.spec.ts:72:16"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T05:52:35.605Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results\\admin-fixture-p1020-integr-19a63-rs-retry-and-responsive-log\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1020-integrations.spec.ts",
+                    "column": 16,
+                    "line": 72
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "0d9c40377e40bac0c214-9d0e85e09ede8b26fe3c",
+          "file": "admin-fixture-p1020-integrations.spec.ts",
+          "line": 69,
+          "column": 5
+        },
+        {
+          "title": "provider health chart errors keyboard data and permission gate",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 1178,
+                  "error": {
+                    "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/integrations\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/integrations\", waiting until \"load\"\u001b[22m\n",
+                    "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/integrations\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/integrations\", waiting until \"load\"\u001b[22m\n\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1020-integrations.spec.ts:88:16",
+                    "location": {
+                      "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1020-integrations.spec.ts",
+                      "column": 16,
+                      "line": 88
+                    },
+                    "snippet": "  86 |     await session(context);\n  87 |     await mockApi(page);\n> 88 |     await page.goto('/integrations');\n     |                ^\n  89 |     await expect(page.getByText('Degraded', { exact: true })).toBeVisible();\n  90 |     await page.screenshot({ path: path.join(output, 'providers-desktop.png'), fullPage: true });\n  91 |     await page.getByRole('link', { name: 'View Health' }).click();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1020-integrations.spec.ts",
+                        "column": 16,
+                        "line": 88
+                      },
+                      "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/integrations\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/integrations\", waiting until \"load\"\u001b[22m\n\n\n  86 |     await session(context);\n  87 |     await mockApi(page);\n> 88 |     await page.goto('/integrations');\n     |                ^\n  89 |     await expect(page.getByText('Degraded', { exact: true })).toBeVisible();\n  90 |     await page.screenshot({ path: path.join(output, 'providers-desktop.png'), fullPage: true });\n  91 |     await page.getByRole('link', { name: 'View Health' }).click();\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1020-integrations.spec.ts:88:16"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T05:52:37.411Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results\\admin-fixture-p1020-integr-e6026-rd-data-and-permission-gate\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1020-integrations.spec.ts",
+                    "column": 16,
+                    "line": 88
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "0d9c40377e40bac0c214-4d15de21c72feeebf747",
+          "file": "admin-fixture-p1020-integrations.spec.ts",
+          "line": 85,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "admin-fixture-p1021-support.spec.ts",
+      "file": "admin-fixture-p1021-support.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "queue filters detail notes escalation and narrow layout",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 1189,
+                  "error": {
+                    "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/support/cases\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/support/cases\", waiting until \"load\"\u001b[22m\n",
+                    "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/support/cases\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/support/cases\", waiting until \"load\"\u001b[22m\n\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1021-support.spec.ts:53:176",
+                    "location": {
+                      "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1021-support.spec.ts",
+                      "column": 176,
+                      "line": 53
+                    },
+                    "snippet": "  51 | }\n  52 | test.beforeAll(() => fs.mkdirSync(out, { recursive: true }));\n> 53 | test('queue filters detail notes escalation and narrow layout', async ({ page, context }) => { await session(context); const { calls, queries } = await mock(page); await page.goto('/support/cases'); await expect(page.getByText('Overdue', { exact: true })).toBeVisible(); await page.getByLabel('Type', { exact: true }).selectOption('Dispute'); await page.getByLabel('Priority', { exact: true }).selectOption('high'); await expect.poll(() => queries.some(q => q.includes('type=Dispute') && q.includes('priority=high'))).toBeTruthy(); await page.screenshot({ path: path.join(out, 'queue-desktop.png'), fullPage: true }); await page.getByRole('link', { name: 'DSP-000021', exact: true }).click(); await expect(page.getByText('merchant-receipt.pdf', { exact: true })).toBeVisible(); const download=page.waitForEvent('download'); await page.getByRole('button',{name:'merchant-receipt.pdf',exact:true}).click(); expect((await download).suggestedFilename()).toBe('merchant-receipt.pdf'); await page.getByLabel('Internal note', { exact: true }).fill('Reviewed customer receipt and transaction history.'); await page.getByRole('button', { name: 'Add internal note', exact: true }).click(); await expect(page.getByText('Reviewed customer receipt and transaction history.', { exact: true })).toBeVisible(); await page.getByLabel('Support agent ID', { exact: true }).fill(user); await page.getByLabel('Escalation reason', { exact: true }).selectOption('financial_review'); await page.getByRole('button', { name: 'Escalate case', exact: true }).click(); await expect(page.getByRole('status', { name: 'Case action status' })).toContainText('24-hour'); expect(calls.some(c => c.body['action'] === 'escalate' && c.body['reason'] === 'financial_review')).toBeTruthy(); await page.evaluate(()=>{document.querySelectorAll('*').forEach(el=>{if(el.scrollTop>0)el.scrollTop=0;});}); await page.screenshot({ path: path.join(out, 'case-desktop.png'), fullPage: true }); await page.setViewportSize({ width: 390, height: 844 }); await page.evaluate(()=>{document.querySelectorAll('*').forEach(el=>{if(el.scrollTop>0)el.scrollTop=0;});}); await page.screenshot({ path: path.join(out, 'case-mobile.png'), fullPage: true }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy(); await page.getByLabel('Internal note', { exact: true }).focus(); await expect(page.getByLabel('Internal note', { exact: true })).toBeFocused(); });\n     |                                                                                                                                                                                ^\n  54 | test('refund requires MFA confirmation and stable financial request', async ({ page, context }) => { await session(context); const { calls } = await mock(page); await page.goto('/support/cases/' + id); await page.getByLabel('Amount (minor units)', { exact: true }).fill('500'); await page.getByLabel('Refund reason', { exact: true }).fill('Verified duplicate charge; partial refund.'); await page.getByRole('button', { name: 'Initiate Refund', exact: true }).click(); expect(calls.some(c => c.path.endsWith('/refund'))).toBeFalsy(); await page.getByLabel('Verification code', { exact: true }).fill('123456'); await page.screenshot({ path: path.join(out, 'refund-confirmation.png'), fullPage: true, mask: [page.getByLabel('Verification code', { exact: true })] }); await page.getByRole('button', { name: 'Verify and confirm refund', exact: true }).click(); await expect(page.getByRole('status', { name: 'Case action status' })).toContainText('Refund submitted'); const c = calls.find(c => c.path.endsWith('/refund')); expect(c?.body['step_up_token']).toBe('test-proof'); expect(c?.body['amount_minor']).toBe(500); expect(c?.key).toMatch(/^[0-9a-f-]{36}$/); expect(await page.evaluate(() => localStorage.length)).toBe(0); await expect(page.getByRole('button', { name: 'Initiate Refund', exact: true })).toHaveCount(0); });\n  55 | test('permission gate prevents case fetch', async ({ page, context }) => { await session(context, ['support.create']); const { calls } = await mock(page); await page.goto('/support/cases'); await expect(page).toHaveURL(/\\/403/); expect(calls.filter(c => c.path.includes('/support/'))).toHaveLength(0); });\n  56 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1021-support.spec.ts",
+                        "column": 176,
+                        "line": 53
+                      },
+                      "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/support/cases\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/support/cases\", waiting until \"load\"\u001b[22m\n\n\n  51 | }\n  52 | test.beforeAll(() => fs.mkdirSync(out, { recursive: true }));\n> 53 | test('queue filters detail notes escalation and narrow layout', async ({ page, context }) => { await session(context); const { calls, queries } = await mock(page); await page.goto('/support/cases'); await expect(page.getByText('Overdue', { exact: true })).toBeVisible(); await page.getByLabel('Type', { exact: true }).selectOption('Dispute'); await page.getByLabel('Priority', { exact: true }).selectOption('high'); await expect.poll(() => queries.some(q => q.includes('type=Dispute') && q.includes('priority=high'))).toBeTruthy(); await page.screenshot({ path: path.join(out, 'queue-desktop.png'), fullPage: true }); await page.getByRole('link', { name: 'DSP-000021', exact: true }).click(); await expect(page.getByText('merchant-receipt.pdf', { exact: true })).toBeVisible(); const download=page.waitForEvent('download'); await page.getByRole('button',{name:'merchant-receipt.pdf',exact:true}).click(); expect((await download).suggestedFilename()).toBe('merchant-receipt.pdf'); await page.getByLabel('Internal note', { exact: true }).fill('Reviewed customer receipt and transaction history.'); await page.getByRole('button', { name: 'Add internal note', exact: true }).click(); await expect(page.getByText('Reviewed customer receipt and transaction history.', { exact: true })).toBeVisible(); await page.getByLabel('Support agent ID', { exact: true }).fill(user); await page.getByLabel('Escalation reason', { exact: true }).selectOption('financial_review'); await page.getByRole('button', { name: 'Escalate case', exact: true }).click(); await expect(page.getByRole('status', { name: 'Case action status' })).toContainText('24-hour'); expect(calls.some(c => c.body['action'] === 'escalate' && c.body['reason'] === 'financial_review')).toBeTruthy(); await page.evaluate(()=>{document.querySelectorAll('*').forEach(el=>{if(el.scrollTop>0)el.scrollTop=0;});}); await page.screenshot({ path: path.join(out, 'case-desktop.png'), fullPage: true }); await page.setViewportSize({ width: 390, height: 844 }); await page.evaluate(()=>{document.querySelectorAll('*').forEach(el=>{if(el.scrollTop>0)el.scrollTop=0;});}); await page.screenshot({ path: path.join(out, 'case-mobile.png'), fullPage: true }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy(); await page.getByLabel('Internal note', { exact: true }).focus(); await expect(page.getByLabel('Internal note', { exact: true })).toBeFocused(); });\n     |                                                                                                                                                                                ^\n  54 | test('refund requires MFA confirmation and stable financial request', async ({ page, context }) => { await session(context); const { calls } = await mock(page); await page.goto('/support/cases/' + id); await page.getByLabel('Amount (minor units)', { exact: true }).fill('500'); await page.getByLabel('Refund reason', { exact: true }).fill('Verified duplicate charge; partial refund.'); await page.getByRole('button', { name: 'Initiate Refund', exact: true }).click(); expect(calls.some(c => c.path.endsWith('/refund'))).toBeFalsy(); await page.getByLabel('Verification code', { exact: true }).fill('123456'); await page.screenshot({ path: path.join(out, 'refund-confirmation.png'), fullPage: true, mask: [page.getByLabel('Verification code', { exact: true })] }); await page.getByRole('button', { name: 'Verify and confirm refund', exact: true }).click(); await expect(page.getByRole('status', { name: 'Case action status' })).toContainText('Refund submitted'); const c = calls.find(c => c.path.endsWith('/refund')); expect(c?.body['step_up_token']).toBe('test-proof'); expect(c?.body['amount_minor']).toBe(500); expect(c?.key).toMatch(/^[0-9a-f-]{36}$/); expect(await page.evaluate(() => localStorage.length)).toBe(0); await expect(page.getByRole('button', { name: 'Initiate Refund', exact: true })).toHaveCount(0); });\n  55 | test('permission gate prevents case fetch', async ({ page, context }) => { await session(context, ['support.create']); const { calls } = await mock(page); await page.goto('/support/cases'); await expect(page).toHaveURL(/\\/403/); expect(calls.filter(c => c.path.includes('/support/'))).toHaveLength(0); });\n  56 |\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1021-support.spec.ts:53:176"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T05:52:39.180Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results\\admin-fixture-p1021-suppor-fc631-scalation-and-narrow-layout\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1021-support.spec.ts",
+                    "column": 176,
+                    "line": 53
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "4dd43ab26141781b3ac0-3eea72a2b13fcd456c33",
+          "file": "admin-fixture-p1021-support.spec.ts",
+          "line": 53,
+          "column": 5
+        },
+        {
+          "title": "refund requires MFA confirmation and stable financial request",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 6,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 1192,
+                  "error": {
+                    "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/support/cases/019c1111-1111-7111-8111-111111111111\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/support/cases/019c1111-1111-7111-8111-111111111111\", waiting until \"load\"\u001b[22m\n",
+                    "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/support/cases/019c1111-1111-7111-8111-111111111111\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/support/cases/019c1111-1111-7111-8111-111111111111\", waiting until \"load\"\u001b[22m\n\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1021-support.spec.ts:54:173",
+                    "location": {
+                      "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1021-support.spec.ts",
+                      "column": 173,
+                      "line": 54
+                    },
+                    "snippet": "  52 | test.beforeAll(() => fs.mkdirSync(out, { recursive: true }));\n  53 | test('queue filters detail notes escalation and narrow layout', async ({ page, context }) => { await session(context); const { calls, queries } = await mock(page); await page.goto('/support/cases'); await expect(page.getByText('Overdue', { exact: true })).toBeVisible(); await page.getByLabel('Type', { exact: true }).selectOption('Dispute'); await page.getByLabel('Priority', { exact: true }).selectOption('high'); await expect.poll(() => queries.some(q => q.includes('type=Dispute') && q.includes('priority=high'))).toBeTruthy(); await page.screenshot({ path: path.join(out, 'queue-desktop.png'), fullPage: true }); await page.getByRole('link', { name: 'DSP-000021', exact: true }).click(); await expect(page.getByText('merchant-receipt.pdf', { exact: true })).toBeVisible(); const download=page.waitForEvent('download'); await page.getByRole('button',{name:'merchant-receipt.pdf',exact:true}).click(); expect((await download).suggestedFilename()).toBe('merchant-receipt.pdf'); await page.getByLabel('Internal note', { exact: true }).fill('Reviewed customer receipt and transaction history.'); await page.getByRole('button', { name: 'Add internal note', exact: true }).click(); await expect(page.getByText('Reviewed customer receipt and transaction history.', { exact: true })).toBeVisible(); await page.getByLabel('Support agent ID', { exact: true }).fill(user); await page.getByLabel('Escalation reason', { exact: true }).selectOption('financial_review'); await page.getByRole('button', { name: 'Escalate case', exact: true }).click(); await expect(page.getByRole('status', { name: 'Case action status' })).toContainText('24-hour'); expect(calls.some(c => c.body['action'] === 'escalate' && c.body['reason'] === 'financial_review')).toBeTruthy(); await page.evaluate(()=>{document.querySelectorAll('*').forEach(el=>{if(el.scrollTop>0)el.scrollTop=0;});}); await page.screenshot({ path: path.join(out, 'case-desktop.png'), fullPage: true }); await page.setViewportSize({ width: 390, height: 844 }); await page.evaluate(()=>{document.querySelectorAll('*').forEach(el=>{if(el.scrollTop>0)el.scrollTop=0;});}); await page.screenshot({ path: path.join(out, 'case-mobile.png'), fullPage: true }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy(); await page.getByLabel('Internal note', { exact: true }).focus(); await expect(page.getByLabel('Internal note', { exact: true })).toBeFocused(); });\n> 54 | test('refund requires MFA confirmation and stable financial request', async ({ page, context }) => { await session(context); const { calls } = await mock(page); await page.goto('/support/cases/' + id); await page.getByLabel('Amount (minor units)', { exact: true }).fill('500'); await page.getByLabel('Refund reason', { exact: true }).fill('Verified duplicate charge; partial refund.'); await page.getByRole('button', { name: 'Initiate Refund', exact: true }).click(); expect(calls.some(c => c.path.endsWith('/refund'))).toBeFalsy(); await page.getByLabel('Verification code', { exact: true }).fill('123456'); await page.screenshot({ path: path.join(out, 'refund-confirmation.png'), fullPage: true, mask: [page.getByLabel('Verification code', { exact: true })] }); await page.getByRole('button', { name: 'Verify and confirm refund', exact: true }).click(); await expect(page.getByRole('status', { name: 'Case action status' })).toContainText('Refund submitted'); const c = calls.find(c => c.path.endsWith('/refund')); expect(c?.body['step_up_token']).toBe('test-proof'); expect(c?.body['amount_minor']).toBe(500); expect(c?.key).toMatch(/^[0-9a-f-]{36}$/); expect(await page.evaluate(() => localStorage.length)).toBe(0); await expect(page.getByRole('button', { name: 'Initiate Refund', exact: true })).toHaveCount(0); });\n     |                                                                                                                                                                             ^\n  55 | test('permission gate prevents case fetch', async ({ page, context }) => { await session(context, ['support.create']); const { calls } = await mock(page); await page.goto('/support/cases'); await expect(page).toHaveURL(/\\/403/); expect(calls.filter(c => c.path.includes('/support/'))).toHaveLength(0); });\n  56 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1021-support.spec.ts",
+                        "column": 173,
+                        "line": 54
+                      },
+                      "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/support/cases/019c1111-1111-7111-8111-111111111111\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/support/cases/019c1111-1111-7111-8111-111111111111\", waiting until \"load\"\u001b[22m\n\n\n  52 | test.beforeAll(() => fs.mkdirSync(out, { recursive: true }));\n  53 | test('queue filters detail notes escalation and narrow layout', async ({ page, context }) => { await session(context); const { calls, queries } = await mock(page); await page.goto('/support/cases'); await expect(page.getByText('Overdue', { exact: true })).toBeVisible(); await page.getByLabel('Type', { exact: true }).selectOption('Dispute'); await page.getByLabel('Priority', { exact: true }).selectOption('high'); await expect.poll(() => queries.some(q => q.includes('type=Dispute') && q.includes('priority=high'))).toBeTruthy(); await page.screenshot({ path: path.join(out, 'queue-desktop.png'), fullPage: true }); await page.getByRole('link', { name: 'DSP-000021', exact: true }).click(); await expect(page.getByText('merchant-receipt.pdf', { exact: true })).toBeVisible(); const download=page.waitForEvent('download'); await page.getByRole('button',{name:'merchant-receipt.pdf',exact:true}).click(); expect((await download).suggestedFilename()).toBe('merchant-receipt.pdf'); await page.getByLabel('Internal note', { exact: true }).fill('Reviewed customer receipt and transaction history.'); await page.getByRole('button', { name: 'Add internal note', exact: true }).click(); await expect(page.getByText('Reviewed customer receipt and transaction history.', { exact: true })).toBeVisible(); await page.getByLabel('Support agent ID', { exact: true }).fill(user); await page.getByLabel('Escalation reason', { exact: true }).selectOption('financial_review'); await page.getByRole('button', { name: 'Escalate case', exact: true }).click(); await expect(page.getByRole('status', { name: 'Case action status' })).toContainText('24-hour'); expect(calls.some(c => c.body['action'] === 'escalate' && c.body['reason'] === 'financial_review')).toBeTruthy(); await page.evaluate(()=>{document.querySelectorAll('*').forEach(el=>{if(el.scrollTop>0)el.scrollTop=0;});}); await page.screenshot({ path: path.join(out, 'case-desktop.png'), fullPage: true }); await page.setViewportSize({ width: 390, height: 844 }); await page.evaluate(()=>{document.querySelectorAll('*').forEach(el=>{if(el.scrollTop>0)el.scrollTop=0;});}); await page.screenshot({ path: path.join(out, 'case-mobile.png'), fullPage: true }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy(); await page.getByLabel('Internal note', { exact: true }).focus(); await expect(page.getByLabel('Internal note', { exact: true })).toBeFocused(); });\n> 54 | test('refund requires MFA confirmation and stable financial request', async ({ page, context }) => { await session(context); const { calls } = await mock(page); await page.goto('/support/cases/' + id); await page.getByLabel('Amount (minor units)', { exact: true }).fill('500'); await page.getByLabel('Refund reason', { exact: true }).fill('Verified duplicate charge; partial refund.'); await page.getByRole('button', { name: 'Initiate Refund', exact: true }).click(); expect(calls.some(c => c.path.endsWith('/refund'))).toBeFalsy(); await page.getByLabel('Verification code', { exact: true }).fill('123456'); await page.screenshot({ path: path.join(out, 'refund-confirmation.png'), fullPage: true, mask: [page.getByLabel('Verification code', { exact: true })] }); await page.getByRole('button', { name: 'Verify and confirm refund', exact: true }).click(); await expect(page.getByRole('status', { name: 'Case action status' })).toContainText('Refund submitted'); const c = calls.find(c => c.path.endsWith('/refund')); expect(c?.body['step_up_token']).toBe('test-proof'); expect(c?.body['amount_minor']).toBe(500); expect(c?.key).toMatch(/^[0-9a-f-]{36}$/); expect(await page.evaluate(() => localStorage.length)).toBe(0); await expect(page.getByRole('button', { name: 'Initiate Refund', exact: true })).toHaveCount(0); });\n     |                                                                                                                                                                             ^\n  55 | test('permission gate prevents case fetch', async ({ page, context }) => { await session(context, ['support.create']); const { calls } = await mock(page); await page.goto('/support/cases'); await expect(page).toHaveURL(/\\/403/); expect(calls.filter(c => c.path.includes('/support/'))).toHaveLength(0); });\n  56 |\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1021-support.spec.ts:54:173"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T05:52:41.016Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results\\admin-fixture-p1021-suppor-79449-nd-stable-financial-request\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1021-support.spec.ts",
+                    "column": 173,
+                    "line": 54
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "4dd43ab26141781b3ac0-2d58eb0919514c3ca072",
+          "file": "admin-fixture-p1021-support.spec.ts",
+          "line": 54,
+          "column": 5
+        },
+        {
+          "title": "permission gate prevents case fetch",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 7,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 1186,
+                  "error": {
+                    "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/support/cases\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/support/cases\", waiting until \"load\"\u001b[22m\n",
+                    "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/support/cases\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/support/cases\", waiting until \"load\"\u001b[22m\n\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1021-support.spec.ts:55:167",
+                    "location": {
+                      "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1021-support.spec.ts",
+                      "column": 167,
+                      "line": 55
+                    },
+                    "snippet": "  53 | test('queue filters detail notes escalation and narrow layout', async ({ page, context }) => { await session(context); const { calls, queries } = await mock(page); await page.goto('/support/cases'); await expect(page.getByText('Overdue', { exact: true })).toBeVisible(); await page.getByLabel('Type', { exact: true }).selectOption('Dispute'); await page.getByLabel('Priority', { exact: true }).selectOption('high'); await expect.poll(() => queries.some(q => q.includes('type=Dispute') && q.includes('priority=high'))).toBeTruthy(); await page.screenshot({ path: path.join(out, 'queue-desktop.png'), fullPage: true }); await page.getByRole('link', { name: 'DSP-000021', exact: true }).click(); await expect(page.getByText('merchant-receipt.pdf', { exact: true })).toBeVisible(); const download=page.waitForEvent('download'); await page.getByRole('button',{name:'merchant-receipt.pdf',exact:true}).click(); expect((await download).suggestedFilename()).toBe('merchant-receipt.pdf'); await page.getByLabel('Internal note', { exact: true }).fill('Reviewed customer receipt and transaction history.'); await page.getByRole('button', { name: 'Add internal note', exact: true }).click(); await expect(page.getByText('Reviewed customer receipt and transaction history.', { exact: true })).toBeVisible(); await page.getByLabel('Support agent ID', { exact: true }).fill(user); await page.getByLabel('Escalation reason', { exact: true }).selectOption('financial_review'); await page.getByRole('button', { name: 'Escalate case', exact: true }).click(); await expect(page.getByRole('status', { name: 'Case action status' })).toContainText('24-hour'); expect(calls.some(c => c.body['action'] === 'escalate' && c.body['reason'] === 'financial_review')).toBeTruthy(); await page.evaluate(()=>{document.querySelectorAll('*').forEach(el=>{if(el.scrollTop>0)el.scrollTop=0;});}); await page.screenshot({ path: path.join(out, 'case-desktop.png'), fullPage: true }); await page.setViewportSize({ width: 390, height: 844 }); await page.evaluate(()=>{document.querySelectorAll('*').forEach(el=>{if(el.scrollTop>0)el.scrollTop=0;});}); await page.screenshot({ path: path.join(out, 'case-mobile.png'), fullPage: true }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy(); await page.getByLabel('Internal note', { exact: true }).focus(); await expect(page.getByLabel('Internal note', { exact: true })).toBeFocused(); });\n  54 | test('refund requires MFA confirmation and stable financial request', async ({ page, context }) => { await session(context); const { calls } = await mock(page); await page.goto('/support/cases/' + id); await page.getByLabel('Amount (minor units)', { exact: true }).fill('500'); await page.getByLabel('Refund reason', { exact: true }).fill('Verified duplicate charge; partial refund.'); await page.getByRole('button', { name: 'Initiate Refund', exact: true }).click(); expect(calls.some(c => c.path.endsWith('/refund'))).toBeFalsy(); await page.getByLabel('Verification code', { exact: true }).fill('123456'); await page.screenshot({ path: path.join(out, 'refund-confirmation.png'), fullPage: true, mask: [page.getByLabel('Verification code', { exact: true })] }); await page.getByRole('button', { name: 'Verify and confirm refund', exact: true }).click(); await expect(page.getByRole('status', { name: 'Case action status' })).toContainText('Refund submitted'); const c = calls.find(c => c.path.endsWith('/refund')); expect(c?.body['step_up_token']).toBe('test-proof'); expect(c?.body['amount_minor']).toBe(500); expect(c?.key).toMatch(/^[0-9a-f-]{36}$/); expect(await page.evaluate(() => localStorage.length)).toBe(0); await expect(page.getByRole('button', { name: 'Initiate Refund', exact: true })).toHaveCount(0); });\n> 55 | test('permission gate prevents case fetch', async ({ page, context }) => { await session(context, ['support.create']); const { calls } = await mock(page); await page.goto('/support/cases'); await expect(page).toHaveURL(/\\/403/); expect(calls.filter(c => c.path.includes('/support/'))).toHaveLength(0); });\n     |                                                                                                                                                                       ^\n  56 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1021-support.spec.ts",
+                        "column": 167,
+                        "line": 55
+                      },
+                      "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/support/cases\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/support/cases\", waiting until \"load\"\u001b[22m\n\n\n  53 | test('queue filters detail notes escalation and narrow layout', async ({ page, context }) => { await session(context); const { calls, queries } = await mock(page); await page.goto('/support/cases'); await expect(page.getByText('Overdue', { exact: true })).toBeVisible(); await page.getByLabel('Type', { exact: true }).selectOption('Dispute'); await page.getByLabel('Priority', { exact: true }).selectOption('high'); await expect.poll(() => queries.some(q => q.includes('type=Dispute') && q.includes('priority=high'))).toBeTruthy(); await page.screenshot({ path: path.join(out, 'queue-desktop.png'), fullPage: true }); await page.getByRole('link', { name: 'DSP-000021', exact: true }).click(); await expect(page.getByText('merchant-receipt.pdf', { exact: true })).toBeVisible(); const download=page.waitForEvent('download'); await page.getByRole('button',{name:'merchant-receipt.pdf',exact:true}).click(); expect((await download).suggestedFilename()).toBe('merchant-receipt.pdf'); await page.getByLabel('Internal note', { exact: true }).fill('Reviewed customer receipt and transaction history.'); await page.getByRole('button', { name: 'Add internal note', exact: true }).click(); await expect(page.getByText('Reviewed customer receipt and transaction history.', { exact: true })).toBeVisible(); await page.getByLabel('Support agent ID', { exact: true }).fill(user); await page.getByLabel('Escalation reason', { exact: true }).selectOption('financial_review'); await page.getByRole('button', { name: 'Escalate case', exact: true }).click(); await expect(page.getByRole('status', { name: 'Case action status' })).toContainText('24-hour'); expect(calls.some(c => c.body['action'] === 'escalate' && c.body['reason'] === 'financial_review')).toBeTruthy(); await page.evaluate(()=>{document.querySelectorAll('*').forEach(el=>{if(el.scrollTop>0)el.scrollTop=0;});}); await page.screenshot({ path: path.join(out, 'case-desktop.png'), fullPage: true }); await page.setViewportSize({ width: 390, height: 844 }); await page.evaluate(()=>{document.querySelectorAll('*').forEach(el=>{if(el.scrollTop>0)el.scrollTop=0;});}); await page.screenshot({ path: path.join(out, 'case-mobile.png'), fullPage: true }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy(); await page.getByLabel('Internal note', { exact: true }).focus(); await expect(page.getByLabel('Internal note', { exact: true })).toBeFocused(); });\n  54 | test('refund requires MFA confirmation and stable financial request', async ({ page, context }) => { await session(context); const { calls } = await mock(page); await page.goto('/support/cases/' + id); await page.getByLabel('Amount (minor units)', { exact: true }).fill('500'); await page.getByLabel('Refund reason', { exact: true }).fill('Verified duplicate charge; partial refund.'); await page.getByRole('button', { name: 'Initiate Refund', exact: true }).click(); expect(calls.some(c => c.path.endsWith('/refund'))).toBeFalsy(); await page.getByLabel('Verification code', { exact: true }).fill('123456'); await page.screenshot({ path: path.join(out, 'refund-confirmation.png'), fullPage: true, mask: [page.getByLabel('Verification code', { exact: true })] }); await page.getByRole('button', { name: 'Verify and confirm refund', exact: true }).click(); await expect(page.getByRole('status', { name: 'Case action status' })).toContainText('Refund submitted'); const c = calls.find(c => c.path.endsWith('/refund')); expect(c?.body['step_up_token']).toBe('test-proof'); expect(c?.body['amount_minor']).toBe(500); expect(c?.key).toMatch(/^[0-9a-f-]{36}$/); expect(await page.evaluate(() => localStorage.length)).toBe(0); await expect(page.getByRole('button', { name: 'Initiate Refund', exact: true })).toHaveCount(0); });\n> 55 | test('permission gate prevents case fetch', async ({ page, context }) => { await session(context, ['support.create']); const { calls } = await mock(page); await page.goto('/support/cases'); await expect(page).toHaveURL(/\\/403/); expect(calls.filter(c => c.path.includes('/support/'))).toHaveLength(0); });\n     |                                                                                                                                                                       ^\n  56 |\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1021-support.spec.ts:55:167"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T05:52:42.893Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results\\admin-fixture-p1021-suppor-05683-on-gate-prevents-case-fetch\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1021-support.spec.ts",
+                    "column": 167,
+                    "line": 55
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "4dd43ab26141781b3ac0-951ec3aa0798ecf87f5f",
+          "file": "admin-fixture-p1021-support.spec.ts",
+          "line": 55,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "admin-fixture-p1022-fx.spec.ts",
+      "file": "admin-fixture-p1022-fx.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "currency maker and checker controls desktop and mobile",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 8,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 1176,
+                  "error": {
+                    "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/multi-currency/currencies\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/multi-currency/currencies\", waiting until \"load\"\u001b[22m\n",
+                    "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/multi-currency/currencies\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/multi-currency/currencies\", waiting until \"load\"\u001b[22m\n\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1022-fx.spec.ts:52:165",
+                    "location": {
+                      "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1022-fx.spec.ts",
+                      "column": 165,
+                      "line": 52
+                    },
+                    "snippet": "  50 | async function screenshot(page: Page, name: string) { fs.mkdirSync(out, { recursive: true }); await page.evaluate(() => document.querySelectorAll('*').forEach(el => { if (el.scrollTop > 0)\n  51 |     el.scrollTop = 0; })); await page.screenshot({ path: path.join(out, name), fullPage: true }); }\n> 52 | test('currency maker and checker controls desktop and mobile', async ({ page, context }) => { await session(context); const calls = await fixture(page); await page.goto('/multi-currency/currencies'); await expect(page.getByText('US Dollar')).toBeVisible(); await page.getByRole('button', { name: 'Request disable USD' }).click(); await expect(page.getByText('Pending: Disable').last()).toBeVisible(); expect(calls[0]?.key).toMatch(/^[0-9a-f-]{36}$/); await screenshot(page, 'currencies-desktop.png'); await page.getByRole('button', { name: 'Approve USD' }).click(); await expect(page.getByRole('button', { name: 'Request enable USD' })).toBeVisible(); await page.setViewportSize({ width: 390, height: 844 }); await screenshot(page, 'currencies-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); });\n     |                                                                                                                                                                     ^\n  53 | test('rate history chart and provider failure are explicit', async ({ page, context }) => { await session(context); const calls = await fixture(page); await page.goto('/multi-currency/fx-rates'); await expect(page.getByText('Manual (locked)').first()).toBeVisible(); await page.getByRole('button', { name: 'BWP/USD', exact: true }).click(); await expect(page.getByRole('img', { name: /Exchange rate changes/ })).toBeVisible(); await screenshot(page, 'fx-desktop.png'); await page.getByRole('heading', { name: 'BWP/USD rate history' }).evaluate(el => el.scrollIntoView({ block: 'start' })); await page.screenshot({ path: path.join(out, 'history-desktop.png') }); await page.getByLabel('From currency', { exact: true }).fill('BWP'); await page.getByLabel('To currency', { exact: true }).fill('USD'); await page.getByLabel('Spread %', { exact: true }).fill('1.25'); await page.getByLabel('Rate mode').selectOption('provider'); await page.getByRole('button', { name: 'Submit for approval' }).click(); await expect(page.getByRole('status')).toContainText('FX provider is not configured'); expect((calls[0]?.body as {\n  54 |     rate?: string;\n  55 | }).rate).toBeUndefined(); await page.setViewportSize({ width: 390, height: 844 }); await screenshot(page, 'fx-mobile.png'); await page.getByRole('heading', { name: 'BWP/USD rate history' }).evaluate(el => el.scrollIntoView({ block: 'start' })); await page.screenshot({ path: path.join(out, 'history-mobile.png') }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); await page.keyboard.press('Tab'); expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('BODY'); });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1022-fx.spec.ts",
+                        "column": 165,
+                        "line": 52
+                      },
+                      "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/multi-currency/currencies\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/multi-currency/currencies\", waiting until \"load\"\u001b[22m\n\n\n  50 | async function screenshot(page: Page, name: string) { fs.mkdirSync(out, { recursive: true }); await page.evaluate(() => document.querySelectorAll('*').forEach(el => { if (el.scrollTop > 0)\n  51 |     el.scrollTop = 0; })); await page.screenshot({ path: path.join(out, name), fullPage: true }); }\n> 52 | test('currency maker and checker controls desktop and mobile', async ({ page, context }) => { await session(context); const calls = await fixture(page); await page.goto('/multi-currency/currencies'); await expect(page.getByText('US Dollar')).toBeVisible(); await page.getByRole('button', { name: 'Request disable USD' }).click(); await expect(page.getByText('Pending: Disable').last()).toBeVisible(); expect(calls[0]?.key).toMatch(/^[0-9a-f-]{36}$/); await screenshot(page, 'currencies-desktop.png'); await page.getByRole('button', { name: 'Approve USD' }).click(); await expect(page.getByRole('button', { name: 'Request enable USD' })).toBeVisible(); await page.setViewportSize({ width: 390, height: 844 }); await screenshot(page, 'currencies-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); });\n     |                                                                                                                                                                     ^\n  53 | test('rate history chart and provider failure are explicit', async ({ page, context }) => { await session(context); const calls = await fixture(page); await page.goto('/multi-currency/fx-rates'); await expect(page.getByText('Manual (locked)').first()).toBeVisible(); await page.getByRole('button', { name: 'BWP/USD', exact: true }).click(); await expect(page.getByRole('img', { name: /Exchange rate changes/ })).toBeVisible(); await screenshot(page, 'fx-desktop.png'); await page.getByRole('heading', { name: 'BWP/USD rate history' }).evaluate(el => el.scrollIntoView({ block: 'start' })); await page.screenshot({ path: path.join(out, 'history-desktop.png') }); await page.getByLabel('From currency', { exact: true }).fill('BWP'); await page.getByLabel('To currency', { exact: true }).fill('USD'); await page.getByLabel('Spread %', { exact: true }).fill('1.25'); await page.getByLabel('Rate mode').selectOption('provider'); await page.getByRole('button', { name: 'Submit for approval' }).click(); await expect(page.getByRole('status')).toContainText('FX provider is not configured'); expect((calls[0]?.body as {\n  54 |     rate?: string;\n  55 | }).rate).toBeUndefined(); await page.setViewportSize({ width: 390, height: 844 }); await screenshot(page, 'fx-mobile.png'); await page.getByRole('heading', { name: 'BWP/USD rate history' }).evaluate(el => el.scrollIntoView({ block: 'start' })); await page.screenshot({ path: path.join(out, 'history-mobile.png') }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); await page.keyboard.press('Tab'); expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('BODY'); });\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1022-fx.spec.ts:52:165"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T05:52:44.713Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results\\admin-fixture-p1022-fx-cur-25cd2-controls-desktop-and-mobile\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1022-fx.spec.ts",
+                    "column": 165,
+                    "line": 52
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "ecc2ba9ad79a4dd8567b-eb64f3a128a01fd099b5",
+          "file": "admin-fixture-p1022-fx.spec.ts",
+          "line": 52,
+          "column": 5
+        },
+        {
+          "title": "rate history chart and provider failure are explicit",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 9,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 1204,
+                  "error": {
+                    "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/multi-currency/fx-rates\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/multi-currency/fx-rates\", waiting until \"load\"\u001b[22m\n",
+                    "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/multi-currency/fx-rates\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/multi-currency/fx-rates\", waiting until \"load\"\u001b[22m\n\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1022-fx.spec.ts:53:163",
+                    "location": {
+                      "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1022-fx.spec.ts",
+                      "column": 163,
+                      "line": 53
+                    },
+                    "snippet": "  51 |     el.scrollTop = 0; })); await page.screenshot({ path: path.join(out, name), fullPage: true }); }\n  52 | test('currency maker and checker controls desktop and mobile', async ({ page, context }) => { await session(context); const calls = await fixture(page); await page.goto('/multi-currency/currencies'); await expect(page.getByText('US Dollar')).toBeVisible(); await page.getByRole('button', { name: 'Request disable USD' }).click(); await expect(page.getByText('Pending: Disable').last()).toBeVisible(); expect(calls[0]?.key).toMatch(/^[0-9a-f-]{36}$/); await screenshot(page, 'currencies-desktop.png'); await page.getByRole('button', { name: 'Approve USD' }).click(); await expect(page.getByRole('button', { name: 'Request enable USD' })).toBeVisible(); await page.setViewportSize({ width: 390, height: 844 }); await screenshot(page, 'currencies-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); });\n> 53 | test('rate history chart and provider failure are explicit', async ({ page, context }) => { await session(context); const calls = await fixture(page); await page.goto('/multi-currency/fx-rates'); await expect(page.getByText('Manual (locked)').first()).toBeVisible(); await page.getByRole('button', { name: 'BWP/USD', exact: true }).click(); await expect(page.getByRole('img', { name: /Exchange rate changes/ })).toBeVisible(); await screenshot(page, 'fx-desktop.png'); await page.getByRole('heading', { name: 'BWP/USD rate history' }).evaluate(el => el.scrollIntoView({ block: 'start' })); await page.screenshot({ path: path.join(out, 'history-desktop.png') }); await page.getByLabel('From currency', { exact: true }).fill('BWP'); await page.getByLabel('To currency', { exact: true }).fill('USD'); await page.getByLabel('Spread %', { exact: true }).fill('1.25'); await page.getByLabel('Rate mode').selectOption('provider'); await page.getByRole('button', { name: 'Submit for approval' }).click(); await expect(page.getByRole('status')).toContainText('FX provider is not configured'); expect((calls[0]?.body as {\n     |                                                                                                                                                                   ^\n  54 |     rate?: string;\n  55 | }).rate).toBeUndefined(); await page.setViewportSize({ width: 390, height: 844 }); await screenshot(page, 'fx-mobile.png'); await page.getByRole('heading', { name: 'BWP/USD rate history' }).evaluate(el => el.scrollIntoView({ block: 'start' })); await page.screenshot({ path: path.join(out, 'history-mobile.png') }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); await page.keyboard.press('Tab'); expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('BODY'); });\n  56 | test('unauthorized route is gated', async ({ page, context }) => { await session(context, []); await fixture(page); await page.goto('/multi-currency/fx-rates'); await expect(page).toHaveURL(/\\/403/); });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1022-fx.spec.ts",
+                        "column": 163,
+                        "line": 53
+                      },
+                      "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/multi-currency/fx-rates\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/multi-currency/fx-rates\", waiting until \"load\"\u001b[22m\n\n\n  51 |     el.scrollTop = 0; })); await page.screenshot({ path: path.join(out, name), fullPage: true }); }\n  52 | test('currency maker and checker controls desktop and mobile', async ({ page, context }) => { await session(context); const calls = await fixture(page); await page.goto('/multi-currency/currencies'); await expect(page.getByText('US Dollar')).toBeVisible(); await page.getByRole('button', { name: 'Request disable USD' }).click(); await expect(page.getByText('Pending: Disable').last()).toBeVisible(); expect(calls[0]?.key).toMatch(/^[0-9a-f-]{36}$/); await screenshot(page, 'currencies-desktop.png'); await page.getByRole('button', { name: 'Approve USD' }).click(); await expect(page.getByRole('button', { name: 'Request enable USD' })).toBeVisible(); await page.setViewportSize({ width: 390, height: 844 }); await screenshot(page, 'currencies-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); });\n> 53 | test('rate history chart and provider failure are explicit', async ({ page, context }) => { await session(context); const calls = await fixture(page); await page.goto('/multi-currency/fx-rates'); await expect(page.getByText('Manual (locked)').first()).toBeVisible(); await page.getByRole('button', { name: 'BWP/USD', exact: true }).click(); await expect(page.getByRole('img', { name: /Exchange rate changes/ })).toBeVisible(); await screenshot(page, 'fx-desktop.png'); await page.getByRole('heading', { name: 'BWP/USD rate history' }).evaluate(el => el.scrollIntoView({ block: 'start' })); await page.screenshot({ path: path.join(out, 'history-desktop.png') }); await page.getByLabel('From currency', { exact: true }).fill('BWP'); await page.getByLabel('To currency', { exact: true }).fill('USD'); await page.getByLabel('Spread %', { exact: true }).fill('1.25'); await page.getByLabel('Rate mode').selectOption('provider'); await page.getByRole('button', { name: 'Submit for approval' }).click(); await expect(page.getByRole('status')).toContainText('FX provider is not configured'); expect((calls[0]?.body as {\n     |                                                                                                                                                                   ^\n  54 |     rate?: string;\n  55 | }).rate).toBeUndefined(); await page.setViewportSize({ width: 390, height: 844 }); await screenshot(page, 'fx-mobile.png'); await page.getByRole('heading', { name: 'BWP/USD rate history' }).evaluate(el => el.scrollIntoView({ block: 'start' })); await page.screenshot({ path: path.join(out, 'history-mobile.png') }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); await page.keyboard.press('Tab'); expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('BODY'); });\n  56 | test('unauthorized route is gated', async ({ page, context }) => { await session(context, []); await fixture(page); await page.goto('/multi-currency/fx-rates'); await expect(page).toHaveURL(/\\/403/); });\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1022-fx.spec.ts:53:163"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T05:52:46.543Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results\\admin-fixture-p1022-fx-rat-df51a-ovider-failure-are-explicit\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1022-fx.spec.ts",
+                    "column": 163,
+                    "line": 53
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "ecc2ba9ad79a4dd8567b-709a4b621571386cdf7a",
+          "file": "admin-fixture-p1022-fx.spec.ts",
+          "line": 53,
+          "column": 5
+        },
+        {
+          "title": "unauthorized route is gated",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 10,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 1251,
+                  "error": {
+                    "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/multi-currency/fx-rates\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/multi-currency/fx-rates\", waiting until \"load\"\u001b[22m\n",
+                    "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/multi-currency/fx-rates\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/multi-currency/fx-rates\", waiting until \"load\"\u001b[22m\n\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1022-fx.spec.ts:56:128",
+                    "location": {
+                      "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1022-fx.spec.ts",
+                      "column": 128,
+                      "line": 56
+                    },
+                    "snippet": "  54 |     rate?: string;\n  55 | }).rate).toBeUndefined(); await page.setViewportSize({ width: 390, height: 844 }); await screenshot(page, 'fx-mobile.png'); await page.getByRole('heading', { name: 'BWP/USD rate history' }).evaluate(el => el.scrollIntoView({ block: 'start' })); await page.screenshot({ path: path.join(out, 'history-mobile.png') }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); await page.keyboard.press('Tab'); expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('BODY'); });\n> 56 | test('unauthorized route is gated', async ({ page, context }) => { await session(context, []); await fixture(page); await page.goto('/multi-currency/fx-rates'); await expect(page).toHaveURL(/\\/403/); });\n     |                                                                                                                                ^\n  57 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1022-fx.spec.ts",
+                        "column": 128,
+                        "line": 56
+                      },
+                      "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/multi-currency/fx-rates\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/multi-currency/fx-rates\", waiting until \"load\"\u001b[22m\n\n\n  54 |     rate?: string;\n  55 | }).rate).toBeUndefined(); await page.setViewportSize({ width: 390, height: 844 }); await screenshot(page, 'fx-mobile.png'); await page.getByRole('heading', { name: 'BWP/USD rate history' }).evaluate(el => el.scrollIntoView({ block: 'start' })); await page.screenshot({ path: path.join(out, 'history-mobile.png') }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); await page.keyboard.press('Tab'); expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('BODY'); });\n> 56 | test('unauthorized route is gated', async ({ page, context }) => { await session(context, []); await fixture(page); await page.goto('/multi-currency/fx-rates'); await expect(page).toHaveURL(/\\/403/); });\n     |                                                                                                                                ^\n  57 |\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1022-fx.spec.ts:56:128"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T05:52:48.456Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results\\admin-fixture-p1022-fx-unauthorized-route-is-gated\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1022-fx.spec.ts",
+                    "column": 128,
+                    "line": 56
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "ecc2ba9ad79a4dd8567b-dca1d3ed369957ccf845",
+          "file": "admin-fixture-p1022-fx.spec.ts",
+          "line": 56,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "admin-fixture-p1023-security.spec.ts",
+      "file": "admin-fixture-p1023-security.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "policy provenance and responsive layout",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 11,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 1226,
+                  "error": {
+                    "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/platform/security-config\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/platform/security-config\", waiting until \"load\"\u001b[22m\n",
+                    "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/platform/security-config\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/platform/security-config\", waiting until \"load\"\u001b[22m\n\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1023-security.spec.ts:38:136",
+                    "location": {
+                      "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1023-security.spec.ts",
+                      "column": 136,
+                      "line": 38
+                    },
+                    "snippet": "  36 | } await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ data }) }); }); return calls; }\n  37 | async function shot(page: Page, name: string) { fs.mkdirSync(out, { recursive: true }); await page.evaluate(() => document.querySelectorAll('*').forEach(el => { el.scrollTop = 0; })); await page.screenshot({ path: path.join(out, name), fullPage: true }); }\n> 38 | test('policy provenance and responsive layout', async ({ page, context }) => { await session(context); await fixture(page); await page.goto('/platform/security-config'); await expect(page.getByText('Minimum password length', { exact: true })).toBeVisible(); await page.getByRole('button', { name: 'Edit Minimum password length' }).click(); await page.getByLabel('Policy value').fill('14'); await page.getByRole('button', { name: 'Submit policy for approval' }).click(); await expect(page.getByText('Proposed: 14')).toBeVisible(); await page.getByRole('button', { name: 'Approve Minimum password length' }).click(); await expect(page.getByRole('status')).toHaveText('Approved policy applied.'); await shot(page, 'policies-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'policies-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); });\n     |                                                                                                                                        ^\n  39 | test('finding investigation and audited remediation', async ({ page, context }) => { await session(context); const calls = await fixture(page); await page.goto('/security/findings/finding-1'); await expect(page.getByRole('heading', { name: 'Dependency vulnerability' })).toBeVisible(); await page.getByRole('button', { name: 'Start remediation' }).click(); await expect(page.getByRole('status')).toHaveText('Finding updated and audited.'); expect(calls[0]).toMatch(/^[0-9a-f-]{36}$/); await page.getByRole('button', { name: 'Resolve finding' }).click(); await page.getByRole('button', { name: 'Verify resolution' }).click(); await expect(page.getByRole('button', { name: 'Verify resolution' })).toHaveCount(0); await shot(page, 'finding-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'finding-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); });\n  40 | test('security events filters and authenticated SIEM download', async ({ page, context }) => { await session(context); await fixture(page); await page.goto('/security/events'); await expect(page.getByText('identity.login.failed')).toBeVisible(); await page.getByLabel('Security event severity').selectOption('medium'); await page.getByLabel('Security event type').selectOption('login_failed'); const download = page.waitForEvent('download'); await page.getByRole('button', { name: 'Export SIEM JSONL' }).click(); expect((await download).suggestedFilename()).toBe('security-events.ndjson'); await shot(page, 'events-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'events-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); await page.keyboard.press('Tab'); expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('BODY'); });\n  41 | test('security events route requires permission', async ({ page, context }) => { await session(context, []); await fixture(page); await page.goto('/security/events'); await expect(page).toHaveURL(/\\/403/); });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1023-security.spec.ts",
+                        "column": 136,
+                        "line": 38
+                      },
+                      "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/platform/security-config\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/platform/security-config\", waiting until \"load\"\u001b[22m\n\n\n  36 | } await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ data }) }); }); return calls; }\n  37 | async function shot(page: Page, name: string) { fs.mkdirSync(out, { recursive: true }); await page.evaluate(() => document.querySelectorAll('*').forEach(el => { el.scrollTop = 0; })); await page.screenshot({ path: path.join(out, name), fullPage: true }); }\n> 38 | test('policy provenance and responsive layout', async ({ page, context }) => { await session(context); await fixture(page); await page.goto('/platform/security-config'); await expect(page.getByText('Minimum password length', { exact: true })).toBeVisible(); await page.getByRole('button', { name: 'Edit Minimum password length' }).click(); await page.getByLabel('Policy value').fill('14'); await page.getByRole('button', { name: 'Submit policy for approval' }).click(); await expect(page.getByText('Proposed: 14')).toBeVisible(); await page.getByRole('button', { name: 'Approve Minimum password length' }).click(); await expect(page.getByRole('status')).toHaveText('Approved policy applied.'); await shot(page, 'policies-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'policies-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); });\n     |                                                                                                                                        ^\n  39 | test('finding investigation and audited remediation', async ({ page, context }) => { await session(context); const calls = await fixture(page); await page.goto('/security/findings/finding-1'); await expect(page.getByRole('heading', { name: 'Dependency vulnerability' })).toBeVisible(); await page.getByRole('button', { name: 'Start remediation' }).click(); await expect(page.getByRole('status')).toHaveText('Finding updated and audited.'); expect(calls[0]).toMatch(/^[0-9a-f-]{36}$/); await page.getByRole('button', { name: 'Resolve finding' }).click(); await page.getByRole('button', { name: 'Verify resolution' }).click(); await expect(page.getByRole('button', { name: 'Verify resolution' })).toHaveCount(0); await shot(page, 'finding-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'finding-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); });\n  40 | test('security events filters and authenticated SIEM download', async ({ page, context }) => { await session(context); await fixture(page); await page.goto('/security/events'); await expect(page.getByText('identity.login.failed')).toBeVisible(); await page.getByLabel('Security event severity').selectOption('medium'); await page.getByLabel('Security event type').selectOption('login_failed'); const download = page.waitForEvent('download'); await page.getByRole('button', { name: 'Export SIEM JSONL' }).click(); expect((await download).suggestedFilename()).toBe('security-events.ndjson'); await shot(page, 'events-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'events-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); await page.keyboard.press('Tab'); expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('BODY'); });\n  41 | test('security events route requires permission', async ({ page, context }) => { await session(context, []); await fixture(page); await page.goto('/security/events'); await expect(page).toHaveURL(/\\/403/); });\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1023-security.spec.ts:38:136"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T05:52:50.369Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results\\admin-fixture-p1023-securi-74794-nance-and-responsive-layout\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1023-security.spec.ts",
+                    "column": 136,
+                    "line": 38
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "7b000081fe26eb1e19f8-8873d9bf8af150934b72",
+          "file": "admin-fixture-p1023-security.spec.ts",
+          "line": 38,
+          "column": 5
+        },
+        {
+          "title": "finding investigation and audited remediation",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 12,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 1250,
+                  "error": {
+                    "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/security/findings/finding-1\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/security/findings/finding-1\", waiting until \"load\"\u001b[22m\n",
+                    "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/security/findings/finding-1\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/security/findings/finding-1\", waiting until \"load\"\u001b[22m\n\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1023-security.spec.ts:39:156",
+                    "location": {
+                      "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1023-security.spec.ts",
+                      "column": 156,
+                      "line": 39
+                    },
+                    "snippet": "  37 | async function shot(page: Page, name: string) { fs.mkdirSync(out, { recursive: true }); await page.evaluate(() => document.querySelectorAll('*').forEach(el => { el.scrollTop = 0; })); await page.screenshot({ path: path.join(out, name), fullPage: true }); }\n  38 | test('policy provenance and responsive layout', async ({ page, context }) => { await session(context); await fixture(page); await page.goto('/platform/security-config'); await expect(page.getByText('Minimum password length', { exact: true })).toBeVisible(); await page.getByRole('button', { name: 'Edit Minimum password length' }).click(); await page.getByLabel('Policy value').fill('14'); await page.getByRole('button', { name: 'Submit policy for approval' }).click(); await expect(page.getByText('Proposed: 14')).toBeVisible(); await page.getByRole('button', { name: 'Approve Minimum password length' }).click(); await expect(page.getByRole('status')).toHaveText('Approved policy applied.'); await shot(page, 'policies-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'policies-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); });\n> 39 | test('finding investigation and audited remediation', async ({ page, context }) => { await session(context); const calls = await fixture(page); await page.goto('/security/findings/finding-1'); await expect(page.getByRole('heading', { name: 'Dependency vulnerability' })).toBeVisible(); await page.getByRole('button', { name: 'Start remediation' }).click(); await expect(page.getByRole('status')).toHaveText('Finding updated and audited.'); expect(calls[0]).toMatch(/^[0-9a-f-]{36}$/); await page.getByRole('button', { name: 'Resolve finding' }).click(); await page.getByRole('button', { name: 'Verify resolution' }).click(); await expect(page.getByRole('button', { name: 'Verify resolution' })).toHaveCount(0); await shot(page, 'finding-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'finding-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); });\n     |                                                                                                                                                            ^\n  40 | test('security events filters and authenticated SIEM download', async ({ page, context }) => { await session(context); await fixture(page); await page.goto('/security/events'); await expect(page.getByText('identity.login.failed')).toBeVisible(); await page.getByLabel('Security event severity').selectOption('medium'); await page.getByLabel('Security event type').selectOption('login_failed'); const download = page.waitForEvent('download'); await page.getByRole('button', { name: 'Export SIEM JSONL' }).click(); expect((await download).suggestedFilename()).toBe('security-events.ndjson'); await shot(page, 'events-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'events-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); await page.keyboard.press('Tab'); expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('BODY'); });\n  41 | test('security events route requires permission', async ({ page, context }) => { await session(context, []); await fixture(page); await page.goto('/security/events'); await expect(page).toHaveURL(/\\/403/); });\n  42 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1023-security.spec.ts",
+                        "column": 156,
+                        "line": 39
+                      },
+                      "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/security/findings/finding-1\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/security/findings/finding-1\", waiting until \"load\"\u001b[22m\n\n\n  37 | async function shot(page: Page, name: string) { fs.mkdirSync(out, { recursive: true }); await page.evaluate(() => document.querySelectorAll('*').forEach(el => { el.scrollTop = 0; })); await page.screenshot({ path: path.join(out, name), fullPage: true }); }\n  38 | test('policy provenance and responsive layout', async ({ page, context }) => { await session(context); await fixture(page); await page.goto('/platform/security-config'); await expect(page.getByText('Minimum password length', { exact: true })).toBeVisible(); await page.getByRole('button', { name: 'Edit Minimum password length' }).click(); await page.getByLabel('Policy value').fill('14'); await page.getByRole('button', { name: 'Submit policy for approval' }).click(); await expect(page.getByText('Proposed: 14')).toBeVisible(); await page.getByRole('button', { name: 'Approve Minimum password length' }).click(); await expect(page.getByRole('status')).toHaveText('Approved policy applied.'); await shot(page, 'policies-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'policies-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); });\n> 39 | test('finding investigation and audited remediation', async ({ page, context }) => { await session(context); const calls = await fixture(page); await page.goto('/security/findings/finding-1'); await expect(page.getByRole('heading', { name: 'Dependency vulnerability' })).toBeVisible(); await page.getByRole('button', { name: 'Start remediation' }).click(); await expect(page.getByRole('status')).toHaveText('Finding updated and audited.'); expect(calls[0]).toMatch(/^[0-9a-f-]{36}$/); await page.getByRole('button', { name: 'Resolve finding' }).click(); await page.getByRole('button', { name: 'Verify resolution' }).click(); await expect(page.getByRole('button', { name: 'Verify resolution' })).toHaveCount(0); await shot(page, 'finding-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'finding-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); });\n     |                                                                                                                                                            ^\n  40 | test('security events filters and authenticated SIEM download', async ({ page, context }) => { await session(context); await fixture(page); await page.goto('/security/events'); await expect(page.getByText('identity.login.failed')).toBeVisible(); await page.getByLabel('Security event severity').selectOption('medium'); await page.getByLabel('Security event type').selectOption('login_failed'); const download = page.waitForEvent('download'); await page.getByRole('button', { name: 'Export SIEM JSONL' }).click(); expect((await download).suggestedFilename()).toBe('security-events.ndjson'); await shot(page, 'events-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'events-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); await page.keyboard.press('Tab'); expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('BODY'); });\n  41 | test('security events route requires permission', async ({ page, context }) => { await session(context, []); await fixture(page); await page.goto('/security/events'); await expect(page).toHaveURL(/\\/403/); });\n  42 |\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1023-security.spec.ts:39:156"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T05:52:52.238Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results\\admin-fixture-p1023-securi-ee74c-ion-and-audited-remediation\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1023-security.spec.ts",
+                    "column": 156,
+                    "line": 39
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "7b000081fe26eb1e19f8-d3ca7796cd875c1f0b55",
+          "file": "admin-fixture-p1023-security.spec.ts",
+          "line": 39,
+          "column": 5
+        },
+        {
+          "title": "security events filters and authenticated SIEM download",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 13,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 1201,
+                  "error": {
+                    "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/security/events\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/security/events\", waiting until \"load\"\u001b[22m\n",
+                    "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/security/events\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/security/events\", waiting until \"load\"\u001b[22m\n\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1023-security.spec.ts:40:152",
+                    "location": {
+                      "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1023-security.spec.ts",
+                      "column": 152,
+                      "line": 40
+                    },
+                    "snippet": "  38 | test('policy provenance and responsive layout', async ({ page, context }) => { await session(context); await fixture(page); await page.goto('/platform/security-config'); await expect(page.getByText('Minimum password length', { exact: true })).toBeVisible(); await page.getByRole('button', { name: 'Edit Minimum password length' }).click(); await page.getByLabel('Policy value').fill('14'); await page.getByRole('button', { name: 'Submit policy for approval' }).click(); await expect(page.getByText('Proposed: 14')).toBeVisible(); await page.getByRole('button', { name: 'Approve Minimum password length' }).click(); await expect(page.getByRole('status')).toHaveText('Approved policy applied.'); await shot(page, 'policies-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'policies-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); });\n  39 | test('finding investigation and audited remediation', async ({ page, context }) => { await session(context); const calls = await fixture(page); await page.goto('/security/findings/finding-1'); await expect(page.getByRole('heading', { name: 'Dependency vulnerability' })).toBeVisible(); await page.getByRole('button', { name: 'Start remediation' }).click(); await expect(page.getByRole('status')).toHaveText('Finding updated and audited.'); expect(calls[0]).toMatch(/^[0-9a-f-]{36}$/); await page.getByRole('button', { name: 'Resolve finding' }).click(); await page.getByRole('button', { name: 'Verify resolution' }).click(); await expect(page.getByRole('button', { name: 'Verify resolution' })).toHaveCount(0); await shot(page, 'finding-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'finding-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); });\n> 40 | test('security events filters and authenticated SIEM download', async ({ page, context }) => { await session(context); await fixture(page); await page.goto('/security/events'); await expect(page.getByText('identity.login.failed')).toBeVisible(); await page.getByLabel('Security event severity').selectOption('medium'); await page.getByLabel('Security event type').selectOption('login_failed'); const download = page.waitForEvent('download'); await page.getByRole('button', { name: 'Export SIEM JSONL' }).click(); expect((await download).suggestedFilename()).toBe('security-events.ndjson'); await shot(page, 'events-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'events-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); await page.keyboard.press('Tab'); expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('BODY'); });\n     |                                                                                                                                                        ^\n  41 | test('security events route requires permission', async ({ page, context }) => { await session(context, []); await fixture(page); await page.goto('/security/events'); await expect(page).toHaveURL(/\\/403/); });\n  42 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1023-security.spec.ts",
+                        "column": 152,
+                        "line": 40
+                      },
+                      "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/security/events\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/security/events\", waiting until \"load\"\u001b[22m\n\n\n  38 | test('policy provenance and responsive layout', async ({ page, context }) => { await session(context); await fixture(page); await page.goto('/platform/security-config'); await expect(page.getByText('Minimum password length', { exact: true })).toBeVisible(); await page.getByRole('button', { name: 'Edit Minimum password length' }).click(); await page.getByLabel('Policy value').fill('14'); await page.getByRole('button', { name: 'Submit policy for approval' }).click(); await expect(page.getByText('Proposed: 14')).toBeVisible(); await page.getByRole('button', { name: 'Approve Minimum password length' }).click(); await expect(page.getByRole('status')).toHaveText('Approved policy applied.'); await shot(page, 'policies-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'policies-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); });\n  39 | test('finding investigation and audited remediation', async ({ page, context }) => { await session(context); const calls = await fixture(page); await page.goto('/security/findings/finding-1'); await expect(page.getByRole('heading', { name: 'Dependency vulnerability' })).toBeVisible(); await page.getByRole('button', { name: 'Start remediation' }).click(); await expect(page.getByRole('status')).toHaveText('Finding updated and audited.'); expect(calls[0]).toMatch(/^[0-9a-f-]{36}$/); await page.getByRole('button', { name: 'Resolve finding' }).click(); await page.getByRole('button', { name: 'Verify resolution' }).click(); await expect(page.getByRole('button', { name: 'Verify resolution' })).toHaveCount(0); await shot(page, 'finding-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'finding-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); });\n> 40 | test('security events filters and authenticated SIEM download', async ({ page, context }) => { await session(context); await fixture(page); await page.goto('/security/events'); await expect(page.getByText('identity.login.failed')).toBeVisible(); await page.getByLabel('Security event severity').selectOption('medium'); await page.getByLabel('Security event type').selectOption('login_failed'); const download = page.waitForEvent('download'); await page.getByRole('button', { name: 'Export SIEM JSONL' }).click(); expect((await download).suggestedFilename()).toBe('security-events.ndjson'); await shot(page, 'events-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'events-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); await page.keyboard.press('Tab'); expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('BODY'); });\n     |                                                                                                                                                        ^\n  41 | test('security events route requires permission', async ({ page, context }) => { await session(context, []); await fixture(page); await page.goto('/security/events'); await expect(page).toHaveURL(/\\/403/); });\n  42 |\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1023-security.spec.ts:40:152"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T05:52:54.110Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results\\admin-fixture-p1023-securi-d9e66-authenticated-SIEM-download\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1023-security.spec.ts",
+                    "column": 152,
+                    "line": 40
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "7b000081fe26eb1e19f8-784c811cf340bfee50ac",
+          "file": "admin-fixture-p1023-security.spec.ts",
+          "line": 40,
+          "column": 5
+        },
+        {
+          "title": "security events route requires permission",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 14,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 1229,
+                  "error": {
+                    "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/security/events\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/security/events\", waiting until \"load\"\u001b[22m\n",
+                    "stack": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/security/events\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/security/events\", waiting until \"load\"\u001b[22m\n\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1023-security.spec.ts:41:142",
+                    "location": {
+                      "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1023-security.spec.ts",
+                      "column": 142,
+                      "line": 41
+                    },
+                    "snippet": "  39 | test('finding investigation and audited remediation', async ({ page, context }) => { await session(context); const calls = await fixture(page); await page.goto('/security/findings/finding-1'); await expect(page.getByRole('heading', { name: 'Dependency vulnerability' })).toBeVisible(); await page.getByRole('button', { name: 'Start remediation' }).click(); await expect(page.getByRole('status')).toHaveText('Finding updated and audited.'); expect(calls[0]).toMatch(/^[0-9a-f-]{36}$/); await page.getByRole('button', { name: 'Resolve finding' }).click(); await page.getByRole('button', { name: 'Verify resolution' }).click(); await expect(page.getByRole('button', { name: 'Verify resolution' })).toHaveCount(0); await shot(page, 'finding-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'finding-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); });\n  40 | test('security events filters and authenticated SIEM download', async ({ page, context }) => { await session(context); await fixture(page); await page.goto('/security/events'); await expect(page.getByText('identity.login.failed')).toBeVisible(); await page.getByLabel('Security event severity').selectOption('medium'); await page.getByLabel('Security event type').selectOption('login_failed'); const download = page.waitForEvent('download'); await page.getByRole('button', { name: 'Export SIEM JSONL' }).click(); expect((await download).suggestedFilename()).toBe('security-events.ndjson'); await shot(page, 'events-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'events-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); await page.keyboard.press('Tab'); expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('BODY'); });\n> 41 | test('security events route requires permission', async ({ page, context }) => { await session(context, []); await fixture(page); await page.goto('/security/events'); await expect(page).toHaveURL(/\\/403/); });\n     |                                                                                                                                              ^\n  42 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1023-security.spec.ts",
+                        "column": 142,
+                        "line": 41
+                      },
+                      "message": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3030/security/events\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3030/security/events\", waiting until \"load\"\u001b[22m\n\n\n  39 | test('finding investigation and audited remediation', async ({ page, context }) => { await session(context); const calls = await fixture(page); await page.goto('/security/findings/finding-1'); await expect(page.getByRole('heading', { name: 'Dependency vulnerability' })).toBeVisible(); await page.getByRole('button', { name: 'Start remediation' }).click(); await expect(page.getByRole('status')).toHaveText('Finding updated and audited.'); expect(calls[0]).toMatch(/^[0-9a-f-]{36}$/); await page.getByRole('button', { name: 'Resolve finding' }).click(); await page.getByRole('button', { name: 'Verify resolution' }).click(); await expect(page.getByRole('button', { name: 'Verify resolution' })).toHaveCount(0); await shot(page, 'finding-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'finding-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); });\n  40 | test('security events filters and authenticated SIEM download', async ({ page, context }) => { await session(context); await fixture(page); await page.goto('/security/events'); await expect(page.getByText('identity.login.failed')).toBeVisible(); await page.getByLabel('Security event severity').selectOption('medium'); await page.getByLabel('Security event type').selectOption('login_failed'); const download = page.waitForEvent('download'); await page.getByRole('button', { name: 'Export SIEM JSONL' }).click(); expect((await download).suggestedFilename()).toBe('security-events.ndjson'); await shot(page, 'events-desktop.png'); await page.setViewportSize({ width: 390, height: 844 }); await shot(page, 'events-mobile.png'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); await page.keyboard.press('Tab'); expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('BODY'); });\n> 41 | test('security events route requires permission', async ({ page, context }) => { await session(context, []); await fixture(page); await page.goto('/security/events'); await expect(page).toHaveURL(/\\/403/); });\n     |                                                                                                                                              ^\n  42 |\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1023-security.spec.ts:41:142"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T05:52:55.972Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results\\admin-fixture-p1023-securi-5392c-s-route-requires-permission\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-fixture-p1023-security.spec.ts",
+                    "column": 142,
+                    "line": 41
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "7b000081fe26eb1e19f8-931d76743f20a5e7fac9",
+          "file": "admin-fixture-p1023-security.spec.ts",
+          "line": 41,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-16T05:52:09.521Z",
+    "duration": 47878.162,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 15,
+    "flaky": 0
+  }
+}

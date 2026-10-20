@@ -1,0 +1,801 @@
+openapi: "3.1.0"
+info:
+  title: "E30 — DevOps & Operations API"
+  version: "1.0.0"
+  description: >
+    Observability, health probes, monitoring, alerting, backup,
+    disaster recovery, and deployment rollback for the Wallet Ecosystem platform.
+
+servers:
+  - url: /api
+
+tags:
+  - name: Health Probes
+    description: Unauthenticated liveness, readiness, and health endpoints
+  - name: Logs
+    description: Structured log search (admin)
+  - name: Metrics
+    description: Service metrics query (admin)
+  - name: Provider Monitoring
+    description: Payment provider health status (admin)
+  - name: Alert Rules
+    description: Alert rule management (admin)
+  - name: Alerts
+    description: Fired alert history (admin)
+  - name: Backup Jobs
+    description: Backup scheduling and history (admin)
+  - name: Deployments
+    description: Deployment version tracking and rollback (admin)
+
+paths:
+
+  # ── Health Probes (unauthenticated) ──────────────────────────────────────
+
+  /v1/ops/health:
+    get:
+      operationId: getHealth
+      summary: Aggregate health check
+      description: Returns overall service health with component-level breakdown. Unauthenticated.
+      tags: [Health Probes]
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "503":
+          description: Service is unhealthy or degraded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /v1/ops/health/ready:
+    get:
+      operationId: getReadiness
+      summary: Readiness probe
+      description: Returns 200 only when all startup checks pass. Unauthenticated.
+      tags: [Health Probes]
+      responses:
+        "200":
+          description: Service is ready to accept traffic
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeResponse"
+        "503":
+          description: Service is not yet ready
+
+  /v1/ops/health/live:
+    get:
+      operationId: getLiveness
+      summary: Liveness probe
+      description: Returns 200 if the service process is alive. Does not check external dependencies. Unauthenticated.
+      tags: [Health Probes]
+      responses:
+        "200":
+          description: Service process is alive
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProbeResponse"
+
+  # ── Log Search ────────────────────────────────────────────────────────────
+
+  /v1/admin/ops/logs:
+    get:
+      operationId: searchLogs
+      summary: Search structured log entries
+      tags: [Logs]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: correlation_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: severity
+          in: query
+          schema: { type: string, enum: [debug, info, warning, error, critical] }
+        - name: service_name
+          in: query
+          schema: { type: string }
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+        - name: per_page
+          in: query
+          schema: { type: integer, default: 50, maximum: 200 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Log entries matching the filter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogSearchResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ── Metrics ───────────────────────────────────────────────────────────────
+
+  /v1/admin/ops/metrics:
+    get:
+      operationId: queryMetrics
+      summary: Query service performance metrics
+      tags: [Metrics]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: service_name
+          in: query
+          schema: { type: string }
+        - name: metric_name
+          in: query
+          schema: { type: string }
+        - name: granularity
+          in: query
+          schema: { type: string, enum: [raw, minute, hour, day], default: minute }
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Metric data points
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetricsResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ── Provider Monitoring ───────────────────────────────────────────────────
+
+  /v1/admin/ops/providers:
+    get:
+      operationId: listProviderStatus
+      summary: List current payment provider health statuses
+      tags: [Provider Monitoring]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Provider status list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderStatusListResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/admin/ops/providers/{providerCode}/history:
+    get:
+      operationId: getProviderHealthHistory
+      summary: Get health check history for a payment provider
+      tags: [Provider Monitoring]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: providerCode
+          in: path
+          required: true
+          schema: { type: string }
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Provider health check history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderHealthHistoryResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ── Alert Rules ───────────────────────────────────────────────────────────
+
+  /v1/admin/ops/alert-rules:
+    get:
+      operationId: listAlertRules
+      summary: List alert rules
+      tags: [Alert Rules]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Alert rule list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertRuleListResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+    post:
+      operationId: createAlertRule
+      summary: Create an alert rule
+      tags: [Alert Rules]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAlertRuleRequest"
+      responses:
+        "201":
+          description: Alert rule created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertRuleResponse"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/admin/ops/alert-rules/{id}:
+    patch:
+      operationId: updateAlertRule
+      summary: Update an alert rule
+      tags: [Alert Rules]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAlertRuleRequest"
+      responses:
+        "200":
+          description: Alert rule updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertRuleResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+    delete:
+      operationId: deleteAlertRule
+      summary: Delete an alert rule
+      tags: [Alert Rules]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Alert rule deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ── Alerts ────────────────────────────────────────────────────────────────
+
+  /v1/admin/ops/alerts:
+    get:
+      operationId: listAlerts
+      summary: List fired alerts
+      tags: [Alerts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [firing, resolved] }
+        - name: severity
+          in: query
+          schema: { type: string, enum: [info, warning, critical] }
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+        - name: per_page
+          in: query
+          schema: { type: integer, default: 50 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Alert list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertListResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ── Backup Jobs ───────────────────────────────────────────────────────────
+
+  /v1/admin/ops/backup-jobs:
+    get:
+      operationId: listBackupJobs
+      summary: List backup job history
+      tags: [Backup Jobs]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [pending, running, completed, failed] }
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Backup job list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BackupJobListResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+    post:
+      operationId: triggerManualBackup
+      summary: Trigger a manual backup
+      tags: [Backup Jobs]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TriggerBackupRequest"
+      responses:
+        "201":
+          description: Backup job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BackupJobResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ── Deployments ───────────────────────────────────────────────────────────
+
+  /v1/admin/ops/deployments:
+    get:
+      operationId: listDeploymentVersions
+      summary: List deployment version history
+      tags: [Deployments]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Deployment version list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentVersionListResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/admin/ops/deployments/{id}/rollback:
+    post:
+      operationId: initiateRollback
+      summary: Initiate a deployment rollback
+      tags: [Deployments]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: Target deployment version to roll back to
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "201":
+          description: Rollback initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentRollbackResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: A rollback is already in progress
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      schema: { type: string, format: uuid }
+
+  responses:
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+
+    SuccessResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        correlation_id: { type: string, format: uuid }
+
+    ErrorResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: false }
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+        correlation_id: { type: string, format: uuid }
+
+    ProbeResponse:
+      type: object
+      properties:
+        status: { type: string, enum: [ready, not_ready, live] }
+
+    HealthResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: object
+          properties:
+            overall_status:
+              type: string
+              enum: [healthy, degraded, unhealthy]
+            components:
+              type: array
+              items:
+                type: object
+                properties:
+                  name: { type: string }
+                  status: { type: string, enum: [healthy, degraded, unhealthy] }
+                  latency_ms: { type: integer }
+                  details: { type: string }
+            checked_at: { type: string, format: date-time }
+        correlation_id: { type: string, format: uuid }
+
+    LogEntry:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        service_name: { type: string }
+        correlation_id: { type: string, format: uuid }
+        severity: { type: string, enum: [debug, info, warning, error, critical] }
+        message: { type: string }
+        context: { type: object }
+        created_at: { type: string, format: date-time }
+
+    LogSearchResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/LogEntry"
+        meta:
+          type: object
+          properties:
+            cursor: { type: string }
+            has_more: { type: boolean }
+        correlation_id: { type: string, format: uuid }
+
+    MetricDataPoint:
+      type: object
+      properties:
+        service_name: { type: string }
+        metric_name: { type: string }
+        value: { type: number }
+        unit: { type: string }
+        granularity: { type: string }
+        recorded_at: { type: string, format: date-time }
+
+    MetricsResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/MetricDataPoint"
+        correlation_id: { type: string, format: uuid }
+
+    ProviderStatusEntry:
+      type: object
+      properties:
+        provider_code: { type: string }
+        current_status: { type: string, enum: [up, degraded, down] }
+        avg_response_time_ms: { type: integer }
+        error_rate_5m: { type: number }
+        last_checked_at: { type: string, format: date-time }
+        status_changed_at: { type: string, format: date-time }
+
+    ProviderStatusListResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProviderStatusEntry"
+        correlation_id: { type: string, format: uuid }
+
+    ProviderHealthHistoryResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              probe_status: { type: string, enum: [success, timeout, error] }
+              response_time_ms: { type: integer, nullable: true }
+              error_message: { type: string, nullable: true }
+              checked_at: { type: string, format: date-time }
+        correlation_id: { type: string, format: uuid }
+
+    AlertCondition:
+      type: object
+      properties:
+        metric: { type: string, description: "Metric key, e.g. db.connection_pool_pct" }
+        operator: { type: string, enum: [gt, gte, lt, lte, eq] }
+        threshold: { type: number }
+        duration_seconds: { type: integer, description: "Condition must persist this long before firing" }
+
+    AlertRule:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        metric_condition: { $ref: "#/components/schemas/AlertCondition" }
+        severity: { type: string, enum: [info, warning, critical] }
+        notification_channels:
+          type: array
+          items:
+            type: object
+            properties:
+              type: { type: string, enum: [email, webhook] }
+              config: { type: object }
+        grouping_key: { type: string, nullable: true }
+        is_enabled: { type: boolean }
+        created_by: { type: string, format: uuid }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    AlertRuleResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data: { $ref: "#/components/schemas/AlertRule" }
+        correlation_id: { type: string, format: uuid }
+
+    AlertRuleListResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AlertRule"
+        correlation_id: { type: string, format: uuid }
+
+    CreateAlertRuleRequest:
+      type: object
+      required: [name, metric_condition, severity, notification_channels]
+      properties:
+        name: { type: string, maxLength: 255 }
+        description: { type: string }
+        metric_condition: { $ref: "#/components/schemas/AlertCondition" }
+        severity: { type: string, enum: [info, warning, critical] }
+        notification_channels:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            properties:
+              type: { type: string, enum: [email, webhook] }
+              config: { type: object }
+        grouping_key: { type: string }
+        is_enabled: { type: boolean, default: true }
+
+    UpdateAlertRuleRequest:
+      type: object
+      properties:
+        name: { type: string, maxLength: 255 }
+        description: { type: string }
+        metric_condition: { $ref: "#/components/schemas/AlertCondition" }
+        severity: { type: string, enum: [info, warning, critical] }
+        notification_channels:
+          type: array
+          items:
+            type: object
+        grouping_key: { type: string, nullable: true }
+        is_enabled: { type: boolean }
+
+    Alert:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        alert_rule_id: { type: string, format: uuid }
+        alert_rule_name: { type: string }
+        status: { type: string, enum: [firing, resolved] }
+        severity: { type: string, enum: [info, warning, critical] }
+        condition_summary: { type: string }
+        fired_at: { type: string, format: date-time }
+        resolved_at: { type: string, format: date-time, nullable: true }
+
+    AlertListResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Alert"
+        meta:
+          type: object
+          properties:
+            cursor: { type: string }
+            has_more: { type: boolean }
+        correlation_id: { type: string, format: uuid }
+
+    BackupJob:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        backup_type: { type: string, enum: [full, incremental] }
+        status: { type: string, enum: [pending, running, completed, failed] }
+        started_at: { type: string, format: date-time, nullable: true }
+        completed_at: { type: string, format: date-time, nullable: true }
+        size_bytes: { type: integer, format: int64, nullable: true }
+        storage_location: { type: string, nullable: true }
+        failure_reason: { type: string, nullable: true }
+        triggered_by: { type: string, format: uuid, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    BackupJobListResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/BackupJob"
+        correlation_id: { type: string, format: uuid }
+
+    BackupJobResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data: { $ref: "#/components/schemas/BackupJob" }
+        correlation_id: { type: string, format: uuid }
+
+    TriggerBackupRequest:
+      type: object
+      required: [backup_type]
+      properties:
+        backup_type: { type: string, enum: [full, incremental] }
+        notes: { type: string }
+
+    DeploymentVersion:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        version_tag: { type: string }
+        deployed_at: { type: string, format: date-time }
+        deployed_by: { type: string, format: uuid, nullable: true }
+        is_current: { type: boolean }
+        notes: { type: string, nullable: true }
+
+    DeploymentVersionListResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeploymentVersion"
+        correlation_id: { type: string, format: uuid }
+
+    DeploymentRollback:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        from_version_id: { type: string, format: uuid }
+        to_version_id: { type: string, format: uuid }
+        status: { type: string, enum: [pending, in_progress, completed, failed] }
+        initiated_by: { type: string, format: uuid }
+        initiated_at: { type: string, format: date-time }
+        completed_at: { type: string, format: date-time, nullable: true }
+        failure_reason: { type: string, nullable: true }
+
+    DeploymentRollbackResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data: { $ref: "#/components/schemas/DeploymentRollback" }
+        correlation_id: { type: string, format: uuid }

@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<ruleset name="WalletEcosystem">
+    <description>PSR-12 + financial safety rules for Wallet Ecosystem API</description>
+
+    <file>app</file>
+    <file>tests</file>
+
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/bootstrap/cache/*</exclude-pattern>
+    <exclude-pattern>*/storage/*</exclude-pattern>
+
+    <rule ref="PSR12"/>
+
+    <!-- Prohibit float types in financial calculations -->
+    <rule ref="Generic.PHP.ForbiddenFunctions">
+        <properties>
+            <property name="forbiddenFunctions" type="array">
+                <element key="floatval" value="null"/>
+                <element key="doubleval" value="null"/>
+                <element key="round" value="null"/>
+                <element key="ceil" value="null"/>
+                <element key="floor" value="null"/>
+            </property>
+        </properties>
+    </rule>
+
+    <arg name="colors"/>
+    <arg value="sp"/>
+</ruleset>

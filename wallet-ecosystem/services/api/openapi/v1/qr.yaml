@@ -1,0 +1,835 @@
+openapi: "3.1.0"
+info:
+  title: OleKard Wallet — QR & Merchant Payments
+  version: "1.0.0"
+  description: |
+    MPQR-based QR code generation and payment endpoints.
+    Static QR codes are reusable; dynamic QR codes are single-use with an optional expiry.
+    All financial amounts are returned as decimal strings (e.g. "20.00") in the API layer,
+    stored as bigInteger minor units internally.
+
+servers:
+  - url: /api/v1
+    description: API v1
+
+tags:
+  - name: QR Codes
+    description: Merchant QR code management (qr.generate / qr.manage permissions)
+  - name: QR Payments
+    description: Customer payment flows (qr.pay permission)
+
+# ---------------------------------------------------------------------------
+# Security
+# ---------------------------------------------------------------------------
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  # -------------------------------------------------------------------------
+  # Reusable schemas
+  # -------------------------------------------------------------------------
+  schemas:
+
+    QrCodeType:
+      type: string
+      enum: [static, dynamic]
+      description: "`static` = unlimited reuse; `dynamic` = single-use with optional expiry"
+
+    QrCodeStatus:
+      type: string
+      enum: [active, reserved, used, expired, inactive]
+
+    QrPaymentStatus:
+      type: string
+      enum: [initiated, completed, failed]
+
+    # ---- QR Code objects --------------------------------------------------
+
+    QrCodeSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: "#/components/schemas/QrCodeType"
+        label:
+          type: string
+          nullable: true
+          maxLength: 100
+        amount:
+          type: string
+          nullable: true
+          description: Decimal string (minor units / 100). null for static QR.
+          example: "50.00"
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: BWP
+        status:
+          $ref: "#/components/schemas/QrCodeStatus"
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+      required: [id, type, currency, status, created_at]
+
+    QrCodeDetail:
+      allOf:
+        - $ref: "#/components/schemas/QrCodeSummary"
+        - type: object
+          properties:
+            merchant_ref:
+              type: string
+              nullable: true
+              maxLength: 255
+            updated_at:
+              type: string
+              format: date-time
+
+    QrCodeWithPayload:
+      allOf:
+        - $ref: "#/components/schemas/QrCodeDetail"
+        - type: object
+          properties:
+            payload:
+              type: string
+              description: Base64URL-encoded HMAC-signed payload. Only returned on initial generate.
+              example: "eyJ0eXBlIjoiZHluYW1pYyIs..."
+          required: [payload]
+
+    # ---- Payment / receipt objects ----------------------------------------
+
+    QrResolution:
+      type: object
+      properties:
+        qr_code_id:
+          type: string
+          format: uuid
+        type:
+          $ref: "#/components/schemas/QrCodeType"
+        merchant:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            display_name:
+              type: string
+            category:
+              type: string
+              nullable: true
+          required: [id, display_name]
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        amount:
+          type: string
+          nullable: true
+          description: Present for dynamic QR only.
+          example: "50.00"
+        amount_required:
+          type: boolean
+          description: true for static QR (customer must enter amount); false for dynamic.
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+      required: [qr_code_id, type, merchant, currency, amount_required]
+
+    QrFeeQuote:
+      type: object
+      properties:
+        amount:
+          type: string
+          example: "20.00"
+        fee:
+          type: string
+          example: "1.00"
+        total:
+          type: string
+          example: "21.00"
+        currency:
+          type: string
+          example: BWP
+      required: [amount, fee, total, currency]
+
+    QrPaymentTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/QrPaymentStatus"
+        qr_code_id:
+          type: string
+          format: uuid
+        amount:
+          type: string
+          example: "20.00"
+        fee:
+          type: string
+          example: "1.00"
+        total_debited:
+          type: string
+          example: "21.00"
+        currency:
+          type: string
+          example: BWP
+        merchant_display_name:
+          type: string
+        receipt_ref:
+          type: string
+          nullable: true
+          example: "QRPMT-20260925-A3F7"
+        created_at:
+          type: string
+          format: date-time
+      required: [id, status, qr_code_id, amount, fee, total_debited, currency, merchant_display_name, created_at]
+
+    QrReceipt:
+      type: object
+      properties:
+        receipt_ref:
+          type: string
+          example: "QRPMT-20260925-A3F7"
+        merchant_display_name:
+          type: string
+        merchant_ref:
+          type: string
+          nullable: true
+        amount:
+          type: string
+          example: "20.00"
+        fee:
+          type: string
+          example: "1.00"
+        total_debited:
+          type: string
+          example: "21.00"
+        currency:
+          type: string
+          example: BWP
+        status:
+          type: string
+          enum: [completed]
+        issued_at:
+          type: string
+          format: date-time
+      required: [receipt_ref, merchant_display_name, amount, fee, total_debited, currency, status, issued_at]
+
+    # ---- Error object -------------------------------------------------------
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: QR_EXPIRED
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true
+          required: [code, message]
+      required: [error]
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        last_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+      required: [current_page, last_page, per_page, total]
+
+  # -------------------------------------------------------------------------
+  # Reusable parameters
+  # -------------------------------------------------------------------------
+  parameters:
+    QrCodeId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: QR code UUID
+
+    QrPaymentId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: QR payment transaction UUID
+
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Client-generated UUID for idempotent payment submission
+
+  # -------------------------------------------------------------------------
+  # Reusable responses
+  # -------------------------------------------------------------------------
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: { code: UNAUTHORIZED, message: "Authentication required." }
+
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: { code: FORBIDDEN, message: "You do not have the required permission." }
+
+    NotFound:
+      description: Resource not found or inaccessible
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: { code: NOT_FOUND, message: "Resource not found." }
+
+    UnprocessableEntity:
+      description: Domain or validation error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    Conflict:
+      description: Conflict — e.g. QR currently reserved
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: { code: QR_RESERVED, message: "QR code is reserved by another session." }
+
+# ---------------------------------------------------------------------------
+# Paths
+# ---------------------------------------------------------------------------
+
+security:
+  - BearerAuth: []
+
+paths:
+
+  # ==========================================================================
+  # QR Code Management (Merchant)
+  # ==========================================================================
+
+  /qr-codes:
+    post:
+      tags: [QR Codes]
+      operationId: generateQrCode
+      summary: Generate a QR code
+      description: |
+        Creates a new static or dynamic QR code for the authenticated merchant.
+        Returns the Base64URL-encoded signed payload only on this initial response.
+        Requires `qr.generate` permission.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  $ref: "#/components/schemas/QrCodeType"
+                label:
+                  type: string
+                  nullable: true
+                  maxLength: 100
+                  description: Display label; NOT included in signed payload.
+                amount:
+                  type: number
+                  nullable: true
+                  minimum: 0.01
+                  description: Required for dynamic; prohibited for static.
+                  example: 50.00
+                currency:
+                  type: string
+                  minLength: 3
+                  maxLength: 3
+                  default: BWP
+                merchant_ref:
+                  type: string
+                  nullable: true
+                  maxLength: 255
+                expiry_seconds:
+                  type: integer
+                  nullable: true
+                  minimum: 60
+                  description: Dynamic only; defaults to `qr.dynamic_expiry_seconds` config.
+              required: [type]
+            examples:
+              static:
+                summary: Static QR
+                value: { type: static, label: "Main Counter", currency: BWP }
+              dynamic:
+                summary: Dynamic QR
+                value: { type: dynamic, amount: 50.00, currency: BWP, merchant_ref: "INV-001", expiry_seconds: 300 }
+      responses:
+        "201":
+          description: QR code created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/QrCodeWithPayload"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          description: Validation or domain error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                merchantNotActive:
+                  value: { error: { code: MERCHANT_NOT_ACTIVE, message: "Merchant wallet is not active." } }
+                validationError:
+                  value: { error: { code: VALIDATION_ERROR, message: "The amount field is required for dynamic QR codes." } }
+
+    get:
+      tags: [QR Codes]
+      operationId: listQrCodes
+      summary: List merchant's QR codes
+      description: Returns paginated QR codes for the authenticated merchant. Requires `qr.manage` permission.
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/QrCodeStatus"
+          description: Filter by status
+        - name: type
+          in: query
+          schema:
+            $ref: "#/components/schemas/QrCodeType"
+          description: Filter by type
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Paginated list of QR codes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/QrCodeSummary"
+                  meta:
+                    $ref: "#/components/schemas/PaginationMeta"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /qr-codes/{id}:
+    get:
+      tags: [QR Codes]
+      operationId: getQrCode
+      summary: Get a single QR code
+      description: Returns full detail for one QR code owned by the merchant. Requires `qr.manage` permission.
+      parameters:
+        - $ref: "#/components/parameters/QrCodeId"
+      responses:
+        "200":
+          description: QR code detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/QrCodeDetail"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    delete:
+      tags: [QR Codes]
+      operationId: deactivateQrCode
+      summary: Deactivate a QR code
+      description: |
+        Transitions a QR code from `active` → `inactive`. Only the owning merchant can deactivate.
+        Requires `qr.manage` permission.
+      parameters:
+        - $ref: "#/components/parameters/QrCodeId"
+      responses:
+        "200":
+          description: QR code deactivated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/QrCodeDetail"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          description: QR not in a deactivatable state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: { code: QR_NOT_ACTIVE, message: "QR code is not active." }
+
+  # ==========================================================================
+  # QR Payments (Customer)
+  # ==========================================================================
+
+  /qr-payments/resolve:
+    post:
+      tags: [QR Payments]
+      operationId: resolveQrCode
+      summary: Resolve a scanned QR payload
+      description: |
+        Decodes and validates a scanned QR payload. Returns merchant and payment details
+        for the customer to review. **No money moves at this step.**
+        Tampered or malformed payloads are audit-logged with action `qr.payload.tampered`.
+        Requires `qr.pay` permission.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payload:
+                  type: string
+                  minLength: 1
+                  description: Base64URL-encoded signed QR payload from the QR image.
+              required: [payload]
+      responses:
+        "200":
+          description: QR resolved — ready for quote/confirm
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/QrResolution"
+              examples:
+                staticQr:
+                  summary: Static QR (amount required)
+                  value:
+                    data:
+                      qr_code_id: "019270ab-0000-7000-8000-000000000001"
+                      type: static
+                      merchant: { id: "01926fa2-0000-7000-8000-000000000001", display_name: "Kgalagadi Café", category: null }
+                      currency: BWP
+                      amount_required: true
+                      expires_at: null
+                dynamicQr:
+                  summary: Dynamic QR (amount fixed)
+                  value:
+                    data:
+                      qr_code_id: "019270ab-0000-7000-8000-000000000002"
+                      type: dynamic
+                      merchant: { id: "01926fa2-0000-7000-8000-000000000001", display_name: "Kgalagadi Café", category: null }
+                      currency: BWP
+                      amount: "50.00"
+                      amount_required: false
+                      expires_at: "2026-09-25T14:05:00Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          description: Invalid or unusable QR
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalid:
+                  value: { error: { code: INVALID_QR_PAYLOAD, message: "QR payload signature is invalid." } }
+                expired:
+                  value: { error: { code: QR_EXPIRED, message: "QR code has expired." } }
+                alreadyUsed:
+                  value: { error: { code: QR_ALREADY_USED, message: "QR code has already been used." } }
+                notActive:
+                  value: { error: { code: QR_NOT_ACTIVE, message: "QR code is not active." } }
+                merchantNotActive:
+                  value: { error: { code: MERCHANT_NOT_ACTIVE, message: "Merchant wallet is inactive." } }
+
+  /qr-payments/quote:
+    post:
+      tags: [QR Payments]
+      operationId: quoteQrPayment
+      summary: Get fee quote for a QR payment
+      description: |
+        Calculates and returns the fee and total for a prospective payment amount.
+        Call this after `resolve` for static QR codes (where the customer enters the amount).
+        Requires `qr.pay` permission.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                qr_code_id:
+                  type: string
+                  format: uuid
+                amount:
+                  type: number
+                  minimum: 0.01
+                  example: 20.00
+                currency:
+                  type: string
+                  minLength: 3
+                  maxLength: 3
+                  example: BWP
+              required: [qr_code_id, amount, currency]
+      responses:
+        "200":
+          description: Fee quote
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/QrFeeQuote"
+              example:
+                data: { amount: "20.00", fee: "1.00", total: "21.00", currency: BWP }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          description: Amount out of range or currency mismatch
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                outOfRange:
+                  value: { error: { code: AMOUNT_OUT_OF_RANGE, message: "Amount must be between 0.01 and 10000.00." } }
+
+  /qr-payments:
+    post:
+      tags: [QR Payments]
+      operationId: confirmQrPayment
+      summary: Execute (confirm) a QR payment
+      description: |
+        Debits the customer wallet and credits the merchant wallet via a triple-leg journal.
+        This is the only state-changing payment endpoint — idempotency is enforced via
+        the `Idempotency-Key` header.
+        Requires `qr.pay` permission.
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                qr_code_id:
+                  type: string
+                  format: uuid
+                customer_wallet_id:
+                  type: string
+                  format: uuid
+                  description: Must be owned by the authenticated user.
+                amount:
+                  type: number
+                  nullable: true
+                  minimum: 0.01
+                  description: Required for static QR; omit for dynamic (amount encoded in QR).
+                  example: 20.00
+                currency:
+                  type: string
+                  minLength: 3
+                  maxLength: 3
+                  example: BWP
+                step_up_token:
+                  type: string
+                  nullable: true
+                  description: Required when amount ≥ auth.step_up_threshold.
+              required: [qr_code_id, customer_wallet_id, currency]
+            examples:
+              staticPayment:
+                summary: Static QR payment
+                value: { qr_code_id: "019270ab-0000-7000-8000-000000000001", customer_wallet_id: "01927000-0000-7000-8000-000000000001", amount: 20.00, currency: BWP }
+              dynamicPayment:
+                summary: Dynamic QR payment (amount omitted)
+                value: { qr_code_id: "019270ab-0000-7000-8000-000000000002", customer_wallet_id: "01927000-0000-7000-8000-000000000001", currency: BWP }
+      responses:
+        "201":
+          description: Payment completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/QrPaymentTransaction"
+              example:
+                data:
+                  id: "01927100-0000-7000-8000-000000000001"
+                  status: completed
+                  qr_code_id: "019270ab-0000-7000-8000-000000000001"
+                  amount: "20.00"
+                  fee: "1.00"
+                  total_debited: "21.00"
+                  currency: BWP
+                  merchant_display_name: "Kgalagadi Café"
+                  receipt_ref: "QRPMT-20260925-A3F7"
+                  created_at: "2026-09-25T14:02:30Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          description: Domain error preventing payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                insufficientBalance:
+                  value: { error: { code: INSUFFICIENT_BALANCE, message: "Insufficient wallet balance." } }
+                stepUpRequired:
+                  value: { error: { code: STEP_UP_REQUIRED, message: "Step-up authentication required for this payment amount." } }
+                qrExpired:
+                  value: { error: { code: QR_EXPIRED, message: "QR code has expired." } }
+                qrAlreadyUsed:
+                  value: { error: { code: QR_ALREADY_USED, message: "QR code has already been used." } }
+                qrPayloadMismatch:
+                  value: { error: { code: QR_PAYLOAD_MISMATCH, message: "Confirmed amount does not match the dynamic QR amount." } }
+                merchantNotActive:
+                  value: { error: { code: MERCHANT_NOT_ACTIVE, message: "Merchant wallet is inactive." } }
+                currencyMismatch:
+                  value: { error: { code: CURRENCY_MISMATCH, message: "Currency does not match the QR code." } }
+                missingIdempotencyKey:
+                  value: { error: { code: MISSING_IDEMPOTENCY_KEY, message: "Idempotency-Key header is required." } }
+
+  /qr-payments/{id}:
+    get:
+      tags: [QR Payments]
+      operationId: getQrPayment
+      summary: Get a QR payment transaction
+      description: Returns a single QR payment transaction owned by the authenticated customer. Requires `qr.pay` permission.
+      parameters:
+        - $ref: "#/components/parameters/QrPaymentId"
+      responses:
+        "200":
+          description: Payment transaction detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/QrPaymentTransaction"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /qr-payments/{id}/receipt:
+    get:
+      tags: [QR Payments]
+      operationId: getQrReceipt
+      summary: Get the payment receipt
+      description: |
+        Returns the immutable payment receipt for a **completed** QR payment.
+        Returns `RECEIPT_NOT_AVAILABLE` (422) for initiated or failed payments.
+        Requires `qr.pay` permission.
+      parameters:
+        - $ref: "#/components/parameters/QrPaymentId"
+      responses:
+        "200":
+          description: Payment receipt
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/QrReceipt"
+              example:
+                data:
+                  receipt_ref: "QRPMT-20260925-A3F7"
+                  merchant_display_name: "Kgalagadi Café"
+                  merchant_ref: "INV-2026-001"
+                  amount: "20.00"
+                  fee: "1.00"
+                  total_debited: "21.00"
+                  currency: BWP
+                  status: completed
+                  issued_at: "2026-09-25T14:02:31Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          description: Receipt not yet available (payment not completed)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: { code: RECEIPT_NOT_AVAILABLE, message: "Receipt is not available for non-completed payments." }

@@ -1,0 +1,15 @@
+# Tasks ADM-P1-021
+- [x] T001 Review catalogue, Constitution, E22 and related completed epics; clarify/design/analyze.
+- [x] T002 [US1] Backend API tests first in services/api/tests/Feature/Modules/Support/AdminSupportTest.php.
+- [x] T003 [US1] Add support admin metadata migration and unified filtered queue in Support/Application/Services/AdminCaseService.php.
+- [x] T004 [US1] Add /support/cases UI and navigation/middleware gates.
+- [x] T005 [US2] Detail timeline, existing evidence and links in AdminCaseService.php and AdminSupportController.php.
+- [x] T006 [US2] Internal notes, private MIME-validated attachments, related cases and assignment actions.
+- [x] T007 [US3] Identity actor/session-bound step-up contract and Transaction-owned refund adapter.
+- [x] T008 [US3] Atomic amount-validated idempotent maker-checker refund using Ledger/Fees with durable event.
+- [x] T009 [US3] E17 refund notification listener/templates and UI verification/confirmation.
+- [x] T010 [US4] Senior escalation with 24-hour deadline and durable senior notification.
+- [x] T011 [US2] Detail UI with action permissions, keyboard and responsive states.
+- [x] T012 OpenAPI documentation, scoped lint/types, backend/unit/integration/security/concurrency and related regression.
+- [x] T013 Chromium browser journeys and screenshot visual inspection.
+- [x] T014 Read-only story/AC convergence, status/traceability/changed-file evidence.

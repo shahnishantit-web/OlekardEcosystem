@@ -1,0 +1,14 @@
+{
+    "name": "olekard/shared-utils",
+    "description": "Shared PHP utilities for the OleKard platform — internal reuse only",
+    "type": "library",
+    "license": "proprietary",
+    "autoload": {
+        "psr-4": {
+            "OleKard\\SharedUtils\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^8.4"
+    }
+}

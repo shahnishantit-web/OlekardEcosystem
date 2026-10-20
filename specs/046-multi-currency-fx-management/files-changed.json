@@ -1,0 +1,308 @@
+{
+  "epic": "ADM-P1-022",
+  "status": "PARTIAL",
+  "source_files": [
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/MultiCurrency/Application/Services/FxRateAdminService.php",
+      "sha256": "ee4c6b91be85c3fb1d9dfcfc6ea28e3998ef80ac40db28e3c9ca5f0f37f6b1bb"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/MultiCurrency/Application/Services/AdminFxManagementService.php",
+      "sha256": "07ff6c78d2a789f8a8a3b5a9d0c695d3dc08003804da8537488f9687dc609e4e"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/MultiCurrency/Domain/Contracts/FxRateProviderInterface.php",
+      "sha256": "c2434aeed3b4ec660d6cc5d1bdbe3857bfecec02acaf7b900978182e4aa397d2"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/MultiCurrency/Domain/Exceptions/FxProviderUnavailableException.php",
+      "sha256": "4000212b06fb1d8efecc4597861c3d28df720dc5a9a0d8117e98777468734550"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/MultiCurrency/Infrastructure/Providers/UnavailableFxRateProvider.php",
+      "sha256": "4d8afb8ac247eeaa3527ec90f972ffa3dfc542b51e76bf2bc6e490b9b57bf6ad"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/MultiCurrency/Infrastructure/Models/FxRateModel.php",
+      "sha256": "9568cef20ea06918f4728e2b07d3415345406bb7039dcee9a5fa8ef6bd9098ab"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/MultiCurrency/Infrastructure/Repositories/EloquentFxRateRepository.php",
+      "sha256": "048fe896e2dceb0605637880140de28b53bf752873fccbe46602808460a2b714"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/MultiCurrency/Infrastructure/Migrations/2026_10_15_022000_add_fx_provenance.php",
+      "sha256": "21682e87ee4ad84c9ec834e585ed06bbfa83e543e23e9a7b6c62402f7c0bbfc1"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/MultiCurrency/Infrastructure/Migrations/2026_10_15_022100_currency_change_applications.php",
+      "sha256": "4bfcdad5980726d6f874df07f56efc2be4bebf58a08ca41259cf726eab0f4f5d"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/MultiCurrency/Providers/MultiCurrencyServiceProvider.php",
+      "sha256": "fd0b2f734d96069e35199eff7c62fea13f6a4e7afb7d15a91a11c5c08ffe7f80"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/MultiCurrency/Http/Resources/FxRateResource.php",
+      "sha256": "9900f4826040b18501c21922fa27a30a8707b55897142e6c2bcb3f7fe3fde20e"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/MultiCurrency/Http/Controllers/Admin/AdminFxManagementController.php",
+      "sha256": "7d33cd7b1fc7b14da7028bd9431386c0be4e26f47c263032d878dcc73eb2bb1f"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/MultiCurrency/Http/Controllers/Admin/AdminCurrencyController.php",
+      "sha256": "6edb56e09496f3302e2e32e8575452556a2c74c8f64f08dbe891c39bb38c2c7f"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/MultiCurrency/Http/Controllers/Admin/AdminFxRateController.php",
+      "sha256": "f0006451f4a3bbb2b7a69d3da5f68eea76876b40a3faf83581142ead7b32b1a8"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Platform/Domain/Validators/FinancialPolicyConfigValidator.php",
+      "sha256": "51e9b847eb2b82040b31cedaa6ac75dc484e3eafab4a4a61617f10a2e9c3978e"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Platform/Application/Services/ConfigurationChangeRequestService.php",
+      "sha256": "2141e76ffe575c1a8dd19913cbf9fec27dca98403de9d6b9fcab4142d455ba50"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Platform/Infrastructure/Persistence/ConfigurationChangeRequestModel.php",
+      "sha256": "6da2726267ad0e3ffadcb52a75204414cce56830430c29da54e345f413f60928"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Platform/Infrastructure/Persistence/ConfigurationApprovalModel.php",
+      "sha256": "9a270925bc1cb6b96753f2045758ac43b831e5edd943df546b36d60f6c607fda"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/routes/modules/admin-multi-currency.php",
+      "sha256": "e64209866bddd6dcc902df1e1aea2c7b2cfe40fe9be828c0fc2360cd765c4959"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/openapi/v1/admin_fx.yaml",
+      "sha256": "2d6829c519f0b680b92b459fcaf16e1a519f2c50ecc6b3320bbbe393c1d276ed"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/tests/Feature/Modules/MultiCurrency/AdminFxManagementTest.php",
+      "sha256": "1c737a4cd691158acce00ac310ecc0f40ceab56f66efb7ba37c81dd181ec53eb"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/tests/Unit/Modules/MultiCurrency/FxRateDecimalTest.php",
+      "sha256": "2bbb5cf5c9f9caa5976249af9110c1f88ea9d556e3600c5ba90435bd31d91604"
+    },
+    {
+      "path": "wallet-ecosystem/apps/admin/src/modules/multi-currency/pages/currencies.tsx",
+      "sha256": "0d1320f7f554297e88f1ef11a606b628c6eca1feb243adaf8668a26020a1acda"
+    },
+    {
+      "path": "wallet-ecosystem/apps/admin/src/modules/multi-currency/pages/fx-rates.tsx",
+      "sha256": "26053055f6c617876fe2588b961c6874dfab9dcaeeb50a985da6842271079d75"
+    },
+    {
+      "path": "wallet-ecosystem/apps/admin/src/lib/navigation/nav-items.ts",
+      "sha256": "fa12e435fd767d4d2c6c77d91064ad97fd21843881e42c638997f69e531126eb"
+    },
+    {
+      "path": "wallet-ecosystem/apps/admin/lib/api/admin-app-client.ts",
+      "sha256": "ece0dc737c13407be6ac047e7e157a13299cb4ead1ffa565cde0e1eb011d6b00"
+    },
+    {
+      "path": "wallet-ecosystem/apps/admin/middleware.ts",
+      "sha256": "e140f7c0d6a01cc2d88e869cd2e9e5f2fe4b758d8557311be9664c4e480abcd3"
+    },
+    {
+      "path": "wallet-ecosystem/apps/admin/__tests__/features/multi-currency/p1022.test.tsx",
+      "sha256": "5d096efd57fd5df012b692abafbb07e0d4b7593fa418bfb2c8fdfcbb11c6bcc2"
+    },
+    {
+      "path": "wallet-ecosystem/apps/admin/e2e/p1022-fx.spec.ts",
+      "sha256": "77b6e0d7f41da581329d755bcc2e7d089852295b8e6d6b1fd03ffeb4d85d6851"
+    },
+    {
+      "path": "wallet-ecosystem/apps/admin/playwright.p1022.config.ts",
+      "sha256": "573cd112b1d0cd3b209835057d6c1f19288b4abae677271947408b82e18b9fb2"
+    },
+    {
+      "path": ".specify/feature.json",
+      "sha256": "138f45c223a96ce6eeb375c2b049b2c00b807d5cf6d149b7b0042ef9fdf1c441"
+    },
+    {
+      "path": "docs/admin-p1p2-epic-catalogue.md",
+      "sha256": "b933ebf08501c6fc1d5fe326c764719ed55f95e6db9f6f0498e6e3cec68578d1"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "specs/046-multi-currency-fx-management/backend-final.log",
+      "sha256": "e8aa43217e2106861d9acea7c17a31ad1749d81a65f52fcdcc051618a4312310"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/backend-red.log",
+      "sha256": "5272da83105df37011128ad76cbed4d3778215731d170bd24ca1c0ca49aa3a5a"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/backend-unit-regression.log",
+      "sha256": "84f7668b9baec1acb0da5689bbccdeef909824c1496e4db27ccb47319880b5b8"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/backend.log",
+      "sha256": "c7b60344f724f3c62c40ee4fa3d75f4b2a5d875afc3e91dc34796191389f9799"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/browser-final.log",
+      "sha256": "6b0f65ef6f2eb9b7813a14ec3aa9255a73b815a80943b9f4fb439ca50c96a7d8"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/browser-results.json",
+      "sha256": "6ed1f793696c671b849761b2fa6d1ed9f6e36b83006925ede3e2e3965b033c6d"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/browser.log",
+      "sha256": "a58bc57dcb573f0cee0429f7f3ce03a5aea004b69f3fe93cf063cbd73825a92f"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/checklists/requirements.md",
+      "sha256": "36fc94b6353b9eac305731bf853e57a430792b8e6b3e6fcce4f0e3f753d4e084"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/contracts/api.md",
+      "sha256": "db09278eefcd07d21c7fa39ef75a970cd91fdc1cce6d668c395388a1944a9e27"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/contracts/openapi.yaml",
+      "sha256": "2d6829c519f0b680b92b459fcaf16e1a519f2c50ecc6b3320bbbe393c1d276ed"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/convergence.md",
+      "sha256": "0a0ebc34227ffe8dfdfad49193674674c0e389aff1969d453a4bffc0ef95cb5a"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/data-model.md",
+      "sha256": "9668b1b2ddcbcda75896e9b76516733b7a12fca1cb9e49a1c7e14286ece13ca0"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/e28-migration.log",
+      "sha256": "2b651f7b1e57c9f6a00cc70b8e1f0a7fc7c71a8e3714afe15a1903ba4c107135"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/e29-regression.log",
+      "sha256": "e78d9a0f5bb8954b96cfa352370111c00e7ccdeb1ca87685ef5c71f5a56e7307"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/files-changed.md",
+      "sha256": "a69fc1938f0f534c5d567417df12d29e794ea57ac2ebfc5bd74adca0ce0b12ef"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/frontend-final.log",
+      "sha256": "2bac21234616359b7d9fb79147cf4576a8e12a71877742c86c25958c89b58426"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/frontend.log",
+      "sha256": "490219c2270b3460fd8cc36fb48af650cca28d2acb4a3d420e6adce8b7b24784"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/implementation-status.md",
+      "sha256": "1700f9fc66eb1e1b02a2889c9ae09954725827e68c1a7773d7cc5b57d3ec6976"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/lint-scoped.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/lint.log",
+      "sha256": "380f31479cd3211ab8eeaa8146d3271805496992f9ead2114ecbf4f5daf9f848"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/migration-last.log",
+      "sha256": "6198ac9461ac4c68bcfa904d0068982e0e355f956bad889a6272292e4eab38d7"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/migrations.log",
+      "sha256": "3a7c2c5f3c0d9c3347e3778440a6955015ccf39ac1938126e0c67f4fc5f85ff1"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/phpstan-convergence.log",
+      "sha256": "0652d24c347da503fe800245cf10b2a22c234c8ba349302150a587ec34057028"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/phpstan-final.log",
+      "sha256": "64635048cd2775cd30429062f72020cbf6cea9ca0bf3941417a10cd5bd6d4aa5"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/phpstan.log",
+      "sha256": "11f5124d172b7f9341538d5dc6907cef4a5d4cc2bdb6dfca6b5da9d3a0cc6cb9"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/pint-final.log",
+      "sha256": "9100447fb767bb5916a0955f71b796e94483c48a71bfbeed29b7e0153f339c25"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/pint.log",
+      "sha256": "fed884f9fe6c9cda93bfda7a934f6a09895d85dd304416714d63f655d96c8d83"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/plan.md",
+      "sha256": "d16f7942830118689f98b9783f45764096fd57f9205848ec4c0dc50cac79f329"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/quickstart.md",
+      "sha256": "0053538a2f173e00dee4fb4f2b78ffdc67765b3155cbfc431c5c60531f139301"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/research.md",
+      "sha256": "04e2b8dcaa7fdd04381e5465a39867543b55b5fbc79220480599f999d40dd0a4"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/screenshots/currencies-desktop.png",
+      "sha256": "4b1cace34b35925713c5f2dba044e97fed971c2e31ee73f7a3b8e29c0cd0891e"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/screenshots/currencies-mobile.png",
+      "sha256": "9fa6bec2d37d7f907049fbecb54fda86f6fab9985db372f2feac866fa382d15c"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/screenshots/fx-desktop.png",
+      "sha256": "6eb0023cb775dd71ae0241b0f3f774bd4ef7d4ee8ee4ab3148954dcb054a2c24"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/screenshots/fx-mobile.png",
+      "sha256": "f2bb96de1da483b3aebda768b17147c9e89a9f4986618355a09da614b6f4acd0"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/screenshots/history-desktop.png",
+      "sha256": "1e5a7989d50a5265b1df431315309e52727764c8465d92751f004d01f8ed7526"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/screenshots/history-mobile.png",
+      "sha256": "e6f4fa62dd38cdb2eb1616d963eb2081cdb21f88021fa162eaa065318ac957ea"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/security-architecture-regression.log",
+      "sha256": "464e4aa3449702a2d867d37cecfbf9e121afc51c46aee8b1d342150e2629321b"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/security-review.md",
+      "sha256": "064c972cc2a36ff7fc15f380ebc2693c5970c870126bcfa1edcf6054e6bf4a7a"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/spec.md",
+      "sha256": "40602fda599401365cb3a75fc12704640c0a6e03b8984b9f1276158e4a9ba601"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/tasks.md",
+      "sha256": "6e351112a1ba6c16ecf83d1b19f5489b0db2ace4246b3d0418849d123420c604"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/traceability.md",
+      "sha256": "f3797100da3e218ad5d5bf861a00a894cdd783ff0bc1cb7d0f389d32dea32576"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/types-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "specs/046-multi-currency-fx-management/types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

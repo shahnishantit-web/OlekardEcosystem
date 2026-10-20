@@ -1,0 +1,6 @@
+{
+  "status": 200,
+  "audience": "http://localhost:8001",
+  "permissions": 195,
+  "qa_marker_found": false
+}

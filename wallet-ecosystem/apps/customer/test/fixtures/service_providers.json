@@ -1,0 +1,22 @@
+[
+  {
+    "id": "prov-001",
+    "category_id": "cat-001",
+    "name": "Safaricom",
+    "logo_url": "https://example.com/logos/safaricom.png",
+    "description": "Kenya's largest mobile network",
+    "required_fields": [
+      {
+        "key": "phone_number",
+        "label": "Phone Number",
+        "type": "phone",
+        "required": true,
+        "hint": "e.g. 0712345678",
+        "options": null
+      }
+    ],
+    "fee_minor_units": 0,
+    "currency_code": "KES",
+    "is_active": true
+  }
+]

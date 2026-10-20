@@ -1,0 +1,16 @@
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMTkzMTIzNC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJleHAiOjk5OTk5OTk5OTl9.test_signature",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJyZWZyZXNoIiwiZXhwIjo5OTk5OTk5OTk5fQ.test_refresh_signature",
+  "expires_at": "2099-01-01T00:00:00Z",
+  "agent": {
+    "id": "01931234-0000-7000-8000-000000000001",
+    "phone": "+26771000001",
+    "first_name": "Sipho",
+    "last_name": "Dlamini",
+    "full_name": "Sipho Dlamini",
+    "location_code": "GAB-001",
+    "status": "active",
+    "kyc_status": "verified",
+    "created_at": "2026-01-01T00:00:00Z"
+  }
+}

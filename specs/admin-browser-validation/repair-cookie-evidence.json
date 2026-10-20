@@ -1,0 +1,30 @@
+{
+  "cookieSizes": [
+    {
+      "name": "admin_token.0",
+      "valueBytes": 3000
+    },
+    {
+      "name": "admin_token.1",
+      "valueBytes": 3000
+    },
+    {
+      "name": "admin_token.2",
+      "valueBytes": 635
+    },
+    {
+      "name": "admin_token",
+      "valueBytes": 10
+    },
+    {
+      "name": "admin_user",
+      "valueBytes": 146
+    },
+    {
+      "name": "admin_sid",
+      "valueBytes": 36
+    }
+  ],
+  "tokenPersisted": true,
+  "permissionDuplicateRemoved": true
+}

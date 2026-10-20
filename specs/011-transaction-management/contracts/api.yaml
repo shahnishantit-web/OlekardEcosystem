@@ -1,0 +1,756 @@
+openapi: 3.1.0
+info:
+  title: E11 Transaction Management API
+  version: 1.0.0
+  description: |
+    Unified read model for wallet transactions. E11 is a projection layer —
+    it consumes events from E08 (Funding), E09 (Transfer), and E10 (Withdrawal)
+    to populate the `transaction_projections` read model. E11 owns reversals,
+    reversal audit logs, and transaction receipts.
+
+servers:
+  - url: /api/v1
+    description: Current version
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TransactionId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ReversalId:
+      name: rid
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 64
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    TransactionType:
+      type: string
+      enum: [funding, transfer, withdrawal, refund]
+
+    TransactionDirection:
+      type: string
+      enum: [debit, credit]
+
+    TransactionStatus:
+      type: string
+      enum: [pending, processing, completed, failed, cancelled, reversed]
+
+    ReversalStatus:
+      type: string
+      enum: [pending_approval, approved, rejected, executed, failed]
+
+    Money:
+      type: object
+      required: [amount, currency_code]
+      properties:
+        amount:
+          type: integer
+          description: Amount in minor units (cents/thebe)
+        currency_code:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          example: BWP
+
+    PaginationMeta:
+      type: object
+      required: [total, page, per_page, pages]
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        per_page:
+          type: integer
+        pages:
+          type: integer
+
+    TransactionProjection:
+      type: object
+      required: [id, reference, type, status, amount, currency_code, direction, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        reference:
+          type: string
+          example: TXN-20260919-ABCD1234
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        status:
+          $ref: '#/components/schemas/TransactionStatus'
+        amount:
+          type: integer
+          description: Amount in minor units
+        currency_code:
+          type: string
+        direction:
+          $ref: '#/components/schemas/TransactionDirection'
+        description:
+          type: string
+          nullable: true
+        metadata:
+          type: object
+          nullable: true
+        parent_transaction_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Set for refund transactions linking to parent
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        failed_at:
+          type: string
+          format: date-time
+          nullable: true
+        _links:
+          type: object
+          properties:
+            status_history:
+              type: object
+              properties:
+                href:
+                  type: string
+            receipt:
+              type: object
+              nullable: true
+              description: Present only when status = completed
+              properties:
+                href:
+                  type: string
+
+    TransactionStatusHistory:
+      type: object
+      required: [id, transaction_id, new_status, occurred_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        transaction_id:
+          type: string
+          format: uuid
+        previous_status:
+          type: string
+          nullable: true
+        new_status:
+          type: string
+        actor_type:
+          type: string
+          nullable: true
+        reason:
+          type: string
+          nullable: true
+        occurred_at:
+          type: string
+          format: date-time
+
+    Reversal:
+      type: object
+      required: [id, transaction_id, status, requested_by, requested_at, idempotency_key, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        transaction_id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/ReversalStatus'
+        requested_by:
+          type: string
+        requested_at:
+          type: string
+          format: date-time
+        approved_by:
+          type: string
+          nullable: true
+        approved_at:
+          type: string
+          format: date-time
+          nullable: true
+        rejected_by:
+          type: string
+          nullable: true
+        rejected_reason:
+          type: string
+          nullable: true
+        executed_at:
+          type: string
+          format: date-time
+          nullable: true
+        idempotency_key:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ReversalAuditLog:
+      type: object
+      required: [id, reversal_id, action, occurred_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        reversal_id:
+          type: string
+          format: uuid
+        action:
+          type: string
+          enum:
+            - reversal.requested
+            - reversal.approved
+            - reversal.rejected
+            - reversal.executed
+            - reversal.failed
+        actor_id:
+          type: string
+          nullable: true
+        actor_type:
+          type: string
+          nullable: true
+        occurred_at:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          nullable: true
+
+    TransactionReceipt:
+      type: object
+      required: [id, transaction_id, reference, amount, currency_code, type, customer_id, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        transaction_id:
+          type: string
+          format: uuid
+        reference:
+          type: string
+        amount:
+          type: integer
+        currency_code:
+          type: string
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        channel:
+          type: string
+          nullable: true
+        customer_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              example: TRANSACTION_NOT_FOUND
+            message:
+              type: string
+
+  responses:
+    TransactionNotFound:
+      description: Transaction not found (also returned for cross-customer IDOR)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: TRANSACTION_NOT_FOUND
+              message: "Transaction [uuid] not found."
+
+    ReversalNotFound:
+      description: Reversal not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: REVERSAL_NOT_FOUND
+              message: "Reversal [uuid] not found."
+
+    MissingIdempotencyKey:
+      description: Idempotency-Key header missing
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: MISSING_IDEMPOTENCY_KEY
+              message: "Idempotency-Key header is required."
+
+security:
+  - bearerAuth: []
+
+paths:
+  /transactions:
+    get:
+      summary: List transactions for the authenticated customer
+      operationId: listTransactions
+      tags: [Transactions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/TransactionType'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/TransactionStatus'
+        - name: search
+          in: query
+          schema:
+            type: string
+            maxLength: 200
+          description: Full-text search on reference and description
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Paginated transaction list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TransactionProjection'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          description: Unauthenticated
+
+  /transactions/{id}:
+    get:
+      summary: Get a transaction by ID
+      operationId: getTransaction
+      tags: [Transactions]
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      responses:
+        '200':
+          description: Transaction detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TransactionProjection'
+        '404':
+          $ref: '#/components/responses/TransactionNotFound'
+
+  /transactions/{id}/status-history:
+    get:
+      summary: Get status transition history for a transaction
+      operationId: getTransactionStatusHistory
+      tags: [Transactions]
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      responses:
+        '200':
+          description: Status history in ascending occurred_at order
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TransactionStatusHistory'
+        '404':
+          $ref: '#/components/responses/TransactionNotFound'
+
+  /transactions/{id}/receipt:
+    get:
+      summary: Get or generate the receipt for a completed transaction
+      operationId: getTransactionReceipt
+      tags: [Receipts]
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      responses:
+        '200':
+          description: Transaction receipt
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TransactionReceipt'
+        '404':
+          $ref: '#/components/responses/TransactionNotFound'
+
+  /transactions/{id}/receipt/share:
+    post:
+      summary: Share a transaction receipt via a channel
+      operationId: shareTransactionReceipt
+      tags: [Receipts]
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel, recipient]
+              properties:
+                channel:
+                  type: string
+                  enum: [email, sms]
+                recipient:
+                  type: string
+                  description: Email address or phone number
+      responses:
+        '200':
+          description: Receipt shared successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Receipt shared successfully.
+        '404':
+          $ref: '#/components/responses/TransactionNotFound'
+        '422':
+          description: Validation error (invalid channel or recipient)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /transactions/{id}/reversals:
+    post:
+      summary: Request a reversal for a completed transaction
+      operationId: requestReversal
+      tags: [Reversals]
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+      responses:
+        '201':
+          description: Reversal created in pending_approval status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Reversal'
+        '400':
+          $ref: '#/components/responses/MissingIdempotencyKey'
+        '404':
+          $ref: '#/components/responses/TransactionNotFound'
+        '422':
+          description: Transaction not reversible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                not_completed:
+                  value:
+                    error:
+                      code: TRANSACTION_NOT_REVERSIBLE
+                      message: "Transaction [uuid] is not in a completed state."
+                type_not_supported:
+                  value:
+                    error:
+                      code: TRANSACTION_NOT_REVERSIBLE
+                      message: "Transaction type [transfer] is not eligible for reversal."
+                active_reversal_exists:
+                  value:
+                    error:
+                      code: TRANSACTION_NOT_REVERSIBLE
+                      message: "Transaction [uuid] already has an active reversal in progress."
+
+    get:
+      summary: List reversals for a transaction
+      operationId: listReversals
+      tags: [Reversals]
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      responses:
+        '200':
+          description: Reversal list in descending created_at order
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Reversal'
+
+  /transactions/{id}/reversals/{rid}/approve:
+    post:
+      summary: Approve a pending reversal (maker-checker enforced)
+      operationId: approveReversal
+      tags: [Reversals]
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+        - $ref: '#/components/parameters/ReversalId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Reversal approved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Reversal'
+        '400':
+          $ref: '#/components/responses/MissingIdempotencyKey'
+        '404':
+          $ref: '#/components/responses/ReversalNotFound'
+        '422':
+          description: Cannot approve (wrong status or maker-checker violation)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                wrong_status:
+                  value:
+                    error:
+                      code: REVERSAL_NOT_APPROVABLE
+                      message: "Reversal cannot be approved from status [rejected]."
+                maker_checker:
+                  value:
+                    error:
+                      code: REVERSAL_NOT_APPROVABLE
+                      message: "Approver must be different from the reversal requester (maker-checker rule)."
+
+  /transactions/{id}/reversals/{rid}/reject:
+    post:
+      summary: Reject a pending or approved reversal
+      operationId: rejectReversal
+      tags: [Reversals]
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+        - $ref: '#/components/parameters/ReversalId'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+      responses:
+        '200':
+          description: Reversal rejected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Reversal'
+        '404':
+          $ref: '#/components/responses/ReversalNotFound'
+        '422':
+          description: Cannot reject from terminal status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: REVERSAL_NOT_REJECTABLE
+                  message: "Reversal [uuid] cannot be rejected from status [executed]."
+
+  /transactions/{id}/reversals/{rid}/execute:
+    post:
+      summary: Execute an approved reversal (posts compensating journal)
+      operationId: executeReversal
+      tags: [Reversals]
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+        - $ref: '#/components/parameters/ReversalId'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Reversal executed; transaction status is now reversed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Reversal'
+        '404':
+          $ref: '#/components/responses/ReversalNotFound'
+        '422':
+          description: Reversal not in approved status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: REVERSAL_NOT_EXECUTABLE
+                  message: "Reversal [uuid] must be approved before execution."
+        '500':
+          description: Ledger posting failed (reversal remains approved for retry)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: REVERSAL_EXECUTION_FAILED
+                  message: "Reversal execution failed. See logs."
+
+  /transactions/{id}/reversals/{rid}/audit:
+    get:
+      summary: Get audit trail for a reversal
+      operationId: getReversalAudit
+      tags: [Reversals]
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+        - $ref: '#/components/parameters/ReversalId'
+      responses:
+        '200':
+          description: Reversal audit log entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ReversalAuditLog'
+        '404':
+          $ref: '#/components/responses/ReversalNotFound'
+
+  /transactions/{id}/refunds:
+    post:
+      summary: Initiate a refund for a completed transaction
+      operationId: initiateRefund
+      tags: [Refunds]
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+      responses:
+        '201':
+          description: Refund transaction created; parent transaction status unchanged
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TransactionProjection'
+        '400':
+          $ref: '#/components/responses/MissingIdempotencyKey'
+        '404':
+          $ref: '#/components/responses/TransactionNotFound'
+        '422':
+          description: Transaction not refundable (not completed or wrong type)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: TRANSACTION_NOT_REFUNDABLE
+                  message: "Transaction [uuid] is not in a completed state."

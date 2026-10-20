@@ -1,0 +1,742 @@
+openapi: "3.1.0"
+info:
+  title: E13 Agent Float Management API
+  version: "1.0.0"
+  description: |
+    API contracts for agent float wallet provisioning, funding, cash-in/cash-out,
+    limit management, and transaction history.
+
+servers:
+  - url: /v1
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    AgentId:
+      name: agentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CustomerId:
+      name: customerId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Client-generated UUID v4/v7. Replays within TTL return original response.
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: false
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    FloatWallet:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Float wallet ID (from wallet.wallets)
+        agent_id:
+          type: string
+          format: uuid
+        wallet_reference:
+          type: string
+          description: Human-readable wallet reference
+        status:
+          type: string
+          enum: [active, suspended, closed]
+        balance:
+          type: integer
+          description: Current settled balance in minor currency units
+        currency_code:
+          type: string
+          example: BWP
+        low_float_alert:
+          type: boolean
+          description: True when balance is below the configured low-float threshold
+        created_at:
+          type: string
+          format: date-time
+      required: [id, agent_id, wallet_reference, status, balance, currency_code, low_float_alert, created_at]
+
+    FloatTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [funding, cash_in, cash_out]
+        amount:
+          type: integer
+          description: Minor currency units
+        currency_code:
+          type: string
+          example: BWP
+        direction:
+          type: string
+          enum: [debit, credit]
+          description: From agent float perspective (debit = float increases, credit = float decreases)
+        related_party_id:
+          type: string
+          format: uuid
+        related_party_type:
+          type: string
+          enum: [customer, admin]
+        reference:
+          type: string
+        status:
+          type: string
+          enum: [completed, failed]
+        created_at:
+          type: string
+          format: date-time
+      required: [id, type, amount, currency_code, direction, related_party_id, related_party_type, reference, status, created_at]
+
+    FloatLimits:
+      type: object
+      properties:
+        agent_id:
+          type: string
+          format: uuid
+        currency_code:
+          type: string
+          example: BWP
+        max_balance:
+          type: integer
+          nullable: true
+          description: Maximum float wallet ceiling (minor units); null = TBD (no limit enforced)
+        per_transaction_limit:
+          type: integer
+          nullable: true
+          description: Max single cash-in or cash-out (minor units); null = TBD
+        daily_volume_limit:
+          type: integer
+          nullable: true
+          description: Max total daily float volume (minor units); null = TBD
+        low_float_threshold:
+          type: integer
+          nullable: true
+          description: Alert fires when balance drops below this (minor units); null = TBD (monitoring disabled)
+        effective_from:
+          type: string
+          format: date-time
+        updated_by:
+          type: string
+          format: uuid
+        updated_at:
+          type: string
+          format: date-time
+      required: [agent_id, currency_code, effective_from]
+
+    ErrorEnvelope:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            correlation_id:
+              type: string
+          required: [code, message]
+      required: [error]
+
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        per_page:
+          type: integer
+        pages:
+          type: integer
+      required: [total, page, per_page, pages]
+
+paths:
+
+  # ─────────────────────────────────────────────────────────────────
+  # US-FLOAT-001: Create float wallet
+  # ─────────────────────────────────────────────────────────────────
+  /agents/{agentId}/float-wallet:
+    post:
+      summary: Create agent float wallet
+      description: |
+        Creates a dedicated float wallet for an approved agent.
+        Idempotent per Idempotency-Key.
+        Required permission: `agent_float.wallet.create`
+      operationId: createAgentFloatWallet
+      tags: [AgentFloat]
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currency_code:
+                  type: string
+                  example: BWP
+                  description: ISO 4217 currency code for the float wallet
+              required: [currency_code]
+      responses:
+        "201":
+          description: Float wallet created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FloatWallet'
+        "200":
+          description: Idempotent replay — original wallet returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FloatWallet'
+        "409":
+          description: Float wallet already exists for this agent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                error:
+                  code: FLOAT_WALLET_ALREADY_EXISTS
+                  message: "Agent already has an active float wallet."
+        "422":
+          description: Agent not eligible (unapproved or suspended)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                error:
+                  code: AGENT_NOT_ELIGIBLE
+                  message: "Agent must be in approved/active status to create a float wallet."
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+    # ─────────────────────────────────────────────────────────────────
+    # US-FLOAT-002: View float wallet balance and status
+    # ─────────────────────────────────────────────────────────────────
+    get:
+      summary: Get agent float wallet balance and status
+      description: |
+        Returns current settled balance, status, and low-float alert state.
+        Available to the owning agent and admins.
+        Required permission: `agent_float.wallet.view` (own) or `agent_float.wallet.view_any` (admin)
+      operationId: getAgentFloatWallet
+      tags: [AgentFloat]
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        "200":
+          description: Float wallet details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FloatWallet'
+        "404":
+          description: No float wallet found for agent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                error:
+                  code: FLOAT_WALLET_NOT_FOUND
+                  message: "No float wallet exists for this agent."
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  # ─────────────────────────────────────────────────────────────────
+  # US-FLOAT-003: Admin fund float wallet
+  # ─────────────────────────────────────────────────────────────────
+  /agents/{agentId}/float-wallet/fund:
+    post:
+      summary: Fund agent float wallet (admin)
+      description: |
+        Credits an agent's float wallet with a specified amount.
+        Posts a balanced double-entry ledger journal.
+        Idempotent per Idempotency-Key.
+        Required permission: `agent_float.wallet.fund`
+      operationId: fundAgentFloatWallet
+      tags: [AgentFloat]
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: integer
+                  minimum: 1
+                  description: Amount in minor currency units
+                  example: 500000
+                currency_code:
+                  type: string
+                  example: BWP
+                description:
+                  type: string
+                  nullable: true
+              required: [amount, currency_code]
+      responses:
+        "201":
+          description: Float wallet funded; journal posted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FloatTransaction'
+        "200":
+          description: Idempotent replay — original transaction returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FloatTransaction'
+        "422":
+          description: Float limit exceeded or invalid amount
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                limit_exceeded:
+                  value:
+                    error:
+                      code: FLOAT_LIMIT_EXCEEDED
+                      message: "Funding would exceed the configured maximum float balance."
+                invalid_amount:
+                  value:
+                    error:
+                      code: INVALID_AMOUNT
+                      message: "Amount must be a positive integer."
+        "503":
+          description: Platform funding account not configured (TBD-E13-001)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                error:
+                  code: FLOAT_FUNDING_ACCOUNT_NOT_CONFIGURED
+                  message: "Platform float funding account is not yet configured for currency BWP."
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  # ─────────────────────────────────────────────────────────────────
+  # US-FLOAT-007: Admin configure float limits
+  # ─────────────────────────────────────────────────────────────────
+  /agents/{agentId}/float-wallet/limits:
+    patch:
+      summary: Update agent float limits (admin)
+      description: |
+        Sets or updates per-agent float limits: maximum balance ceiling,
+        per-transaction limit, daily volume limit, and low-float alert threshold.
+        All dimensions are optional per request; unspecified dimensions are unchanged.
+        Changes are audit-logged.
+        Required permission: `agent_float.limits.manage`
+      operationId: updateAgentFloatLimits
+      tags: [AgentFloat]
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                max_balance:
+                  type: integer
+                  nullable: true
+                  minimum: 1
+                  description: Maximum float ceiling (minor units). Null = remove limit.
+                per_transaction_limit:
+                  type: integer
+                  nullable: true
+                  minimum: 1
+                daily_volume_limit:
+                  type: integer
+                  nullable: true
+                  minimum: 1
+                low_float_threshold:
+                  type: integer
+                  nullable: true
+                  minimum: 0
+                  description: Alert threshold (minor units). 0 = disable alert. Null = TBD (unchanged).
+              minProperties: 1
+      responses:
+        "200":
+          description: Limits updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FloatLimits'
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+    get:
+      summary: Get agent float limits
+      description: |
+        Returns current float limit configuration for an agent.
+        Required permission: `agent_float.limits.view`
+      operationId: getAgentFloatLimits
+      tags: [AgentFloat]
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        "200":
+          description: Float limits
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FloatLimits'
+        "404":
+          description: No limits configured yet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                error:
+                  code: FLOAT_LIMITS_NOT_CONFIGURED
+                  message: "No float limits have been configured for this agent yet."
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  # ─────────────────────────────────────────────────────────────────
+  # US-FLOAT-009: Float transaction history
+  # ─────────────────────────────────────────────────────────────────
+  /agents/{agentId}/float-wallet/transactions:
+    get:
+      summary: List agent float transactions
+      description: |
+        Returns paginated, date-filtered float transaction history for an agent.
+        Required permission: `agent_float.transactions.view` (own) or `agent_float.transactions.view_any` (admin)
+      operationId: listAgentFloatTransactions
+      tags: [AgentFloat]
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Start of date range (inclusive, UTC date)
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+          description: End of date range (inclusive, UTC date)
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [funding, cash_in, cash_out]
+          description: Filter by transaction type
+      responses:
+        "200":
+          description: Paginated transaction list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FloatTransaction'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  # ─────────────────────────────────────────────────────────────────
+  # US-FLOAT-004: Cash-in (agent float → customer wallet)
+  # ─────────────────────────────────────────────────────────────────
+  /agents/{agentId}/customers/{customerId}/cash-in:
+    post:
+      summary: Agent cash-in — debit agent float, credit customer wallet
+      description: |
+        Agent facilitates a cash-in transaction: customer deposits physical cash
+        with the agent; agent's float decreases, customer's wallet increases.
+        Rejects if agent has insufficient float.
+        Rejects if customer wallet is frozen or inactive.
+        Idempotent per Idempotency-Key.
+        Required permission: `agent_float.cash_in` (agent, own customers only)
+      operationId: agentCashIn
+      tags: [AgentFloat]
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: integer
+                  minimum: 1
+                  description: Cash-in amount in minor currency units
+                  example: 20000
+                currency_code:
+                  type: string
+                  example: BWP
+                description:
+                  type: string
+                  nullable: true
+              required: [amount, currency_code]
+      responses:
+        "201":
+          description: Cash-in completed; ledger journal posted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FloatTransaction'
+        "200":
+          description: Idempotent replay
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FloatTransaction'
+        "422":
+          description: Business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                insufficient_float:
+                  value:
+                    error:
+                      code: INSUFFICIENT_FLOAT
+                      message: "Agent float balance is insufficient for this transaction."
+                agent_suspended:
+                  value:
+                    error:
+                      code: AGENT_SUSPENDED
+                      message: "Agent account is suspended."
+                customer_wallet_frozen:
+                  value:
+                    error:
+                      code: CUSTOMER_WALLET_FROZEN
+                      message: "Customer wallet is frozen and cannot receive funds."
+                tx_limit_exceeded:
+                  value:
+                    error:
+                      code: TRANSACTION_LIMIT_EXCEEDED
+                      message: "Amount exceeds the configured per-transaction float limit."
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  # ─────────────────────────────────────────────────────────────────
+  # US-FLOAT-005: Cash-out (customer wallet → agent float)
+  # ─────────────────────────────────────────────────────────────────
+  /agents/{agentId}/customers/{customerId}/cash-out:
+    post:
+      summary: Agent cash-out — debit customer wallet, credit agent float
+      description: |
+        Agent facilitates a cash-out transaction: customer withdraws physical cash
+        from the agent; customer's wallet decreases, agent's float increases.
+        Rejects if customer has insufficient wallet balance.
+        Rejects if agent is suspended or float wallet is not active.
+        Idempotent per Idempotency-Key.
+        Required permission: `agent_float.cash_out` (agent, own customers only)
+      operationId: agentCashOut
+      tags: [AgentFloat]
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: integer
+                  minimum: 1
+                  description: Cash-out amount in minor currency units
+                  example: 10000
+                currency_code:
+                  type: string
+                  example: BWP
+                description:
+                  type: string
+                  nullable: true
+              required: [amount, currency_code]
+      responses:
+        "201":
+          description: Cash-out completed; ledger journal posted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FloatTransaction'
+        "200":
+          description: Idempotent replay
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FloatTransaction'
+        "422":
+          description: Business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                insufficient_customer_balance:
+                  value:
+                    error:
+                      code: INSUFFICIENT_CUSTOMER_BALANCE
+                      message: "Customer does not have sufficient balance for this withdrawal."
+                agent_suspended:
+                  value:
+                    error:
+                      code: AGENT_SUSPENDED
+                      message: "Agent account is suspended."
+                tx_limit_exceeded:
+                  value:
+                    error:
+                      code: TRANSACTION_LIMIT_EXCEEDED
+                      message: "Amount exceeds the configured per-transaction float limit."
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  components:
+    responses:
+      Unauthorized:
+        description: Missing or invalid authentication token
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorEnvelope'
+            example:
+              error:
+                code: UNAUTHORIZED
+                message: "Authentication required."
+      Forbidden:
+        description: Authenticated but insufficient permissions
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorEnvelope'
+            example:
+              error:
+                code: FORBIDDEN
+                message: "You do not have permission to perform this action."

@@ -1,0 +1,72 @@
+{
+  "pattern": "/admin-portal/transactions/[id]",
+  "route": "/admin-portal/transactions/b11a73ba-ec9e-4049-ad7d-7954af47bc28",
+  "landed": "/admin-portal/transactions/b11a73ba-ec9e-4049-ad7d-7954af47bc28",
+  "errors": [],
+  "failures": [],
+  "detailResponses": [
+    {
+      "url": "/v1/admin-app/transactions",
+      "status": 200
+    },
+    {
+      "url": "/v1/admin-app/transactions/b11a73ba-ec9e-4049-ad7d-7954af47bc28",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "b11a73ba-ec9e-4049-ad7d-7954af47bc28",
+          "transaction_id": "b11a73ba-ec9e-4049-ad7d-7954af47bc28",
+          "reference_number": "QA-b11a73baec9e4049ad7d7954af47bc28",
+          "type": "withdrawal",
+          "status": "completed",
+          "amount_minor_units": 1234,
+          "currency_code": "BWP",
+          "currency": "BWP",
+          "fee_minor_units": 0,
+          "initiator_user_id": "526a4f26-8f74-4ac4-8cf6-64d7b3e0c6c6",
+          "initiator_name": "",
+          "source_wallet_id": "bc12b492-a212-4e45-a1d7-20bdac474462",
+          "destination_wallet_id": null,
+          "created_at": "2026-10-16 12:15:11+00",
+          "completed_at": null,
+          "reversal_eligible": true,
+          "reversal_id": null,
+          "fraud_flags": [],
+          "idempotency_key": null,
+          "ledger_entries": [],
+          "fraud_assessment": null
+        }
+      }
+    },
+    {
+      "url": "/v1/admin-app/transactions/b11a73ba-ec9e-4049-ad7d-7954af47bc28",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "b11a73ba-ec9e-4049-ad7d-7954af47bc28",
+          "transaction_id": "b11a73ba-ec9e-4049-ad7d-7954af47bc28",
+          "reference_number": "QA-b11a73baec9e4049ad7d7954af47bc28",
+          "type": "withdrawal",
+          "status": "completed",
+          "amount_minor_units": 1234,
+          "currency_code": "BWP",
+          "currency": "BWP",
+          "fee_minor_units": 0,
+          "initiator_user_id": "526a4f26-8f74-4ac4-8cf6-64d7b3e0c6c6",
+          "initiator_name": "",
+          "source_wallet_id": "bc12b492-a212-4e45-a1d7-20bdac474462",
+          "destination_wallet_id": null,
+          "created_at": "2026-10-16 12:15:11+00",
+          "completed_at": null,
+          "reversal_eligible": true,
+          "reversal_id": null,
+          "fraud_flags": [],
+          "idempotency_key": null,
+          "ledger_entries": [],
+          "fraud_assessment": null
+        }
+      }
+    }
+  ],
+  "text": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nOperations\n/\nTransactions\n⌘K\nA\nadmin@olekard.local\nTransactions\n/\nQA-b11a73baec9e4049ad7d7954af47bc28\nQA-b11a73baec9e4049ad7d7954af47bc28\nREFERENCE\nQA-b11a73baec9e4049ad7d7954af47bc28\nSTATUS\nCOMPLETED\nTYPE\nwithdrawal\nCURRENCY\nBWP\nAMOUNT\nBWP 12.34\nFEE\nBWP 0.00\nINITIATOR\nSOURCE WALLET\nbc12b492…\nCREATED\n10/16/2026, 5:45:11 PM\nReverse Transaction\nLedger Entries\n\nNo ledger entries for this transaction."
+}

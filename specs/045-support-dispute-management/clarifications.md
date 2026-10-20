@@ -1,0 +1,2 @@
+# Clarify
+No user policy question required. Resolved from sources: escalation SLA exactly24h; ordinary SLA unspecified; preserve configurable maker-checker; disputes require approved state; partial refunds require reason; actual owned wallet pocket. Source E22 marked Draft, so approved Admin catalogue governs selected scope. Log channel adapters mean external provider delivery remains unverified and must be disclosed.

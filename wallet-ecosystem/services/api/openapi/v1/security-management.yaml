@@ -1,0 +1,263 @@
+openapi: 3.0.3
+info:
+  title: OleKard ADM-P1-023 Security Management
+  version: 1.0.0
+  description: >-
+    Additive administration APIs. Existing E26 findings, E28 approval, authentication and MFA APIs
+    remain. UTC timestamps and X-Correlation-ID apply to responses.
+security:
+  - bearerAuth: []
+paths:
+  /v1/admin/platform/security-config:
+    get:
+      summary: List policies and provenance
+      description: >-
+        Requires security.config.read. Returns settings with key, label, type, value, configured,
+        last_modified_by, last_modified_at, pending {id,maker_id,value}; roles contain actual
+        slug/name.
+      responses:
+        '200':
+          description: Result in data envelope
+        '401':
+          description: Valid signed session required
+        '403':
+          description: Permission or security policy denied
+        '422':
+          description: Validation or domain policy failure; standard error envelope
+    patch:
+      summary: Propose policy
+      description: >-
+        Requires security.config.write. Key and value validated; Idempotency-Key bound to maker and
+        exact payload. Distinct checker required.
+      responses:
+        '202':
+          description: Pending approval; no runtime effect
+        '401':
+          description: Valid signed session required
+        '403':
+          description: Permission or security policy denied
+        '422':
+          description: Validation or domain policy failure; standard error envelope
+      parameters:
+        - $ref: '#/components/parameters/Idempotency'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - key
+                - value
+              properties:
+                key:
+                  type: string
+                value:
+                  description: >-
+                    Registry typed positive integer, nullable cap/expiry, boolean, role-mode map, or
+                    IPv4/IPv6 CIDR list
+  /v1/admin/platform/security-config/{id}/approve:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    post:
+      summary: Approve and activate policy
+      description: >-
+        Requires security.config.write plus configuration.approve. Distinct maker/checker; approving
+        IP must survive allowlist. Durable audit and version activation atomic. Replay cannot
+        reactivate older policy.
+      responses:
+        '200':
+          description: Result in data envelope
+        '401':
+          description: Valid signed session required
+        '403':
+          description: Permission or security policy denied
+        '422':
+          description: Validation or domain policy failure; standard error envelope
+      parameters:
+        - $ref: '#/components/parameters/Idempotency'
+  /v1/admin/security/findings/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      summary: Investigate finding
+      description: >-
+        Requires security.findings.read. Returns component, CVSS score (nullable string),
+        remediation steps (nullable), status, version and timestamped audit timeline.
+      responses:
+        '200':
+          description: Result in data envelope
+        '401':
+          description: Valid signed session required
+        '403':
+          description: Permission or security policy denied
+        '422':
+          description: Validation or domain policy failure; standard error envelope
+    patch:
+      summary: Update finding
+      description: >-
+        Requires security.findings.write. Verified requires Resolved and is terminal. Exact replay
+        returns stored response; key conflict rejected. Legacy acknowledged/suppressed flows
+        retained.
+      responses:
+        '200':
+          description: Updated finding in data envelope
+        '401':
+          description: Valid signed session required
+        '403':
+          description: Permission or security policy denied
+        '404':
+          description: Unknown finding
+        '409':
+          description: Stale version
+        '422':
+          description: Validation or domain policy failure; standard error envelope
+      parameters:
+        - $ref: '#/components/parameters/Idempotency'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - version
+              properties:
+                version:
+                  type: integer
+                  minimum: 1
+                status:
+                  type: string
+                  enum:
+                    - open
+                    - acknowledged
+                    - in_remediation
+                    - resolved
+                    - verified
+                    - suppressed
+                cvss_score:
+                  type: number
+                  nullable: true
+                  minimum: 0
+                  maximum: 10
+                  multipleOf: 0.1
+                remediation_steps:
+                  type: string
+                  nullable: true
+                  maxLength: 20000
+                suppression_justification:
+                  type: string
+                  nullable: true
+  /v1/admin/security/events:
+    get:
+      summary: Browse security events
+      description: >-
+        Requires security.events.read. Returns data {items,next_cursor}. Safe schema_version 1 items
+        contain source, id, occurred_at, action, event_type, severity, actor_id, resource_type,
+        resource_id, outcome, correlation_id. No raw payload, credential or IP.
+      responses:
+        '200':
+          description: Result in data envelope
+        '401':
+          description: Valid signed session required
+        '403':
+          description: Permission or security policy denied
+        '422':
+          description: Validation or domain policy failure; standard error envelope
+      parameters:
+        - in: query
+          name: severity
+          schema:
+            type: string
+            enum:
+              - critical
+              - high
+              - medium
+              - low
+              - info
+        - in: query
+          name: event_type
+          schema:
+            type: string
+            enum:
+              - login_failed
+              - privilege_change
+              - config_change
+              - api_key_rotation
+              - security
+        - in: query
+          name: cursor
+          schema:
+            type: string
+            maxLength: 1024
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+  /v1/admin/security/events/export:
+    get:
+      summary: Export SIEM JSONL
+      description: >-
+        Requires security.events.export. Same safe item whitelist and selected filters. Audit
+        recorded before streaming; snapshot upper bound; bounded cursor reads. Content-Disposition
+        attachment; Cache-Control no-store.
+      responses:
+        '200':
+          description: One normalized JSON object per line
+          content:
+            application/x-ndjson:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Valid signed session required
+        '403':
+          description: Permission or security policy denied
+        '422':
+          description: Validation or domain policy failure; standard error envelope
+      parameters:
+        - in: query
+          name: severity
+          schema:
+            type: string
+            enum:
+              - critical
+              - high
+              - medium
+              - low
+              - info
+        - in: query
+          name: event_type
+          schema:
+            type: string
+            enum:
+              - login_failed
+              - privilege_change
+              - config_change
+              - api_key_rotation
+              - security
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Id:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Idempotency:
+      in: header
+      name: Idempotency-Key
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas: {}

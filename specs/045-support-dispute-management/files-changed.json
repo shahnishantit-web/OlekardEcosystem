@@ -1,0 +1,213 @@
+{
+  "epic": "ADM-P1-021",
+  "date": "2026-10-15",
+  "scope": "Files touched for this epic; the workspace contains pre-existing unrelated changes.",
+  "code_and_configuration": [
+    {
+      "path": ".specify/feature.json",
+      "sha256": "e284a2cbe3ab0b02a795e17df124d8fc07f70b6fb165ee5d20752adebe4b164e"
+    },
+    {
+      "path": "docs/admin-p1p2-epic-catalogue.md",
+      "sha256": "be29118924382ce47f14b18e1cb5c769ecd2c35aa3ebbf6c0938b2fe82c034f1"
+    },
+    {
+      "path": "wallet-ecosystem/apps/admin/__tests__/features/support/p1021.test.tsx",
+      "sha256": "2c889877e5f56d7f18e43950377109f501cb0173d38f0cab8b4551cfe04362f7"
+    },
+    {
+      "path": "wallet-ecosystem/apps/admin/app/(admin)/support/cases/[id]/page.tsx",
+      "sha256": "f58ac3ab2c3e1d7f1d06ec95f8277ab3aaa08da24e869de83f7ef77b8fb74f74"
+    },
+    {
+      "path": "wallet-ecosystem/apps/admin/app/(admin)/support/cases/page.tsx",
+      "sha256": "a394026e3b894741249b304c0d3f88b4b2b1657451eac97662e45817d671f8e5"
+    },
+    {
+      "path": "wallet-ecosystem/apps/admin/e2e/p1021-support.spec.ts",
+      "sha256": "6ffe58c67bdba240e82f274dd5b07b51e035a34da2fd0fb09f2e424bd1e3a33e"
+    },
+    {
+      "path": "wallet-ecosystem/apps/admin/lib/api/admin-app-client.ts",
+      "sha256": "6515f4d9dd78346d9f306baa51473a84baf600a9e4f4679ce194ddcde94ba8e9"
+    },
+    {
+      "path": "wallet-ecosystem/apps/admin/lib/api/authenticated-client.ts",
+      "sha256": "758230ab8ccb79a00570e1b481f7d72dd1a7daa48b4f925be3a3eeb4f43833e0"
+    },
+    {
+      "path": "wallet-ecosystem/apps/admin/middleware.ts",
+      "sha256": "314011f6e4b00f037ecd523099887921632d35d480b0c8726ab2e46562c1c53f"
+    },
+    {
+      "path": "wallet-ecosystem/apps/admin/playwright.p1021.config.ts",
+      "sha256": "20455698a73235f934181de8d7c13d558771f14f8e5b0a0f50c526b1c0350b23"
+    },
+    {
+      "path": "wallet-ecosystem/apps/admin/src/lib/navigation/nav-items.ts",
+      "sha256": "15ccf0bdd17e2269f6d86df5dab66edb80ef369f661629cf90f5c9e4ad5e4b31"
+    },
+    {
+      "path": "wallet-ecosystem/apps/admin/src/modules/support/api.ts",
+      "sha256": "45ec4fa545c6fc35fd613fb86845ff81882850e9f10040b1248a32be901a3a57"
+    },
+    {
+      "path": "wallet-ecosystem/apps/admin/src/modules/support/pages/case-detail.tsx",
+      "sha256": "defb2d421b03990c76c3eedfed1c4311ee1d1dd06cca5ee2e7e0e9089fea05c7"
+    },
+    {
+      "path": "wallet-ecosystem/apps/admin/src/modules/support/pages/case-queue.tsx",
+      "sha256": "5d426b359c446e0a8e2db3c73a7bffcfb2d719634c91b349599aabb6e175716a"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/Dockerfile",
+      "sha256": "fe816afd26a167bc095b7353722af6ed8822bc71b7504d8c7efc6434ed7b7a7a"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Identity/Application/IdentityModule.php",
+      "sha256": "7ad31e5191dc6cc86aca09693117fb23f63703825cc4a906ee8a665bb4809c26"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Identity/Domain/Contracts/ActorStepUpVerifierContract.php",
+      "sha256": "5cf2a2b45f1f491a864d3eac4fffca3d80de60a53e7a5de0024c8825699cd21f"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Identity/Infrastructure/Http/Controllers/StepUpController.php",
+      "sha256": "636577678c30e9c82e24eb081b6647093fe878db435e8419d293b79b8d77068b"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Identity/Infrastructure/Models/User.php",
+      "sha256": "f1e782cb8c5ae78e8b62958b0c88f3aa6511015efa81dbc0cd25a7ba15f5dcc2"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Identity/Providers/IdentityServiceProvider.php",
+      "sha256": "98a987e48136ce660604089f71d87c14ac378cb4abf436b1150dd0592df87853"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Notification/Application/Listeners/SupportCaseNotificationListener.php",
+      "sha256": "9679037a24191915857bd1ab37d77a01bd122626f19baffa8d200ab49f0d139d"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Notification/Infrastructure/Migrations/2026_10_15_021100_support_notification_templates.php",
+      "sha256": "0808e1d7e9691e3fbacb434708d2644031c73c0e3f64201b88dc31b5a02624a6"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Notification/Providers/NotificationServiceProvider.php",
+      "sha256": "aa66cb0ac3655d2fee112fabb3db3fd98b2d34f25a4ddfdd2eb6e8d994813cce"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Platform/Infrastructure/EventBus/InProcessDriver.php",
+      "sha256": "9a937848736e9ad06339164cc73528d9abec82b815b63115c3c53b329b049bae"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Support/Application/Services/AdminCaseService.php",
+      "sha256": "8b2e8e9dbfeeae72f10213060accb28f1a5fc74d1293caa770694e71d1cfdfa0"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Support/Application/Services/AdminDisputeRefundService.php",
+      "sha256": "2522916ec1adc28586889179dc178c82fb59d2beedd5b538818833d2d44c94ab"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Support/Application/Services/DisputeRefundService.php",
+      "sha256": "da0e4d5c7d27942163cf086a0ecef6f10c8c9c00c570a0d79df5e7de41c8d1e1"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Support/Domain/Events/AdminCaseEvent.php",
+      "sha256": "63bfcb9af34d4cdbfaa74c0c3930d9b3fd23aab762f233fb12b8efe982ae173e"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Support/Infrastructure/Http/Controllers/AdminSupportController.php",
+      "sha256": "8fd6397f439d149af9d985999ff58c2b86f0cafcb11ef7a3ce66289690020b37"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Support/Infrastructure/Http/Controllers/DisputeConfirmRefundController.php",
+      "sha256": "07e936f63913533ad6d348289123ef34a25aeb107fb0261c9b92c94c12db245f"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Support/Infrastructure/Http/Controllers/DisputeRefundController.php",
+      "sha256": "5329e03e6309430cc43e2638dd8e8b75f5d5d0be5743a80212da724fc1e630c3"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Support/Infrastructure/Http/Middleware/RefundStepUpMiddleware.php",
+      "sha256": "b89978119c498390ccaa473273454f43fc7551988949b76ca5750a91045a767c"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Support/Infrastructure/Migrations/2026_10_15_021000_admin_support_cases.php",
+      "sha256": "4b0b2d7c83a6700da460dd83f0d3940440c6d64ee70147031b58b6b5de97775b"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Support/Providers/SupportServiceProvider.php",
+      "sha256": "d31cc573ac0d3df8544afa33e1b45efa435caee0ebf97a509722173cc7890c48"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Transaction/Application/Services/SupportRefundAdapter.php",
+      "sha256": "c37069e95a764e34323c93d50069b2e86e2809c79b8158a1dc842c13bd847e57"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Transaction/Domain/Contracts/SupportRefundContract.php",
+      "sha256": "544fffb654fee50a6c6c35b2556c766e3481729ce64b9fa9c0bce815be347fb2"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/app/Modules/Transaction/Providers/TransactionServiceProvider.php",
+      "sha256": "72eb6775ef9a904799cee609511fc35dd2f69a1fda28b353ad64b18f51582217"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/docker/support-uploads.ini",
+      "sha256": "3b0027cb6f7e8c93189d2d1eebba95cea1c2097d948824519f2a7489f4cd29df"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/openapi/v1/admin-support.yaml",
+      "sha256": "83330c214a1d026965c8fb265761e45984e659b1b4373c3419b1898bc004459d"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/openapi/v1/support.yaml",
+      "sha256": "b295eda76e188aa7dfcd8b66dd2083cabb3378c0b855c6b7b2f848d666a5acdd"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/routes/modules/admin-support.php",
+      "sha256": "3781f4c2309feef72b79c95e3b1b40d31ab6f8045c76dc26ddcab0d52649b009"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/routes/modules/support.php",
+      "sha256": "e154f36c934071dfadbcec4188093fd139bf2019b8a271280129562d72584ba6"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/tests/Feature/Modules/Support/AdminSupportTest.php",
+      "sha256": "ca9e0269e16d3b30029e994a454a13e88521843d7e8fb8ad245188f3f87aef1d"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/tests/Feature/Modules/Support/Concerns/CreatesSecureRefundContext.php",
+      "sha256": "6cb4b0f1ab67bbbbbeb92fceb269c1165aec3924bf184d0d87d37f279d23cda1"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/tests/Feature/Modules/Support/DisputeRefundConcurrencyTest.php",
+      "sha256": "f0dbf9e87420fcd4737033ab2cf8cdfd2cced56ad65266a72be14a804b73081b"
+    },
+    {
+      "path": "wallet-ecosystem/services/api/tests/Feature/Modules/Support/DisputeRefundTest.php",
+      "sha256": "3dd143060b63bf47b5b344bb4506b2e1d708e7c2e8e6ab5c6cf397aa02d2cb26"
+    }
+  ],
+  "artifacts": [
+    "specs/045-support-dispute-management/spec.md",
+    "specs/045-support-dispute-management/plan.md",
+    "specs/045-support-dispute-management/tasks.md",
+    "specs/045-support-dispute-management/research.md",
+    "specs/045-support-dispute-management/clarifications.md",
+    "specs/045-support-dispute-management/data-model.md",
+    "specs/045-support-dispute-management/quickstart.md",
+    "specs/045-support-dispute-management/analysis.md",
+    "specs/045-support-dispute-management/contracts/admin-support.md",
+    "specs/045-support-dispute-management/checklists/requirements.md",
+    "specs/045-support-dispute-management/implementation-status.md",
+    "specs/045-support-dispute-management/traceability.md",
+    "specs/045-support-dispute-management/security-findings.md",
+    "specs/045-support-dispute-management/browser-verification.md",
+    "specs/045-support-dispute-management/workflow.md",
+    "specs/045-support-dispute-management/convergence.md",
+    "specs/045-support-dispute-management/files-changed.md",
+    "specs/045-support-dispute-management/files-changed.json",
+    "specs/045-support-dispute-management/browser-results.json"
+  ],
+  "final_tasks_sha256": "6835897dec289f6bca329f236942f423baf87c597743f7609375778c75cecf81"
+}

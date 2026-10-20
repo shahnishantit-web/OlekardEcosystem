@@ -1,0 +1,254 @@
+openapi: "3.1.0"
+info:
+  title: Community Services — Service Catalogue and Discovery
+  version: "1.0.0"
+  description: >
+    HZ05 Configurable Service Catalogue and Discovery.
+    Service capabilities are enabled per organisation and per jurisdiction.
+    Raffle/fundraising requires an activation gate (compliance review).
+    Disabled capabilities are blocked at both UI and API layers.
+
+paths:
+  /v1/community/catalogue:
+    get:
+      operationId: discoverServices
+      summary: Consumer — discover enabled services and offerings
+      tags: [Catalogue]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: service_type
+          in: query
+          schema:
+            type: string
+            enum: [funeral_assistance, events_ticketing, raffles_fundraising]
+        - name: jurisdiction
+          in: query
+          schema:
+            type: string
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: Search query
+        - name: cursor
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Available services and offerings consumer is entitled to see
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogueDiscoveryResponse"
+
+  /v1/community/admin/service-entitlements:
+    get:
+      operationId: listServiceEntitlements
+      summary: Admin — list service entitlements per organisation and jurisdiction
+      tags: [Admin, Catalogue]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organisation_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Service entitlements list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceEntitlementListResponse"
+
+    post:
+      operationId: upsertServiceEntitlement
+      summary: Enable or configure a service for an organisation and jurisdiction
+      tags: [Admin, Catalogue]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertServiceEntitlementRequest"
+      responses:
+        "200":
+          description: Service entitlement updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceEntitlementResponse"
+        "422":
+          description: Raffle activation gate not passed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /v1/community/admin/service-entitlements/{id}/activate-gate:
+    post:
+      operationId: passActivationGate
+      summary: Record that the activation gate has been passed (Platform Admin, compliance evidence required)
+      tags: [Admin, Catalogue]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [gate_evidence_id]
+              properties:
+                gate_evidence_id:
+                  type: string
+                  format: uuid
+      responses:
+        "200":
+          description: Gate passed; raffles can now be enabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceEntitlementResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CatalogueItem:
+      type: object
+      properties:
+        organisation_id:
+          type: string
+          format: uuid
+        organisation_name:
+          type: string
+        service_type:
+          type: string
+        category_id:
+          type: string
+          format: uuid
+        category_name:
+          type: string
+        jurisdiction:
+          type: string
+        currency:
+          type: string
+
+    CatalogueDiscoveryResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/CatalogueItem"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    ServiceEntitlement:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organisation_id:
+          type: string
+          format: uuid
+        service_type:
+          type: string
+          enum: [funeral_assistance, events_ticketing, raffles_fundraising]
+        jurisdiction:
+          type: string
+        enabled:
+          type: boolean
+        activation_gate_passed:
+          type: boolean
+        effective_from:
+          type: string
+          format: date-time
+          nullable: true
+        effective_to:
+          type: string
+          format: date-time
+          nullable: true
+
+    ServiceEntitlementResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/ServiceEntitlement"
+
+    ServiceEntitlementListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ServiceEntitlement"
+
+    UpsertServiceEntitlementRequest:
+      type: object
+      required: [organisation_id, service_type, jurisdiction, enabled]
+      properties:
+        organisation_id:
+          type: string
+          format: uuid
+        service_type:
+          type: string
+          enum: [funeral_assistance, events_ticketing, raffles_fundraising]
+        jurisdiction:
+          type: string
+          minLength: 2
+          maxLength: 2
+        enabled:
+          type: boolean
+        effective_from:
+          type: string
+          format: date-time
+          nullable: true
+        effective_to:
+          type: string
+          format: date-time
+          nullable: true
+
+    PaginationMeta:
+      type: object
+      properties:
+        next_cursor:
+          type: string
+          nullable: true
+        per_page:
+          type: integer
+
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, correlation_id]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            correlation_id:
+              type: string
+              format: uuid

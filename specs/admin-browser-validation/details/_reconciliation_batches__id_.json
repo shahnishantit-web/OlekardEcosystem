@@ -1,0 +1,34 @@
+{
+  "pattern": "/reconciliation/batches/[id]",
+  "route": "/reconciliation/batches/d026a4eb-0e40-4fa7-a67b-d815f021ad17",
+  "landed": "/reconciliation/batches/d026a4eb-0e40-4fa7-a67b-d815f021ad17",
+  "errors": [],
+  "failures": [],
+  "detailResponses": [
+    {
+      "url": "/v1/admin-app/reconciliation",
+      "status": 200
+    },
+    {
+      "url": "/v1/admin-app/reconciliation/d026a4eb-0e40-4fa7-a67b-d815f021ad17",
+      "status": 200,
+      "body": {
+        "data": {
+          "batch_id": "d026a4eb-0e40-4fa7-a67b-d815f021ad17",
+          "period_start": "2026-10-17",
+          "period_end": "2026-10-17",
+          "status": "completed",
+          "total_transactions": 0,
+          "matched_count": 0,
+          "unmatched_count": 0,
+          "discrepancy_amount_minor_units": 0,
+          "currency_code": "BWP",
+          "run_at": "2026-10-17 12:46:57+00",
+          "completed_at": null,
+          "unmatched_transaction_ids": []
+        }
+      }
+    }
+  ],
+  "text": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nOperations\n/\nReconciliation\n⌘K\nA\nadmin@olekard.local\nReconciliation Batch\n← Back\nBatch ID\nd026a4eb-0e40-4fa7-a67b-d815f021ad17\nStatus\nCOMPLETED\nPeriod\n2026-10-17 → 2026-10-17\nCurrency\nBWP\nTotal Transactions\n0\nMatch Rate\n0%\nMatched\n0\nUnmatched\n0\nDiscrepancy\nBWP 0.00\nRun At\n2026-10-17 12:46:57+00\nCompleted At\n—"
+}

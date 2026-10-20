@@ -1,0 +1,179 @@
+{
+  "checks": [
+    {
+      "uri": "/v1/admin-app/agents/4196cf5c-871c-4a1f-8526-a72e906d3106",
+      "status": 200
+    },
+    {
+      "uri": "/v1/admin-app/kyc/460661f1-e0c2-58cb-a56c-278f4e40c889",
+      "status": 200
+    },
+    {
+      "uri": "/v1/reconciliation/batches/10042cc2-9d1d-598e-919d-6924562d9db1",
+      "status": 200
+    },
+    {
+      "uri": "/v1/reconciliation/settlements/e807c4bd-9d38-5665-9cad-ebe1d95d8216",
+      "status": 200
+    },
+    {
+      "uri": "/v1/admin/security/alerts/90443150-ed98-5d12-8ad0-881b65c97328",
+      "status": 200
+    },
+    {
+      "uri": "/v1/security/findings/5f0fe20c-429f-5224-b0cb-0bf4a39b4bef",
+      "status": 200
+    },
+    {
+      "uri": "/v1/admin/support/cases/f0877561-1dd2-5bb4-96e7-c5f6702709f0",
+      "status": 200
+    },
+    {
+      "uri": "/v1/community/admin/organisations",
+      "status": 200
+    },
+    {
+      "uri": "/v1/community/admin/orders",
+      "status": 200
+    },
+    {
+      "uri": "/v1/community/admin/campaigns",
+      "status": 200
+    },
+    {
+      "uri": "/api/v1/admin/payment/providers",
+      "status": 403,
+      "code": "AUTHORIZATION_001"
+    },
+    {
+      "uri": "/v1/admin/configuration/change-requests",
+      "status": 200
+    },
+    {
+      "uri": "/v1/admin/configuration/keys",
+      "status": 200
+    },
+    {
+      "uri": "/v1/qa/runs",
+      "status": 200
+    },
+    {
+      "uri": "/v1/reports/jobs",
+      "status": 200
+    }
+  ],
+  "links": [
+    {
+      "href": "/agents/4196cf5c-871c-4a1f-8526-a72e906d3106",
+      "source": "verified existing API record"
+    },
+    {
+      "href": "/kyc/460661f1-e0c2-58cb-a56c-278f4e40c889",
+      "source": "verified existing API record"
+    },
+    {
+      "href": "/reconciliation/batches/10042cc2-9d1d-598e-919d-6924562d9db1",
+      "source": "verified existing API record"
+    },
+    {
+      "href": "/reconciliation/settlements/e807c4bd-9d38-5665-9cad-ebe1d95d8216",
+      "source": "verified existing API record"
+    },
+    {
+      "href": "/security/alerts/90443150-ed98-5d12-8ad0-881b65c97328",
+      "source": "verified existing API record"
+    },
+    {
+      "href": "/security/findings/5f0fe20c-429f-5224-b0cb-0bf4a39b4bef",
+      "source": "verified existing API record"
+    },
+    {
+      "href": "/support/cases/f0877561-1dd2-5bb4-96e7-c5f6702709f0",
+      "source": "verified existing API record"
+    },
+    {
+      "href": "/configuration/approvals/01a15289-e793-7382-bff8-fd21c537fb20",
+      "source": "/v1/admin/configuration/change-requests"
+    },
+    {
+      "href": "/configuration/auth/auth.biometric.enabled",
+      "source": "/v1/admin/configuration/keys"
+    },
+    {
+      "href": "/configuration/auth/auth.lockout.initial_duration",
+      "source": "/v1/admin/configuration/keys"
+    },
+    {
+      "href": "/configuration/auth/auth.lockout.max_failed_attempts",
+      "source": "/v1/admin/configuration/keys"
+    },
+    {
+      "href": "/configuration/auth/auth.lockout.progressive_enabled",
+      "source": "/v1/admin/configuration/keys"
+    },
+    {
+      "href": "/configuration/auth/auth.mfa.admin.fido2_enabled",
+      "source": "/v1/admin/configuration/keys"
+    },
+    {
+      "href": "/configuration/auth/auth.mfa.admin.sms_enabled",
+      "source": "/v1/admin/configuration/keys"
+    },
+    {
+      "href": "/configuration/auth/auth.mfa.admin.totp_enabled",
+      "source": "/v1/admin/configuration/keys"
+    },
+    {
+      "href": "/configuration/auth/auth.otp.max_attempts",
+      "source": "/v1/admin/configuration/keys"
+    },
+    {
+      "href": "/configuration/auth/auth.otp.max_sends_per_hour",
+      "source": "/v1/admin/configuration/keys"
+    },
+    {
+      "href": "/configuration/auth/auth.otp.provider",
+      "source": "/v1/admin/configuration/keys"
+    },
+    {
+      "href": "/configuration/auth/auth.otp.resend_cooldown",
+      "source": "/v1/admin/configuration/keys"
+    },
+    {
+      "href": "/configuration/auth/auth.otp.ttl",
+      "source": "/v1/admin/configuration/keys"
+    },
+    {
+      "href": "/configuration/auth/auth.permission_cache_ttl",
+      "source": "/v1/admin/configuration/keys"
+    },
+    {
+      "href": "/configuration/auth/auth.pin.length",
+      "source": "/v1/admin/configuration/keys"
+    },
+    {
+      "href": "/configuration/auth/auth.pin.reject_common",
+      "source": "/v1/admin/configuration/keys"
+    },
+    {
+      "href": "/configuration/auth/auth.pin.reject_repeated",
+      "source": "/v1/admin/configuration/keys"
+    },
+    {
+      "href": "/configuration/auth/auth.pin.reject_sequential",
+      "source": "/v1/admin/configuration/keys"
+    },
+    {
+      "href": "/configuration/auth/auth.refresh_token.reuse_detection_enabled",
+      "source": "/v1/admin/configuration/keys"
+    },
+    {
+      "href": "/configuration/auth/auth.refresh_token.rotation_enabled",
+      "source": "/v1/admin/configuration/keys"
+    },
+    {
+      "href": "/configuration/auth/auth.refresh_token.ttl",
+      "source": "/v1/admin/configuration/keys"
+    }
+  ]
+}

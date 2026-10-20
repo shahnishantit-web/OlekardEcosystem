@@ -1,0 +1,513 @@
+openapi: "3.1.0"
+info:
+  title: Community Services — Order and Payment Orchestration
+  version: "1.0.0"
+  description: >
+    HZ06 Common Order and Payment Orchestration.
+    Financial mutations require Idempotency-Key header.
+    All amounts in integer minor units (e.g. thebe for BWP).
+    Double tap / duplicate callbacks produce one financial effect.
+
+paths:
+  /v1/community/orders:
+    post:
+      operationId: createOrder
+      summary: Create a new order (initiates inventory hold)
+      tags: [Orders]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderRequest"
+      responses:
+        "201":
+          description: Order created; inventory held
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "409":
+          description: Idempotency key conflict (same key, different payload)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "503":
+          description: Inventory unavailable (sold out or hold expired)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /v1/community/orders/{id}:
+    get:
+      operationId: getOrder
+      summary: Get order detail
+      tags: [Orders]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200":
+          description: Order detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderDetailResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/community/orders/{id}/payment:
+    post:
+      operationId: initiatePayment
+      summary: Initiate payment for an order
+      tags: [Orders, Payments]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InitiatePaymentRequest"
+      responses:
+        "200":
+          description: Payment initiated; redirect URL or provider token provided
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentInitiatedResponse"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /v1/community/orders/{id}/payment/status:
+    get:
+      operationId: queryPaymentStatus
+      summary: Query authoritative payment status (safe to poll)
+      tags: [Orders, Payments]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200":
+          description: Current payment status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentStatusResponse"
+
+  /v1/community/orders/{id}/cancel:
+    post:
+      operationId: cancelOrder
+      summary: Cancel a pending or held order
+      tags: [Orders]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+      responses:
+        "200":
+          description: Order cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "422":
+          description: Cannot cancel confirmed order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /v1/community/admin/orders:
+    get:
+      operationId: adminListOrders
+      summary: Admin — search orders (scoped to organisation)
+      tags: [Admin, Orders]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organisation_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: purpose_type
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: consumer_ref
+          in: query
+          schema:
+            type: string
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 25
+      responses:
+        "200":
+          description: Paginated order list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderListResponse"
+
+  /v1/community/admin/orders/{id}/escalate:
+    post:
+      operationId: escalateOrder
+      summary: Escalate ambiguous order to support (does NOT confirm payment)
+      tags: [Admin, Orders]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Order escalated; support case reference returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      order_id:
+                        type: string
+                        format: uuid
+                      case_ref:
+                        type: string
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    OrderId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 128
+        description: Client-generated unique key binding actor + operation + request hash
+
+  schemas:
+    CreateOrderRequest:
+      type: object
+      required: [organisation_id, purpose_type, purpose_id, currency, lines]
+      properties:
+        organisation_id:
+          type: string
+          format: uuid
+        purpose_type:
+          type: string
+          enum: [event_ticket, funeral_contribution, raffle_entry, donation]
+        purpose_id:
+          type: string
+          format: uuid
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/OrderLineInput"
+
+    OrderLineInput:
+      type: object
+      required: [item_ref, description, quantity, unit_price]
+      properties:
+        item_ref:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 255
+        quantity:
+          type: integer
+          minimum: 1
+        unit_price:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Minor units (e.g. thebe)
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        external_ref:
+          type: string
+        organisation_id:
+          type: string
+          format: uuid
+        purpose_type:
+          type: string
+        purpose_id:
+          type: string
+          format: uuid
+        currency:
+          type: string
+        subtotal:
+          type: integer
+          format: int64
+          description: Minor units
+        fee_total:
+          type: integer
+          format: int64
+          description: Minor units
+        grand_total:
+          type: integer
+          format: int64
+          description: Minor units
+        status:
+          type: string
+          enum: [pending, hold, processing, confirmed, failed, cancelled, partially_refunded, refunded]
+        hold_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        confirmed_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    OrderDetailResponse:
+      type: object
+      properties:
+        data:
+          allOf:
+            - $ref: "#/components/schemas/Order"
+            - type: object
+              properties:
+                lines:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/OrderLine"
+                payment_attempts:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/PaymentAttemptSummary"
+
+    OrderResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Order"
+
+    OrderListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Order"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    OrderLine:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        item_ref:
+          type: string
+        description:
+          type: string
+        quantity:
+          type: integer
+        unit_price:
+          type: integer
+          format: int64
+        line_total:
+          type: integer
+          format: int64
+        currency:
+          type: string
+
+    InitiatePaymentRequest:
+      type: object
+      required: [payment_method, connector_id]
+      properties:
+        payment_method:
+          type: string
+          enum: [mobile_money, bank_transfer, wallet]
+        connector_id:
+          type: string
+          format: uuid
+        return_url:
+          type: string
+          format: uri
+          nullable: true
+
+    PaymentInitiatedResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            attempt_id:
+              type: string
+              format: uuid
+            status:
+              type: string
+              enum: [initiated, pending]
+            redirect_url:
+              type: string
+              format: uri
+              nullable: true
+            provider_token:
+              type: string
+              nullable: true
+
+    PaymentStatusResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            order_id:
+              type: string
+              format: uuid
+            order_status:
+              type: string
+            latest_attempt_status:
+              type: string
+              nullable: true
+            confirmed_at:
+              type: string
+              format: date-time
+              nullable: true
+
+    PaymentAttemptSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        amount:
+          type: integer
+          format: int64
+        currency:
+          type: string
+        initiated_at:
+          type: string
+          format: date-time
+        terminal_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    PaginationMeta:
+      type: object
+      properties:
+        next_cursor:
+          type: string
+          nullable: true
+        per_page:
+          type: integer
+
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, correlation_id]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            correlation_id:
+              type: string
+              format: uuid
+            details:
+              type: object
+              nullable: true
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    Conflict:
+      description: Idempotency key conflict or state conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    ValidationError:
+      description: Input validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"

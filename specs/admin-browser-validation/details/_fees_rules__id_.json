@@ -1,0 +1,35 @@
+{
+  "pattern": "/fees/rules/[id]",
+  "route": "/fees/rules/d026a4eb-0e40-4fa7-a67b-d815f021ad13",
+  "landed": "/fees/rules/d026a4eb-0e40-4fa7-a67b-d815f021ad13",
+  "errors": [],
+  "failures": [],
+  "detailResponses": [
+    {
+      "url": "/v1/fees/rules/d026a4eb-0e40-4fa7-a67b-d815f021ad13",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "d026a4eb-0e40-4fa7-a67b-d815f021ad13",
+          "pricing_version_id": null,
+          "transaction_type": "transfer",
+          "fee_type": "fixed",
+          "currency": "BWP",
+          "subject_type": "global",
+          "subject_id": null,
+          "rate": null,
+          "amount_minor": 1,
+          "min_fee_minor": null,
+          "max_fee_minor": null,
+          "valid_from": "2024-10-17T12:46:57+00:00",
+          "valid_to": "2025-10-17T12:46:57+00:00",
+          "status": "deactivated",
+          "created_by": "01a0d2ba-3aee-7347-b52d-5802bab17ef6",
+          "created_at": "2026-10-17T12:46:57+00:00",
+          "updated_at": "2026-10-17T12:46:57+00:00"
+        }
+      }
+    }
+  ],
+  "text": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nOperations\n/\nFee Rules\n⌘K\nA\nadmin@olekard.local\nFee Rules\n/\ntransfer\nTRANSFER\nID\nd026a4eb-0e40-4fa7-a67b-d815f021ad13\nTRANSACTION TYPE\ntransfer\nFEE TYPE\nfixed\nFEE AMOUNT\nBWP 0.01\nMIN FEE\n—\nMAX FEE\n—\nCURRENCY\nBWP\nSUBJECT TYPE\nglobal\nSUBJECT ID\n—\nVALID FROM\n10/17/2024, 6:16:57 PM\nVALID TO\n10/17/2025, 6:16:57 PM\nSTATUS\nDEACTIVATED\nCREATED AT\n10/17/2026, 6:16:57 PM\nCREATED BY\n01a0d2ba-3aee-7347-b52d-5802bab17ef6\nUPDATED AT\n10/17/2026, 6:16:57 PM\n\nThis rule has been deactivated and is no longer applied to transactions.\n\n▶ Simulate Fee Impact"
+}

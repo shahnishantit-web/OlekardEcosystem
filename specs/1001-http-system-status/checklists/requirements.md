@@ -1,0 +1,4 @@
+- [x] Approved scope/stories transcribed; all nine criteria testable.
+- [x] Dependencies/reuse reviewed; no external provider blocker.
+- [x] Unknown return time and browser minimums not invented.
+- [x] Bypass/auth/security and offline constraints clarified.

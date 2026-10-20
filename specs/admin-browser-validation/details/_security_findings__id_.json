@@ -1,0 +1,43 @@
+{
+  "pattern": "/security/findings/[id]",
+  "route": "/security/findings/d026a4eb-0e40-4fa7-a67b-d815f021ad21",
+  "landed": "/security/findings/d026a4eb-0e40-4fa7-a67b-d815f021ad21",
+  "errors": [],
+  "failures": [],
+  "detailResponses": [
+    {
+      "url": "/v1/admin/security/findings/d026a4eb-0e40-4fa7-a67b-d815f021ad21",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "d026a4eb-0e40-4fa7-a67b-d815f021ad21",
+          "cvss_score": null,
+          "remediation_steps": null,
+          "version": 1,
+          "verified_at": null,
+          "scanner": "browser-qa",
+          "finding_ref": "browser-qa-20261017-finding",
+          "cve_id": null,
+          "severity": "info",
+          "component": "QA fixture only",
+          "title": "Browser QA finding fixture",
+          "description": "Synthetic isolated test finding.",
+          "status": "open",
+          "detected_at": "2026-10-17T12:46:57+00:00",
+          "resolved_at": null,
+          "timeline": [
+            {
+              "id": "d026a4eb-0e40-4fa7-a67b-d815f021ad21-detected",
+              "action": "Detected",
+              "status": "open",
+              "actor_id": null,
+              "occurred_at": "2026-10-17T12:46:57+00:00"
+            }
+          ]
+        },
+        "correlation_id": "cb5198e7-0309-4487-8d4f-f3b587cad6c2"
+      }
+    }
+  ],
+  "text": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nManagement\n/\nVulnerabilities\n⌘K\nA\nadmin@olekard.local\nBrowser QA finding fixture\nBack to vulnerability findings\nComponent\nQA fixture only\nSeverity\nInfo\nStatus\nOpen\nCVSS score\nNot provided by scanner\n\nSynthetic isolated test finding.\n\nRemediation steps\n\nNo remediation steps recorded.\n\nCVSS score (0–10)\nRemediation steps\nSave finding details\nStart remediation\nReload finding\nRemediation timeline\n\nOpen\n\n2026-10-17T12:46:57+00:00 · Scanner"
+}

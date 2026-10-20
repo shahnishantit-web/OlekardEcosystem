@@ -1,0 +1,62 @@
+{
+  "pattern": "/configuration/approvals/[id]",
+  "route": "/configuration/approvals/d026a4eb-0e40-4fa7-a67b-d815f021ad11",
+  "landed": "/configuration/approvals/d026a4eb-0e40-4fa7-a67b-d815f021ad11",
+  "errors": [],
+  "failures": [],
+  "detailResponses": [
+    {
+      "url": "/v1/admin/configuration/change-requests/d026a4eb-0e40-4fa7-a67b-d815f021ad11",
+      "status": 200,
+      "body": {
+        "success": true,
+        "data": {
+          "id": "d026a4eb-0e40-4fa7-a67b-d815f021ad11",
+          "config_key": "operational_policy.browser_qa_detail_fixture",
+          "domain": "operational_policy",
+          "proposed_value": "inert",
+          "previous_value": "inert",
+          "maker_id": "01a0d2ba-3aee-7347-b52d-5802bab17ef6",
+          "status": "pending_approval",
+          "rejection_reason": null,
+          "idempotency_key": "browser-qa-20261017-approval",
+          "correlation_id": "d026a4eb-0e40-4fa7-a67b-d815f021ad11",
+          "submitted_at": "2026-10-17T12:46:57.000000Z",
+          "resolved_at": null,
+          "created_at": "2026-10-17T12:46:57.000000Z",
+          "updated_at": "2026-10-17T12:46:57.000000Z"
+        },
+        "error": null,
+        "correlation_id": "9b268820-425f-4c13-8e79-d0d55404c9e1",
+        "meta": null
+      }
+    },
+    {
+      "url": "/v1/admin/configuration/change-requests/d026a4eb-0e40-4fa7-a67b-d815f021ad11",
+      "status": 200,
+      "body": {
+        "success": true,
+        "data": {
+          "id": "d026a4eb-0e40-4fa7-a67b-d815f021ad11",
+          "config_key": "operational_policy.browser_qa_detail_fixture",
+          "domain": "operational_policy",
+          "proposed_value": "inert",
+          "previous_value": "inert",
+          "maker_id": "01a0d2ba-3aee-7347-b52d-5802bab17ef6",
+          "status": "pending_approval",
+          "rejection_reason": null,
+          "idempotency_key": "browser-qa-20261017-approval",
+          "correlation_id": "d026a4eb-0e40-4fa7-a67b-d815f021ad11",
+          "submitted_at": "2026-10-17T12:46:57.000000Z",
+          "resolved_at": null,
+          "created_at": "2026-10-17T12:46:57.000000Z",
+          "updated_at": "2026-10-17T12:46:57.000000Z"
+        },
+        "error": null,
+        "correlation_id": "d4909f4a-21be-46b9-bb55-28665199ee23",
+        "meta": null
+      }
+    }
+  ],
+  "text": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nManagement\n/\nConfiguration\n⌘K\nA\nadmin@olekard.local\nChange Request Detail\n\noperational_policy.browser_qa_detail_fixture\n\npending approval\nPrevious Value\n\"inert\"\nProposed Value\n\"inert\"\n\nYou cannot approve your own change request.\n\nApprove\nReject\nWithdraw"
+}

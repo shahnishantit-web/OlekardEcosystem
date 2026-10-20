@@ -1,0 +1,10 @@
+const fs=require('fs'),cp=require('child_process');
+const out='specs/admin-browser-validation';fs.mkdirSync(out,{recursive:true});fs.writeFileSync(out+'/.gitignore','.env*\n.auth/\n*.dump\n');
+const run=args=>{const r=cp.spawnSync('docker',args,{encoding:'utf8',maxBuffer:8*1024*1024});if(r.status!==0)throw Error('Docker '+args[0]+' failed: '+r.stderr.slice(0,1000));return r.stdout;};
+const original=JSON.parse(run(['inspect','wallet-ecosystem-api-1']))[0];
+const overrides={DB_DATABASE:'olekard_browser_qa_20261016',REDIS_HOST:'olekard-browser-redis',REDIS_CLIENT:'predis',APP_ENV:'local',CACHE_PREFIX:'browser_qa',REDIS_PREFIX:'browser_qa_',MAIL_MAILER:'array',QUEUE_CONNECTION:'database',APP_URL:'http://localhost:8001'};
+const env=original.Config.Env.filter(v=>!Object.keys(overrides).some(k=>v.startsWith(k+'='))&&!v.startsWith('HOSTNAME='));
+env.push(...Object.entries(overrides).map(([k,v])=>k+'='+v));fs.writeFileSync(out+'/.env.browserqa',env.join('\n')+'\n');
+if(!run(['ps','-a','--format','{{.Names}}']).split('\n').includes('olekard-browser-redis'))run(['run','-d','--name','olekard-browser-redis','--network','wallet-ecosystem_wallet','redis:7-alpine','redis-server','--save','','--appendonly','no']);
+console.log('Isolated environment prepared; credentials not printed.');
+console.log(run(['exec','wallet-ecosystem-postgres-1','psql','-U','wallet_app','-d','wallet_ecosystem','-tAc',"SELECT datname FROM pg_database WHERE datname IN ('wallet_ecosystem','olekard_browser_qa_20261016')"]));

@@ -1,0 +1,25 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  plugins:
+    - custom_lint
+  errors:
+    invalid_annotation_target: ignore
+
+linter:
+  rules:
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    avoid_print: true
+    avoid_unnecessary_containers: true
+    sized_box_for_whitespace: true
+    use_key_in_widget_constructors: true
+    prefer_final_fields: true
+    prefer_final_locals: true
+    sort_child_properties_last: true
+
+custom_lint:
+  rules:
+    - riverpod_avoid_ref_inside_state_dispose: true
+    - riverpod_final_provider: true
+    - provider_parameters: true

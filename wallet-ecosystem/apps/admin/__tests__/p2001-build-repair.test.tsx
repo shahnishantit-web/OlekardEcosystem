@@ -1,0 +1,31 @@
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { Dialog } from '@/components/ui/Dialog';
+describe('p2001 build repair — shared modal interaction', () => {
+    it('closes only on backdrop or Escape, traps keyboard focus, and restores the opener', async () => {
+        const user = userEvent.setup(), close = jest.fn();
+        const opener = document.createElement('button');
+        opener.textContent = 'Open modal';
+        document.body.append(opener);
+        opener.focus();
+        const { unmount } = render(<Dialog open onClose={close} labelledBy="repair-title" overlayClassName="fixed inset-0" className="panel" showCloseButton={false}><h2 id="repair-title">Repair modal</h2><label>Reason<input /></label><button type="button">Confirm action</button></Dialog>);
+        const dialog = screen.getByRole('dialog', { name: 'Repair modal' });
+        expect(dialog).toHaveFocus();
+        await user.tab();
+        expect(screen.getByLabelText('Reason')).toHaveFocus();
+        await user.tab();
+        expect(screen.getByRole('button', { name: 'Confirm action' })).toHaveFocus();
+        await user.tab();
+        expect(screen.getByLabelText('Reason')).toHaveFocus();
+        await user.click(screen.getByLabelText('Reason'));
+        expect(close).not.toHaveBeenCalled();
+        fireEvent.keyDown(document, { key: 'Escape' });
+        expect(close).toHaveBeenCalledTimes(1);
+        await user.click(screen.getByRole('button', { name: 'Close dialog backdrop' }));
+        expect(close).toHaveBeenCalledTimes(2);
+        unmount();
+        expect(opener).toHaveFocus();
+        opener.remove();
+    });
+});

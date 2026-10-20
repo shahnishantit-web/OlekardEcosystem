@@ -1,0 +1,599 @@
+openapi: "3.1.0"
+info:
+  title: E23 Audit & Compliance API
+  version: "1.0"
+  description: |
+    Exposes read access to immutable audit events, compliance status/history,
+    compliance report generation, SAR generation, and retention policy management.
+
+    All write operations on audit records are blocked. Compliance reports and SARs
+    are generated via POST and retrieved via GET. Retention policies support
+    POST (create) and PUT (update).
+
+    All endpoints require a valid bearer token and appropriate permission:
+      - audit.read — audit event queries
+      - compliance.read — compliance status/history/transactions
+      - compliance.report — compliance report and SAR generation
+      - compliance.config — retention policy management
+
+servers:
+  - url: /v1
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ──────────────────────────────────────────────────────────────────
+  # Audit Events
+  # ──────────────────────────────────────────────────────────────────
+
+  /audit/events:
+    get:
+      operationId: listAuditEvents
+      summary: List audit events
+      description: Returns a cursor-paginated list of audit events. Requires audit.read permission.
+      tags: [Audit]
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [authentication, authorization, wallet, transaction, kyc, admin, config, security]
+        - name: actor_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: entity_type
+          in: query
+          schema: { type: string }
+        - name: entity_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: outcome
+          in: query
+          schema:
+            type: string
+            enum: [success, failure, denied]
+        - name: correlation_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+          description: ISO-8601 UTC datetime; events at or after this time
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+          description: ISO-8601 UTC datetime; events at or before this time
+        - name: cursor
+          in: query
+          schema: { type: string }
+          description: Base64-encoded pagination cursor from previous response
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        "200":
+          description: Paginated audit event list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditEventListResponse"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /audit/events/{id}:
+    get:
+      operationId: getAuditEvent
+      summary: Get single audit event
+      description: Returns a single audit event by ID, including its integrity verification status.
+      tags: [Audit]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Audit event detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditEventDetailResponse"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ──────────────────────────────────────────────────────────────────
+  # Compliance Status & History
+  # ──────────────────────────────────────────────────────────────────
+
+  /compliance/status/{userId}:
+    get:
+      operationId: getComplianceStatus
+      summary: Get current compliance status for a user
+      tags: [Compliance]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Current compliance status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceStatusResponse"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /compliance/history/{userId}:
+    get:
+      operationId: getComplianceHistory
+      summary: Get compliance history for a user
+      tags: [Compliance]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        "200":
+          description: Paginated compliance history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceHistoryListResponse"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /compliance/transactions:
+    get:
+      operationId: listComplianceTransactions
+      summary: List transactions for compliance review
+      tags: [Compliance]
+      parameters:
+        - name: user_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: from
+          in: query
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          schema: { type: string, format: date }
+        - name: transaction_type
+          in: query
+          schema: { type: string }
+        - name: outcome
+          in: query
+          schema: { type: string }
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        "200":
+          description: Paginated compliance transaction list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceTransactionListResponse"
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  # ──────────────────────────────────────────────────────────────────
+  # Compliance Reports
+  # ──────────────────────────────────────────────────────────────────
+
+  /compliance/reports:
+    post:
+      operationId: generateComplianceReport
+      summary: Request compliance report generation
+      tags: [ComplianceReports]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, maxLength: 64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateComplianceReportRequest"
+      responses:
+        "202":
+          description: Report generation accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceReportResponse"
+        "200":
+          description: Idempotent repeat — returns previously generated report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceReportResponse"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /compliance/reports/{id}:
+    get:
+      operationId: getComplianceReport
+      summary: Get compliance report by ID
+      tags: [ComplianceReports]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Compliance report detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceReportResponse"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ──────────────────────────────────────────────────────────────────
+  # Suspicious Activity Reports (SARs)
+  # ──────────────────────────────────────────────────────────────────
+
+  /compliance/sars:
+    post:
+      operationId: generateSAR
+      summary: Generate a Suspicious Activity Report
+      tags: [SAR]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, maxLength: 64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateSARRequest"
+      responses:
+        "201":
+          description: SAR created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SARResponse"
+        "200":
+          description: Idempotent repeat — returns existing SAR
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SARResponse"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /compliance/sars/{id}:
+    get:
+      operationId: getSAR
+      summary: Get SAR by ID
+      tags: [SAR]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: SAR detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SARResponse"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ──────────────────────────────────────────────────────────────────
+  # Retention Policies
+  # ──────────────────────────────────────────────────────────────────
+
+  /compliance/retention-policies:
+    get:
+      operationId: listRetentionPolicies
+      summary: List all retention policies
+      tags: [RetentionPolicies]
+      responses:
+        "200":
+          description: List of retention policies
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RetentionPolicyListResponse"
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+    post:
+      operationId: createRetentionPolicy
+      summary: Create a new retention policy
+      tags: [RetentionPolicies]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RetentionPolicyRequest"
+      responses:
+        "201":
+          description: Policy created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RetentionPolicyResponse"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /compliance/retention-policies/{id}:
+    put:
+      operationId: updateRetentionPolicy
+      summary: Update a retention policy
+      tags: [RetentionPolicies]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RetentionPolicyRequest"
+      responses:
+        "200":
+          description: Policy updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RetentionPolicyResponse"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+# ──────────────────────────────────────────────────────────────────
+# Components
+# ──────────────────────────────────────────────────────────────────
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  responses:
+    Forbidden:
+      description: Insufficient permission
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+
+  schemas:
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { type: object }
+
+    # ── Audit Events ──────────────────────────────────────────────
+
+    AuditEventSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        event_category: { type: string }
+        event_type: { type: string }
+        actor_id: { type: string, format: uuid, nullable: true }
+        actor_type: { type: string }
+        entity_type: { type: string, nullable: true }
+        entity_id: { type: string, format: uuid, nullable: true }
+        action: { type: string }
+        outcome: { type: string, enum: [success, failure, denied] }
+        correlation_id: { type: string, format: uuid }
+        occurred_at: { type: string, format: date-time }
+
+    AuditEventDetail:
+      allOf:
+        - $ref: "#/components/schemas/AuditEventSummary"
+        - type: object
+          properties:
+            before_state: { type: object, nullable: true }
+            after_state: { type: object, nullable: true }
+            metadata: { type: object }
+            integrity_verified: { type: boolean }
+
+    AuditEventListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/AuditEventSummary" }
+        meta:
+          $ref: "#/components/schemas/CursorPaginationMeta"
+
+    AuditEventDetailResponse:
+      type: object
+      properties:
+        data: { $ref: "#/components/schemas/AuditEventDetail" }
+
+    # ── Compliance Status & History ───────────────────────────────
+
+    ComplianceStatusResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            user_id: { type: string, format: uuid }
+            kyc_tier: { type: integer }
+            aml_risk_level: { type: string, enum: [low, medium, high, blocked] }
+            active_restrictions: { type: array, items: { type: object } }
+            last_changed_at: { type: string, format: date-time, nullable: true }
+
+    ComplianceHistoryEntry:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        user_id: { type: string, format: uuid }
+        changed_at: { type: string, format: date-time }
+        field_changed: { type: string }
+        before_value: { type: object, nullable: true }
+        after_value: { type: object }
+        source_system: { type: string }
+        triggering_audit_event_id: { type: string, format: uuid, nullable: true }
+
+    ComplianceHistoryListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/ComplianceHistoryEntry" }
+        meta: { $ref: "#/components/schemas/CursorPaginationMeta" }
+
+    ComplianceTransactionItem:
+      type: object
+      properties:
+        transaction_id: { type: string, format: uuid }
+        transaction_type: { type: string }
+        amount_minor: { type: integer }
+        currency_code: { type: string }
+        outcome: { type: string }
+        occurred_at: { type: string, format: date-time }
+        user_id: { type: string, format: uuid }
+
+    ComplianceTransactionListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/ComplianceTransactionItem" }
+        meta: { $ref: "#/components/schemas/CursorPaginationMeta" }
+
+    # ── Compliance Reports ─────────────────────────────────────────
+
+    GenerateComplianceReportRequest:
+      type: object
+      required: [report_type, date_range_start, date_range_end]
+      properties:
+        report_type:
+          type: string
+          enum: [compliance_summary, kyc_snapshot, transaction_volume]
+        date_range_start: { type: string, format: date }
+        date_range_end: { type: string, format: date }
+        filters: { type: object }
+
+    ComplianceReportResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            report_type: { type: string }
+            status: { type: string, enum: [pending, generating, completed, failed] }
+            date_range_start: { type: string, format: date }
+            date_range_end: { type: string, format: date }
+            report_data: { type: object, nullable: true }
+            report_file_url: { type: string, nullable: true }
+            generated_at: { type: string, format: date-time, nullable: true }
+            created_at: { type: string, format: date-time }
+
+    # ── Suspicious Activity Reports ────────────────────────────────
+
+    GenerateSARRequest:
+      type: object
+      required: [subject_user_id, reason_code, reason_narrative]
+      properties:
+        subject_user_id: { type: string, format: uuid }
+        reason_code: { type: string, maxLength: 64 }
+        reason_narrative: { type: string, maxLength: 5000 }
+        flagged_transaction_ids:
+          type: array
+          items: { type: string, format: uuid }
+
+    SARResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            report_number: { type: string }
+            subject_user_id: { type: string, format: uuid }
+            status: { type: string, enum: [draft, submitted, filed] }
+            reason_code: { type: string }
+            reason_narrative: { type: string }
+            flagged_transaction_ids: { type: array, items: { type: string } }
+            created_at: { type: string, format: date-time }
+
+    # ── Retention Policies ─────────────────────────────────────────
+
+    RetentionPolicyRequest:
+      type: object
+      required: [data_category, minimum_retention_days, post_retention_action]
+      properties:
+        data_category: { type: string, maxLength: 64 }
+        minimum_retention_days: { type: integer, minimum: 1 }
+        post_retention_action: { type: string, enum: [archive, purge] }
+
+    RetentionPolicyResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            data_category: { type: string }
+            minimum_retention_days: { type: integer }
+            post_retention_action: { type: string }
+            effective_from: { type: string, format: date }
+            enforcement_hold_until: { type: string, format: date, nullable: true }
+            configured_by_actor_id: { type: string, format: uuid }
+            created_at: { type: string, format: date-time }
+            updated_at: { type: string, format: date-time }
+
+    RetentionPolicyListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/RetentionPolicyResponse/properties/data" }
+
+    # ── Shared ─────────────────────────────────────────────────────
+
+    CursorPaginationMeta:
+      type: object
+      properties:
+        next_cursor: { type: string, nullable: true }
+        per_page: { type: integer }
+        has_more: { type: boolean }

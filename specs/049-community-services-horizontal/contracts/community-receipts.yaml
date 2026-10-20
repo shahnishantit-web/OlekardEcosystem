@@ -1,0 +1,314 @@
+openapi: "3.1.0"
+info:
+  title: Community Services — Receipts and Transaction History
+  version: "1.0.0"
+  description: >
+    HZ07 Receipts and Transaction History.
+    Receipts are immutable once issued. Reversals append new entries.
+    Receipt retrieval is scoped to the authenticated consumer's own records.
+    Admin exports apply field masking and generate audit log entries.
+
+paths:
+  /v1/community/receipts:
+    get:
+      operationId: listMyReceipts
+      summary: List own receipts (consumer)
+      tags: [Receipts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: purpose_type
+          in: query
+          schema:
+            type: string
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 25
+      responses:
+        "200":
+          description: Consumer receipt list (own records only)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReceiptListResponse"
+
+  /v1/community/receipts/{ref}:
+    get:
+      operationId: getReceipt
+      summary: Get receipt by immutable reference
+      tags: [Receipts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Immutable external reference (not internal UUID — prevents enumeration)
+      responses:
+        "200":
+          description: Receipt detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReceiptDetailResponse"
+        "404":
+          description: Not found or not in consumer's scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /v1/community/admin/receipts:
+    get:
+      operationId: adminSearchReceipts
+      summary: Admin — search receipts (scoped, masked, audited)
+      tags: [Admin, Receipts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organisation_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: external_ref
+          in: query
+          schema:
+            type: string
+        - name: purpose_type
+          in: query
+          schema:
+            type: string
+        - name: from_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: cursor
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Receipt list (masked fields, access logged)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminReceiptListResponse"
+
+  /v1/community/admin/receipts/export:
+    post:
+      operationId: requestReceiptExport
+      summary: Request an async CSV export (scoped, expiring, audited)
+      tags: [Admin, Receipts]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExportRequest"
+      responses:
+        "202":
+          description: Export job queued; download link provided when ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExportJobResponse"
+
+  /v1/community/admin/exports/{job_id}/download:
+    get:
+      operationId: downloadExport
+      summary: Download completed export (expiring authenticated link)
+      tags: [Admin, Receipts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: CSV file download
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Export not found, expired or not in scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Receipt:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        external_ref:
+          type: string
+          description: Immutable consumer-facing reference
+        purpose_type:
+          type: string
+        purpose_description:
+          type: string
+        currency:
+          type: string
+        amount:
+          type: integer
+          format: int64
+          description: Minor units
+        issued_at:
+          type: string
+          format: date-time
+
+    ReceiptDetailResponse:
+      type: object
+      properties:
+        data:
+          allOf:
+            - $ref: "#/components/schemas/Receipt"
+            - type: object
+              properties:
+                organisation_name:
+                  type: string
+                provider_ref:
+                  type: string
+                  nullable: true
+                  description: Masked external provider reference
+
+    ReceiptListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Receipt"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    AdminReceiptListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminReceiptItem"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    AdminReceiptItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        external_ref:
+          type: string
+        consumer_ref:
+          type: string
+          description: Masked consumer identifier
+        purpose_type:
+          type: string
+        currency:
+          type: string
+        amount:
+          type: integer
+          format: int64
+        ledger_posting_ref:
+          type: string
+        issued_at:
+          type: string
+          format: date-time
+
+    ExportRequest:
+      type: object
+      required: [organisation_id, from_date, to_date]
+      properties:
+        organisation_id:
+          type: string
+          format: uuid
+        from_date:
+          type: string
+          format: date
+        to_date:
+          type: string
+          format: date
+        purpose_type:
+          type: string
+          nullable: true
+
+    ExportJobResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            job_id:
+              type: string
+              format: uuid
+            status:
+              type: string
+              enum: [queued, processing, completed, failed]
+            download_url:
+              type: string
+              format: uri
+              nullable: true
+            expires_at:
+              type: string
+              format: date-time
+              nullable: true
+
+    PaginationMeta:
+      type: object
+      properties:
+        next_cursor:
+          type: string
+          nullable: true
+        per_page:
+          type: integer
+
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, correlation_id]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            correlation_id:
+              type: string
+              format: uuid

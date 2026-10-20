@@ -1,0 +1,126 @@
+openapi: 3.0.3
+info:
+  title: OleKard Admin Risk Investigations
+  version: 1.0.0
+  description: Additive ADM-P1-018 adapters. Legacy Risk and Security APIs remain available.
+security:
+  - bearerAuth: []
+paths:
+  /v1/admin/security/alerts:
+    get:
+      summary: Paginated risk alert queue
+      description: Requires security.alerts.read. In Review includes under_investigation and escalated; Resolved includes both outcomes and closed.
+      parameters:
+        - {in: query, name: severity, schema: {type: string, enum: [critical, high, medium, low]}}
+        - {in: query, name: status, schema: {type: string, enum: [open, in_review, resolved], default: open}}
+        - {in: query, name: page, schema: {type: integer, minimum: 1}}
+      responses:
+        '200': {description: Alert array in data and current_page/last_page/total in meta}
+        '401': {description: Authentication required}
+        '403': {description: Permission denied}
+        '422': {description: Invalid filter}
+  /v1/admin/security/alerts/{id}:
+    parameters:
+      - {$ref: '#/components/parameters/AlertId'}
+    get:
+      summary: Investigation evidence
+      description: Requires security.alerts.read. Returns persisted trigger, affected_transactions, entity_history, risk_timeline, notes, related_alerts, decisions, freeze_subject, active_hold and freeze_requests.
+      responses:
+        '200': {description: Alert detail in data; dates are UTC ISO 8601}
+        '404': {description: Unknown alert}
+        '403': {description: Permission denied}
+  /v1/admin/security/alerts/{id}/{action}:
+    parameters:
+      - {$ref: '#/components/parameters/AlertId'}
+      - in: path
+        name: action
+        required: true
+        schema: {type: string, enum: [assign, notes, links, resolve, escalate]}
+    post:
+      summary: Versioned investigation action
+      description: Requires security.alerts.read and risk.manage_alerts. Actor is derived from authentication. Assign targets self. Notes and links are append-only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version]
+              properties:
+                version: {type: integer, minimum: 1}
+                note: {type: string, minLength: 1, maxLength: 4000, description: Required for notes}
+                related_alert_id: {type: string, format: uuid, description: Required for links; cannot equal id}
+                outcome: {type: string, enum: [false_positive, confirmed_fraud], description: Required for resolve}
+                rationale: {type: string, minLength: 10, maxLength: 4000, description: Required for resolve}
+      responses:
+        '200': {description: Updated detail in data}
+        '403': {description: Permission denied}
+        '404': {description: Unknown alert or related alert}
+        '409': {description: Stale version}
+        '422': {description: Invalid input or terminal alert}
+  /v1/admin/security/alerts/{id}/freeze-requests:
+    parameters:
+      - {$ref: '#/components/parameters/AlertId'}
+    post:
+      summary: Request independent approval for an AML account freeze
+      description: Requires security.alerts.read and risk.freeze_account. Account owner is derived server-side, including wallet entities. Request does not itself apply a hold.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version, reason]
+              properties:
+                version: {type: integer, minimum: 1}
+                reason: {type: string, minLength: 10, maxLength: 2000}
+      responses:
+        '201': {description: Pending freeze request in data}
+        '403': {description: Permission denied}
+        '409': {description: Stale version, pending request, or existing hold}
+        '422': {description: Invalid reason/entity or terminal alert}
+  /v1/admin/security/alerts/{id}/freeze-requests/{requestId}/approve:
+    parameters:
+      - {$ref: '#/components/parameters/AlertId'}
+      - {in: path, name: requestId, required: true, schema: {type: string, format: uuid}}
+    post:
+      summary: Approve and freeze using a separate authenticated checker
+      description: Requires security.alerts.read and risk.freeze_account. Maker cannot approve. Caller-supplied actor/subject/checker fields are never trusted. Locks account, records real hold and audit, and atomically records ACCOUNT_FROZEN_AML in the domain outbox. Repeated approval returns existing result.
+      responses:
+        '200': {description: Approved freeze request in data}
+        '403': {description: Missing permission or maker self-approval}
+        '404': {description: Unknown request or alert}
+        '409': {description: Account already held}
+        '422': {description: Closed alert or unsupported owner}
+  /v1/admin/security/findings:
+    get:
+      summary: Compatibility alias for findings list
+      description: Requires security.findings.read. Same filters and envelope as GET /v1/security/findings.
+      responses:
+        '200': {description: Findings include nullable cve_id and pagination meta}
+        '403': {description: Permission denied}
+  /v1/security/findings/{id}/status:
+    parameters:
+      - {$ref: '#/components/parameters/AlertId'}
+    patch:
+      summary: Existing findings endpoint with additive lifecycle states
+      description: Requires security.findings.write; existing suppression and resolution behavior is preserved.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: {type: string, enum: [open, acknowledged, in_remediation, suppressed, resolved]}
+                suppression_justification: {type: string, maxLength: 1000, description: Required for suppressed}
+      responses:
+        '200': {description: Updated finding in data}
+        '403': {description: Permission denied}
+        '422': {description: Invalid status or missing justification}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
+  parameters:
+    AlertId: {in: path, name: id, required: true, schema: {type: string, format: uuid}}

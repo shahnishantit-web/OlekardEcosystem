@@ -1,0 +1,16 @@
+{
+  "route": "/offline",
+  "landed": "/offline",
+  "status": 200,
+  "headings": [
+    "You are offline"
+  ],
+  "errors": [],
+  "api": [],
+  "failed": [],
+  "links": [
+    "/login"
+  ],
+  "overflow": false,
+  "text": "OK\nOleKard\nYou are offline\n\nCheck your internet connection, then reload this page. Verify any recent operation before submitting it again.\n\nTry again\nReturn to sign in\n\nAuthorized personnel only. All sessions are logged and monitored."
+}

@@ -1,0 +1,1159 @@
+openapi: 3.1.0
+info:
+  title: E12 Agent Management API
+  version: 1.0.0
+  description: |
+    Agent lifecycle management — from multi-step onboarding and admin approval
+    through active agent operations (customer search, registration, KYC initiation,
+    wallet view, transaction view). Authorization is enforced server-side on every
+    endpoint. All state-changing operations require `Idempotency-Key`.
+
+servers:
+  - url: /api/v1
+    description: Current version
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ApplicationId:
+      name: id
+      in: path
+      required: true
+      description: AgentApplication UUID v7
+      schema:
+        type: string
+        format: uuid
+
+    AgentId:
+      name: id
+      in: path
+      required: true
+      description: Agent UUID v7
+      schema:
+        type: string
+        format: uuid
+
+    CustomerId:
+      name: cid
+      in: path
+      required: true
+      description: Customer (identity user) UUID v7
+      schema:
+        type: string
+        format: uuid
+
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 64
+      description: Client-generated unique key; duplicate requests with same key return the original response.
+
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    AgentType:
+      type: string
+      enum: [individual, business]
+
+    ApplicationStatus:
+      type: string
+      enum:
+        - draft
+        - in_progress
+        - submitted
+        - kyc_in_progress
+        - kyc_passed
+        - kyc_failed
+        - under_review
+        - approved
+        - rejected
+
+    AgentStatus:
+      type: string
+      enum: [active, suspended]
+
+    DocumentType:
+      type: string
+      enum: [national_id, proof_of_address, business_registration]
+
+    DocumentStatus:
+      type: string
+      enum: [pending_review, accepted, rejected, quarantined]
+
+    AgentApplication:
+      type: object
+      required: [id, agent_type, status, correlation_id, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        agent_type:
+          $ref: '#/components/schemas/AgentType'
+        status:
+          $ref: '#/components/schemas/ApplicationStatus'
+        kyc_result:
+          type: string
+          enum: [passed, failed, pending]
+          nullable: true
+        rejection_reason:
+          type: string
+          nullable: true
+        submitted_at:
+          type: string
+          format: date-time
+          nullable: true
+        approved_at:
+          type: string
+          format: date-time
+          nullable: true
+        correlation_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AgentDocument:
+      type: object
+      required: [id, application_id, document_type, status, mime_type, size_bytes, uploaded_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        application_id:
+          type: string
+          format: uuid
+        document_type:
+          $ref: '#/components/schemas/DocumentType'
+        status:
+          $ref: '#/components/schemas/DocumentStatus'
+        mime_type:
+          type: string
+        size_bytes:
+          type: integer
+          format: int64
+        rejection_reason:
+          type: string
+          nullable: true
+          description: e.g. VIRUS_SCAN_FAILED, UNSUPPORTED_FORMAT, SUPERSEDED
+        uploaded_at:
+          type: string
+          format: date-time
+
+    Agent:
+      type: object
+      required: [id, application_id, user_id, agent_type, status, approved_at, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        application_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        agent_type:
+          $ref: '#/components/schemas/AgentType'
+        status:
+          $ref: '#/components/schemas/AgentStatus'
+        approved_at:
+          type: string
+          format: date-time
+        suspended_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CustomerSummary:
+      type: object
+      required: [id, first_name, masked_national_id, phone, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+        last_name:
+          type: string
+        masked_national_id:
+          type: string
+          description: Last 4 digits only; e.g. "****1234"
+        phone:
+          type: string
+        status:
+          type: string
+          enum: [active, suspended, pending_kyc]
+
+    CustomerWalletView:
+      type: object
+      required: [wallet_id, status, tier, is_frozen]
+      properties:
+        wallet_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [active, frozen, suspended, closed]
+        tier:
+          type: string
+          description: Customer tier (e.g. standard, premium)
+        is_frozen:
+          type: boolean
+        balance_disclosure:
+          type: string
+          nullable: true
+          description: "TBD-E12-001: exact balance disclosure rules deferred. Returns null until defined."
+
+    AgentTransactionSummary:
+      type: object
+      required: [id, type, status, amount, currency_code, direction, reference, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [funding, withdrawal, transfer, refund]
+        status:
+          type: string
+        amount:
+          type: integer
+          format: int64
+          description: Amount in minor units (cents/thebe)
+        currency_code:
+          type: string
+          minLength: 3
+          maxLength: 3
+        direction:
+          type: string
+          enum: [debit, credit]
+        reference:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    PaginationMeta:
+      type: object
+      required: [current_page, per_page, total, last_page]
+      properties:
+        current_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+        last_page:
+          type: integer
+
+    Error:
+      type: object
+      required: [error, code, message]
+      properties:
+        error:
+          type: boolean
+          enum: [true]
+        code:
+          type: string
+          description: Machine-readable error code
+        message:
+          type: string
+          description: Human-readable description
+        details:
+          type: object
+          additionalProperties: true
+          nullable: true
+
+paths:
+  # ── Agent Applications ────────────────────────────────────────────────────
+
+  /agent-applications:
+    post:
+      operationId: createAgentApplication
+      summary: Create Agent Application (US-AGENT-001)
+      description: |
+        Initiates a new agent onboarding application in `draft` status.
+        Requires `agent.application.create` permission.
+        Idempotent: duplicate `Idempotency-Key` returns original `200`.
+      tags: [Agent Applications]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [agent_type]
+              properties:
+                agent_type:
+                  $ref: '#/components/schemas/AgentType'
+            example:
+              agent_type: individual
+      responses:
+        '201':
+          description: Application created
+          headers:
+            X-Idempotent-Replayed:
+              schema:
+                type: boolean
+              description: Present and true when this is a replayed idempotent response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AgentApplication'
+        '200':
+          description: Idempotent replay — original application returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AgentApplication'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: true
+                code: UNAUTHENTICATED
+                message: Authentication required
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: true
+                code: VALIDATION_ERROR
+                message: The agent_type field is required.
+                details:
+                  agent_type: [The agent_type field is required.]
+
+  /agent-applications/{id}/personal-information:
+    patch:
+      operationId: updatePersonalInformation
+      summary: Update Personal Information (US-AGENT-002)
+      description: |
+        Captures personal details on a `draft` or `in_progress` application.
+        Only the application owner may update. Applications in non-editable
+        states return `422 APPLICATION_NOT_EDITABLE`.
+      tags: [Agent Applications]
+      parameters:
+        - $ref: '#/components/parameters/ApplicationId'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [first_name, last_name, national_id_number, national_id_type, date_of_birth, phone, address]
+              properties:
+                first_name:
+                  type: string
+                  maxLength: 100
+                last_name:
+                  type: string
+                  maxLength: 100
+                national_id_number:
+                  type: string
+                  maxLength: 50
+                national_id_type:
+                  type: string
+                  enum: [national_id, passport, drivers_license]
+                date_of_birth:
+                  type: string
+                  format: date
+                phone:
+                  type: string
+                  description: E.164 format
+                address:
+                  type: object
+                  required: [street, city, country]
+                  properties:
+                    street:
+                      type: string
+                    city:
+                      type: string
+                    country:
+                      type: string
+                      minLength: 2
+                      maxLength: 2
+      responses:
+        '200':
+          description: Personal information updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AgentApplication'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          description: Not the application owner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: true
+                code: FORBIDDEN
+                message: You do not own this application
+        '422':
+          description: Validation error or non-editable state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                validation:
+                  value:
+                    error: true
+                    code: VALIDATION_ERROR
+                    message: The national_id_number field is required.
+                not_editable:
+                  value:
+                    error: true
+                    code: APPLICATION_NOT_EDITABLE
+                    message: Application cannot be edited in its current status
+
+  /agent-applications/{id}/business-information:
+    patch:
+      operationId: updateBusinessInformation
+      summary: Update Business Information (US-AGENT-003)
+      description: |
+        Captures business details on a draft/in_progress application.
+        Optional for individual agents; required for business agents.
+        Returns `422 DUPLICATE_BUSINESS_NAME` if trading name already used.
+      tags: [Agent Applications]
+      parameters:
+        - $ref: '#/components/parameters/ApplicationId'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                trading_name:
+                  type: string
+                  maxLength: 200
+                registration_number:
+                  type: string
+                  maxLength: 50
+                tax_number:
+                  type: string
+                  maxLength: 50
+                business_address:
+                  type: object
+                  properties:
+                    street:
+                      type: string
+                    city:
+                      type: string
+                    country:
+                      type: string
+      responses:
+        '200':
+          description: Business information updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AgentApplication'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: Validation or duplicate business name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                duplicate:
+                  value:
+                    error: true
+                    code: DUPLICATE_BUSINESS_NAME
+                    message: This trading name is already registered to an active agent
+
+  /agent-applications/{id}/documents:
+    post:
+      operationId: uploadDocument
+      summary: Upload Supporting Document (US-AGENT-004)
+      description: |
+        Uploads a KYC or compliance document. The document is scanned for viruses
+        before storage. If the scan fails, the file is quarantined (not stored)
+        and `422 DOCUMENT_VIRUS_DETECTED` is returned (FR-E12-024).
+        Supersedes a previous document of the same type for the same application.
+      tags: [Agent Applications]
+      parameters:
+        - $ref: '#/components/parameters/ApplicationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [document_type, file]
+              properties:
+                document_type:
+                  $ref: '#/components/schemas/DocumentType'
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Document uploaded and queued for review
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AgentDocument'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: Validation or virus scan failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                virus:
+                  value:
+                    error: true
+                    code: DOCUMENT_VIRUS_DETECTED
+                    message: The uploaded document failed the virus scan and has been quarantined
+                too_large:
+                  value:
+                    error: true
+                    code: DOCUMENT_TOO_LARGE
+                    message: Document exceeds the maximum allowed size
+                format:
+                  value:
+                    error: true
+                    code: INVALID_DOCUMENT_FORMAT
+                    message: The document format is not supported
+
+  /agent-applications/{id}/kyc:
+    post:
+      operationId: triggerAgentKyc
+      summary: Trigger KYC Verification (US-AGENT-005)
+      description: |
+        Initiates KYC verification for a complete agent application.
+        Application must have all required sections (personal info + documents).
+        Status transitions to `kyc_in_progress`. KYC result arrives via callback.
+      tags: [Agent Applications]
+      parameters:
+        - $ref: '#/components/parameters/ApplicationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '202':
+          description: KYC verification initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AgentApplication'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: Application incomplete or wrong state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                incomplete:
+                  value:
+                    error: true
+                    code: APPLICATION_INCOMPLETE
+                    message: Application is missing required sections
+                    details:
+                      missing: [personal_information, national_id_document]
+
+  /agent-applications/{id}/approve:
+    post:
+      operationId: approveAgentApplication
+      summary: Approve Agent Application (US-AGENT-006)
+      description: |
+        Admin approves a `kyc_passed` or `under_review` application.
+        Creates an Agent record with `active` status. Grants the `agent` role.
+        Emits `agent.approved` event consumed by E13 (float wallet) and E17 (notifications).
+        Maker-checker enforced when `agent.approval.require_maker_checker = true`.
+      tags: [Agent Lifecycle — Admin]
+      parameters:
+        - $ref: '#/components/parameters/ApplicationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notes:
+                  type: string
+                  maxLength: 500
+                  description: Optional approval notes
+      responses:
+        '200':
+          description: Agent approved; Agent record returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Agent'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: Not approvable or maker-checker violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                not_approvable:
+                  value:
+                    error: true
+                    code: APPLICATION_NOT_APPROVABLE
+                    message: Application is not in a state that can be approved
+                maker_checker:
+                  value:
+                    error: true
+                    code: MAKER_CHECKER_VIOLATION
+                    message: The approver cannot be the same admin who last updated the application
+
+  /agent-applications/{id}/reject:
+    post:
+      operationId: rejectAgentApplication
+      summary: Reject Agent Application (US-AGENT-007)
+      description: |
+        Admin rejects an application in `kyc_passed`, `kyc_failed`, or `under_review` status.
+        Rejection reason is mandatory. Application transitions to terminal `rejected` status.
+      tags: [Agent Lifecycle — Admin]
+      parameters:
+        - $ref: '#/components/parameters/ApplicationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                  minLength: 10
+                  maxLength: 1000
+            example:
+              reason: Identity documents could not be verified against national registry.
+      responses:
+        '200':
+          description: Application rejected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AgentApplication'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: Missing reason or terminal status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                terminal:
+                  value:
+                    error: true
+                    code: APPLICATION_IN_TERMINAL_STATUS
+                    message: Application is already in a terminal status
+
+  # ── Agent Lifecycle ───────────────────────────────────────────────────────
+
+  /agents/{id}/suspend:
+    post:
+      operationId: suspendAgent
+      summary: Suspend Agent (US-AGENT-008)
+      description: |
+        Admin suspends an `active` agent. Reason is mandatory.
+        Emits `agent.suspended` event; E03 consumes it asynchronously to
+        invalidate all of the agent's active sessions (FR-E12-021).
+        Maker-checker enforced when `agent.approval.require_maker_checker = true`.
+      tags: [Agent Lifecycle — Admin]
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                  minLength: 10
+                  maxLength: 1000
+      responses:
+        '200':
+          description: Agent suspended
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Agent'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: Agent not active or maker-checker violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                not_active:
+                  value:
+                    error: true
+                    code: AGENT_NOT_ACTIVE
+                    message: Only active agents can be suspended
+                maker_checker:
+                  value:
+                    error: true
+                    code: MAKER_CHECKER_VIOLATION
+                    message: Maker-checker violation
+
+  /agents/{id}/reactivate:
+    post:
+      operationId: reactivateAgent
+      summary: Reactivate Agent (US-AGENT-009)
+      description: |
+        Admin reactivates a `suspended` agent, restoring operational access.
+        Emits `agent.reactivated` event consumed by E17.
+      tags: [Agent Lifecycle — Admin]
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notes:
+                  type: string
+                  maxLength: 500
+      responses:
+        '200':
+          description: Agent reactivated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Agent'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: Agent not suspended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: true
+                code: AGENT_NOT_SUSPENDED
+                message: Only suspended agents can be reactivated
+
+  # ── Agent Customers ───────────────────────────────────────────────────────
+
+  /agents/{id}/customers:
+    get:
+      operationId: searchAgentCustomers
+      summary: Search Agent Customers (US-AGENT-010)
+      description: |
+        Active agent searches for existing customers by phone, name, or national ID.
+        Returns limited PII (name, masked ID, phone, account status) — no full national ID.
+        Requires `agent.customer.search` permission. Suspended agents receive `403`.
+        Minimum search query length is configurable (default 3 chars).
+      tags: [Agent Customers]
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+        - name: search
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 3
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Customer search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CustomerSummary'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          description: Suspended agent or insufficient permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: true
+                code: AGENT_SUSPENDED
+                message: Suspended agents cannot perform this operation
+        '422':
+          description: Search query too short
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: true
+                code: SEARCH_TOO_SHORT
+                message: Search query must be at least 3 characters
+
+    post:
+      operationId: registerCustomer
+      summary: Register New Customer (US-AGENT-011)
+      description: |
+        Active agent registers a new customer. Creates a minimal customer user record
+        and an AgentCustomerRelationship linking the customer to this agent.
+        E06 opens the customer wallet in response to `agent.customer.registered` event.
+        Returns `422 PHONE_ALREADY_REGISTERED` if phone is in use.
+        Idempotent via `Idempotency-Key`.
+      tags: [Agent Customers]
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, first_name, last_name, id_type, id_number]
+              properties:
+                phone:
+                  type: string
+                  description: E.164 format
+                first_name:
+                  type: string
+                  maxLength: 100
+                last_name:
+                  type: string
+                  maxLength: 100
+                id_type:
+                  type: string
+                  enum: [national_id, passport]
+                id_number:
+                  type: string
+                  maxLength: 50
+      responses:
+        '201':
+          description: Customer registered and linked to agent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CustomerSummary'
+        '200':
+          description: Idempotent replay
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CustomerSummary'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/AgentSuspended'
+        '422':
+          description: Validation error or duplicate phone
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                duplicate:
+                  value:
+                    error: true
+                    code: PHONE_ALREADY_REGISTERED
+                    message: This phone number is already registered to a customer
+
+  /agents/{id}/customers/{cid}/kyc:
+    post:
+      operationId: initiateCustomerKyc
+      summary: Initiate Customer KYC (US-AGENT-012)
+      description: |
+        Active agent initiates KYC for a linked customer in `pending_kyc` status.
+        E12 owns the API call; document capture UI is E32 scope.
+        Returns `403 UNAUTHORIZED_CUSTOMER_ACCESS` if customer not linked to this agent.
+      tags: [Agent Customers]
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '202':
+          description: KYC initiation accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: KYC process initiated for customer
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          description: Suspended agent or unauthorized customer access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                suspended:
+                  value:
+                    error: true
+                    code: AGENT_SUSPENDED
+                    message: Suspended agents cannot perform this operation
+                idor:
+                  value:
+                    error: true
+                    code: UNAUTHORIZED_CUSTOMER_ACCESS
+                    message: You are not authorized to access this customer's data
+        '422':
+          description: KYC already completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: true
+                code: KYC_ALREADY_COMPLETED
+                message: This customer has already completed KYC verification
+
+  /agents/{id}/customers/{cid}/wallet:
+    get:
+      operationId: viewCustomerWallet
+      summary: View Customer Wallet Status (US-AGENT-013)
+      description: |
+        Active agent views wallet status (status, tier, balance disclosure per TBD-E12-001)
+        for a linked customer. Returns `403 UNAUTHORIZED_CUSTOMER_ACCESS` for unlinked customers.
+        Full balance amount is NOT returned (balance_disclosure is null until TBD-E12-001 is resolved).
+      tags: [Agent Customers]
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Customer wallet view
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CustomerWalletView'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/UnauthorizedCustomerAccess'
+
+  /agents/{id}/customers/{cid}/transactions:
+    get:
+      operationId: viewCustomerTransactions
+      summary: View Customer Transactions (US-AGENT-014)
+      description: |
+        Active agent views agent-channel transactions for a linked customer.
+        Only transactions sourced through this agent are returned (FR-E12-019).
+        Full transaction history is NOT exposed.
+      tags: [Agent Customers]
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+        - $ref: '#/components/parameters/CustomerId'
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Agent-channel transactions for customer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AgentTransactionSummary'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/UnauthorizedCustomerAccess'
+
+  # ─────────────────────────────────────────────────────────────────────────
+
+  components:
+    responses:
+      Unauthenticated:
+        description: Authentication required
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+            example:
+              error: true
+              code: UNAUTHENTICATED
+              message: Authentication required
+
+      Forbidden:
+        description: Insufficient permissions
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+            example:
+              error: true
+              code: FORBIDDEN
+              message: You do not have permission to perform this action
+
+      AgentSuspended:
+        description: Agent is suspended
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+            example:
+              error: true
+              code: AGENT_SUSPENDED
+              message: Suspended agents cannot perform this operation
+
+      UnauthorizedCustomerAccess:
+        description: Customer not linked to this agent — always 403, never 404
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+            example:
+              error: true
+              code: UNAUTHORIZED_CUSTOMER_ACCESS
+              message: You are not authorized to access this customer's data

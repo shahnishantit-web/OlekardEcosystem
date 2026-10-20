@@ -1,0 +1,4 @@
+# Research and source review
+Approved scope: docs/admin-p1p2-epic-catalogue.md ADM-P1-021. Reviewed E22 spec, Support services/models/routes, Ledger/Fees/Wallet/Identity/Transaction contracts; completed ADM009 transaction and ADM018-020 conventions.
+Findings: original refund missing authoritative amount/currency check and locks; generic reversal payload incompatible; scope-only step-up insufficient; no Support Notification listener. Reuse real Ledger/Fees and extend owning module contracts. No invented ordinary SLA. Senior eligibility derives existing privileged support.assign/investigate capabilities.
+Dependencies: E22, ADM009, E01/E04 identity, E07 ledger, E11 transaction, E17 notifications, E21 fees, private evidence storage. Real notification provider delivery cannot be claimed with existing Log channels; this is a deployment limitation.

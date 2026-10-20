@@ -1,0 +1,12 @@
+{
+  "name": "@olekard/design-system",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "tokens:build": "style-dictionary build --config style-dictionary.config.js && npm run tokens:validate",
+    "tokens:validate": "node scripts/validate-tokens.js"
+  },
+  "devDependencies": {
+    "style-dictionary": "^3.9.2"
+  }
+}

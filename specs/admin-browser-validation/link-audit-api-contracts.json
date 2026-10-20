@@ -1,0 +1,481 @@
+{
+  "checkedAt": "2026-10-19T07:16:47.595Z",
+  "checks": [
+    {
+      "source": "app/(admin)/ops/alert-rules/page.tsx",
+      "uri": "/v1/admin/ops/alert-rules",
+      "registered": true
+    },
+    {
+      "source": "app/(admin)/ops/alerts/page.tsx",
+      "uri": "/v1/admin/ops/alerts",
+      "registered": true
+    },
+    {
+      "source": "app/(admin)/ops/backup-jobs/page.tsx",
+      "uri": "/v1/admin/ops/backup-jobs",
+      "registered": true
+    },
+    {
+      "source": "app/(admin)/ops/db-monitoring/page.tsx",
+      "uri": "/v1/admin/ops/metrics",
+      "registered": true
+    },
+    {
+      "source": "app/(admin)/ops/deployments/page.tsx",
+      "uri": "/v1/admin/ops/deployments/versions",
+      "registered": true
+    },
+    {
+      "source": "app/(admin)/ops/deployments/page.tsx",
+      "uri": "/v1/admin/ops/deployments/rollbacks",
+      "registered": true
+    },
+    {
+      "source": "app/(admin)/ops/logs/page.tsx",
+      "uri": "/v1/admin/ops/logs",
+      "registered": true
+    },
+    {
+      "source": "app/(admin)/ops/metrics/page.tsx",
+      "uri": "/v1/admin/ops/metrics",
+      "registered": true
+    },
+    {
+      "source": "app/(admin)/ops/page.tsx",
+      "uri": "/v1/admin/ops/providers",
+      "registered": true
+    },
+    {
+      "source": "app/(admin)/ops/page.tsx",
+      "uri": "/v1/admin/ops/alerts",
+      "registered": true
+    },
+    {
+      "source": "app/(admin)/ops/providers/page.tsx",
+      "uri": "/v1/admin/ops/providers",
+      "registered": true
+    },
+    {
+      "source": "app/(admin)/ops/queue-monitoring/page.tsx",
+      "uri": "/v1/admin/ops/metrics",
+      "registered": true
+    },
+    {
+      "source": "src/modules/auth/api/sessions.ts",
+      "uri": "/v1/admin/sessions",
+      "registered": true
+    },
+    {
+      "source": "src/modules/auth/api/sessions.ts",
+      "uri": "/v1/auth/sessions",
+      "registered": true
+    },
+    {
+      "source": "src/modules/community/pages/approval-inbox.tsx",
+      "uri": "/v1/community/admin/approvals",
+      "registered": true
+    },
+    {
+      "source": "src/modules/community/pages/campaign-detail.tsx",
+      "uri": "/v1/community/admin/campaigns/{value}",
+      "registered": true
+    },
+    {
+      "source": "src/modules/community/pages/campaign-detail.tsx",
+      "uri": "/v1/community/admin/campaigns/{value}/dashboard",
+      "registered": true
+    },
+    {
+      "source": "src/modules/community/pages/campaign-detail.tsx",
+      "uri": "/v1/community/admin/campaigns/{value}/orders",
+      "registered": true
+    },
+    {
+      "source": "src/modules/community/pages/campaign-list.tsx",
+      "uri": "/v1/community/admin/campaigns",
+      "registered": true
+    },
+    {
+      "source": "src/modules/community/pages/consent-notices.tsx",
+      "uri": "/v1/community/admin/consent-notices",
+      "registered": true
+    },
+    {
+      "source": "src/modules/community/pages/export-page.tsx",
+      "uri": "/v1/community/admin/exports/{value}",
+      "registered": true
+    },
+    {
+      "source": "src/modules/community/pages/order-detail.tsx",
+      "uri": "/v1/community/admin/orders/{value}",
+      "registered": true
+    },
+    {
+      "source": "src/modules/community/pages/order-list.tsx",
+      "uri": "/v1/community/admin/orders",
+      "registered": true
+    },
+    {
+      "source": "src/modules/community/pages/organisation-detail.tsx",
+      "uri": "/v1/community/admin/organisations/{value}",
+      "registered": true
+    },
+    {
+      "source": "src/modules/community/pages/organisation-list.tsx",
+      "uri": "/v1/community/admin/organisations",
+      "registered": true
+    },
+    {
+      "source": "src/modules/community/pages/partner-connectors.tsx",
+      "uri": "/v1/community/admin/partner-connectors",
+      "registered": true
+    },
+    {
+      "source": "src/modules/community/pages/refund-queue.tsx",
+      "uri": "/v1/community/admin/refunds",
+      "registered": true
+    },
+    {
+      "source": "src/modules/community/pages/service-entitlements.tsx",
+      "uri": "/v1/community/admin/service-entitlements",
+      "registered": true
+    },
+    {
+      "source": "src/modules/community/pages/staff-list.tsx",
+      "uri": "/v1/community/admin/organisations/{value}/staff",
+      "registered": true
+    },
+    {
+      "source": "src/modules/configuration/api/security-config.ts",
+      "uri": "/v1/admin/platform/configuration/security",
+      "registered": true
+    },
+    {
+      "source": "src/modules/dashboard/api/dashboard.ts",
+      "uri": "/v1/admin/profile/dashboard/summary",
+      "registered": true
+    },
+    {
+      "source": "src/modules/dashboard/api/kpi-summary.ts",
+      "uri": "/v1/admin/dashboard/wallets",
+      "registered": true
+    },
+    {
+      "source": "src/modules/dashboard/api/kpi-summary.ts",
+      "uri": "/v1/admin/dashboard/transactions",
+      "registered": true
+    },
+    {
+      "source": "src/modules/dashboard/api/kpi-summary.ts",
+      "uri": "/v1/admin/dashboard/kyc",
+      "registered": true
+    },
+    {
+      "source": "src/modules/dashboard/api/kpi-summary.ts",
+      "uri": "/v1/admin/dashboard/agents",
+      "registered": true
+    },
+    {
+      "source": "src/modules/dashboard/api/kpi-summary.ts",
+      "uri": "/v1/admin/support/summary",
+      "registered": true
+    },
+    {
+      "source": "src/modules/devices/api/devices.ts",
+      "uri": "/v1/admin/users/{value}/devices",
+      "registered": true
+    },
+    {
+      "source": "src/modules/devices/api/devices.ts",
+      "uri": "/v1/admin/devices/{value}/security-events",
+      "registered": true
+    },
+    {
+      "source": "src/modules/fees/api/fees.ts",
+      "uri": "/v1/fees/rules/{value}",
+      "registered": true
+    },
+    {
+      "source": "src/modules/fees/pages/fee-rules-list.tsx",
+      "uri": "/v1/fees/rules",
+      "registered": true
+    },
+    {
+      "source": "src/modules/integrations/api.ts",
+      "uri": "/v1/admin/integrations/api-clients/{value}",
+      "registered": true
+    },
+    {
+      "source": "src/modules/integrations/api.ts",
+      "uri": "/v1/admin/integrations/api-clients",
+      "registered": true
+    },
+    {
+      "source": "src/modules/integrations/api.ts",
+      "uri": "/v1/admin/integrations/providers",
+      "registered": true
+    },
+    {
+      "source": "src/modules/integrations/api.ts",
+      "uri": "/v1/admin/webhooks/deliveries",
+      "registered": true
+    },
+    {
+      "source": "src/modules/integrations/api.ts",
+      "uri": "/v1/admin/integrations/providers/{value}/health",
+      "registered": true
+    },
+    {
+      "source": "src/modules/multi-currency/pages/currencies.tsx",
+      "uri": "/v1/admin/currencies",
+      "registered": true
+    },
+    {
+      "source": "src/modules/multi-currency/pages/fx-rates.tsx",
+      "uri": "/v1/admin/fx/rates",
+      "registered": true
+    },
+    {
+      "source": "src/modules/multi-currency/pages/fx-rates.tsx",
+      "uri": "/v1/admin/fx/rates/{value}/history",
+      "registered": true
+    },
+    {
+      "source": "src/modules/notifications/api.ts",
+      "uri": "/v1/admin/notifications/templates",
+      "registered": true
+    },
+    {
+      "source": "src/modules/notifications/api.ts",
+      "uri": "/v1/admin/notifications/log",
+      "registered": true
+    },
+    {
+      "source": "src/modules/notifications/api.ts",
+      "uri": "/v1/admin/notifications/rules",
+      "registered": true
+    },
+    {
+      "source": "src/modules/operations/pages/dead-letter.tsx",
+      "uri": "/v1/operations/dead-letter",
+      "registered": true
+    },
+    {
+      "source": "src/modules/profile/api/notification-prefs.ts",
+      "uri": "/v1/notifications/preferences",
+      "registered": true
+    },
+    {
+      "source": "src/modules/profile/api/profile.ts",
+      "uri": "/v1/admin/users/{value}/profile",
+      "registered": true
+    },
+    {
+      "source": "src/modules/profile/api/profile.ts",
+      "uri": "/v1/admin/users/{value}/profile/status",
+      "registered": true
+    },
+    {
+      "source": "src/modules/profile/api/security.ts",
+      "uri": "/v1/auth/mfa/methods",
+      "registered": true
+    },
+    {
+      "source": "src/modules/qa/api/qa.ts",
+      "uri": "/v1/qa/runs",
+      "registered": true
+    },
+    {
+      "source": "src/modules/qa/api/qa.ts",
+      "uri": "/v1/qa/runs/{value}",
+      "registered": true
+    },
+    {
+      "source": "src/modules/qa/api/qa.ts",
+      "uri": "/v1/qa/dashboard",
+      "registered": true
+    },
+    {
+      "source": "src/modules/reports/api/reports.ts",
+      "uri": "/v1/reports/jobs/{value}",
+      "registered": true
+    },
+    {
+      "source": "src/modules/reports/api/reports.ts",
+      "uri": "/v1/reports/exports/{value}",
+      "registered": true
+    },
+    {
+      "source": "src/modules/reports/pages/report-job-detail.tsx",
+      "uri": "/v1/reports/jobs/{value}",
+      "registered": true
+    },
+    {
+      "source": "src/modules/reports/pages/report-list.tsx",
+      "uri": "/v1/reports/jobs",
+      "registered": true
+    },
+    {
+      "source": "src/modules/reports/pages/report-schedule-list.tsx",
+      "uri": "/v1/reports/schedules",
+      "registered": true
+    },
+    {
+      "source": "src/modules/security/api.ts",
+      "uri": "/v1/admin/security/alerts",
+      "registered": true
+    },
+    {
+      "source": "src/modules/security/api.ts",
+      "uri": "/v1/admin/security/alerts/{value}",
+      "registered": true
+    },
+    {
+      "source": "src/modules/security/pages/events.tsx",
+      "uri": "/v1/admin/security/events",
+      "registered": true
+    },
+    {
+      "source": "src/modules/security/pages/events.tsx",
+      "uri": "/v1/admin/security/events/export",
+      "registered": true
+    },
+    {
+      "source": "src/modules/security/pages/finding-detail.tsx",
+      "uri": "/v1/admin/security/findings/{value}",
+      "registered": true
+    },
+    {
+      "source": "src/modules/security/pages/findings.tsx",
+      "uri": "/v1/security/findings",
+      "registered": true
+    },
+    {
+      "source": "src/modules/security/pages/overview.tsx",
+      "uri": "/v1/security/dashboard",
+      "registered": true
+    },
+    {
+      "source": "src/modules/security/pages/security-policies.tsx",
+      "uri": "/v1/admin/platform/security-config",
+      "registered": true
+    },
+    {
+      "source": "src/modules/support/api.ts",
+      "uri": "/v1/admin/support/cases",
+      "registered": true
+    },
+    {
+      "source": "src/modules/support/api.ts",
+      "uri": "/v1/admin/support/cases/{value}",
+      "registered": true
+    },
+    {
+      "source": "src/modules/support/api.ts",
+      "uri": "/v1/admin/support/cases/{value}/attachments/{value}",
+      "registered": true
+    },
+    {
+      "source": "src/modules/users/api/admin-portal.ts",
+      "uri": "/v1/admin/dashboard",
+      "registered": true
+    },
+    {
+      "source": "src/modules/users/api/admin-portal.ts",
+      "uri": "/v1/admin/customers",
+      "registered": true
+    },
+    {
+      "source": "src/modules/users/api/admin-portal.ts",
+      "uri": "/v1/admin/customers/{value}",
+      "registered": true
+    },
+    {
+      "source": "src/modules/users/api/admin-portal.ts",
+      "uri": "/v1/admin/wallets",
+      "registered": true
+    },
+    {
+      "source": "src/modules/users/api/admin-portal.ts",
+      "uri": "/v1/admin/transactions",
+      "registered": true
+    },
+    {
+      "source": "src/modules/users/api/admin-portal.ts",
+      "uri": "/v1/admin/transactions/exports/{value}",
+      "registered": true
+    },
+    {
+      "source": "lib/api/admin-app-client.ts",
+      "uri": "/v1/compliance/dashboard",
+      "registered": true
+    },
+    {
+      "source": "lib/api/admin-app-client.ts",
+      "uri": "/v1/compliance/retention-policies",
+      "registered": true
+    },
+    {
+      "source": "lib/api/admin-app-client.ts",
+      "uri": "/v1/qa/runs",
+      "registered": true
+    },
+    {
+      "source": "lib/api/admin-app-client.ts",
+      "uri": "/v1/qa/runs/{value}",
+      "registered": true
+    },
+    {
+      "source": "lib/api/admin-app-client.ts",
+      "uri": "/v1/qa/dashboard",
+      "registered": true
+    },
+    {
+      "source": "lib/api/configuration.ts",
+      "uri": "/v1/admin/configuration/keys",
+      "registered": true
+    },
+    {
+      "source": "lib/api/configuration.ts",
+      "uri": "/v1/admin/configuration/keys/{value}",
+      "registered": true
+    },
+    {
+      "source": "lib/api/configuration.ts",
+      "uri": "/v1/admin/configuration/keys/{value}/versions",
+      "registered": true
+    },
+    {
+      "source": "lib/api/configuration.ts",
+      "uri": "/v1/admin/configuration/change-requests",
+      "registered": true
+    },
+    {
+      "source": "lib/api/configuration.ts",
+      "uri": "/v1/admin/configuration/change-requests/{value}",
+      "registered": true
+    },
+    {
+      "source": "lib/api/payment.ts",
+      "uri": "/api/v1/admin/payment/providers",
+      "registered": true
+    },
+    {
+      "source": "lib/api/payment.ts",
+      "uri": "/api/v1/admin/payment/providers/{value}",
+      "registered": true
+    },
+    {
+      "source": "lib/api/payment.ts",
+      "uri": "/api/v1/admin/payment/reconciliation/exceptions",
+      "registered": true
+    },
+    {
+      "source": "components/dashboard/ActivityFeed.tsx",
+      "uri": "/v1/audit/events",
+      "registered": true
+    }
+  ],
+  "unmatched": []
+}

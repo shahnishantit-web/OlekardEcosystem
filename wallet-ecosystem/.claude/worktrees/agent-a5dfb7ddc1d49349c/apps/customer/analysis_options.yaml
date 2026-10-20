@@ -1,0 +1,26 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  plugins:
+    - riverpod_lint
+  errors:
+    avoid_print: error
+    prefer_const_constructors: warning
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
+
+linter:
+  rules:
+    - avoid_print
+    - prefer_const_constructors
+    - prefer_const_declarations
+    - prefer_final_fields
+    - avoid_unnecessary_containers
+    - use_key_in_widget_constructors
+    - sized_box_for_whitespace

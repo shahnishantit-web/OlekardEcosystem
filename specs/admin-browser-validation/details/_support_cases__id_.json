@@ -1,0 +1,41 @@
+{
+  "pattern": "/support/cases/[id]",
+  "route": "/support/cases/d026a4eb-0e40-4fa7-a67b-d815f021ad22",
+  "landed": "/support/cases/d026a4eb-0e40-4fa7-a67b-d815f021ad22",
+  "errors": [],
+  "failures": [],
+  "detailResponses": [
+    {
+      "url": "/v1/admin/support/cases",
+      "status": 200
+    },
+    {
+      "url": "/v1/admin/support/cases/d026a4eb-0e40-4fa7-a67b-d815f021ad22",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "d026a4eb-0e40-4fa7-a67b-d815f021ad22",
+          "number": "BQA-20261017-001",
+          "type": "Support",
+          "customer_id": "01a0d2ba-3aee-7347-b52d-5802bab17ef6",
+          "description": "Isolated browser test record; no customer action required.",
+          "priority": "low",
+          "status": "Open",
+          "raw_status": "open",
+          "created_at": "2026-10-17T12:46:57+00:00",
+          "assigned_id": null,
+          "deadline": null,
+          "overdue": false,
+          "transaction_ids": [],
+          "timeline": [],
+          "evidence": [],
+          "refund_pending_confirmation": false,
+          "refund_initiator_id": null,
+          "refund_amount_minor": null,
+          "refund_reason": null
+        }
+      }
+    }
+  ],
+  "text": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nManagement\n/\nSupport & Disputes\n⌘K\nA\nadmin@olekard.local\nBack to support queue\nBQA-20261017-001\n\nSupport case · Open\n\nCase overview\n\nIsolated browser test record; no customer action required.\n\nCustomer\nView customer 01a0d2ba-3aee-7347-b52d-5802bab17ef6\nPriority\nlow\nAssigned\nUnassigned\nCreated\n10/17/2026, 6:16:57 PM\nRelated transactions\n\nNo linked transaction.\n\nEvidence files\n\nNo attachments.\n\nAttach investigation evidence\n\nJPEG, PNG, WebP or PDF; up to 10 MB. Files remain private.\n\nAttach file\nConversation timeline\n\nNo conversation yet.\n\nInternal note\nAdd internal note\nInvestigation actions\nStart investigation\nRelated case ID\nLink case\nSupport agent ID\nAssign case\nEscalation reason\ncomplex investigation\nfinancial review\nsecurity review\ncustomer appeal\nother\n\nEnter an eligible senior in Support agent ID above. The senior must have support assignment and investigation permissions.\n\nEscalate case"
+}

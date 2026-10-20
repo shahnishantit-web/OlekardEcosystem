@@ -1,0 +1,58 @@
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { NotificationTemplatesPage } from '@/src/modules/notifications/templates';
+import { NotificationLogPage } from '@/src/modules/notifications/log';
+import { NotificationRulesPage } from '@/src/modules/notifications/rules';
+const mockClient = { get: jest.fn(), post: jest.fn(), patch: jest.fn() };
+let mockPermissions: string[] = [];
+jest.mock('@/lib/auth/context', () => ({ useAuth: () => ({ authenticatedClient: mockClient, hasPermission: (p: string) => mockPermissions.includes(p) }) }));
+const template = { id: 'template-1', key: 'operations.notice', category: 'operational', language: null, revision: 1, subject_template: 'Hello {{name}}', body_template: 'Body {{name}}', supported_channels: ['email', 'sms'], variables: ['name'], active: true };
+beforeEach(() => { jest.clearAllMocks(); mockPermissions = ['notifications.templates.read', 'notifications.templates.write', 'notifications.log.read', 'notifications.retry', 'notifications.rules.read', 'notifications.rules.write']; });
+test('unauthorized pages issue no requests', () => { mockPermissions = []; const { unmount } = render(<NotificationTemplatesPage />); expect(screen.getByRole('alert')).toHaveTextContent('Access denied'); unmount(); render(<NotificationRulesPage />); expect(mockClient.get).not.toHaveBeenCalled(); });
+test('groups template metadata, previews text safely and saves revision', async () => {
+    mockClient.get.mockResolvedValue({ data: [template] });
+    mockClient.post.mockResolvedValue({ data: { subject: 'Hello Ada', body: '<script>literal</script>' } });
+    mockClient.patch.mockResolvedValue({ data: { ...template, subject_template: 'New {{name}}', revision: 2 } });
+    render(<NotificationTemplatesPage />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit operations.notice email' }));
+    fireEvent.change(screen.getByLabelText('name'), { target: { value: 'Ada' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
+    expect(await screen.findByText('<script>literal</script>')).toBeInTheDocument();
+    expect(document.querySelector('script')).toBeNull();
+    fireEvent.change(screen.getByLabelText('Subject'), { target: { value: 'New {{name}}' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save template' }));
+    await screen.findByText('Template saved.');
+    expect(mockClient.patch).toHaveBeenCalledWith('/v1/admin/notifications/templates', expect.objectContaining({ revision: 1, subject_template: 'New {{name}}' }));
+});
+test('read-only templates allow preview but no save or test send', async () => {
+    mockPermissions = ['notifications.templates.read'];
+    mockClient.get.mockResolvedValue({ data: [template] });
+    render(<NotificationTemplatesPage />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit operations.notice email' }));
+    expect(screen.getByLabelText('Subject')).toHaveAttribute('readOnly');
+    expect(screen.queryByRole('button', { name: 'Save template' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Send test to me' })).not.toBeInTheDocument();
+});
+test('delivery filters use UTC date range and retry targets delivery id', async () => {
+    mockClient.get.mockResolvedValue({ data: [{ id: 'delivery-1', recipient: 'User UUID', channel: 'email', event: 'OPTIONAL_EVENT', status: 'failed', timestamp: '2026-10-15T00:00:00Z', attempt_count: 2 }], meta: { last_page: 1, current_page: 1, total: 1 } });
+    mockClient.post.mockResolvedValue({ data: { status: 'queued' } });
+    render(<NotificationLogPage />);
+    await screen.findByRole('button', { name: 'Retry' });
+    fireEvent.change(screen.getByLabelText('Channel'), { target: { value: 'email' } });
+    await waitFor(() => expect(mockClient.get).toHaveBeenLastCalledWith(expect.stringContaining('channel=email')));
+    fireEvent.change(screen.getByLabelText('From date (UTC)'), { target: { value: '2026-10-15' } });
+    await waitFor(() => expect(mockClient.get).toHaveBeenLastCalledWith(expect.stringContaining('from=2026-10-15')));
+    fireEvent.click(await screen.findByRole('button', { name: 'Retry' }));
+    await screen.findByText('Retry queued.');
+    expect(mockClient.post).toHaveBeenCalledWith('/v1/admin/notifications/retry/delivery-1', {});
+});
+test('rules lock mandatory channels and persist optional toggle', async () => {
+    const rows = [{ template_id: 'a', event: 'security.login', channel: 'email', mandatory: true, enabled: true, revision: 0 }, { template_id: 'b', event: 'operations.notice', channel: 'email', mandatory: false, enabled: true, revision: 0 }];
+    mockClient.get.mockResolvedValue({ data: rows });
+    mockClient.patch.mockResolvedValue({ data: {} });
+    render(<NotificationRulesPage />);
+    expect(await screen.findByRole('switch', { name: 'security.login email' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('switch', { name: 'operations.notice email' }));
+    await screen.findByText('Rule saved. Applies to new events immediately.');
+    expect(mockClient.patch).toHaveBeenCalledWith('/v1/admin/notifications/rules', expect.objectContaining({ enabled: false, revision: 0 }));
+});
+test('empty and failed-load states are visible', async () => { mockClient.get.mockRejectedValue(new Error('Service unavailable')); render(<NotificationRulesPage />); expect(await screen.findByText('Service unavailable')).toBeInTheDocument(); });

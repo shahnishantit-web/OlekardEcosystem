@@ -1,0 +1,191 @@
+openapi: 3.1.0
+info:
+  title: E21 — Fee Calculation API
+  version: "1.0"
+  description: Fee preview endpoint — calculate the fee for a proposed transaction before confirmation (US-FEE-008)
+
+paths:
+  /v1/fees/calculate:
+    post:
+      operationId: calculateFee
+      summary: Calculate fee for a proposed transaction
+      description: |
+        Returns the fee that will be charged if the described transaction proceeds.
+        This is a read-only, stateless operation — it does NOT create any records.
+        The same inputs always produce the same output (deterministic).
+        The returned fee_amount_minor will match the fee deducted during actual execution.
+      tags: [fee-calculate]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalculateFeeRequest'
+            examples:
+              transfer_500:
+                summary: BWP 500 transfer (0.5% rule → BWP 2.50)
+                value:
+                  transaction_type: transfer
+                  amount_minor: 50000
+                  currency: BWP
+                  subject_type: customer
+                  subject_id: "018f3c2a-0000-7000-8000-000000000001"
+              bill_payment_fixed:
+                summary: Bill payment (fixed BWP 1.50 rule)
+                value:
+                  transaction_type: bill_payment
+                  amount_minor: 20000
+                  currency: BWP
+                  subject_type: global
+      responses:
+        "200":
+          description: Fee calculation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FeeCalculationResult'
+              examples:
+                percentage_result:
+                  summary: Percentage fee applied
+                  value:
+                    data:
+                      fee_amount_minor: 250
+                      fee_type: percentage
+                      rule_id: "018f3c2a-0000-7000-8000-000000000099"
+                      has_applicable_rule: true
+                      min_fee_applied: false
+                      max_fee_applied: false
+                no_rule:
+                  summary: No applicable rule (zero fee)
+                  value:
+                    data:
+                      fee_amount_minor: 0
+                      fee_type: null
+                      rule_id: null
+                      has_applicable_rule: false
+                      min_fee_applied: false
+                      max_fee_applied: false
+        "422":
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                unsupported_type:
+                  value:
+                    error:
+                      code: UNSUPPORTED_TRANSACTION_TYPE
+                      message: "The transaction_type 'loan_repayment' is not supported."
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CalculateFeeRequest:
+      type: object
+      required:
+        - transaction_type
+        - amount_minor
+        - currency
+        - subject_type
+      properties:
+        transaction_type:
+          type: string
+          enum:
+            - transfer
+            - funding
+            - withdrawal
+            - bill_payment
+            - qr_payment
+            - cash_in
+            - cash_out
+            - settlement
+        amount_minor:
+          type: integer
+          minimum: 1
+          description: Transaction amount in minor units (e.g., 50000 = BWP 500.00)
+          example: 50000
+        currency:
+          type: string
+          description: ISO 4217 currency code
+          default: BWP
+          example: BWP
+        subject_type:
+          type: string
+          enum:
+            - global
+            - customer
+            - agent
+          description: |
+            Indicates whose fee rules to check.
+            - `global`: resolve the global rule for this transaction type
+            - `customer`: check for customer-specific override first, then global
+            - `agent`: check for agent-specific override first, then global
+        subject_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Required when subject_type=customer or subject_type=agent
+
+    FeeCalculationResult:
+      type: object
+      required:
+        - fee_amount_minor
+        - has_applicable_rule
+        - min_fee_applied
+        - max_fee_applied
+      properties:
+        fee_amount_minor:
+          type: integer
+          description: Calculated fee in minor units; 0 if no applicable rule
+          example: 250
+        fee_type:
+          type: string
+          enum: [fixed, percentage]
+          nullable: true
+          description: Type of the applied rule; null if no applicable rule
+        rule_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: ID of the fee rule used for calculation; null if no applicable rule
+        has_applicable_rule:
+          type: boolean
+          description: True if an active rule was found for this context
+        min_fee_applied:
+          type: boolean
+          description: True if the minimum fee floor was applied (percentage rules only)
+        max_fee_applied:
+          type: boolean
+          description: True if the maximum fee ceiling was applied (percentage rules only)
+
+    ErrorEnvelope:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+
+  responses:
+    Unauthorized:
+      description: JWT missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'

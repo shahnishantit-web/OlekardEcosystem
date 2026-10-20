@@ -1,0 +1,7 @@
+{
+  "@@locale": "en",
+  "appTitle": "Wallet Agent",
+  "@appTitle": {
+    "description": "Application title"
+  }
+}

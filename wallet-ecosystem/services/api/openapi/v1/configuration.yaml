@@ -1,0 +1,479 @@
+openapi: 3.1.0
+info:
+  title: Configuration Management API
+  version: 1.0.0
+  description: |
+    E28 Admin API for runtime platform configuration via maker-checker approval workflow.
+
+    All state-changing endpoints require an `Idempotency-Key` header. Configuration changes
+    are not active until approved; an approved change is activated by `ConfigurationActivationJob`
+    within 60 seconds (FR-011).
+
+servers:
+  - url: /v1
+    description: API v1
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 255
+      description: Client-generated idempotency key (UUID v7 recommended).
+
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      schema:
+        type: string
+      description: Client-supplied correlation ID propagated through audit logs.
+
+  schemas:
+    ApiEnvelope:
+      type: object
+      required: [success, data, error, correlation_id]
+      properties:
+        success:
+          type: boolean
+        data:
+          nullable: true
+        error:
+          nullable: true
+          type: object
+          properties:
+            code:    { type: string }
+            message: { type: string }
+            details: { type: array, items: { type: object } }
+        correlation_id:
+          type: string
+        meta:
+          nullable: true
+          type: object
+
+    ConfigurationDomain:
+      type: string
+      enum: [financial_policy, operational_policy, geographic]
+
+    ChangeRequestStatus:
+      type: string
+      enum: [pending_approval, approved, rejected, withdrawn, failed]
+
+    VersionEventType:
+      type: string
+      enum: [submitted, approved, rejected, withdrawn, activated, failed]
+
+    ConfigurationKeyItem:
+      type: object
+      properties:
+        config_key:          { type: string }
+        domain:              { $ref: '#/components/schemas/ConfigurationDomain' }
+        current_value:       {}
+        value_type:          { type: string }
+        status:              { type: string }
+        description:         { type: string, nullable: true }
+        updated_at:          { type: string, format: date-time }
+        has_pending_change:  { type: boolean }
+        pending_change_request_id: { type: string, format: uuid, nullable: true }
+
+    ConfigurationVersionItem:
+      type: object
+      properties:
+        id:                { type: string, format: uuid }
+        config_key:        { type: string }
+        domain:            { $ref: '#/components/schemas/ConfigurationDomain' }
+        event_type:        { $ref: '#/components/schemas/VersionEventType' }
+        value:             {}
+        actor_id:          { type: string, format: uuid, nullable: true }
+        change_request_id: { type: string, format: uuid, nullable: true }
+        notes:             { type: string, nullable: true }
+        occurred_at:       { type: string, format: date-time }
+
+    ChangeRequestItem:
+      type: object
+      properties:
+        id:               { type: string, format: uuid }
+        config_key:       { type: string }
+        domain:           { $ref: '#/components/schemas/ConfigurationDomain' }
+        proposed_value:   {}
+        previous_value:   {}
+        maker_id:         { type: string, format: uuid }
+        status:           { $ref: '#/components/schemas/ChangeRequestStatus' }
+        rejection_reason: { type: string, nullable: true }
+        submitted_at:     { type: string, format: date-time }
+        resolved_at:      { type: string, format: date-time, nullable: true }
+
+    ChangeRequestDetail:
+      allOf:
+        - $ref: '#/components/schemas/ChangeRequestItem'
+        - type: object
+          properties:
+            version_trail:
+              type: array
+              items:
+                $ref: '#/components/schemas/ConfigurationVersionItem'
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page: { type: integer }
+        last_page:    { type: integer }
+        per_page:     { type: integer }
+        total:        { type: integer }
+
+paths:
+  /admin/configuration/keys:
+    get:
+      summary: List all configuration keys
+      operationId: listConfigurationKeys
+      tags: [Configuration]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: domain
+          in: query
+          schema: { $ref: '#/components/schemas/ConfigurationDomain' }
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: include_inactive
+          in: query
+          schema: { type: boolean, default: false }
+          description: When true, include configuration keys with no current active value; surfaces deactivated_at timestamp for inactive entries (US3/AC5)
+        - name: per_page
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: Paginated list of configuration keys
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          data: { type: array, items: { $ref: '#/components/schemas/ConfigurationKeyItem' } }
+                          meta: { $ref: '#/components/schemas/PaginationMeta' }
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Missing configuration.read permission
+
+  /admin/configuration/keys/{key}:
+    get:
+      summary: Get configuration key detail
+      operationId: getConfigurationKey
+      tags: [Configuration]
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: key
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Key detail with current value and pending change info
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/ConfigurationKeyItem' }
+        '401': { description: Unauthenticated }
+        '403': { description: Forbidden }
+        '404': { description: Key not found }
+
+  /admin/configuration/keys/{key}/versions:
+    get:
+      summary: Get paginated version history for a key
+      operationId: getConfigurationKeyVersions
+      tags: [Configuration]
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: key
+          in: path
+          required: true
+          schema: { type: string }
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+          description: Filter to records with occurred_at >= this value (FR-017)
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+          description: Filter to records with occurred_at <= this value (FR-017)
+        - name: maker_id
+          in: query
+          schema: { type: string, format: uuid }
+          description: Filter by maker identity (FR-017)
+        - name: checker_id
+          in: query
+          schema: { type: string, format: uuid }
+          description: Filter by checker identity (FR-017)
+        - name: domain
+          in: query
+          schema: { $ref: '#/components/schemas/ConfigurationDomain' }
+          description: Filter by domain (FR-017)
+        - name: per_page
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        '200':
+          description: Paginated version history
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          data: { type: array, items: { $ref: '#/components/schemas/ConfigurationVersionItem' } }
+                          meta: { $ref: '#/components/schemas/PaginationMeta' }
+        '401': { description: Unauthenticated }
+        '403': { description: Forbidden }
+
+  /admin/configuration/change-requests:
+    get:
+      summary: List change requests
+      operationId: listChangeRequests
+      tags: [Configuration]
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/ChangeRequestStatus' }
+        - name: domain
+          in: query
+          schema: { $ref: '#/components/schemas/ConfigurationDomain' }
+        - name: config_key
+          in: query
+          schema: { type: string }
+        - name: per_page
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: Paginated list of change requests
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          data: { type: array, items: { $ref: '#/components/schemas/ChangeRequestItem' } }
+                          meta: { $ref: '#/components/schemas/PaginationMeta' }
+        '401': { description: Unauthenticated }
+        '403': { description: Forbidden }
+
+    post:
+      summary: Submit a configuration change request
+      operationId: submitChangeRequest
+      tags: [Configuration]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [config_key, proposed_value, idempotency_key]
+              properties:
+                config_key:
+                  type: string
+                  maxLength: 255
+                proposed_value: {}
+                idempotency_key:
+                  type: string
+                  maxLength: 255
+      responses:
+        '201':
+          description: Change request created (pending_approval)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/ChangeRequestItem' }
+        '400': { description: Validation error (domain validator rejected value) }
+        '401': { description: Unauthenticated }
+        '403': { description: Missing configuration.write permission }
+        '409': { description: A pending change already exists for this key }
+
+  /admin/configuration/change-requests/{id}:
+    get:
+      summary: Get change request detail
+      operationId: getChangeRequest
+      tags: [Configuration]
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Change request with version trail
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/ChangeRequestDetail' }
+        '401': { description: Unauthenticated }
+        '403': { description: Forbidden }
+        '404': { description: Change request not found }
+
+  /admin/configuration/change-requests/{id}/approve:
+    post:
+      summary: Approve a change request
+      operationId: approveChangeRequest
+      tags: [Configuration]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idempotency_key]
+              properties:
+                comments:
+                  type: string
+                  maxLength: 1000
+                  nullable: true
+                idempotency_key:
+                  type: string
+                  maxLength: 255
+      responses:
+        '200':
+          description: Approved; draft queued for activation within 60s
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/ChangeRequestItem' }
+        '401': { description: Unauthenticated }
+        '403': { description: Self-approval not permitted (FR-006) or missing permission }
+        '404': { description: Change request not found }
+        '422': { description: Request is not in pending_approval status }
+
+  /admin/configuration/change-requests/{id}/reject:
+    post:
+      summary: Reject a change request
+      operationId: rejectChangeRequest
+      tags: [Configuration]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason, idempotency_key]
+              properties:
+                reason:
+                  type: string
+                  maxLength: 1000
+                idempotency_key:
+                  type: string
+                  maxLength: 255
+      responses:
+        '200':
+          description: Rejected; maker notified
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/ChangeRequestItem' }
+        '401': { description: Unauthenticated }
+        '403': { description: Missing configuration.approve permission }
+        '404': { description: Change request not found }
+        '422': { description: Request is not in pending_approval status }
+
+  /admin/configuration/change-requests/{id}/withdraw:
+    post:
+      summary: Withdraw a change request
+      operationId: withdrawChangeRequest
+      tags: [Configuration]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idempotency_key]
+              properties:
+                idempotency_key:
+                  type: string
+                  maxLength: 255
+      responses:
+        '200':
+          description: Withdrawn; configuration unchanged
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/ChangeRequestItem' }
+        '401': { description: Unauthenticated }
+        '403': { description: Only the maker may withdraw (FR-008) }
+        '404': { description: Change request not found }
+        '422': { description: Request is not in pending_approval status }

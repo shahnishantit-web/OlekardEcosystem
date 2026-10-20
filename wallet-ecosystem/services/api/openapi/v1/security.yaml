@@ -1,0 +1,345 @@
+openapi: "3.1.0"
+info:
+  title: E26 Security Admin API
+  version: "1.0"
+  description: |
+    Security administration endpoints for the OleKard Wallet Ecosystem.
+
+    Provides vulnerability finding management (create, list, view, status update)
+    and a security dashboard showing current open findings by severity and status.
+
+    All endpoints require:
+      - A valid bearer token (`identity.auth` middleware)
+      - `security.admin` permission (`identity.require-permission:security.admin`)
+
+servers:
+  - url: /v1
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ─────────────────────────────────────────────────────────────────
+  # Security Dashboard
+  # ─────────────────────────────────────────────────────────────────
+
+  /security/dashboard:
+    get:
+      operationId: getSecurityDashboard
+      summary: Security dashboard counts
+      description: |
+        Returns a snapshot of vulnerability finding counts grouped by severity and status.
+        Descoped: trend over time is not included (deferred to future analytics epic).
+      tags: [Security]
+      responses:
+        "200":
+          description: Dashboard counts retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/SecurityDashboard"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ─────────────────────────────────────────────────────────────────
+  # Vulnerability Findings
+  # ─────────────────────────────────────────────────────────────────
+
+  /security/findings:
+    get:
+      operationId: listVulnerabilityFindings
+      summary: List vulnerability findings
+      description: Returns a paginated list of vulnerability findings with optional severity/status filters.
+      tags: [Security]
+      parameters:
+        - name: severity
+          in: query
+          schema:
+            $ref: "#/components/schemas/FindingSeverity"
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/FindingStatus"
+        - name: scanner
+          in: query
+          schema: { type: string, maxLength: 100 }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        "200":
+          description: Paginated list of findings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/VulnerabilityFinding"
+                  meta:
+                    $ref: "#/components/schemas/PaginationMeta"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+    post:
+      operationId: createVulnerabilityFinding
+      summary: Record a new vulnerability finding
+      description: |
+        Creates a new vulnerability finding with status=open.
+        Idempotent via `Idempotency-Key` header (UUID v4/v7 required).
+      tags: [Security]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFindingRequest"
+      responses:
+        "201":
+          description: Finding created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/VulnerabilityFinding"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /security/findings/{id}:
+    get:
+      operationId: getVulnerabilityFinding
+      summary: Get a vulnerability finding by ID
+      tags: [Security]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Finding retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/VulnerabilityFinding"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /security/findings/{id}/status:
+    patch:
+      operationId: updateFindingStatus
+      summary: Update the status of a vulnerability finding
+      description: |
+        Transitions a finding to `suppressed` or `resolved`.
+        Suppression requires a `suppression_justification`.
+        Emits a `security.vuln_finding.suppressed` or `security.vuln_finding.resolved` audit event.
+      tags: [Security]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFindingStatusRequest"
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/VulnerabilityFinding"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    FindingSeverity:
+      type: string
+      enum: [critical, high, medium, low, info]
+
+    FindingStatus:
+      type: string
+      enum: [open, suppressed, resolved]
+
+    VulnerabilityFinding:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        scanner:
+          type: string
+          maxLength: 100
+        finding_ref:
+          type: string
+          maxLength: 255
+        severity:
+          $ref: "#/components/schemas/FindingSeverity"
+        component:
+          type: string
+          maxLength: 255
+        title:
+          type: string
+          maxLength: 500
+        description:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/FindingStatus"
+        detected_at:
+          type: string
+          format: date-time
+        resolved_at:
+          type: string
+          format: date-time
+          nullable: true
+      required: [id, scanner, finding_ref, severity, component, title, status, detected_at]
+
+    CreateFindingRequest:
+      type: object
+      properties:
+        scanner:
+          type: string
+          maxLength: 100
+        finding_ref:
+          type: string
+          maxLength: 255
+        severity:
+          $ref: "#/components/schemas/FindingSeverity"
+        component:
+          type: string
+          maxLength: 255
+        title:
+          type: string
+          maxLength: 500
+        description:
+          type: string
+          maxLength: 5000
+          nullable: true
+      required: [scanner, finding_ref, severity, component, title]
+
+    UpdateFindingStatusRequest:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/FindingStatus"
+        suppression_justification:
+          type: string
+          maxLength: 1000
+          nullable: true
+          description: Required when status is `suppressed`.
+      required: [status]
+
+    SecurityDashboard:
+      type: object
+      description: |
+        Nested object keyed by severity, then by status, containing integer counts.
+        Example: `{ "critical": { "open": 3, "resolved": 1 }, "high": { "open": 7 } }`
+      additionalProperties:
+        type: object
+        additionalProperties:
+          type: integer
+          minimum: 0
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+        last_page:
+          type: integer
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items: { type: string }

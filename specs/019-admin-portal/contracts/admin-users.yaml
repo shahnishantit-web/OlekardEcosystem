@@ -1,0 +1,447 @@
+openapi: 3.0.3
+info:
+  title: Admin Portal — User Management API
+  description: |
+    E19 Admin Portal user management endpoints.
+    US-ADMIN-009 through US-ADMIN-014.
+  version: 1.0.0
+
+servers:
+  - url: /v1/admin
+
+security:
+  - bearerAuth: []
+
+paths:
+  /users:
+    get:
+      operationId: searchUsers
+      summary: Search users (US-ADMIN-009)
+      description: |
+        Full-text search across email, phone, name, and user ID.
+        Returns paginated user summaries.
+      tags: [User Management]
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: Search term (email, phone, name, or UUID)
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, suspended, all]
+            default: all
+        - in: query
+          name: kyc_tier
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 3
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+      responses:
+        '200':
+          description: Paginated user list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /users/{id}:
+    get:
+      operationId: getUserProfile
+      summary: View user profile (US-ADMIN-010)
+      description: Returns full user profile including KYC status, wallets, and recent sessions.
+      tags: [User Management]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: Full user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetailResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /users/{id}/suspend:
+    post:
+      operationId: suspendUser
+      summary: Suspend user (US-ADMIN-011)
+      description: |
+        Suspends the user account. All active sessions are invalidated.
+        Requires `admin.write` permission. Action is logged in AdminAction.
+      tags: [User Management]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserActionRequest'
+      responses:
+        '200':
+          description: User suspended successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserActionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: User already suspended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{id}/reactivate:
+    post:
+      operationId: reactivateUser
+      summary: Reactivate user (US-ADMIN-012)
+      description: |
+        Reactivates a previously suspended user account.
+        Requires `admin.write` permission. Action is logged in AdminAction.
+      tags: [User Management]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserActionRequest'
+      responses:
+        '200':
+          description: User reactivated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserActionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: User is not suspended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{id}/reset-auth:
+    post:
+      operationId: resetUserAuth
+      summary: Reset user authentication (US-ADMIN-013)
+      description: |
+        Invalidates all active sessions and forces password/PIN reset on next login.
+        Requires `admin.write` permission. Action is logged in AdminAction.
+      tags: [User Management]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserActionRequest'
+      responses:
+        '200':
+          description: Authentication reset successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserActionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /users/{id}/sessions:
+    get:
+      operationId: getUserSessions
+      summary: View user sessions (US-ADMIN-014)
+      description: Lists all active and recent device sessions for the user.
+      tags: [User Management]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, revoked, all]
+            default: active
+      responses:
+        '200':
+          description: User session list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /users/{id}/sessions/{sessionId}/terminate:
+    post:
+      operationId: terminateUserSession
+      summary: Terminate a specific user session
+      description: Revokes a single device session. Action logged in AdminAction.
+      tags: [User Management]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - in: path
+          name: sessionId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserActionRequest'
+      responses:
+        '200':
+          description: Session terminated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserActionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Session already revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    UserId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: User UUID
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+
+    UserActionRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 10
+          maxLength: 2000
+          description: Mandatory business justification for this admin action
+
+    UserSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        status:
+          type: string
+          enum: [active, suspended, pending_verification]
+        kyc_tier:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    UserDetail:
+      allOf:
+        - $ref: '#/components/schemas/UserSummary'
+        - type: object
+          properties:
+            date_of_birth:
+              type: string
+              format: date
+            id_number:
+              type: string
+            address:
+              type: object
+            kyc_status:
+              type: string
+            wallets:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  balance:
+                    type: string
+                  status:
+                    type: string
+            last_login_at:
+              type: string
+              format: date-time
+            suspended_at:
+              type: string
+              format: date-time
+              nullable: true
+            suspension_reason:
+              type: string
+              nullable: true
+
+    UserListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserSummary'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    UserDetailResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/UserDetail'
+
+    UserActionResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            action_id:
+              type: string
+              format: uuid
+            action_type:
+              type: string
+            subject_id:
+              type: string
+              format: uuid
+            performed_at:
+              type: string
+              format: date-time
+            message:
+              type: string
+
+    SessionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        device_name:
+          type: string
+        device_type:
+          type: string
+        ip_address:
+          type: string
+        status:
+          type: string
+          enum: [active, revoked]
+        last_active_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    SessionListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SessionSummary'
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+        last_page:
+          type: integer

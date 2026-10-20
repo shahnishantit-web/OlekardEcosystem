@@ -1,0 +1,544 @@
+openapi: 3.1.0
+info:
+  title: Configuration Management Admin API
+  version: 1.0.0
+  description: >
+    Admin API for managing platform configuration keys, submitting change requests
+    through the maker-checker approval workflow, and querying immutable version history.
+    All endpoints require an authenticated admin session.
+servers:
+  - url: /v1/admin
+    description: Admin API v1
+
+tags:
+  - name: Configuration Keys
+    description: Read configuration key catalog and current values
+  - name: Change Requests
+    description: Maker-checker change request workflow
+  - name: Version History
+    description: Immutable configuration version history
+
+paths:
+
+  # ─── Configuration Keys ────────────────────────────────────────────────────
+
+  /configuration/keys:
+    get:
+      operationId: listConfigurationKeys
+      summary: List configuration keys
+      tags: [Configuration Keys]
+      security:
+        - AdminBearerAuth: []
+      parameters:
+        - in: query
+          name: domain
+          schema:
+            $ref: '#/components/schemas/ConfigurationDomain'
+          description: Filter by domain
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, default: 50, maximum: 100 }
+      responses:
+        '200':
+          description: Paginated list of configuration keys
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ConfigurationKeySummary'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /configuration/keys/{key}:
+    get:
+      operationId: getConfigurationKey
+      summary: Get a configuration key with current active value
+      tags: [Configuration Keys]
+      security:
+        - AdminBearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ConfigKey'
+      responses:
+        '200':
+          description: Configuration key detail with current value
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationKeyDetail'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /configuration/keys/{key}/history:
+    get:
+      operationId: getConfigurationKeyHistory
+      summary: Get version history for a configuration key
+      tags: [Version History]
+      security:
+        - AdminBearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ConfigKey'
+        - in: query
+          name: from
+          schema: { type: string, format: date-time }
+          description: Filter versions from this UTC timestamp (inclusive)
+        - in: query
+          name: to
+          schema: { type: string, format: date-time }
+          description: Filter versions to this UTC timestamp (inclusive)
+        - in: query
+          name: maker_id
+          schema: { type: string, format: uuid }
+          description: Filter by maker identity
+        - in: query
+          name: checker_id
+          schema: { type: string, format: uuid }
+          description: Filter by checker identity
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, default: 50, maximum: 50 }
+      responses:
+        '200':
+          description: Paginated version history (newest first)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ConfigurationVersion'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ─── Change Requests ───────────────────────────────────────────────────────
+
+  /configuration/change-requests:
+    get:
+      operationId: listChangeRequests
+      summary: List configuration change requests
+      tags: [Change Requests]
+      security:
+        - AdminBearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/ChangeRequestStatus'
+        - in: query
+          name: domain
+          schema:
+            $ref: '#/components/schemas/ConfigurationDomain'
+        - in: query
+          name: maker_id
+          schema: { type: string, format: uuid }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, default: 50, maximum: 100 }
+      responses:
+        '200':
+          description: Paginated list of change requests
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ChangeRequestSummary'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+    post:
+      operationId: submitChangeRequest
+      summary: Submit a configuration change request (maker)
+      tags: [Change Requests]
+      security:
+        - AdminBearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitChangeRequestBody'
+      responses:
+        '201':
+          description: Change request created and pending approval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequestDetail'
+        '400':
+          description: Validation error — invalid value for domain schema
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409':
+          description: Conflict — a pending change request already exists for this key (FR-007)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /configuration/change-requests/{id}:
+    get:
+      operationId: getChangeRequest
+      summary: Get a change request with full decision trail
+      tags: [Change Requests]
+      security:
+        - AdminBearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: Change request detail with decision trail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequestDetail'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /configuration/change-requests/{id}/approve:
+    post:
+      operationId: approveChangeRequest
+      summary: Approve a pending change request (checker)
+      description: >
+        Checker must hold `configuration.approve` permission and must NOT be the same
+        person as the maker (FR-006). Concurrent duplicate approval returns 409 (FR-009).
+      tags: [Change Requests]
+      security:
+        - AdminBearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: Optional approval note
+      responses:
+        '200':
+          description: Change request approved; draft configuration value written; activation within 60s
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequestDetail'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Forbidden — checker is the same person as the maker, or lacks permission
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Conflict — request already processed (FR-009 concurrent race)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /configuration/change-requests/{id}/reject:
+    post:
+      operationId: rejectChangeRequest
+      summary: Reject a pending change request (checker)
+      tags: [Change Requests]
+      security:
+        - AdminBearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                  minLength: 1
+                  description: Required rejection reason (shown to maker via notification)
+      responses:
+        '200':
+          description: Change request rejected; maker notified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequestDetail'
+        '400':
+          description: Missing rejection reason
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Conflict — request no longer pending
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /configuration/change-requests/{id}/withdraw:
+    post:
+      operationId: withdrawChangeRequest
+      summary: Withdraw a pending change request (maker only)
+      tags: [Change Requests]
+      security:
+        - AdminBearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: Optional withdrawal reason
+      responses:
+        '200':
+          description: Change request withdrawn; live configuration unchanged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequestDetail'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Forbidden — caller is not the maker of this request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Conflict — request is not in pending_approval state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+# ─── Components ─────────────────────────────────────────────────────────────
+
+components:
+
+  securitySchemes:
+    AdminBearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ConfigKey:
+      name: key
+      in: path
+      required: true
+      schema: { type: string }
+      description: Configuration key name (e.g. `financial_policy.max_single_transfer`)
+
+    RequestId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+      description: Change request UUID v7
+
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, maxLength: 255 }
+      description: Caller-supplied idempotency token (required on state-changing endpoints)
+
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: false
+      schema: { type: string, format: uuid }
+
+  schemas:
+
+    ConfigurationDomain:
+      type: string
+      enum: [financial_policy, operational_policy, geographic]
+      description: Configuration domain
+
+    ChangeRequestStatus:
+      type: string
+      enum: [pending_approval, approved, rejected, withdrawn, failed]
+
+    VersionEventType:
+      type: string
+      enum: [submitted, approved, rejected, withdrawn, activated, failed]
+
+    ConfigurationKeySummary:
+      type: object
+      required: [config_key, domain, value_type, has_active_value, has_pending_change]
+      properties:
+        config_key: { type: string }
+        domain: { $ref: '#/components/schemas/ConfigurationDomain' }
+        value_type: { type: string, enum: [string, integer, decimal, boolean, json] }
+        description: { type: string, nullable: true }
+        has_active_value: { type: boolean }
+        has_pending_change: { type: boolean }
+        last_modified_at: { type: string, format: date-time, nullable: true }
+
+    ConfigurationKeyDetail:
+      allOf:
+        - $ref: '#/components/schemas/ConfigurationKeySummary'
+        - type: object
+          properties:
+            current_value: {}
+            pending_change_request_id: { type: string, format: uuid, nullable: true }
+
+    ConfigurationVersion:
+      type: object
+      required: [id, config_key, domain, event_type, maker_id, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        config_key: { type: string }
+        domain: { $ref: '#/components/schemas/ConfigurationDomain' }
+        previous_value: { nullable: true }
+        new_value: { nullable: true }
+        maker_id: { type: string, format: uuid }
+        maker_name: { type: string, nullable: true }
+        checker_id: { type: string, format: uuid, nullable: true }
+        checker_name: { type: string, nullable: true }
+        event_type: { $ref: '#/components/schemas/VersionEventType' }
+        decision_reason: { type: string, nullable: true }
+        effective_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    SubmitChangeRequestBody:
+      type: object
+      required: [config_key, proposed_value]
+      properties:
+        config_key:
+          type: string
+          description: The configuration key to change
+        proposed_value:
+          description: The new value (type depends on the key's value_type)
+        reason:
+          type: string
+          description: Optional explanation for the change
+
+    ChangeRequestSummary:
+      type: object
+      required: [id, config_key, domain, status, maker_id, submitted_at]
+      properties:
+        id: { type: string, format: uuid }
+        config_key: { type: string }
+        domain: { $ref: '#/components/schemas/ConfigurationDomain' }
+        status: { $ref: '#/components/schemas/ChangeRequestStatus' }
+        maker_id: { type: string, format: uuid }
+        maker_name: { type: string, nullable: true }
+        submitted_at: { type: string, format: date-time }
+        resolved_at: { type: string, format: date-time, nullable: true }
+
+    ChangeRequestDetail:
+      allOf:
+        - $ref: '#/components/schemas/ChangeRequestSummary'
+        - type: object
+          properties:
+            proposed_value: {}
+            previous_value: { nullable: true }
+            rejection_reason: { type: string, nullable: true }
+            approval:
+              $ref: '#/components/schemas/ApprovalRecord'
+              nullable: true
+            version_trail:
+              type: array
+              items:
+                $ref: '#/components/schemas/ConfigurationVersion'
+
+    ApprovalRecord:
+      type: object
+      required: [id, checker_id, decision, decided_at]
+      properties:
+        id: { type: string, format: uuid }
+        checker_id: { type: string, format: uuid }
+        checker_name: { type: string, nullable: true }
+        decision: { type: string, enum: [approved, rejected] }
+        reason: { type: string, nullable: true }
+        decided_at: { type: string, format: date-time }
+
+    PaginatedEnvelope:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items: {}
+        meta:
+          type: object
+          required: [current_page, per_page, total, last_page]
+          properties:
+            current_page: { type: integer }
+            per_page: { type: integer }
+            total: { type: integer }
+            last_page: { type: integer }
+
+    ErrorEnvelope:
+      type: object
+      required: [message, errors]
+      properties:
+        message: { type: string }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+        correlation_id: { type: string, format: uuid, nullable: true }
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }

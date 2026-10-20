@@ -1,0 +1,832 @@
+openapi: "3.1.0"
+info:
+  title: "E10 Withdrawal / Cash-Out API"
+  version: "1.0.0"
+  description: >
+    Internal REST contract for the E10 Withdrawal / Cash-Out feature.
+    All amounts are integers in minor units (e.g., BWP 500.00 = 50000).
+    All IDs are UUID v7 strings.
+    All timestamps are ISO 8601 UTC.
+    State-changing POST endpoints require the Idempotency-Key header (UUID v7 recommended).
+    payout_destination is NEVER returned in responses; payout_destination_masked is used instead.
+
+servers:
+  - url: /api/v1
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    WithdrawalTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        wallet_id:
+          type: string
+          format: uuid
+        pocket_currency_code:
+          type: string
+          example: BWP
+        customer_id:
+          type: string
+          format: uuid
+        channel:
+          type: string
+          enum: [mobile_money, bank_transfer]
+        status:
+          type: string
+          enum: [pending, processing, completed, failed, cancelled]
+        gross_amount:
+          type: integer
+          description: Gross withdrawal amount in minor units
+        fee_amount:
+          type: integer
+          description: Fee charged in minor units
+        net_payout_amount:
+          type: integer
+          description: Net amount paid out (gross - fee) in minor units
+        fee_rate_bps:
+          type: integer
+          description: Fee rate in basis points
+        payout_destination_masked:
+          type: string
+          nullable: true
+          description: Masked payout destination (last 4 chars of phone or account)
+        provider_reference_id:
+          type: string
+          nullable: true
+        failure_reason:
+          type: string
+          nullable: true
+        wallet_hold_id:
+          type: string
+          format: uuid
+          nullable: true
+        ledger_journal_id:
+          type: string
+          format: uuid
+          nullable: true
+        transaction_reference:
+          type: string
+          format: uuid
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        failed_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    WithdrawalReceipt:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        receipt_reference:
+          type: string
+          format: uuid
+        withdrawal_transaction_id:
+          type: string
+          format: uuid
+        gross_amount:
+          type: integer
+        fee_amount:
+          type: integer
+        net_payout_amount:
+          type: integer
+        currency_code:
+          type: string
+          example: BWP
+        channel:
+          type: string
+          enum: [mobile_money, bank_transfer]
+        payout_destination_masked:
+          type: string
+          nullable: true
+        provider_reference_id:
+          type: string
+          nullable: true
+        customer_id:
+          type: string
+          format: uuid
+        wallet_id:
+          type: string
+          format: uuid
+        ledger_journal_id:
+          type: string
+          format: uuid
+        completed_at:
+          type: string
+          format: date-time
+
+    ErrorEnvelope:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true
+
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        per_page:
+          type: integer
+        pages:
+          type: integer
+
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Idempotency key (UUID v7 recommended) for safe replay
+
+    WithdrawalId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+paths:
+  /withdrawals:
+    post:
+      summary: Initiate a withdrawal
+      description: >
+        Creates a withdrawal transaction in `pending` status. Validates wallet, channel,
+        amount limits, and fee. payout_destination is encrypted at rest and never returned.
+        Requires Idempotency-Key header; replays the same key within TTL return the original response.
+      operationId: initiateWithdrawal
+      tags: [Withdrawals]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [wallet_id, currency_code, channel, gross_amount, payout_destination]
+              properties:
+                wallet_id:
+                  type: string
+                  format: uuid
+                currency_code:
+                  type: string
+                  example: BWP
+                channel:
+                  type: string
+                  enum: [mobile_money, bank_transfer]
+                gross_amount:
+                  type: integer
+                  minimum: 1
+                payout_destination:
+                  type: object
+                  description: >
+                    Channel-specific destination. For mobile_money: phone_number + operator_code.
+                    For bank_transfer: account_number + bank_code + account_name.
+                  additionalProperties: true
+            examples:
+              mobile_money:
+                summary: Mobile money withdrawal
+                value:
+                  wallet_id: "01930000-0000-7000-0000-000000000002"
+                  currency_code: BWP
+                  channel: mobile_money
+                  gross_amount: 50000
+                  payout_destination:
+                    phone_number: "+26771234567"
+                    operator_code: mascom
+              bank_transfer:
+                summary: Bank transfer withdrawal
+                value:
+                  wallet_id: "01930000-0000-7000-0000-000000000002"
+                  currency_code: BWP
+                  channel: bank_transfer
+                  gross_amount: 50000
+                  payout_destination:
+                    account_number: "1234567890"
+                    bank_code: BARCBWGX
+                    account_name: "John Doe"
+      responses:
+        "201":
+          description: Withdrawal created in pending status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/WithdrawalTransaction'
+                      - type: object
+                        properties:
+                          limits:
+                            type: object
+                            properties:
+                              min_amount:
+                                type: integer
+                              max_amount:
+                                type: integer
+                              daily_remaining:
+                                type: integer
+        "200":
+          description: Idempotent replay — returns original response
+        "400":
+          description: Missing Idempotency-Key header
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                error:
+                  code: MISSING_IDEMPOTENCY_KEY
+                  message: Idempotency-Key header is required.
+        "401":
+          description: Not authenticated
+        "403":
+          description: Missing withdrawal.initiate permission
+        "404":
+          description: Wallet not found or not owned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                error:
+                  code: WALLET_NOT_FOUND
+                  message: Wallet not found.
+        "422":
+          description: Validation failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                invalid_amount:
+                  value: {error: {code: INVALID_AMOUNT, message: "Amount must be positive."}}
+                unsupported_channel:
+                  value: {error: {code: UNSUPPORTED_CHANNEL, message: "Channel not supported."}}
+                channel_unavailable:
+                  value: {error: {code: CHANNEL_UNAVAILABLE, message: "Channel not available for this currency."}}
+                amount_below_minimum:
+                  value: {error: {code: AMOUNT_BELOW_MINIMUM, message: "Amount below minimum.", details: {minimum: 100}}}
+                amount_above_maximum:
+                  value: {error: {code: AMOUNT_ABOVE_MAXIMUM, message: "Amount exceeds maximum."}}
+                daily_limit_exceeded:
+                  value: {error: {code: DAILY_LIMIT_EXCEEDED, message: "Daily limit exceeded.", details: {remaining: 0}}}
+                insufficient_balance:
+                  value: {error: {code: INSUFFICIENT_BALANCE, message: "Insufficient balance."}}
+                kyc_insufficient:
+                  value: {error: {code: KYC_INSUFFICIENT, message: "KYC tier does not permit this channel."}}
+                invalid_destination:
+                  value: {error: {code: INVALID_PAYOUT_DESTINATION, message: "Invalid payout destination."}}
+
+    get:
+      summary: List customer withdrawal transactions
+      description: Returns paginated list of the authenticated customer's withdrawal transactions.
+      operationId: listWithdrawals
+      tags: [Withdrawals]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, processing, completed, failed, cancelled]
+        - name: channel
+          in: query
+          schema:
+            type: string
+            enum: [mobile_money, bank_transfer]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        "200":
+          description: Paginated withdrawal list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WithdrawalTransaction'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        "401":
+          description: Not authenticated
+
+  /withdrawals/{id}:
+    get:
+      summary: Get a withdrawal transaction by ID
+      description: Returns a single withdrawal transaction owned by the authenticated customer.
+      operationId: getWithdrawal
+      tags: [Withdrawals]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WithdrawalId'
+      responses:
+        "200":
+          description: Withdrawal transaction
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/WithdrawalTransaction'
+        "401":
+          description: Not authenticated
+        "404":
+          description: Not found or not owned by caller
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                error:
+                  code: WITHDRAWAL_NOT_FOUND
+                  message: Withdrawal transaction not found.
+
+  /withdrawals/{id}/confirm:
+    post:
+      summary: Confirm withdrawal with transaction PIN
+      description: >
+        Verifies transaction PIN, re-validates fee and daily limit, runs risk check,
+        creates a wallet hold, and dispatches the payout job.
+        Requires Idempotency-Key; replaying returns the current state.
+      operationId: confirmWithdrawal
+      tags: [Withdrawals]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WithdrawalId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [transaction_pin, quoted_fee_amount]
+              properties:
+                transaction_pin:
+                  type: string
+                  description: Customer transaction PIN (never logged or emitted in events)
+                quoted_fee_amount:
+                  type: integer
+                  minimum: 0
+                  description: Fee amount shown to the customer at initiation
+      responses:
+        "200":
+          description: Confirmation accepted; transaction now processing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/WithdrawalTransaction'
+        "400":
+          description: Missing Idempotency-Key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "403":
+          description: Step-up authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                error:
+                  code: STEP_UP_REQUIRED
+                  message: High-value transaction requires step-up authentication.
+        "404":
+          description: Withdrawal not found or not owned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "409":
+          description: Fee has changed since initiation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: FEE_CHANGED
+                      message:
+                        type: string
+                      updated_fee_amount:
+                        type: integer
+                      updated_net_payout_amount:
+                        type: integer
+        "422":
+          description: Confirmation rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                invalid_pin:
+                  value: {error: {code: INVALID_PIN, message: "PIN verification failed."}}
+                not_modifiable:
+                  value: {error: {code: TRANSACTION_NOT_MODIFIABLE, message: "Transaction is not in pending status."}}
+                insufficient_balance:
+                  value: {error: {code: INSUFFICIENT_BALANCE, message: "Insufficient balance."}}
+                wallet_suspended:
+                  value: {error: {code: WALLET_SUSPENDED, message: "Wallet is suspended."}}
+                risk_rejected:
+                  value: {error: {code: WITHDRAWAL_RISK_REJECTED, message: "Withdrawal rejected by risk engine."}}
+
+  /withdrawals/{id}/cancel:
+    post:
+      summary: Cancel a pending withdrawal
+      description: Cancels a withdrawal in `pending` status. Processing withdrawals cannot be cancelled.
+      operationId: cancelWithdrawal
+      tags: [Withdrawals]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WithdrawalId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Withdrawal cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/WithdrawalTransaction'
+        "401":
+          description: Not authenticated
+        "404":
+          description: Not found or not owned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "422":
+          description: Cannot cancel — not in pending status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                error:
+                  code: TRANSACTION_NOT_CANCELLABLE
+                  message: Only pending transactions can be cancelled.
+
+  /withdrawals/callbacks/{provider}:
+    post:
+      summary: Payout provider callback
+      description: >
+        Receives success/failure callbacks from payout providers.
+        No Bearer auth — uses provider-specific HMAC/signature verification.
+        Always returns 200 for valid signatures (idempotent).
+      operationId: withdrawalCallback
+      tags: [Callbacks]
+      security: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Provider identifier (e.g., mock, mpesa)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Provider-specific callback payload
+              additionalProperties: true
+      responses:
+        "200":
+          description: Callback acknowledged
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: acknowledged
+        "400":
+          description: Invalid callback signature
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                error:
+                  code: INVALID_CALLBACK_SIGNATURE
+                  message: Callback signature verification failed.
+
+  /withdrawals/{id}/receipt:
+    get:
+      summary: Get withdrawal receipt by transaction ID
+      description: >
+        Returns the immutable receipt for a completed withdrawal.
+        Scoped to the authenticated customer.
+      operationId: getWithdrawalReceiptById
+      tags: [Receipts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WithdrawalId'
+      responses:
+        "200":
+          description: Withdrawal receipt
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/WithdrawalReceipt'
+        "401":
+          description: Not authenticated
+        "404":
+          description: Transaction not found, not owned, or receipt not yet available
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                not_found:
+                  value: {error: {code: WITHDRAWAL_NOT_FOUND, message: "Transaction not found."}}
+                receipt_not_found:
+                  value: {error: {code: RECEIPT_NOT_FOUND, message: "Receipt not available for this transaction."}}
+
+  /withdrawals/receipts/{receiptReference}:
+    get:
+      summary: Get withdrawal receipt by receipt reference
+      description: >
+        Returns the immutable receipt by its unique receipt_reference.
+        Scoped to the authenticated customer.
+        NOTE: This route must be registered before /withdrawals/{id} in the router to avoid path conflicts.
+      operationId: getWithdrawalReceiptByReference
+      tags: [Receipts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: receiptReference
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Withdrawal receipt
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/WithdrawalReceipt'
+        "401":
+          description: Not authenticated
+        "404":
+          description: Receipt not found or not owned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                error:
+                  code: RECEIPT_NOT_FOUND
+                  message: Receipt not found.
+
+  /admin/withdrawals:
+    get:
+      summary: Admin — list all withdrawals
+      description: >
+        Returns paginated list of all withdrawal transactions (not filtered by customer).
+        Requires withdrawal.admin permission.
+      operationId: adminListWithdrawals
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, processing, completed, failed, cancelled]
+        - name: channel
+          in: query
+          schema:
+            type: string
+            enum: [mobile_money, bank_transfer]
+        - name: customer_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: wallet_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: from_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        "200":
+          description: Paginated withdrawal list (all customers)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WithdrawalTransaction'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        "401":
+          description: Not authenticated
+        "403":
+          description: Missing withdrawal.admin permission
+
+  /admin/withdrawals/{id}:
+    get:
+      summary: Admin — get any withdrawal by ID
+      description: Returns any withdrawal transaction regardless of customer ownership.
+      operationId: adminGetWithdrawal
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WithdrawalId'
+      responses:
+        "200":
+          description: Withdrawal transaction
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/WithdrawalTransaction'
+        "401":
+          description: Not authenticated
+        "403":
+          description: Missing withdrawal.admin permission
+        "404":
+          description: Withdrawal not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                error:
+                  code: WITHDRAWAL_NOT_FOUND
+                  message: Withdrawal transaction not found.
+
+  /admin/withdrawals/{id}/force-fail:
+    post:
+      summary: Admin — force-fail a stuck processing withdrawal
+      description: >
+        Forces a processing withdrawal into failed state and releases the wallet hold.
+        Audited as ADMIN actor. Cannot be applied to already-terminal transactions.
+      operationId: adminForceFailWithdrawal
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WithdrawalId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: Optional admin note
+      responses:
+        "200":
+          description: Withdrawal force-failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/WithdrawalTransaction'
+        "401":
+          description: Not authenticated
+        "403":
+          description: Missing withdrawal.admin permission
+        "404":
+          description: Withdrawal not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "422":
+          description: Already in terminal state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                error:
+                  code: WITHDRAWAL_ALREADY_TERMINAL
+                  message: Withdrawal is already in a terminal state.
+
+tags:
+  - name: Withdrawals
+    description: Customer-facing withdrawal initiation, listing, and lifecycle management
+  - name: Callbacks
+    description: Payout provider webhook callbacks (system-to-system, no customer auth)
+  - name: Receipts
+    description: Immutable withdrawal completion receipts
+  - name: Admin
+    description: Administrative endpoints requiring withdrawal.admin permission

@@ -1,0 +1,20 @@
+[
+  "components/dashboard/PendingTasksCard.tsx",
+  "components/ui/Button.tsx",
+  "src/modules/agents/pages/agent-detail.tsx",
+  "src/modules/audit/pages/audit-events.tsx",
+  "src/modules/auth/pages/forgot-password.tsx",
+  "src/modules/auth/pages/verify-email.tsx",
+  "src/modules/dashboard/pages/financial-dashboard.tsx",
+  "src/modules/dashboard/pages/risk-dashboard.tsx",
+  "src/modules/float/pages/float-management.tsx",
+  "src/modules/kyc/api/kyc.ts",
+  "src/modules/kyc/pages/kyc-detail.tsx",
+  "src/modules/profile/pages/own-sessions.tsx",
+  "src/modules/profile/pages/user-profile.tsx",
+  "src/modules/reports/pages/settlement-report.tsx",
+  "src/modules/roles/pages/role-management.tsx",
+  "src/modules/transactions/pages/transaction-detail.tsx",
+  "src/modules/users/pages/user-detail.tsx",
+  "src/modules/wallets/pages/wallet-detail.tsx"
+]

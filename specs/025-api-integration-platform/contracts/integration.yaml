@@ -1,0 +1,927 @@
+openapi: 3.1.0
+info:
+  title: E25 — API & Integration Platform
+  version: 1.0.0
+  description: |
+    API client management, provider integration configuration,
+    public webhook receiver, and webhook monitoring endpoints.
+
+servers:
+  - url: /api/v1
+
+security:
+  - IdentityAuth: []
+
+components:
+  securitySchemes:
+    IdentityAuth:
+      type: http
+      scheme: bearer
+      description: User session bearer token (admin portal endpoints)
+    ApiClientAuth:
+      type: http
+      scheme: bearer
+      description: |
+        M2M API client credentials encoded as Bearer base64(api_key:secret).
+        Used only on the public webhook endpoint (no user session required).
+
+  schemas:
+    ApiClient:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        api_key:
+          type: string
+          description: Public 32-char hex key. Shown in full only at creation/rotation.
+        api_key_prefix:
+          type: string
+          description: First 8 characters of api_key — used for listing/display.
+        status:
+          type: string
+          enum: [active, inactive]
+        permissions:
+          type: array
+          items:
+            type: string
+        rate_limit_per_minute:
+          type: integer
+        last_used_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+      required: [id, name, api_key_prefix, status, permissions, rate_limit_per_minute, created_at]
+
+    ApiClientCreated:
+      allOf:
+        - $ref: '#/components/schemas/ApiClient'
+        - type: object
+          properties:
+            api_key:
+              type: string
+              description: Full API key — shown once at creation only.
+            secret:
+              type: string
+              description: Full secret — shown once at creation only. Store immediately.
+          required: [api_key, secret]
+
+    SecretRotated:
+      type: object
+      properties:
+        api_key:
+          type: string
+          description: Full new API key (unchanged on rotation, only secret changes).
+        secret:
+          type: string
+          description: New secret — shown once only.
+        rotated_at:
+          type: string
+          format: date-time
+      required: [api_key, secret, rotated_at]
+
+    Integration:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider_type:
+          type: string
+          enum: [otp, sms, email, kyc, payment, bank, mobile_money]
+        provider_slug:
+          type: string
+          example: twilio
+        display_name:
+          type: string
+        endpoint_override:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [active, inactive]
+        is_default:
+          type: boolean
+        configuration:
+          type: object
+          nullable: true
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+      required: [id, provider_type, provider_slug, display_name, status, is_default, created_at]
+
+    WebhookEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider_type:
+          type: string
+        provider_slug:
+          type: string
+        idempotency_key:
+          type: string
+        event_type:
+          type: string
+        status:
+          type: string
+          enum: [received, processing, processed, failed, dead_letter]
+        retry_count:
+          type: integer
+        max_retry_count:
+          type: integer
+        last_error:
+          type: string
+          nullable: true
+        platform_entity_id:
+          type: string
+          format: uuid
+          nullable: true
+        platform_entity_type:
+          type: string
+          nullable: true
+        received_at:
+          type: string
+          format: date-time
+        processed_at:
+          type: string
+          format: date-time
+          nullable: true
+      required: [id, provider_type, provider_slug, idempotency_key, event_type, status, retry_count, received_at]
+
+    ProviderCallLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        integration_id:
+          type: string
+          format: uuid
+        correlation_id:
+          type: string
+          format: uuid
+        provider_reference:
+          type: string
+          nullable: true
+        outcome:
+          type: string
+          enum: [success, failure, timeout]
+        response_code:
+          type: integer
+          nullable: true
+        elapsed_ms:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+      required: [id, integration_id, correlation_id, outcome, created_at]
+
+    PaginatedMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+        current_page:
+          type: integer
+        per_page:
+          type: integer
+        last_page:
+          type: integer
+      required: [total, current_page, per_page, last_page]
+
+    ErrorEnvelope:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            trace_id:
+              type: string
+          required: [code, message, trace_id]
+      required: [success, error]
+
+paths:
+
+  # ─── API Client Management ─────────────────────────────────────────────────
+
+  /integrations/clients:
+    post:
+      operationId: createApiClient
+      summary: Create an API client
+      tags: [API Clients]
+      security:
+        - IdentityAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                permissions:
+                  type: array
+                  items:
+                    type: string
+                rate_limit_per_minute:
+                  type: integer
+                  minimum: 1
+                  default: 60
+              required: [name, permissions]
+      responses:
+        '201':
+          description: API client created. api_key and secret are shown once only.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    $ref: '#/components/schemas/ApiClientCreated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    get:
+      operationId: listApiClients
+      summary: List API clients
+      tags: [API Clients]
+      security:
+        - IdentityAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 25
+            maximum: 100
+      responses:
+        '200':
+          description: Paginated list of API clients
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApiClient'
+                  meta:
+                    $ref: '#/components/schemas/PaginatedMeta'
+
+  /integrations/clients/{id}:
+    get:
+      operationId: getApiClient
+      summary: Get API client detail
+      tags: [API Clients]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: API client detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    $ref: '#/components/schemas/ApiClient'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /integrations/clients/{id}/rotate-secret:
+    post:
+      operationId: rotateApiClientSecret
+      summary: Rotate API client secret. Old secret is invalidated immediately.
+      tags: [API Clients]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+      responses:
+        '200':
+          description: New secret generated (shown once).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    $ref: '#/components/schemas/SecretRotated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /integrations/clients/{id}/status:
+    patch:
+      operationId: updateApiClientStatus
+      summary: Activate or deactivate an API client
+      tags: [API Clients]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [active, inactive]
+              required: [status]
+      responses:
+        '200':
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    $ref: '#/components/schemas/ApiClient'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ─── Integration (Provider) Management ─────────────────────────────────────
+
+  /integrations/providers:
+    post:
+      operationId: registerIntegration
+      summary: Register a provider integration
+      tags: [Integrations]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                provider_type:
+                  type: string
+                  enum: [otp, sms, email, kyc, payment, bank, mobile_money]
+                provider_slug:
+                  type: string
+                  maxLength: 64
+                display_name:
+                  type: string
+                  maxLength: 255
+                credentials_reference:
+                  type: string
+                  maxLength: 255
+                  description: Platform config key (not raw credentials)
+                endpoint_override:
+                  type: string
+                  nullable: true
+                is_default:
+                  type: boolean
+                  default: false
+                configuration:
+                  type: object
+                  nullable: true
+                  additionalProperties: true
+              required: [provider_type, provider_slug, display_name, credentials_reference]
+      responses:
+        '201':
+          description: Integration registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    $ref: '#/components/schemas/Integration'
+        '409':
+          description: provider_type + provider_slug combination already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+    get:
+      operationId: listIntegrations
+      summary: List all provider integrations
+      tags: [Integrations]
+      parameters:
+        - name: provider_type
+          in: query
+          schema:
+            type: string
+            enum: [otp, sms, email, kyc, payment, bank, mobile_money]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive]
+      responses:
+        '200':
+          description: List of integrations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Integration'
+
+  /integrations/providers/{id}:
+    get:
+      operationId: getIntegration
+      summary: Get integration detail
+      tags: [Integrations]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Integration detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    $ref: '#/components/schemas/Integration'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      operationId: updateIntegration
+      summary: Update integration credentials reference or configuration
+      tags: [Integrations]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                display_name:
+                  type: string
+                credentials_reference:
+                  type: string
+                endpoint_override:
+                  type: string
+                  nullable: true
+                configuration:
+                  type: object
+                  nullable: true
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Integration updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    $ref: '#/components/schemas/Integration'
+
+  /integrations/providers/{id}/status:
+    patch:
+      operationId: updateIntegrationStatus
+      summary: Activate or deactivate an integration
+      tags: [Integrations]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [active, inactive]
+              required: [status]
+      responses:
+        '200':
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    $ref: '#/components/schemas/Integration'
+
+  /integrations/providers/{id}/set-default:
+    post:
+      operationId: setDefaultIntegration
+      summary: Set this integration as the default for its provider type
+      tags: [Integrations]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Default updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    $ref: '#/components/schemas/Integration'
+
+  # ─── Public Webhook Receiver ────────────────────────────────────────────────
+
+  /webhooks/{providerSlug}:
+    post:
+      operationId: receiveWebhook
+      summary: Receive inbound provider webhook. No user auth — signature verification only.
+      tags: [Webhooks]
+      security: []
+      parameters:
+        - name: providerSlug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Registered provider slug (e.g., mock-payment, twilio)
+        - name: X-Correlation-ID
+          in: header
+          schema:
+            type: string
+            format: uuid
+          description: Injected by gateway if not present
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              description: Raw provider payload — structure varies by provider
+      responses:
+        '200':
+          description: Webhook accepted and queued for processing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    type: object
+                    properties:
+                      webhook_event_id:
+                        type: string
+                        format: uuid
+                      status:
+                        type: string
+                        enum: [received]
+        '401':
+          description: Invalid or missing webhook signature
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          description: Provider slug not registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  # ─── Webhook Monitoring (Admin) ─────────────────────────────────────────────
+
+  /integrations/webhooks:
+    get:
+      operationId: listWebhookEvents
+      summary: List webhook events with filtering
+      tags: [Webhook Monitoring]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [received, processing, processed, failed, dead_letter]
+        - name: provider_slug
+          in: query
+          schema:
+            type: string
+        - name: provider_type
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 25
+            maximum: 100
+      responses:
+        '200':
+          description: Paginated list of webhook events
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WebhookEvent'
+                  meta:
+                    $ref: '#/components/schemas/PaginatedMeta'
+
+  /integrations/webhooks/{id}:
+    get:
+      operationId: getWebhookEvent
+      summary: Get webhook event detail including processing attempts
+      tags: [Webhook Monitoring]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Webhook event detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/WebhookEvent'
+                      - type: object
+                        properties:
+                          processing_attempts:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                attempt_number:
+                                  type: integer
+                                outcome:
+                                  type: string
+                                  enum: [success, failure]
+                                error_message:
+                                  type: string
+                                  nullable: true
+                                attempted_at:
+                                  type: string
+                                  format: date-time
+
+  /integrations/webhooks/{id}/requeue:
+    post:
+      operationId: requeueWebhookEvent
+      summary: Manually re-queue a dead_letter webhook event back to received
+      tags: [Webhook Monitoring]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Event re-queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    $ref: '#/components/schemas/WebhookEvent'
+        '409':
+          description: Event is not in dead_letter status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  # ─── Provider Call Logs (Admin) ─────────────────────────────────────────────
+
+  /integrations/logs:
+    get:
+      operationId: listProviderCallLogs
+      summary: List outbound provider call logs
+      tags: [Provider Logs]
+      parameters:
+        - name: integration_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: outcome
+          in: query
+          schema:
+            type: string
+            enum: [success, failure, timeout]
+        - name: correlation_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 25
+            maximum: 100
+      responses:
+        '200':
+          description: Paginated list of call logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProviderCallLog'
+                  meta:
+                    $ref: '#/components/schemas/PaginatedMeta'
+
+  /integrations/logs/{id}:
+    get:
+      operationId: getProviderCallLog
+      summary: Get provider call log detail
+      tags: [Provider Logs]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Call log detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    $ref: '#/components/schemas/ProviderCallLog'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  responses:
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'

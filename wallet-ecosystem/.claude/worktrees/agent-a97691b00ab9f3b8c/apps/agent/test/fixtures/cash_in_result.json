@@ -1,0 +1,11 @@
+{
+  "reference_number": "CI-2026-000001",
+  "amount_minor_units": 50000,
+  "fee_minor_units": 250,
+  "currency_code": "BWP",
+  "customer_name": "Bonolo Sithole",
+  "agent_name": "Thabo Mokoena",
+  "agent_location_code": "GAB-001",
+  "timestamp": "2026-10-05T09:30:00Z",
+  "status": "completed"
+}

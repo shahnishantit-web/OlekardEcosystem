@@ -1,0 +1,226 @@
+openapi: "3.1.0"
+
+info:
+  title: OleKard Community Services API
+  description: |
+    Horizontal foundation for all OleKard community services (E49).
+    Covers HZ01–HZ14: organisation onboarding, orders, receipts, refunds,
+    memberships, consent, catalogue, partners, approvals and notifications.
+  version: "1.0.0"
+  contact:
+    name: OleKard Platform Engineering
+
+servers:
+  - url: /v1/community
+    description: Community Services base path
+
+tags:
+  - name: organisations
+    description: HZ02 Organisation onboarding and verification
+  - name: catalogue
+    description: HZ05 Configurable service catalogue and discovery
+  - name: orders
+    description: HZ06 Common order and payment orchestration
+  - name: receipts
+    description: HZ07 Receipts and transaction history
+  - name: refunds
+    description: HZ08 Refunds, reversals and dispute handling
+  - name: memberships
+    description: HZ03 Membership and tenant context
+  - name: consent
+    description: HZ04 Consent and participant preferences
+  - name: partners
+    description: HZ12 Partner connectors and webhook ingress
+  - name: approvals
+    description: HZ13 Approvals and policy versioning
+  - name: notifications
+    description: HZ09 Notifications (outbox-driven)
+
+# ── Contract fragments ──────────────────────────────────────────────────────
+# Each fragment file lives in specs/049-community-services-horizontal/contracts/
+# and defines the paths, request/response schemas for its bounded sub-domain.
+# This master file provides the envelope (servers, security, tags) and delegates
+# path definitions to the individual fragment files.
+
+paths: {}
+# Paths are defined per contract fragment below. Tooling that supports $ref
+# path-level merging (e.g. Redocly) should use the following configuration:
+#
+#   apis:
+#     community@latest:
+#       root: openapi/v1/community-services.yaml
+#       lint:
+#         extends: [recommended]
+#     fragments:
+#       - specs/049-community-services-horizontal/contracts/community-organisations.yaml
+#       - specs/049-community-services-horizontal/contracts/community-catalogue.yaml
+#       - specs/049-community-services-horizontal/contracts/community-orders.yaml
+#       - specs/049-community-services-horizontal/contracts/community-receipts.yaml
+#       - specs/049-community-services-horizontal/contracts/community-refunds.yaml
+#       - specs/049-community-services-horizontal/contracts/community-membership.yaml
+#       - specs/049-community-services-horizontal/contracts/community-consent.yaml
+#       - specs/049-community-services-horizontal/contracts/community-partners.yaml
+#       - specs/049-community-services-horizontal/contracts/community-approvals.yaml
+
+components:
+  securitySchemes:
+    sanctum:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Laravel Sanctum personal access token
+
+  schemas:
+    UuidV7:
+      type: string
+      format: uuid
+      description: UUID v7 opaque identifier
+      example: "018e4c71-0001-7000-8000-4e91e5d1f5c5"
+
+    MoneyAmount:
+      type: integer
+      format: int64
+      minimum: 0
+      description: Monetary amount in integer minor units (e.g. 1250 = 12.50 BWP)
+
+    CurrencyCode:
+      type: string
+      minLength: 3
+      maxLength: 3
+      pattern: "^[A-Z]{3}$"
+      description: ISO 4217 three-letter currency code
+      example: BWP
+
+    OrganisationStatus:
+      type: string
+      enum:
+        - draft
+        - submitted
+        - under_review
+        - changes_requested
+        - approved
+        - suspended
+        - archived
+
+    OrderStatus:
+      type: string
+      enum:
+        - pending
+        - confirmed
+        - cancelled
+        - refunded
+        - failed
+
+    ServiceType:
+      type: string
+      enum:
+        - funeral_assistance
+        - events_ticketing
+        - raffles_fundraising
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page: { type: integer }
+        per_page:     { type: integer }
+        total:        { type: integer }
+        last_page:    { type: integer }
+
+    CursorPaginationMeta:
+      type: object
+      properties:
+        next_cursor: { type: string, nullable: true }
+        prev_cursor: { type: string, nullable: true }
+        per_page:    { type: integer }
+
+    ErrorResponse:
+      type: object
+      required: [message]
+      properties:
+        message:  { type: string }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+        error_code: { type: string }
+
+    IdempotencyConflictResponse:
+      type: object
+      required: [message]
+      properties:
+        message:    { type: string, example: "Idempotency key conflict: payload mismatch." }
+        error_code: { type: string, example: "IDEMPOTENCY_CONFLICT" }
+
+  responses:
+    Unauthenticated:
+      description: Unauthenticated
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+    Forbidden:
+      description: Forbidden — insufficient scope or role
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+    UnprocessableEntity:
+      description: Validation failed or business rule violation
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+    IdempotencyConflict:
+      description: Idempotency key reused with different payload
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/IdempotencyConflictResponse' }
+
+  parameters:
+    IdempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Client-generated UUID v4/v7 for safe retry
+      schema:
+        type: string
+        format: uuid
+
+    OrgIdPath:
+      name: id
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/UuidV7' }
+
+    PageQuery:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+
+    PerPageQuery:
+      name: per_page
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+
+security:
+  - sanctum: []
+
+# ── Contract source references ─────────────────────────────────────────────
+# Fragment                          | Coverage
+# ─────────────────────────────────|─────────────────────────────────────────
+# community-organisations.yaml     | HZ02 org lifecycle + evidence upload
+# community-catalogue.yaml         | HZ05 service entitlements + discovery
+# community-orders.yaml            | HZ06 orders + payment attempts
+# community-receipts.yaml          | HZ07 receipts + async exports
+# community-refunds.yaml           | HZ08 refund requests + dispute holds
+# community-membership.yaml        | HZ03 staff invitations + memberships
+# community-consent.yaml           | HZ04 consent notices + data rights
+# community-partners.yaml          | HZ12 partner connectors + webhook ingress
+# community-approvals.yaml         | HZ13 approval requests + policy versions

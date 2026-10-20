@@ -1,0 +1,92 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: wallet_ecosystem
+      POSTGRES_USER: wallet_app
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wallet_app -d wallet_ecosystem"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wallet
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save 20 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wallet
+
+  api:
+    build:
+      context: services/api
+      target: prod
+    env_file:
+      - .env
+    environment:
+      DB_HOST: postgres
+      REDIS_HOST: redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    ports:
+      - "${API_PORT:-8080}:8080"
+    networks:
+      - wallet
+
+  horizon:
+    build:
+      context: services/api
+      target: prod
+    command: php artisan horizon
+    env_file:
+      - .env
+    environment:
+      DB_HOST: postgres
+      REDIS_HOST: redis
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - wallet
+
+  admin:
+    build:
+      context: apps/admin
+      target: runner
+    env_file:
+      - .env
+    ports:
+      - "${ADMIN_PORT:-3000}:3000"
+    depends_on:
+      - api
+    networks:
+      - wallet
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  wallet:
+    driver: bridge

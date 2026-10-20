@@ -1,0 +1,9 @@
+{
+  "pattern": "/agents/[id]",
+  "route": "/agents/ebea74a5-b8ac-4d29-9c8e-f35b82626bd6",
+  "landed": "/agents/ebea74a5-b8ac-4d29-9c8e-f35b82626bd6",
+  "errors": [],
+  "failures": [],
+  "detailResponses": [],
+  "text": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nEbea74a5 B8ac 4d29 9c8e F35b82626bd6\n⌘K\nA\nadmin@olekard.local"
+}

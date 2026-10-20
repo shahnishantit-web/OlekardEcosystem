@@ -1,0 +1,6962 @@
+[
+  {
+    "page": "/admin-portal/agents",
+    "source": "app/(admin)/admin-portal/agents/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/admin-portal/agents/[id]",
+    "source": "app/(admin)/admin-portal/agents/[id]/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/admin-portal/dashboard",
+    "source": "app/(admin)/admin-portal/dashboard/page.tsx",
+    "dependencies": []
+  },
+  {
+    "page": "/admin-portal/float",
+    "source": "app/(admin)/admin-portal/float/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/admin-portal/roles",
+    "source": "app/(admin)/admin-portal/roles/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/admin-portal/roles/[id]",
+    "source": "app/(admin)/admin-portal/roles/[id]/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/admin-portal/transactions",
+    "source": "app/(admin)/admin-portal/transactions/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/admin-portal/transactions/[id]",
+    "source": "app/(admin)/admin-portal/transactions/[id]/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/admin-portal/users",
+    "source": "app/(admin)/admin-portal/users/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/dashboard",
+        "registered": true,
+        "permissions": [
+          "admin.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/customers",
+        "registered": true,
+        "permissions": [
+          "admin.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/customers/{userId}",
+        "registered": true,
+        "permissions": [
+          "admin.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/wallets",
+        "registered": true,
+        "permissions": [
+          "admin.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/transactions",
+        "registered": true,
+        "permissions": [
+          "admin.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/transactions/exports/{exportId}",
+        "registered": true,
+        "permissions": [
+          "admin.read"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/admin-portal/users/[id]",
+    "source": "app/(admin)/admin-portal/users/[id]/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/admin-portal/wallets",
+    "source": "app/(admin)/admin-portal/wallets/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/admin-portal/wallets/[id]",
+    "source": "app/(admin)/admin-portal/wallets/[id]/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/agents",
+    "source": "app/(admin)/agents/page.tsx",
+    "dependencies": []
+  },
+  {
+    "page": "/agents/[id]",
+    "source": "app/(admin)/agents/[id]/page.tsx",
+    "dependencies": []
+  },
+  {
+    "page": "/audit",
+    "source": "app/(admin)/audit/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/compliance",
+    "source": "app/(admin)/compliance/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/compliance/retention",
+    "source": "app/(admin)/compliance/retention/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/configuration/approvals",
+    "source": "app/(admin)/configuration/approvals/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/configuration/keys",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      },
+      {
+        "uri": "/v1/admin/configuration/keys/{key}",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      },
+      {
+        "uri": "/v1/admin/configuration/keys/{key}/versions",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      },
+      {
+        "uri": "/v1/admin/configuration/change-requests",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      },
+      {
+        "uri": "/v1/admin/configuration/change-requests/{id}",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/configuration/approvals/[id]",
+    "source": "app/(admin)/configuration/approvals/[id]/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/configuration/keys",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      },
+      {
+        "uri": "/v1/admin/configuration/keys/{key}",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      },
+      {
+        "uri": "/v1/admin/configuration/keys/{key}/versions",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      },
+      {
+        "uri": "/v1/admin/configuration/change-requests",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      },
+      {
+        "uri": "/v1/admin/configuration/change-requests/{id}",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/configuration",
+    "source": "app/(admin)/configuration/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/configuration/keys",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      },
+      {
+        "uri": "/v1/admin/configuration/keys/{key}",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      },
+      {
+        "uri": "/v1/admin/configuration/keys/{key}/versions",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      },
+      {
+        "uri": "/v1/admin/configuration/change-requests",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      },
+      {
+        "uri": "/v1/admin/configuration/change-requests/{id}",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/configuration/[domain]/[key]",
+    "source": "app/(admin)/configuration/[domain]/[key]/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/configuration/keys",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      },
+      {
+        "uri": "/v1/admin/configuration/keys/{key}",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      },
+      {
+        "uri": "/v1/admin/configuration/keys/{key}/versions",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      },
+      {
+        "uri": "/v1/admin/configuration/change-requests",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      },
+      {
+        "uri": "/v1/admin/configuration/change-requests/{id}",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/dashboard",
+    "source": "app/(admin)/dashboard/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/profile/dashboard/summary",
+        "registered": true,
+        "permissions": []
+      },
+      {
+        "uri": "/v1/admin/dashboard/wallets",
+        "registered": true,
+        "permissions": [
+          "admin.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/dashboard/transactions",
+        "registered": true,
+        "permissions": [
+          "admin.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/dashboard/kyc",
+        "registered": true,
+        "permissions": [
+          "admin.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/dashboard/agents",
+        "registered": true,
+        "permissions": [
+          "admin.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/support/summary",
+        "registered": true,
+        "permissions": [
+          "support.investigate"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/devices",
+    "source": "app/(admin)/devices/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/users/{userId}/devices",
+        "registered": true,
+        "permissions": [
+          "device.admin.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/devices/{deviceId}/security-events",
+        "registered": true,
+        "permissions": [
+          "device.admin.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/sessions",
+        "registered": true,
+        "permissions": [
+          "session.admin.revoke"
+        ]
+      },
+      {
+        "uri": "/v1/auth/sessions",
+        "registered": true,
+        "permissions": []
+      }
+    ]
+  },
+  {
+    "page": "/fees/rules/create",
+    "source": "app/(admin)/fees/rules/create/page.tsx",
+    "dependencies": []
+  },
+  {
+    "page": "/fees/rules",
+    "source": "app/(admin)/fees/rules/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/fees/rules",
+        "registered": true,
+        "permissions": [
+          "fees.rules.view"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/fees/rules/[id]",
+    "source": "app/(admin)/fees/rules/[id]/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/fees/rules/{id}",
+        "registered": true,
+        "permissions": [
+          "fees.rules.view"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/financial-dashboard",
+    "source": "app/(admin)/financial-dashboard/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/integrations/clients",
+    "source": "app/(admin)/integrations/clients/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/integrations/api-clients/{clientId}",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/integrations/api-clients",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/integrations/providers",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/webhooks/deliveries",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/integrations/providers/{id}/health",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/integrations",
+    "source": "app/(admin)/integrations/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/integrations/api-clients/{clientId}",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/integrations/api-clients",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/integrations/providers",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/webhooks/deliveries",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/integrations/providers/{id}/health",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/integrations/providers",
+    "source": "app/(admin)/integrations/providers/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/integrations/api-clients/{clientId}",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/integrations/api-clients",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/integrations/providers",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/webhooks/deliveries",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/integrations/providers/{id}/health",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/integrations/providers/[id]/health",
+    "source": "app/(admin)/integrations/providers/[id]/health/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/integrations/api-clients/{clientId}",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/integrations/api-clients",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/integrations/providers",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/webhooks/deliveries",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/integrations/providers/{id}/health",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/integrations/webhooks",
+    "source": "app/(admin)/integrations/webhooks/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/integrations/api-clients/{clientId}",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/integrations/api-clients",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/integrations/providers",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/webhooks/deliveries",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/integrations/providers/{id}/health",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/integrations/[id]",
+    "source": "app/(admin)/integrations/[id]/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/integrations/api-clients/{clientId}",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/integrations/api-clients",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/integrations/providers",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/webhooks/deliveries",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin/integrations/providers/{id}/health",
+        "registered": true,
+        "permissions": [
+          "integrations.manage"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/kyc",
+    "source": "app/(admin)/kyc/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/kyc/[id]",
+    "source": "app/(admin)/kyc/[id]/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/multi-currency/currencies",
+    "source": "app/(admin)/multi-currency/currencies/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/currencies",
+        "registered": true,
+        "permissions": [
+          "multi_currency.manage_currencies"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/multi-currency/fx-rates",
+    "source": "app/(admin)/multi-currency/fx-rates/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/fx/rates",
+        "registered": true,
+        "permissions": [
+          "multi_currency.configure_rate"
+        ]
+      },
+      {
+        "uri": "/v1/admin/fx/rates/{p}/history",
+        "registered": true,
+        "permissions": [
+          "multi_currency.configure_rate"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/notifications/log",
+    "source": "app/(admin)/notifications/log/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/notifications/templates",
+        "registered": true,
+        "permissions": [
+          "notifications.templates.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/notifications/log",
+        "registered": true,
+        "permissions": [
+          "notifications.log.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/notifications/rules",
+        "registered": true,
+        "permissions": [
+          "notifications.rules.read"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/notifications",
+    "source": "app/(admin)/notifications/page.tsx",
+    "dependencies": []
+  },
+  {
+    "page": "/notifications/rules",
+    "source": "app/(admin)/notifications/rules/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/notifications/templates",
+        "registered": true,
+        "permissions": [
+          "notifications.templates.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/notifications/log",
+        "registered": true,
+        "permissions": [
+          "notifications.log.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/notifications/rules",
+        "registered": true,
+        "permissions": [
+          "notifications.rules.read"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/notifications/templates",
+    "source": "app/(admin)/notifications/templates/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/notifications/templates",
+        "registered": true,
+        "permissions": [
+          "notifications.templates.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/notifications/log",
+        "registered": true,
+        "permissions": [
+          "notifications.log.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/notifications/rules",
+        "registered": true,
+        "permissions": [
+          "notifications.rules.read"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/operations/dead-letter",
+    "source": "app/(admin)/operations/dead-letter/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/operations/dead-letter",
+        "registered": true,
+        "permissions": [
+          "operations.dead_letter.manage"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/ops/alert-rules",
+    "source": "app/(admin)/ops/alert-rules/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/ops/alert-rules",
+        "registered": true,
+        "permissions": [
+          "ops.manage_alerts"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/ops/alerts",
+    "source": "app/(admin)/ops/alerts/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/ops/alerts",
+        "registered": true,
+        "permissions": [
+          "ops.manage_alerts"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/ops/backup-jobs",
+    "source": "app/(admin)/ops/backup-jobs/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/ops/backup-jobs",
+        "registered": true,
+        "permissions": [
+          "ops.manage_backup"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/ops/db-monitoring",
+    "source": "app/(admin)/ops/db-monitoring/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/ops/metrics",
+        "registered": true,
+        "permissions": [
+          "ops.view_metrics"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/ops/deployments",
+    "source": "app/(admin)/ops/deployments/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/ops/deployments/versions",
+        "registered": true,
+        "permissions": [
+          "ops.manage_deployments"
+        ]
+      },
+      {
+        "uri": "/v1/admin/ops/deployments/rollbacks",
+        "registered": true,
+        "permissions": [
+          "ops.manage_deployments"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/ops/logs",
+    "source": "app/(admin)/ops/logs/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/ops/logs",
+        "registered": true,
+        "permissions": [
+          "ops.view_logs"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/ops/metrics",
+    "source": "app/(admin)/ops/metrics/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/ops/metrics",
+        "registered": true,
+        "permissions": [
+          "ops.view_metrics"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/ops",
+    "source": "app/(admin)/ops/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/ops/providers",
+        "registered": true,
+        "permissions": [
+          "ops.view_health"
+        ]
+      },
+      {
+        "uri": "/v1/admin/ops/alerts",
+        "registered": true,
+        "permissions": [
+          "ops.manage_alerts"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/ops/providers",
+    "source": "app/(admin)/ops/providers/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/ops/providers",
+        "registered": true,
+        "permissions": [
+          "ops.view_health"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/ops/queue-monitoring",
+    "source": "app/(admin)/ops/queue-monitoring/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/ops/metrics",
+        "registered": true,
+        "permissions": [
+          "ops.view_metrics"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/platform/security-config",
+    "source": "app/(admin)/platform/security-config/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/platform/security-config",
+        "registered": true,
+        "permissions": [
+          "security.config.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/platform/configuration/security",
+        "registered": true,
+        "permissions": [
+          "configuration.policy.view"
+        ]
+      },
+      {
+        "uri": "/v1/admin/security/alerts",
+        "registered": true,
+        "permissions": [
+          "security.alerts.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/security/alerts/{id}",
+        "registered": true,
+        "permissions": [
+          "security.alerts.read"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/profile/notifications",
+    "source": "app/(admin)/profile/notifications/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/notifications/preferences",
+        "registered": true,
+        "permissions": [
+          "notifications.preferences.manage"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/profile",
+    "source": "app/(admin)/profile/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/users/{userId}/profile",
+        "registered": true,
+        "permissions": []
+      },
+      {
+        "uri": "/v1/admin/users/{userId}/profile/status",
+        "registered": true,
+        "permissions": []
+      }
+    ]
+  },
+  {
+    "page": "/profile/security",
+    "source": "app/(admin)/profile/security/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/auth/mfa/methods",
+        "registered": true,
+        "permissions": []
+      }
+    ]
+  },
+  {
+    "page": "/profile/sessions",
+    "source": "app/(admin)/profile/sessions/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/sessions",
+        "registered": true,
+        "permissions": [
+          "session.admin.revoke"
+        ]
+      },
+      {
+        "uri": "/v1/auth/sessions",
+        "registered": true,
+        "permissions": []
+      }
+    ]
+  },
+  {
+    "page": "/qa",
+    "source": "app/(admin)/qa/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/qa/runs/[id]",
+    "source": "app/(admin)/qa/runs/[id]/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/reconciliation/batches",
+    "source": "app/(admin)/reconciliation/batches/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/reconciliation/batches/[id]",
+    "source": "app/(admin)/reconciliation/batches/[id]/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/reconciliation/settlements",
+    "source": "app/(admin)/reconciliation/settlements/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/reconciliation/settlements/[id]",
+    "source": "app/(admin)/reconciliation/settlements/[id]/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/reports",
+    "source": "app/(admin)/reports/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/reports/jobs",
+        "registered": true,
+        "permissions": []
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/reports/reconciliation",
+    "source": "app/(admin)/reports/reconciliation/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/reports/jobs/{id}",
+        "registered": true,
+        "permissions": []
+      },
+      {
+        "uri": "/v1/reports/exports/{exportId}",
+        "registered": true,
+        "permissions": []
+      }
+    ]
+  },
+  {
+    "page": "/reports/schedules",
+    "source": "app/(admin)/reports/schedules/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/reports/schedules",
+        "registered": true,
+        "permissions": [
+          "reports.schedule"
+        ]
+      },
+      {
+        "uri": "/v1/reports/jobs/{id}",
+        "registered": true,
+        "permissions": []
+      },
+      {
+        "uri": "/v1/reports/exports/{exportId}",
+        "registered": true,
+        "permissions": []
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/reports/settlement",
+    "source": "app/(admin)/reports/settlement/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/reports/[id]",
+    "source": "app/(admin)/reports/[id]/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/reports/jobs/{jobId}",
+        "registered": true,
+        "permissions": []
+      },
+      {
+        "uri": "/v1/reports/jobs/{id}",
+        "registered": true,
+        "permissions": []
+      },
+      {
+        "uri": "/v1/reports/exports/{exportId}",
+        "registered": true,
+        "permissions": []
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/risk-dashboard",
+    "source": "app/(admin)/risk-dashboard/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin-app/dashboard/operational",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.operational"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/financial",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.financial"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/dashboard/risk",
+        "registered": true,
+        "permissions": [
+          "adminapp.dashboard.risk"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/users/{userId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.users.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/kyc/{submissionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.kyc.review"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/wallets/{walletId}/ledger",
+        "registered": true,
+        "permissions": [
+          "adminapp.wallets.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/transactions/{transactionId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.transactions.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/agents/{agentId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.agents.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/float",
+        "registered": true,
+        "permissions": [
+          "adminapp.float.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/roles/{roleId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.roles.manage"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reconciliation/{batchId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reconciliation.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/settlement/{settlementId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.settlement.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/audit",
+        "registered": true,
+        "permissions": [
+          "adminapp.audit.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/dashboard",
+        "registered": true,
+        "permissions": [
+          "compliance.read"
+        ]
+      },
+      {
+        "uri": "/v1/compliance/retention-policies",
+        "registered": true,
+        "permissions": [
+          "compliance.config"
+        ]
+      },
+      {
+        "uri": "/v1/admin-app/reports/{reportId}",
+        "registered": true,
+        "permissions": [
+          "adminapp.reports.read"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/runs/{id}",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      },
+      {
+        "uri": "/v1/qa/dashboard",
+        "registered": true,
+        "permissions": [
+          "qa.execute"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/security/alerts/[id]",
+    "source": "app/(admin)/security/alerts/[id]/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/security/alerts",
+        "registered": true,
+        "permissions": [
+          "security.alerts.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/security/alerts/{id}",
+        "registered": true,
+        "permissions": [
+          "security.alerts.read"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/security/dashboard",
+    "source": "app/(admin)/security/dashboard/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/security/alerts",
+        "registered": true,
+        "permissions": [
+          "security.alerts.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/security/alerts/{id}",
+        "registered": true,
+        "permissions": [
+          "security.alerts.read"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/security/events",
+    "source": "app/(admin)/security/events/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/security/events",
+        "registered": true,
+        "permissions": [
+          "security.events.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/security/events/export",
+        "registered": true,
+        "permissions": [
+          "security.events.export"
+        ]
+      },
+      {
+        "uri": "/v1/admin/security/alerts",
+        "registered": true,
+        "permissions": [
+          "security.alerts.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/security/alerts/{id}",
+        "registered": true,
+        "permissions": [
+          "security.alerts.read"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/security/findings",
+    "source": "app/(admin)/security/findings/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/security/findings",
+        "registered": true,
+        "permissions": [
+          "security.findings.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/security/alerts",
+        "registered": true,
+        "permissions": [
+          "security.alerts.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/security/alerts/{id}",
+        "registered": true,
+        "permissions": [
+          "security.alerts.read"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/security/findings/[id]",
+    "source": "app/(admin)/security/findings/[id]/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/security/findings/{id}",
+        "registered": true,
+        "permissions": [
+          "security.findings.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/security/alerts",
+        "registered": true,
+        "permissions": [
+          "security.alerts.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/security/alerts/{id}",
+        "registered": true,
+        "permissions": [
+          "security.alerts.read"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/security/overview",
+    "source": "app/(admin)/security/overview/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/security/dashboard",
+        "registered": true,
+        "permissions": [
+          "security.findings.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/security/alerts",
+        "registered": true,
+        "permissions": [
+          "security.alerts.read"
+        ]
+      },
+      {
+        "uri": "/v1/admin/security/alerts/{id}",
+        "registered": true,
+        "permissions": [
+          "security.alerts.read"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/sessions",
+    "source": "app/(admin)/sessions/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/sessions",
+        "registered": true,
+        "permissions": [
+          "session.admin.revoke"
+        ]
+      },
+      {
+        "uri": "/v1/auth/sessions",
+        "registered": true,
+        "permissions": []
+      }
+    ]
+  },
+  {
+    "page": "/support/cases",
+    "source": "app/(admin)/support/cases/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/support/cases",
+        "registered": true,
+        "permissions": [
+          "support.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin/support/cases/{id}",
+        "registered": true,
+        "permissions": [
+          "support.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin/support/cases/{id}/attachments/{entry}",
+        "registered": true,
+        "permissions": [
+          "support.investigate"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/support/cases/[id]",
+    "source": "app/(admin)/support/cases/[id]/page.tsx",
+    "dependencies": [
+      {
+        "uri": "/v1/admin/support/cases",
+        "registered": true,
+        "permissions": [
+          "support.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin/support/cases/{id}",
+        "registered": true,
+        "permissions": [
+          "support.investigate"
+        ]
+      },
+      {
+        "uri": "/v1/admin/support/cases/{id}/attachments/{entry}",
+        "registered": true,
+        "permissions": [
+          "support.investigate"
+        ]
+      }
+    ]
+  },
+  {
+    "page": "/401",
+    "source": "app/401/page.tsx",
+    "dependencies": []
+  },
+  {
+    "page": "/403",
+    "source": "app/403/page.tsx",
+    "dependencies": []
+  },
+  {
+    "page": "/429",
+    "source": "app/429/page.tsx",
+    "dependencies": []
+  },
+  {
+    "page": "/503",
+    "source": "app/503/page.tsx",
+    "dependencies": []
+  },
+  {
+    "page": "/504",
+    "source": "app/504/page.tsx",
+    "dependencies": []
+  },
+  {
+    "page": "/account-disabled",
+    "source": "app/account-disabled/page.tsx",
+    "dependencies": []
+  },
+  {
+    "page": "/account-locked",
+    "source": "app/account-locked/page.tsx",
+    "dependencies": []
+  },
+  {
+    "page": "/forgot-password",
+    "source": "app/forgot-password/page.tsx",
+    "dependencies": []
+  },
+  {
+    "page": "/login",
+    "source": "app/login/page.tsx",
+    "dependencies": []
+  },
+  {
+    "page": "/maintenance",
+    "source": "app/maintenance/page.tsx",
+    "dependencies": []
+  },
+  {
+    "page": "/mfa-enrollment",
+    "source": "app/mfa-enrollment/page.tsx",
+    "dependencies": []
+  },
+  {
+    "page": "/offline",
+    "source": "app/offline/page.tsx",
+    "dependencies": []
+  },
+  {
+    "page": "/",
+    "source": "app/page.tsx",
+    "dependencies": []
+  },
+  {
+    "page": "/reset-password",
+    "source": "app/reset-password/page.tsx",
+    "dependencies": []
+  },
+  {
+    "page": "/unsupported-browser",
+    "source": "app/unsupported-browser/page.tsx",
+    "dependencies": []
+  },
+  {
+    "page": "/verify-email",
+    "source": "app/verify-email/page.tsx",
+    "dependencies": []
+  }
+]

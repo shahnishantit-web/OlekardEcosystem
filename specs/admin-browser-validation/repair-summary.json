@@ -1,0 +1,897 @@
+{
+  "groups": {
+    "fixture": {
+      "total": 19,
+      "passed": 19,
+      "failed": 0,
+      "skipped": 0
+    },
+    "static": {
+      "total": 75,
+      "passed": 36,
+      "failed": 39,
+      "skipped": 0
+    },
+    "detail": {
+      "total": 19,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 18
+    },
+    "workflow": {
+      "total": 3,
+      "passed": 2,
+      "failed": 1,
+      "skipped": 0
+    }
+  },
+  "unexpectedLoginRedirects": [],
+  "routeFailures": [
+    {
+      "route": "/",
+      "landed": "/dashboard",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin/transactions",
+          "status": 422,
+          "code": "VALIDATION_ERROR",
+          "message": "The given data was invalid."
+        },
+        {
+          "url": "/v1/admin/wallets/summary",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        },
+        {
+          "url": "/v1/admin/transactions/summary",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        },
+        {
+          "url": "/v1/admin/kyc/summary",
+          "status": 404,
+          "code": "RESOURCE_NOT_FOUND",
+          "message": "The requested resource does not exist."
+        }
+      ]
+    },
+    {
+      "route": "/admin-portal/agents",
+      "landed": "/admin-portal/agents",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin-app/agents",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        }
+      ]
+    },
+    {
+      "route": "/admin-portal/dashboard",
+      "landed": "/dashboard",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin/transactions",
+          "status": 422,
+          "code": "VALIDATION_ERROR",
+          "message": "The given data was invalid."
+        },
+        {
+          "url": "/v1/admin/wallets/summary",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        },
+        {
+          "url": "/v1/admin/transactions/summary",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        },
+        {
+          "url": "/v1/admin/kyc/summary",
+          "status": 404,
+          "code": "RESOURCE_NOT_FOUND",
+          "message": "The requested resource does not exist."
+        }
+      ]
+    },
+    {
+      "route": "/admin-portal/float",
+      "landed": "/admin-portal/float",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin-app/float",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        }
+      ]
+    },
+    {
+      "route": "/admin-portal/roles",
+      "landed": "/admin-portal/roles",
+      "browserErrors": [
+        "Cannot read properties of undefined (reading 'length')"
+      ],
+      "api": []
+    },
+    {
+      "route": "/admin-portal/transactions",
+      "landed": "/admin-portal/transactions",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin-app/transactions",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        }
+      ]
+    },
+    {
+      "route": "/admin-portal/users",
+      "landed": "/admin-portal/users",
+      "browserErrors": [
+        "Cannot read properties of undefined (reading 'length')"
+      ],
+      "api": []
+    },
+    {
+      "route": "/admin-portal/wallets",
+      "landed": "/admin-portal/wallets",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin-app/wallets",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        }
+      ]
+    },
+    {
+      "route": "/agents",
+      "landed": "/admin-portal/agents",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin-app/agents",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        }
+      ]
+    },
+    {
+      "route": "/audit",
+      "landed": "/audit",
+      "browserErrors": [
+        "Cannot read properties of undefined (reading 'map')"
+      ],
+      "api": []
+    },
+    {
+      "route": "/compliance",
+      "landed": "/compliance",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin-app/compliance/dashboard",
+          "status": 404,
+          "code": "RESOURCE_NOT_FOUND",
+          "message": "The requested resource does not exist."
+        }
+      ]
+    },
+    {
+      "route": "/compliance/retention",
+      "landed": "/compliance/retention",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin-app/compliance/retention-policies",
+          "status": 404,
+          "code": "RESOURCE_NOT_FOUND",
+          "message": "The requested resource does not exist."
+        }
+      ]
+    },
+    {
+      "route": "/configuration",
+      "landed": "/configuration",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin/configuration/keys",
+          "status": 500,
+          "message": "Non-JSON error"
+        }
+      ]
+    },
+    {
+      "route": "/configuration/approvals",
+      "landed": "/configuration/approvals",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin/configuration/change-requests",
+          "status": 500,
+          "message": "Non-JSON error"
+        }
+      ]
+    },
+    {
+      "route": "/dashboard",
+      "landed": "/dashboard",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin/transactions",
+          "status": 422,
+          "code": "VALIDATION_ERROR",
+          "message": "The given data was invalid."
+        },
+        {
+          "url": "/v1/admin/wallets/summary",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        },
+        {
+          "url": "/v1/admin/transactions/summary",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        },
+        {
+          "url": "/v1/admin/kyc/summary",
+          "status": 404,
+          "code": "RESOURCE_NOT_FOUND",
+          "message": "The requested resource does not exist."
+        }
+      ]
+    },
+    {
+      "route": "/devices",
+      "landed": "/devices",
+      "browserErrors": [
+        "Cannot read properties of undefined (reading 'length')",
+        "Cannot read properties of undefined (reading 'find')"
+      ],
+      "api": []
+    },
+    {
+      "route": "/fees/rules",
+      "landed": "/fees/rules",
+      "browserErrors": [
+        "Cannot read properties of undefined (reading 'length')"
+      ],
+      "api": []
+    },
+    {
+      "route": "/financial-dashboard",
+      "landed": "/financial-dashboard",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin-app/dashboard/financial",
+          "status": 503,
+          "code": "ADMINAPP_DASH_001",
+          "message": "Financial dashboard metrics are currently unavailable. The cache has not been warmed."
+        }
+      ]
+    },
+    {
+      "route": "/kyc",
+      "landed": "/kyc",
+      "browserErrors": [
+        "Cannot read properties of undefined (reading 'length')"
+      ],
+      "api": []
+    },
+    {
+      "route": "/operations/dead-letter",
+      "landed": "/operations/dead-letter",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/operations/dead-letter",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        }
+      ]
+    },
+    {
+      "route": "/ops",
+      "landed": "/ops",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin/ops/providers",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        },
+        {
+          "url": "/v1/admin/ops/alerts",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        }
+      ]
+    },
+    {
+      "route": "/ops/alerts",
+      "landed": "/ops/alerts",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin/ops/alerts",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        }
+      ]
+    },
+    {
+      "route": "/ops/alert-rules",
+      "landed": "/ops/alert-rules",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin/ops/alert-rules",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        }
+      ]
+    },
+    {
+      "route": "/ops/backup-jobs",
+      "landed": "/ops/backup-jobs",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin/ops/backup-jobs",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        }
+      ]
+    },
+    {
+      "route": "/ops/db-monitoring",
+      "landed": "/ops/db-monitoring",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin/ops/metrics",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        }
+      ]
+    },
+    {
+      "route": "/ops/deployments",
+      "landed": "/ops/deployments",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin/ops/deployments/versions",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        },
+        {
+          "url": "/v1/admin/ops/deployments/rollbacks",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        }
+      ]
+    },
+    {
+      "route": "/ops/logs",
+      "landed": "/ops/logs",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin/ops/logs",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        }
+      ]
+    },
+    {
+      "route": "/ops/metrics",
+      "landed": "/ops/metrics",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin/ops/metrics",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        }
+      ]
+    },
+    {
+      "route": "/ops/providers",
+      "landed": "/ops/providers",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin/ops/providers",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        }
+      ]
+    },
+    {
+      "route": "/ops/queue-monitoring",
+      "landed": "/ops/queue-monitoring",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin/ops/metrics",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        }
+      ]
+    },
+    {
+      "route": "/profile",
+      "landed": "/profile",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin/users/01a0d2ba-3aee-7347-b52d-5802bab17ef6/profile",
+          "status": 404,
+          "code": "PROFILE_NOT_FOUND",
+          "message": "Profile not found."
+        }
+      ]
+    },
+    {
+      "route": "/profile/notifications",
+      "landed": "/profile/notifications",
+      "browserErrors": [],
+      "api": []
+    },
+    {
+      "route": "/profile/sessions",
+      "landed": "/profile/sessions",
+      "browserErrors": [
+        "Cannot read properties of undefined (reading 'length')"
+      ],
+      "api": []
+    },
+    {
+      "route": "/qa",
+      "landed": "/qa",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/qa/dashboard",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        }
+      ]
+    },
+    {
+      "route": "/reports",
+      "landed": "/reports",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/reports/jobs",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        }
+      ]
+    },
+    {
+      "route": "/reports/schedules",
+      "landed": "/reports/schedules",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/reports/schedules",
+          "status": 500,
+          "code": "INTERNAL_ERROR",
+          "message": "An unexpected error occurred. Please retry or contact support."
+        }
+      ]
+    },
+    {
+      "route": "/reports/settlement",
+      "landed": "/reports/settlement",
+      "browserErrors": [
+        "Cannot read properties of undefined (reading 'length')"
+      ],
+      "api": []
+    },
+    {
+      "route": "/risk-dashboard",
+      "landed": "/risk-dashboard",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin-app/dashboard/risk",
+          "status": 503,
+          "code": "ADMINAPP_DASH_001",
+          "message": "Risk dashboard metrics are currently unavailable. The cache has not been warmed."
+        }
+      ]
+    },
+    {
+      "route": "/sessions",
+      "landed": "/sessions",
+      "browserErrors": [],
+      "api": [
+        {
+          "url": "/v1/admin/sessions",
+          "status": 404,
+          "code": "RESOURCE_NOT_FOUND",
+          "message": "The requested resource does not exist."
+        }
+      ]
+    }
+  ],
+  "failedTests": [
+    {
+      "title": "live route /admin-portal/agents",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 14\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin-app/agents\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin-app/agents\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /admin-portal/dashboard",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 50\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"VALIDATION_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"The given data was invalid.\",\u001b[39m\n\u001b[31m+     \"status\": 422,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/transactions\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/wallets/summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/transactions/summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"RESOURCE_NOT_FOUND\",\u001b[39m\n\u001b[31m+     \"message\": \"The requested resource does not exist.\",\u001b[39m\n\u001b[31m+     \"status\": 404,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/kyc/summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"VALIDATION_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"The given data was invalid.\",\u001b[39m\n\u001b[31m+     \"status\": 422,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/transactions\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/wallets/summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/transactions/summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"RESOURCE_NOT_FOUND\",\u001b[39m\n\u001b[31m+     \"message\": \"The requested resource does not exist.\",\u001b[39m\n\u001b[31m+     \"status\": 404,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/kyc/summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /admin-portal/float",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 14\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin-app/float\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin-app/float\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /admin-portal/roles",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Uncaught browser errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 12\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /admin-portal/transactions",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 14\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin-app/transactions\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin-app/transactions\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /admin-portal/users",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Uncaught browser errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 12\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /admin-portal/wallets",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 14\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin-app/wallets\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin-app/wallets\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /agents",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 14\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin-app/agents\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin-app/agents\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /audit",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Uncaught browser errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 10\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'map')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'map')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'map')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'map')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'map')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'map')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'map')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'map')\",\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /compliance",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 14\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"RESOURCE_NOT_FOUND\",\u001b[39m\n\u001b[31m+     \"message\": \"The requested resource does not exist.\",\u001b[39m\n\u001b[31m+     \"status\": 404,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin-app/compliance/dashboard\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"RESOURCE_NOT_FOUND\",\u001b[39m\n\u001b[31m+     \"message\": \"The requested resource does not exist.\",\u001b[39m\n\u001b[31m+     \"status\": 404,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin-app/compliance/dashboard\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /compliance/retention",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 14\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"RESOURCE_NOT_FOUND\",\u001b[39m\n\u001b[31m+     \"message\": \"The requested resource does not exist.\",\u001b[39m\n\u001b[31m+     \"status\": 404,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin-app/compliance/retention-policies\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"RESOURCE_NOT_FOUND\",\u001b[39m\n\u001b[31m+     \"message\": \"The requested resource does not exist.\",\u001b[39m\n\u001b[31m+     \"status\": 404,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin-app/compliance/retention-policies\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /configuration/approvals",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 12\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"message\": \"Non-JSON error\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/configuration/change-requests\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"message\": \"Non-JSON error\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/configuration/change-requests\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /configuration",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 12\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"message\": \"Non-JSON error\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/configuration/keys\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"message\": \"Non-JSON error\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/configuration/keys\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /dashboard",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 50\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"VALIDATION_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"The given data was invalid.\",\u001b[39m\n\u001b[31m+     \"status\": 422,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/transactions\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/wallets/summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/transactions/summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"RESOURCE_NOT_FOUND\",\u001b[39m\n\u001b[31m+     \"message\": \"The requested resource does not exist.\",\u001b[39m\n\u001b[31m+     \"status\": 404,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/kyc/summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"VALIDATION_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"The given data was invalid.\",\u001b[39m\n\u001b[31m+     \"status\": 422,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/transactions\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/wallets/summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/transactions/summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"RESOURCE_NOT_FOUND\",\u001b[39m\n\u001b[31m+     \"message\": \"The requested resource does not exist.\",\u001b[39m\n\u001b[31m+     \"status\": 404,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/kyc/summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /devices",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Uncaught browser errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 12\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'find')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'find')\",\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /fees/rules",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Uncaught browser errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 12\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /financial-dashboard",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 14\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"ADMINAPP_DASH_001\",\u001b[39m\n\u001b[31m+     \"message\": \"Financial dashboard metrics are currently unavailable. The cache has not been warmed.\",\u001b[39m\n\u001b[31m+     \"status\": 503,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin-app/dashboard/financial\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"ADMINAPP_DASH_001\",\u001b[39m\n\u001b[31m+     \"message\": \"Financial dashboard metrics are currently unavailable. The cache has not been warmed.\",\u001b[39m\n\u001b[31m+     \"status\": 503,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin-app/dashboard/financial\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /kyc",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Uncaught browser errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 10\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /operations/dead-letter",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 14\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/operations/dead-letter\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/operations/dead-letter\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /ops/alert-rules",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 8\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/ops/alert-rules\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /ops/alerts",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 8\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/ops/alerts\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /ops/backup-jobs",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 8\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/ops/backup-jobs\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /ops/db-monitoring",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 8\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/ops/metrics\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /ops/deployments",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 14\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/ops/deployments/versions\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/ops/deployments/rollbacks\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /ops/logs",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 8\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/ops/logs\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /ops/metrics",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 8\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/ops/metrics\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /ops",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 14\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/ops/providers\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/ops/alerts\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /ops/providers",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 8\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/ops/providers\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /ops/queue-monitoring",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 8\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/ops/metrics\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /profile/notifications",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Failed browser requests\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 4\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"http://localhost:8001/api/v1/notifications/preferences\",\u001b[39m\n\u001b[31m+   \"http://localhost:8001/api/v1/notifications/preferences\",\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /profile",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 14\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"PROFILE_NOT_FOUND\",\u001b[39m\n\u001b[31m+     \"message\": \"Profile not found.\",\u001b[39m\n\u001b[31m+     \"status\": 404,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/users/01a0d2ba-3aee-7347-b52d-5802bab17ef6/profile\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"PROFILE_NOT_FOUND\",\u001b[39m\n\u001b[31m+     \"message\": \"Profile not found.\",\u001b[39m\n\u001b[31m+     \"status\": 404,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/users/01a0d2ba-3aee-7347-b52d-5802bab17ef6/profile\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /profile/sessions",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Uncaught browser errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 12\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /qa",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 14\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/qa/dashboard\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/qa/dashboard\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /reports",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 14\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/reports/jobs\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/reports/jobs\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /reports/schedules",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 14\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/reports/schedules\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/reports/schedules\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /reports/settlement",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Uncaught browser errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 12\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+   \"Cannot read properties of undefined (reading 'length')\",\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /risk-dashboard",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 14\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"ADMINAPP_DASH_001\",\u001b[39m\n\u001b[31m+     \"message\": \"Risk dashboard metrics are currently unavailable. The cache has not been warmed.\",\u001b[39m\n\u001b[31m+     \"status\": 503,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin-app/dashboard/risk\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"ADMINAPP_DASH_001\",\u001b[39m\n\u001b[31m+     \"message\": \"Risk dashboard metrics are currently unavailable. The cache has not been warmed.\",\u001b[39m\n\u001b[31m+     \"status\": 503,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin-app/dashboard/risk\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /sessions",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 14\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"RESOURCE_NOT_FOUND\",\u001b[39m\n\u001b[31m+     \"message\": \"The requested resource does not exist.\",\u001b[39m\n\u001b[31m+     \"status\": 404,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/sessions\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"RESOURCE_NOT_FOUND\",\u001b[39m\n\u001b[31m+     \"message\": \"The requested resource does not exist.\",\u001b[39m\n\u001b[31m+     \"status\": 404,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/sessions\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live route /",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: API errors\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 50\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"VALIDATION_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"The given data was invalid.\",\u001b[39m\n\u001b[31m+     \"status\": 422,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/transactions\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/wallets/summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/transactions/summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"RESOURCE_NOT_FOUND\",\u001b[39m\n\u001b[31m+     \"message\": \"The requested resource does not exist.\",\u001b[39m\n\u001b[31m+     \"status\": 404,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/kyc/summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"VALIDATION_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"The given data was invalid.\",\u001b[39m\n\u001b[31m+     \"status\": 422,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/transactions\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/wallets/summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"INTERNAL_ERROR\",\u001b[39m\n\u001b[31m+     \"message\": \"An unexpected error occurred. Please retry or contact support.\",\u001b[39m\n\u001b[31m+     \"status\": 500,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/transactions/summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"code\": \"RESOURCE_NOT_FOUND\",\u001b[39m\n\u001b[31m+     \"message\": \"The requested resource does not exist.\",\u001b[39m\n\u001b[31m+     \"status\": 404,\u001b[39m\n\u001b[31m+     \"url\": \"/v1/admin/kyc/summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m"
+    },
+    {
+      "title": "live role creation persists after reload and detail navigation",
+      "file": "admin-live-workflows.spec.ts",
+      "status": "failed",
+      "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('status')\nExpected substring: \u001b[32m\"browser_qa_1792131294741\"\u001b[39m\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByRole('status') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('status')\u001b[22m\n"
+    }
+  ],
+  "unverifiedDetails": [
+    "live detail /admin-portal/agents/[id]",
+    "live detail /admin-portal/roles/[id]",
+    "live detail /admin-portal/transactions/[id]",
+    "live detail /admin-portal/users/[id]",
+    "live detail /admin-portal/wallets/[id]",
+    "live detail /agents/[id]",
+    "live detail /configuration/approvals/[id]",
+    "live detail /configuration/[domain]/[key]",
+    "live detail /fees/rules/[id]",
+    "live detail /integrations/providers/[id]/health",
+    "live detail /integrations/[id]",
+    "live detail /kyc/[id]",
+    "live detail /qa/runs/[id]",
+    "live detail /reconciliation/batches/[id]",
+    "live detail /reconciliation/settlements/[id]",
+    "live detail /reports/[id]",
+    "live detail /security/alerts/[id]",
+    "live detail /security/findings/[id]",
+    "live detail /support/cases/[id]"
+  ],
+  "correctedDetailRetest": [
+    {
+      "title": "live detail /admin-portal/agents/[id]",
+      "status": "skipped"
+    },
+    {
+      "title": "live detail /admin-portal/roles/[id]",
+      "status": "skipped"
+    },
+    {
+      "title": "live detail /admin-portal/transactions/[id]",
+      "status": "skipped"
+    },
+    {
+      "title": "live detail /admin-portal/users/[id]",
+      "status": "skipped"
+    },
+    {
+      "title": "live detail /admin-portal/wallets/[id]",
+      "status": "skipped"
+    },
+    {
+      "title": "live detail /agents/[id]",
+      "status": "skipped"
+    },
+    {
+      "title": "live detail /configuration/approvals/[id]",
+      "status": "skipped"
+    },
+    {
+      "title": "live detail /configuration/[domain]/[key]",
+      "status": "skipped"
+    },
+    {
+      "title": "live detail /fees/rules/[id]",
+      "status": "skipped"
+    },
+    {
+      "title": "live detail /integrations/providers/[id]/health",
+      "status": "skipped"
+    },
+    {
+      "title": "live detail /integrations/[id]",
+      "status": "skipped"
+    },
+    {
+      "title": "live detail /kyc/[id]",
+      "status": "skipped"
+    },
+    {
+      "title": "live detail /qa/runs/[id]",
+      "status": "skipped"
+    },
+    {
+      "title": "live detail /reconciliation/batches/[id]",
+      "status": "skipped"
+    },
+    {
+      "title": "live detail /reconciliation/settlements/[id]",
+      "status": "skipped"
+    },
+    {
+      "title": "live detail /reports/[id]",
+      "status": "skipped"
+    },
+    {
+      "title": "live detail /security/alerts/[id]",
+      "status": "skipped"
+    },
+    {
+      "title": "live detail /security/findings/[id]",
+      "status": "skipped"
+    },
+    {
+      "title": "live detail /support/cases/[id]",
+      "status": "skipped"
+    }
+  ]
+}

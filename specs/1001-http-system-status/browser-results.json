@@ -1,0 +1,307 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config",
+      "playwright.p2001.config.ts"
+    ],
+    "configFile": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\playwright.p2001.config.ts",
+    "rootDir": "C:/Projects/OleKardEcosystem/wallet-ecosystem/apps/admin/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Projects/OleKardEcosystem/wallet-ecosystem/apps/admin/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Projects/OleKardEcosystem/wallet-ecosystem/apps/admin/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "p2001-system.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "",
+        "testDir": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e",
+        "snapshotDir": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e",
+        "testIgnore": [],
+        "testMatch": "p2001-system.spec.ts",
+        "timeout": 60000,
+        "use": {
+          "baseURL": "http://localhost:3024",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": ""
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../../../specs/1001-http-system-status/browser-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.0",
+    "workers": 1,
+    "webServer": {
+      "command": "node .next/standalone/server.js",
+      "url": "http://localhost:3024/unsupported-browser",
+      "timeout": 120000,
+      "reuseExistingServer": false,
+      "env": {
+        "PORT": "3024",
+        "HOSTNAME": "localhost",
+        "NEXT_PUBLIC_API_URL": "http://localhost:3024/api",
+        "MAINTENANCE_MODE": "false",
+        "MAINTENANCE_RETURN_AT": "2026-10-17T10:00:00Z",
+        "MAINTENANCE_BYPASS_SECRET": "browser-test-maintenance-secret-at-least32chars"
+      }
+    }
+  },
+  "suites": [
+    {
+      "title": "p2001-system.spec.ts",
+      "file": "p2001-system.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "standalone HTTP routes preserve codes and recovery actions",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 883,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T04:52:49.529Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c21fb2dd0e42feea3143-d4caa2da93060ce20b03",
+          "file": "p2001-system.spec.ts",
+          "line": 7,
+          "column": 5
+        },
+        {
+          "title": "authenticated proxy errors retain shell without replay",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 955,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T04:52:50.535Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c21fb2dd0e42feea3143-88d6afc7aaa4fa7c2997",
+          "file": "p2001-system.spec.ts",
+          "line": 13,
+          "column": 5
+        },
+        {
+          "title": "offline state and connection recovery preserve shell",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 375,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T04:52:51.509Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c21fb2dd0e42feea3143-14316e30d4e4b911c12f",
+          "file": "p2001-system.spec.ts",
+          "line": 32,
+          "column": 5
+        },
+        {
+          "title": "legacy browser has a script-free no-JS fallback",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 219,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T04:52:51.896Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c21fb2dd0e42feea3143-7007ae387a4b6ea6a86a",
+          "file": "p2001-system.spec.ts",
+          "line": 33,
+          "column": 5
+        },
+        {
+          "title": "repaired role dialog keeps layout, keyboard dismissal and action payload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 685,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T04:52:52.125Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c21fb2dd0e42feea3143-d97f4df28bcc31ae6455",
+          "file": "p2001-system.spec.ts",
+          "line": 35,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-16T04:52:48.467Z",
+    "duration": 4890.872,
+    "expected": 5,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

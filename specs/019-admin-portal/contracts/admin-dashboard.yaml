@@ -1,0 +1,369 @@
+openapi: 3.0.3
+info:
+  title: Admin Portal — Dashboard API
+  description: |
+    E19 Admin Portal dashboard endpoints. Aggregates KPIs across all modules.
+    US-ADMIN-001 through US-ADMIN-008.
+  version: 1.0.0
+
+servers:
+  - url: /v1/admin
+
+security:
+  - bearerAuth: []
+
+paths:
+  /dashboard:
+    get:
+      operationId: getDashboard
+      summary: View all dashboard KPIs (US-ADMIN-001)
+      description: |
+        Returns aggregated KPIs across users, wallets, transactions, KYC, agents, and risk.
+        Dashboard stats are cached with a 5-minute TTL. Cache age is reflected in X-Stats-Age header.
+      tags: [Dashboard]
+      parameters:
+        - in: query
+          name: period
+          schema:
+            type: string
+            enum: [today, week, month]
+            default: today
+          description: Aggregation period for time-series KPIs
+      responses:
+        '200':
+          description: Dashboard KPI summary
+          headers:
+            X-Stats-Age:
+              schema:
+                type: integer
+              description: Age of cached stats in seconds (0 = live query)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /dashboard/users:
+    get:
+      operationId: getDashboardUsers
+      summary: View total user statistics (US-ADMIN-002)
+      tags: [Dashboard]
+      parameters:
+        - $ref: '#/components/parameters/Period'
+      responses:
+        '200':
+          description: User statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /dashboard/wallets:
+    get:
+      operationId: getDashboardWallets
+      summary: View wallet statistics (US-ADMIN-003)
+      tags: [Dashboard]
+      parameters:
+        - $ref: '#/components/parameters/Period'
+      responses:
+        '200':
+          description: Wallet statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /dashboard/transactions:
+    get:
+      operationId: getDashboardTransactions
+      summary: View transaction statistics (US-ADMIN-004)
+      tags: [Dashboard]
+      parameters:
+        - $ref: '#/components/parameters/Period'
+      responses:
+        '200':
+          description: Transaction statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /dashboard/failures:
+    get:
+      operationId: getDashboardFailures
+      summary: View transaction failure statistics (US-ADMIN-005)
+      tags: [Dashboard]
+      parameters:
+        - $ref: '#/components/parameters/Period'
+      responses:
+        '200':
+          description: Transaction failure breakdown
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailureStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /dashboard/kyc:
+    get:
+      operationId: getDashboardKyc
+      summary: View KYC statistics (US-ADMIN-006)
+      tags: [Dashboard]
+      parameters:
+        - $ref: '#/components/parameters/Period'
+      responses:
+        '200':
+          description: KYC completion and status breakdown
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /dashboard/agents:
+    get:
+      operationId: getDashboardAgents
+      summary: View agent statistics (US-ADMIN-007)
+      tags: [Dashboard]
+      parameters:
+        - $ref: '#/components/parameters/Period'
+      responses:
+        '200':
+          description: Agent activity statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /dashboard/risk:
+    get:
+      operationId: getDashboardRisk
+      summary: View risk alert statistics (US-ADMIN-008)
+      tags: [Dashboard]
+      responses:
+        '200':
+          description: Open risk alerts summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Period:
+      in: query
+      name: period
+      schema:
+        type: string
+        enum: [today, week, month]
+        default: today
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+
+    DashboardSummary:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            users:
+              $ref: '#/components/schemas/UserStats'
+            wallets:
+              $ref: '#/components/schemas/WalletStats'
+            transactions:
+              $ref: '#/components/schemas/TransactionStats'
+            failures:
+              $ref: '#/components/schemas/FailureStats'
+            kyc:
+              $ref: '#/components/schemas/KycStats'
+            agents:
+              $ref: '#/components/schemas/AgentStats'
+            risk:
+              $ref: '#/components/schemas/RiskStats'
+            cached_at:
+              type: string
+              format: date-time
+            period:
+              type: string
+
+    UserStats:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            total:
+              type: integer
+            active:
+              type: integer
+            suspended:
+              type: integer
+            new_in_period:
+              type: integer
+            period:
+              type: string
+
+    WalletStats:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            total_wallets:
+              type: integer
+            active_wallets:
+              type: integer
+            frozen_wallets:
+              type: integer
+            total_balance:
+              type: string
+              description: BCMATH decimal string in BWP
+            average_balance:
+              type: string
+
+    TransactionStats:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            total_count:
+              type: integer
+            total_volume:
+              type: string
+            by_type:
+              type: object
+              additionalProperties:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  volume:
+                    type: string
+            period:
+              type: string
+
+    FailureStats:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            total_failures:
+              type: integer
+            failure_rate:
+              type: number
+              format: float
+              description: Percentage of transactions that failed
+            by_reason:
+              type: object
+              additionalProperties:
+                type: integer
+            period:
+              type: string
+
+    KycStats:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            total_submitted:
+              type: integer
+            approved:
+              type: integer
+            pending_review:
+              type: integer
+            rejected:
+              type: integer
+            completion_rate:
+              type: number
+              format: float
+
+    AgentStats:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            total_agents:
+              type: integer
+            active_agents:
+              type: integer
+            suspended_agents:
+              type: integer
+            transactions_in_period:
+              type: integer
+            volume_in_period:
+              type: string
+
+    RiskStats:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            open_alerts:
+              type: integer
+            critical_alerts:
+              type: integer
+            high_alerts:
+              type: integer
+            sla_breached:
+              type: integer
+            accounts_frozen:
+              type: integer

@@ -1,0 +1,68 @@
+import 'package:flutter/material.dart';
+import 'package:design_system/design_system.dart';
+
+abstract final class AppTheme {
+  static ThemeData light() => ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme(
+          brightness: Brightness.light,
+          primary: AppTokens.colorConsumerPrimary,
+          onPrimary: AppTokens.colorNeutral0,
+          primaryContainer: AppTokens.colorGreen100,
+          onPrimaryContainer: AppTokens.colorGreen900,
+          secondary: AppTokens.colorConsumerPrimaryLight,
+          onSecondary: AppTokens.colorNeutral0,
+          secondaryContainer: AppTokens.colorGreen50,
+          onSecondaryContainer: AppTokens.colorGreen900,
+          error: AppTokens.colorErrorPrimary,
+          onError: AppTokens.colorNeutral0,
+          errorContainer: AppTokens.colorRed50,
+          onErrorContainer: AppTokens.colorRed700,
+          surface: AppTokens.colorBgPrimary,
+          onSurface: AppTokens.colorTextPrimary,
+          surfaceContainerHighest: AppTokens.colorConsumerSurface,
+          onSurfaceVariant: AppTokens.colorTextSecondary,
+          outline: AppTokens.colorNeutral300,
+          outlineVariant: AppTokens.colorNeutral200,
+          shadow: AppTokens.colorNeutral950,
+          scrim: AppTokens.colorNeutral950,
+          inverseSurface: AppTokens.colorNeutral900,
+          onInverseSurface: AppTokens.colorNeutral0,
+          inversePrimary: AppTokens.colorGreen300,
+        ),
+        scaffoldBackgroundColor: AppTokens.colorConsumerSurface,
+        dividerColor: AppTokens.colorNeutral200,
+      );
+
+  static ThemeData dark() => ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme(
+          brightness: Brightness.dark,
+          primary: AppTokens.colorGreen400,
+          onPrimary: AppTokens.colorGreen900,
+          primaryContainer: AppTokens.colorGreen700,
+          onPrimaryContainer: AppTokens.colorGreen50,
+          secondary: AppTokens.colorGreen300,
+          onSecondary: AppTokens.colorGreen900,
+          secondaryContainer: AppTokens.colorGreen800,
+          onSecondaryContainer: AppTokens.colorGreen50,
+          error: AppTokens.colorRed500,
+          onError: AppTokens.colorNeutral950,
+          errorContainer: AppTokens.colorRed700,
+          onErrorContainer: AppTokens.colorRed50,
+          surface: AppTokens.colorNeutral900,
+          onSurface: AppTokens.colorNeutral0,
+          surfaceContainerHighest: AppTokens.colorNeutral800,
+          onSurfaceVariant: AppTokens.colorNeutral400,
+          outline: AppTokens.colorNeutral600,
+          outlineVariant: AppTokens.colorNeutral700,
+          shadow: AppTokens.colorNeutral950,
+          scrim: AppTokens.colorNeutral950,
+          inverseSurface: AppTokens.colorNeutral0,
+          onInverseSurface: AppTokens.colorNeutral900,
+          inversePrimary: AppTokens.colorConsumerPrimary,
+        ),
+        scaffoldBackgroundColor: AppTokens.colorNeutral950,
+        dividerColor: AppTokens.colorNeutral700,
+      );
+}

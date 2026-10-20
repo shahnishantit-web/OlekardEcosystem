@@ -1,0 +1,478 @@
+openapi: 3.0.3
+info:
+  title: OleKard Admin Support & Dispute Management
+  version: 1.0.0
+  description: >-
+    ADM-P1-021. All operations require authenticated support.investigate; financial operations additionally require
+    dispute.refund and signed actor/session-bound MFA.
+servers:
+  - url: /v1/admin/support
+security:
+  - BearerAuth: []
+paths:
+  /cases:
+    get:
+      operationId: listAdminCases
+      description: Unified queue, excluding linked-ticket duplicates. UTC date range is inclusive; page size20.
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: priority
+          in: query
+          schema:
+            type: string
+        - name: date_from
+          in: query
+          schema:
+            type: string
+        - name: date_to
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Paged queue
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Case'
+                      page:
+                        type: integer
+                      last_page:
+                        type: integer
+                      total:
+                        type: integer
+  /cases/{id}:
+    get:
+      operationId: getAdminCase
+      description: Includes legacy notes/evidence and private Admin investigation timeline.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Case envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Case'
+        '401':
+          description: Authentication required
+        '403':
+          description: Permission or MFA denied
+        '404':
+          description: Case not found
+        '409':
+          description: Conflicting state or replay
+        '422':
+          description: Validation failure
+        '429':
+          description: Rate limited
+    patch:
+      operationId: updateAdminCase
+      description: >-
+        Assignment requires support.assign; escalation requires dispute.escalate and a senior assignee with
+        support.assign and support.investigate. Escalation persists an exact24-hour deadline and durable notification.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+                  enum:
+                    - note
+                    - link
+                    - assign
+                    - investigate
+                    - escalate
+                content:
+                  type: string
+                  maxLength: 10000
+                related_case_id:
+                  type: string
+                  format: uuid
+                assignee_id:
+                  type: string
+                  format: uuid
+                reason:
+                  type: string
+                  enum:
+                    - complex_investigation
+                    - financial_review
+                    - security_review
+                    - customer_appeal
+                    - other
+      responses:
+        '200':
+          description: Case envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Case'
+        '401':
+          description: Authentication required
+        '403':
+          description: Permission or MFA denied
+        '404':
+          description: Case not found
+        '409':
+          description: Conflicting state or replay
+        '422':
+          description: Validation failure
+        '429':
+          description: Rate limited
+  /cases/{id}/resolve:
+    post:
+      operationId: resolveAdminCase
+      description: support.resolve required. Reuses existing ticket state machine; disputes use approval/refund workflow.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - resolution_note
+              properties:
+                resolution_note:
+                  type: string
+                  minLength: 1
+                  maxLength: 10000
+      responses:
+        '200':
+          description: Case envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Case'
+        '401':
+          description: Authentication required
+        '403':
+          description: Permission or MFA denied
+        '404':
+          description: Case not found
+        '409':
+          description: Conflicting state or replay
+        '422':
+          description: Validation failure
+        '429':
+          description: Rate limited
+  /cases/{id}/refund:
+    post:
+      operationId: refundAdminDispute
+      description: >-
+        Atomic journal, fee reversal, linked refund transaction, dispute outcome, audit and outbox. Central
+        support.dispute.refund.require_second_approval policy requires independent exact-payload confirmation when
+        enabled. Same-key changed intent conflicts.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount_minor
+                - reason
+                - step_up_token
+              properties:
+                amount_minor:
+                  type: integer
+                  minimum: 1
+                  description: Original currency minor units; cannot exceed remaining original amount.
+                reason:
+                  type: string
+                  minLength: 1
+                  maxLength: 10000
+                step_up_token:
+                  type: string
+                  writeOnly: true
+                  description: >-
+                    Proof from /v1/auth/step-up/verify; initiate with scope support.refund:{id},
+                    operation_context.risk_required=true.
+                confirm:
+                  type: boolean
+                  default: false
+      responses:
+        '200':
+          description: Case envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Case'
+        '401':
+          description: Authentication required
+        '403':
+          description: Permission or MFA denied
+        '404':
+          description: Case not found
+        '409':
+          description: Conflicting state or replay
+        '422':
+          description: Validation failure
+        '429':
+          description: Rate limited
+  /cases/{id}/attachments:
+    post:
+      operationId: attachAdminCaseEvidence
+      description: >-
+        Private JPEG/PNG/WebP/PDF evidence. Validate decoded MIME, configured size/count. Default10MB/five files;
+        original evidence counts toward limit.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - filename
+                - content_base64
+              properties:
+                filename:
+                  type: string
+                  maxLength: 255
+                content_base64:
+                  type: string
+                  format: byte
+                  maxLength: 13981016
+      responses:
+        '200':
+          description: Case envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Case'
+        '401':
+          description: Authentication required
+        '403':
+          description: Permission or MFA denied
+        '404':
+          description: Case not found
+        '409':
+          description: Conflicting state or replay
+        '422':
+          description: Validation failure
+        '429':
+          description: Rate limited
+  /cases/{id}/attachments/{entryId}:
+    get:
+      operationId: downloadAdminCaseEvidence
+      description: Authenticated download scoped to case and evidence; no public storage key.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: entryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Private evidence
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: Permission denied
+        '404':
+          description: Evidence not found on case
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Case:
+      type: object
+      required:
+        - id
+        - number
+        - type
+        - customer_id
+        - priority
+        - status
+        - created_at
+        - assigned_id
+        - overdue
+      properties:
+        id:
+          type: string
+          format: uuid
+        number:
+          type: string
+        type:
+          type: string
+          enum:
+            - Support
+            - Dispute
+        customer_id:
+          type: string
+          format: uuid
+        priority:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+            - critical
+        status:
+          type: string
+          enum:
+            - Open
+            - In Progress
+            - Escalated
+            - Resolved
+        raw_status:
+          type: string
+        assigned_id:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        deadline:
+          type: string
+          format: date-time
+          nullable: true
+        overdue:
+          type: boolean
+        description:
+          type: string
+        transaction_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        timeline:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              kind:
+                type: string
+              actor_id:
+                type: string
+                format: uuid
+              created_at:
+                type: string
+                format: date-time
+              payload:
+                type: object
+                additionalProperties: true
+        evidence:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              filename:
+                type: string
+              legacy:
+                type: boolean
+        refund_pending_confirmation:
+          type: boolean
+        refund_initiator_id:
+          type: string
+          nullable: true
+        refund_amount_minor:
+          type: integer
+          nullable: true
+        refund_reason:
+          type: string
+          nullable: true

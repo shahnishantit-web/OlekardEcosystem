@@ -1,0 +1,204 @@
+{
+  "loginStatus": 200,
+  "permissionCount": 195,
+  "results": [
+    {
+      "path": "/v1/admin-app/roles?page=1&per_page=50",
+      "status": 200,
+      "rootKeys": [
+        "data",
+        "meta"
+      ],
+      "dataKeys": {
+        "arrayLength": 50,
+        "firstItemKeys": [
+          "role_id",
+          "role_name",
+          "permission_slugs",
+          "user_count",
+          "is_system_role",
+          "created_at"
+        ]
+      },
+      "nestedDataKeys": "undefined",
+      "metaKeys": [
+        "total",
+        "per_page",
+        "current_page",
+        "last_page"
+      ],
+      "nestedMetaKeys": "undefined"
+    },
+    {
+      "path": "/v1/admin-app/users?page=1&per_page=20",
+      "status": 500,
+      "rootKeys": [
+        "success",
+        "data",
+        "error",
+        "correlation_id",
+        "meta"
+      ],
+      "success": false,
+      "error": "INTERNAL_ERROR",
+      "dataKeys": "object",
+      "nestedDataKeys": "undefined",
+      "metaKeys": "object",
+      "nestedMetaKeys": "undefined"
+    },
+    {
+      "path": "/v1/admin-app/agents?page=1&per_page=20",
+      "status": 500,
+      "rootKeys": [
+        "success",
+        "data",
+        "error",
+        "correlation_id",
+        "meta"
+      ],
+      "success": false,
+      "error": "INTERNAL_ERROR",
+      "dataKeys": "object",
+      "nestedDataKeys": "undefined",
+      "metaKeys": "object",
+      "nestedMetaKeys": "undefined"
+    },
+    {
+      "path": "/v1/admin-app/wallets?page=1&per_page=20",
+      "status": 500,
+      "rootKeys": [
+        "success",
+        "data",
+        "error",
+        "correlation_id",
+        "meta"
+      ],
+      "success": false,
+      "error": "INTERNAL_ERROR",
+      "dataKeys": "object",
+      "nestedDataKeys": "undefined",
+      "metaKeys": "object",
+      "nestedMetaKeys": "undefined"
+    },
+    {
+      "path": "/v1/admin-app/transactions?page=1&per_page=20",
+      "status": 500,
+      "rootKeys": [
+        "success",
+        "data",
+        "error",
+        "correlation_id",
+        "meta"
+      ],
+      "success": false,
+      "error": "INTERNAL_ERROR",
+      "dataKeys": "object",
+      "nestedDataKeys": "undefined",
+      "metaKeys": "object",
+      "nestedMetaKeys": "undefined"
+    },
+    {
+      "path": "/v1/admin-app/audit?per_page=20",
+      "status": 200,
+      "rootKeys": [
+        "data",
+        "meta"
+      ],
+      "dataKeys": {
+        "arrayLength": 20,
+        "firstItemKeys": [
+          "id",
+          "action",
+          "actor_type",
+          "actor_id",
+          "resource_type",
+          "resource_id",
+          "outcome",
+          "correlation_id",
+          "before_state",
+          "after_state",
+          "occurred_at"
+        ]
+      },
+      "nestedDataKeys": "undefined",
+      "metaKeys": [
+        "total",
+        "per_page",
+        "current_page",
+        "last_page"
+      ],
+      "nestedMetaKeys": "undefined"
+    },
+    {
+      "path": "/v1/admin/transactions?page=1&per_page=25",
+      "status": 200,
+      "rootKeys": [
+        "data",
+        "meta"
+      ],
+      "dataKeys": {
+        "arrayLength": 0,
+        "firstItemKeys": []
+      },
+      "nestedDataKeys": "undefined",
+      "metaKeys": [
+        "current_page",
+        "per_page",
+        "total",
+        "last_page"
+      ],
+      "nestedMetaKeys": "undefined"
+    },
+    {
+      "path": "/v1/admin/wallets/summary",
+      "status": 500,
+      "rootKeys": [
+        "success",
+        "data",
+        "error",
+        "correlation_id",
+        "meta"
+      ],
+      "success": false,
+      "error": "INTERNAL_ERROR",
+      "dataKeys": "object",
+      "nestedDataKeys": "undefined",
+      "metaKeys": "object",
+      "nestedMetaKeys": "undefined"
+    },
+    {
+      "path": "/v1/admin/transactions/summary",
+      "status": 500,
+      "rootKeys": [
+        "success",
+        "data",
+        "error",
+        "correlation_id",
+        "meta"
+      ],
+      "success": false,
+      "error": "INTERNAL_ERROR",
+      "dataKeys": "object",
+      "nestedDataKeys": "undefined",
+      "metaKeys": "object",
+      "nestedMetaKeys": "undefined"
+    },
+    {
+      "path": "/v1/admin/kyc/summary",
+      "status": 404,
+      "rootKeys": [
+        "success",
+        "data",
+        "error",
+        "correlation_id",
+        "meta"
+      ],
+      "success": false,
+      "error": "RESOURCE_NOT_FOUND",
+      "dataKeys": "object",
+      "nestedDataKeys": "undefined",
+      "metaKeys": "object",
+      "nestedMetaKeys": "undefined"
+    }
+  ]
+}

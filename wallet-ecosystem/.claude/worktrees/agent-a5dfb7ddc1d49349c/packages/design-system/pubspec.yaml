@@ -1,0 +1,11 @@
+name: design_system
+description: OleKard shared design tokens for Flutter applications
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter

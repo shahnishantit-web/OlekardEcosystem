@@ -1,0 +1,10 @@
+{
+  "tokenBytes": 6635,
+  "permissionCount": 195,
+  "browserCookieNames": [
+    "admin_user",
+    "admin_sid"
+  ],
+  "adminTokenPersisted": false,
+  "adminPermissionsPersisted": false
+}

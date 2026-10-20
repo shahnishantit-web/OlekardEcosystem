@@ -1,0 +1,16 @@
+{
+  "route": "/403",
+  "landed": "/403",
+  "status": 200,
+  "headings": [
+    "Access denied"
+  ],
+  "errors": [],
+  "api": [],
+  "failed": [],
+  "links": [
+    "/dashboard"
+  ],
+  "overflow": false,
+  "text": "OK\nOleKard\n\nERROR 403\n\nAccess denied\n\nYou don't have permission to view this page. If you believe this is a mistake, contact your system administrator.\n\nGo to Dashboard\nGo back\n\nAuthorized personnel only. All sessions are logged and monitored."
+}

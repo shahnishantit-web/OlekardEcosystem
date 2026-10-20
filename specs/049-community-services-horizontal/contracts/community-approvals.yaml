@@ -1,0 +1,412 @@
+openapi: "3.1.0"
+info:
+  title: Community Services — Approvals and Policy Versioning
+  version: "1.0.0"
+  description: >
+    HZ13 Approvals and Policy Versioning.
+    Maker-checker: approved_by MUST differ from submitted_by.
+    Concurrent approval attempts are serialised via row lock.
+    A payout or refund edited after approval returns to pending_review.
+
+paths:
+  /v1/community/approvals:
+    get:
+      operationId: listApprovalRequests
+      summary: List approval requests (approval inbox)
+      tags: [Approvals]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organisation_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [payout, refund, destination_change, emergency_suspension, beneficiary_change]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending_review, approved, rejected, expired, cancelled]
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 25
+      responses:
+        "200":
+          description: Approval request list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApprovalRequestListResponse"
+
+    post:
+      operationId: submitApprovalRequest
+      summary: Submit a new approval request
+      tags: [Approvals]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitApprovalRequest"
+      responses:
+        "201":
+          description: Approval request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApprovalRequestResponse"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /v1/community/approvals/{id}:
+    get:
+      operationId: getApprovalRequest
+      summary: Get approval request detail
+      tags: [Approvals]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ApprovalId"
+      responses:
+        "200":
+          description: Approval request detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApprovalRequestResponse"
+
+  /v1/community/approvals/{id}/approve:
+    post:
+      operationId: approveRequest
+      summary: Approve an approval request (approver ≠ submitter)
+      tags: [Approvals]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ApprovalId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                decision_reason:
+                  type: string
+                  maxLength: 1000
+      responses:
+        "200":
+          description: Approval granted; subject entity transitioned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApprovalRequestResponse"
+        "403":
+          description: Self-approval rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Already decided or serialisation conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /v1/community/approvals/{id}/reject:
+    post:
+      operationId: rejectRequest
+      summary: Reject an approval request
+      tags: [Approvals]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ApprovalId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision_reason]
+              properties:
+                decision_reason:
+                  type: string
+                  maxLength: 1000
+      responses:
+        "200":
+          description: Request rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApprovalRequestResponse"
+
+  /v1/community/policy-versions:
+    get:
+      operationId: listPolicyVersions
+      summary: List policy versions
+      tags: [Policies]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organisation_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: policy_type
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Policy versions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyVersionListResponse"
+
+    post:
+      operationId: createPolicyVersion
+      summary: Create a new policy version
+      tags: [Policies]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePolicyVersionRequest"
+      responses:
+        "201":
+          description: Policy version created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyVersionResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ApprovalId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 128
+
+  schemas:
+    ApprovalRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        external_ref:
+          type: string
+        organisation_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [payout, refund, destination_change, emergency_suspension, beneficiary_change]
+        subject_entity_type:
+          type: string
+        subject_entity_id:
+          type: string
+          format: uuid
+        submitted_by:
+          type: string
+          format: uuid
+        assigned_to:
+          type: string
+          format: uuid
+          nullable: true
+        status:
+          type: string
+          enum: [pending_review, approved, rejected, expired, cancelled]
+        approved_by:
+          type: string
+          format: uuid
+          nullable: true
+        rejected_by:
+          type: string
+          format: uuid
+          nullable: true
+        decision_reason:
+          type: string
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        decided_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    ApprovalRequestResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/ApprovalRequest"
+
+    ApprovalRequestListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ApprovalRequest"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    SubmitApprovalRequest:
+      type: object
+      required: [organisation_id, type, subject_entity_type, subject_entity_id]
+      properties:
+        organisation_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [payout, refund, destination_change, emergency_suspension, beneficiary_change]
+        subject_entity_type:
+          type: string
+        subject_entity_id:
+          type: string
+          format: uuid
+        notes:
+          type: string
+          nullable: true
+
+    PolicyVersion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organisation_id:
+          type: string
+          format: uuid
+          nullable: true
+        policy_type:
+          type: string
+          enum: [contribution_amount, refund_policy, capacity_rule, fee_schedule, approval_threshold]
+        version:
+          type: string
+        content_hash:
+          type: string
+        effective_from:
+          type: string
+          format: date-time
+        effective_to:
+          type: string
+          format: date-time
+          nullable: true
+        authored_by:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+
+    PolicyVersionResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/PolicyVersion"
+
+    PolicyVersionListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PolicyVersion"
+
+    CreatePolicyVersionRequest:
+      type: object
+      required: [policy_type, version, content, effective_from]
+      properties:
+        organisation_id:
+          type: string
+          format: uuid
+          nullable: true
+        policy_type:
+          type: string
+          enum: [contribution_amount, refund_policy, capacity_rule, fee_schedule, approval_threshold]
+        version:
+          type: string
+          pattern: "^\\d+\\.\\d+\\.\\d+$"
+        content:
+          type: object
+          description: Policy-type-specific structure
+        effective_from:
+          type: string
+          format: date-time
+
+    PaginationMeta:
+      type: object
+      properties:
+        next_cursor:
+          type: string
+          nullable: true
+        per_page:
+          type: integer
+
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, correlation_id]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            correlation_id:
+              type: string
+              format: uuid
+
+  responses:
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"

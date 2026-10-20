@@ -1,0 +1,1075 @@
+[
+  {
+    "uri": "/v1/admin/configuration/keys",
+    "status": 200,
+    "keys": [
+      "current_page",
+      "data",
+      "first_page_url",
+      "from",
+      "last_page",
+      "last_page_url",
+      "links",
+      "next_page_url",
+      "path",
+      "per_page",
+      "prev_page_url",
+      "to",
+      "total"
+    ],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/configuration/change-requests",
+    "status": 200,
+    "keys": [
+      "current_page",
+      "data",
+      "first_page_url",
+      "from",
+      "last_page",
+      "last_page_url",
+      "links",
+      "next_page_url",
+      "path",
+      "per_page",
+      "prev_page_url",
+      "to",
+      "total"
+    ],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/operations/dead-letter",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/operations/dead-letter/stats",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/operations/ledger-integrity/snapshots",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/users/profile",
+    "status": 404,
+    "code": "PROFILE_NOT_FOUND",
+    "message": "Profile not found.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/profile/dashboard/summary",
+    "status": 200,
+    "keys": [
+      "total_users",
+      "active_accounts",
+      "suspended_accounts",
+      "pending_closure_requests",
+      "recent_contact_changes"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/users/profile/status",
+    "status": 404,
+    "code": "PROFILE_NOT_FOUND",
+    "message": "Profile not found.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/auth/sessions",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21",
+      "22",
+      "23",
+      "24",
+      "25",
+      "26",
+      "27",
+      "28",
+      "29",
+      "30",
+      "31",
+      "32",
+      "33",
+      "34",
+      "35",
+      "36",
+      "37",
+      "38",
+      "39",
+      "40",
+      "41",
+      "42",
+      "43",
+      "44",
+      "45",
+      "46",
+      "47",
+      "48",
+      "49",
+      "50",
+      "51",
+      "52",
+      "53",
+      "54",
+      "55",
+      "56",
+      "57",
+      "58",
+      "59",
+      "60",
+      "61",
+      "62",
+      "63",
+      "64",
+      "65",
+      "66",
+      "67",
+      "68",
+      "69",
+      "70",
+      "71",
+      "72",
+      "73",
+      "74",
+      "75",
+      "76",
+      "77",
+      "78",
+      "79",
+      "80",
+      "81",
+      "82",
+      "83",
+      "84",
+      "85",
+      "86",
+      "87",
+      "88",
+      "89",
+      "90",
+      "91",
+      "92",
+      "93",
+      "94",
+      "95",
+      "96",
+      "97",
+      "98",
+      "99",
+      "100"
+    ],
+    "count": 101,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/auth/devices",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "count": 5,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/sessions",
+    "status": 200,
+    "keys": [
+      "sessions",
+      "pagination"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/platform/configuration/security",
+    "status": 200,
+    "keys": [
+      "configuration",
+      "total"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/roles",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19"
+    ],
+    "count": 20,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/permissions",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19"
+    ],
+    "count": 20,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/users",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/auth/mfa/methods",
+    "status": 200,
+    "keys": [
+      "methods",
+      "enrolled"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/devices",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "count": 5,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/wallets/my",
+    "status": 404,
+    "code": "WALLET_NOT_FOUND",
+    "message": "No wallet found for the authenticated user.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/ledger/journals",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/kyc/cases/my",
+    "status": 404,
+    "code": "NOT_FOUND",
+    "message": "No KYC case found.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/kyc/cases",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/risk/rules",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/risk/alerts",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/risk/sars",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/security/alerts",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/security/findings",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/notifications/templates",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/notifications/log",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/notifications/rules",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/commission-rules",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2"
+    ],
+    "count": 3,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/commissions/report",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8"
+    ],
+    "count": 9,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/dashboard",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/dashboard/users",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/dashboard/wallets",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/dashboard/transactions",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/dashboard/failures",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/dashboard/kyc",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/dashboard/agents",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/dashboard/risk",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/wallets",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/transactions",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/reconciliation/batches",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/reconciliation/exceptions",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/reconciliation/settlements",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/fees/rules",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/support/tickets",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/disputes",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/support/cases",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/audit/events",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/compliance/dashboard",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/compliance/transactions",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/compliance/retention-policies",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/reports/jobs",
+    "status": 500,
+    "code": "INTERNAL_ERROR",
+    "message": "An unexpected error occurred. Please retry or contact support.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/reports/schedules",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/reports/catalogue",
+    "status": 500,
+    "code": "INTERNAL_ERROR",
+    "message": "An unexpected error occurred. Please retry or contact support.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/integrations/clients",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/integrations/providers",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/integrations/providers/call-logs",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/integrations/webhooks",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/integrations/api-clients",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/integrations/providers",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/webhooks/deliveries",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/security/dashboard",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/security/findings",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/platform/security-config",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/security/events/export",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/security/events",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/multi-currency/currencies",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/multi-currency/wallets",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/multi-currency/fx-fee",
+    "status": 422,
+    "code": "VALIDATION_ERROR",
+    "message": "The given data was invalid.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/multi-currency/fx-transactions",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/multi-currency/currencies",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/multi-currency/fx-rates",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/currencies",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/fx/rates",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/ops/logs",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/ops/metrics",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/ops/providers",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/ops/alert-rules",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/ops/alerts",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/ops/backup-jobs",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/ops/dr/status",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/ops/deployments/versions",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/ops/deployments/rollbacks",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/dashboard/operational",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/dashboard/financial",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/dashboard/risk",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/users",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2"
+    ],
+    "count": 3,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/roles",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/kyc",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/wallets",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/transactions",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/agents",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/float",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/reconciliation",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/settlement",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/audit",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/reports",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/qa/runs",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/qa/dashboard",
+    "status": 403,
+    "code": "AUTHORIZATION_001",
+    "message": "Insufficient permissions.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  }
+]

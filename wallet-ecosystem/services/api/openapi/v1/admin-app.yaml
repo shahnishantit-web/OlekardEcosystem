@@ -1,0 +1,1105 @@
+openapi: 3.1.0
+info:
+  title: OleKard Admin Application API
+  description: |
+    E33 Admin Application aggregation layer — provides a unified REST API
+    for the Next.js admin portal over the E01–E32 domain modules.
+
+    All endpoints require a valid Bearer token (`identity.auth` middleware).
+    State-changing endpoints require an `Idempotency-Key` header.
+    All responses include an `X-Correlation-ID` response header.
+
+  version: "1.0.0"
+  contact:
+    name: OleKard Platform Team
+
+servers:
+  - url: /v1/admin-app
+    description: Admin Application API v1
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    idempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Client-generated UUID for idempotent state-changing requests.
+    correlationId:
+      name: X-Correlation-ID
+      in: header
+      required: false
+      schema:
+        type: string
+      description: Propagated correlation ID for distributed tracing.
+    page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    perPage:
+      name: per_page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 25
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, correlation_id]
+          properties:
+            code:
+              type: string
+              example: ADMINAPP_IDEM_001
+            message:
+              type: string
+            correlation_id:
+              type: string
+              format: uuid
+
+    PaginatedMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+        per_page:
+          type: integer
+        current_page:
+          type: integer
+        last_page:
+          type: integer
+
+    PendingAction:
+      type: object
+      properties:
+        approval_id:
+          type: string
+          format: uuid
+        action_type:
+          type: string
+        status:
+          type: string
+          enum: [pending_approval, approved, rejected, expired]
+        expires_at:
+          type: string
+          format: date-time
+
+    OperationalDashboard:
+      type: object
+      properties:
+        active_users:
+          type: integer
+        active_wallets:
+          type: integer
+        pending_kyc_submissions:
+          type: integer
+        pending_agent_approvals:
+          type: integer
+        open_disputes:
+          type: integer
+        system_health:
+          type: string
+        cached_at:
+          type: string
+          format: date-time
+
+    FinancialDashboard:
+      type: object
+      properties:
+        total_wallet_balance_minor_units:
+          type: integer
+        currency:
+          type: string
+        transactions_today_count:
+          type: integer
+        transactions_today_volume_minor_units:
+          type: integer
+        pending_settlements_minor_units:
+          type: integer
+        failed_transactions_today:
+          type: integer
+        cached_at:
+          type: string
+          format: date-time
+
+    RiskDashboard:
+      type: object
+      properties:
+        flagged_accounts:
+          type: integer
+        open_fraud_alerts:
+          type: integer
+        aml_reviews_pending:
+          type: integer
+        high_risk_transactions_today:
+          type: integer
+        blocked_accounts:
+          type: integer
+        cached_at:
+          type: string
+          format: date-time
+
+    AdminUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        phone_number:
+          type: string
+          description: Masked in list view (e.g. "+254 *** *** 789").
+        status:
+          type: string
+          enum: [active, suspended, deactivated]
+        kyc_tier:
+          type: integer
+        wallet_count:
+          type: integer
+        actor_type:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    KycSubmission:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        user_name:
+          type: string
+        tier_applied:
+          type: integer
+        status:
+          type: string
+          enum: [pending_review, approved, rejected, under_review]
+        document_type:
+          type: string
+        submitted_at:
+          type: string
+          format: date-time
+        document_urls:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: Signed document URLs with 1h TTL.
+
+    AdminWallet:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        currency:
+          type: string
+        balance_minor_units:
+          type: integer
+        status:
+          type: string
+          enum: [active, frozen, closed]
+        frozen_at:
+          type: string
+          format: date-time
+          nullable: true
+        frozen_by:
+          type: string
+          nullable: true
+        freeze_reason:
+          type: string
+          nullable: true
+
+    AdminTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        status:
+          type: string
+        amount_minor_units:
+          type: integer
+        currency:
+          type: string
+        wallet_id:
+          type: string
+          format: uuid
+        reversal_eligible:
+          type: boolean
+          description: True only for wallet_transfer, agent_cash_in, agent_cash_out types.
+        created_at:
+          type: string
+          format: date-time
+
+    AdminAgent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+        status:
+          type: string
+          enum: [pending_approval, active, suspended, deactivated]
+        float_balance_minor_units:
+          type: integer
+        float_limit_minor_units:
+          type: integer
+        commission_rate:
+          type: number
+          format: float
+        created_at:
+          type: string
+          format: date-time
+
+    ReconciliationBatch:
+      type: object
+      properties:
+        batch_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        matched_count:
+          type: integer
+        unmatched_count:
+          type: integer
+        discrepancy_minor_units:
+          type: integer
+        period_start:
+          type: string
+          format: date-time
+        period_end:
+          type: string
+          format: date-time
+        unmatched_transaction_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Only present in detail response.
+
+    ReportJob:
+      type: object
+      properties:
+        report_id:
+          type: string
+          format: uuid
+        report_type:
+          type: string
+        status:
+          type: string
+          enum: [pending, processing, ready, failed]
+        download_url:
+          type: string
+          format: uri
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+paths:
+  # --- Dashboards ---
+  /dashboard/operational:
+    get:
+      summary: Operational Dashboard
+      operationId: getOperationalDashboard
+      x-permissions: [adminapp.dashboard.operational]
+      tags: [Dashboards]
+      responses:
+        "200":
+          description: Operational metrics from Redis cache
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/OperationalDashboard'
+        "401":
+          description: Unauthenticated
+        "403":
+          description: Missing permission adminapp.dashboard.operational
+        "503":
+          description: Cache not yet warm
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: ADMINAPP_DASH_001
+                  message: Dashboard cache is not available yet.
+
+  /dashboard/financial:
+    get:
+      summary: Financial Dashboard
+      operationId: getFinancialDashboard
+      x-permissions: [adminapp.dashboard.financial]
+      tags: [Dashboards]
+      responses:
+        "200":
+          description: Financial metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FinancialDashboard'
+        "401": { description: Unauthenticated }
+        "403": { description: Missing permission adminapp.dashboard.financial }
+        "503": { description: Cache not yet warm }
+
+  /dashboard/risk:
+    get:
+      summary: Risk & Compliance Dashboard
+      operationId: getRiskDashboard
+      x-permissions: [adminapp.dashboard.risk]
+      tags: [Dashboards]
+      responses:
+        "200":
+          description: Risk metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RiskDashboard'
+        "401": { description: Unauthenticated }
+        "403": { description: Missing permission adminapp.dashboard.risk }
+        "503": { description: Cache not yet warm }
+
+  # --- Users ---
+  /users:
+    get:
+      summary: Search users
+      operationId: listUsers
+      x-permissions: [adminapp.users.read]
+      tags: [Users]
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: Search query (email, name, phone).
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, suspended]
+        - name: kyc_tier
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Paginated user list with masked phone numbers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminUser'
+                  meta:
+                    $ref: '#/components/schemas/PaginatedMeta'
+
+  /users/{user_id}:
+    get:
+      summary: Get user detail
+      operationId: getUser
+      x-permissions: [adminapp.users.read]
+      tags: [Users]
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: User detail (unmasked phone)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminUser'
+        "404": { description: User not found }
+
+  /users/{user_id}/status:
+    patch:
+      summary: Suspend or reactivate user
+      operationId: updateUserStatus
+      x-permissions: [adminapp.users.write]
+      tags: [Users]
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/idempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action, reason]
+              properties:
+                action:
+                  type: string
+                  enum: [suspend, reactivate]
+                reason:
+                  type: string
+      responses:
+        "200": { description: User status updated }
+        "422":
+          description: Idempotency key missing or invalid state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # --- KYC ---
+  /kyc:
+    get:
+      summary: List KYC review queue
+      operationId: listKyc
+      x-permissions: [adminapp.kyc.review]
+      tags: [KYC]
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending_review, approved, rejected]
+      responses:
+        "200":
+          description: Paginated KYC submissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/KycSubmission'
+                  meta:
+                    $ref: '#/components/schemas/PaginatedMeta'
+
+  /kyc/{kyc_submission_id}/approve:
+    post:
+      summary: Submit KYC approval (maker step)
+      operationId: approveKyc
+      x-permissions: [adminapp.kyc.approve]
+      tags: [KYC]
+      parameters:
+        - name: kyc_submission_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/idempotencyKey'
+      responses:
+        "202":
+          description: Approval queued for checker review
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PendingAction'
+        "422":
+          description: Submission not in pending_review state (ADMINAPP_KYC_002)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /kyc/{kyc_submission_id}/reject:
+    post:
+      summary: Submit KYC rejection (maker step)
+      operationId: rejectKyc
+      x-permissions: [adminapp.kyc.reject]
+      tags: [KYC]
+      parameters:
+        - name: kyc_submission_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/idempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        "202":
+          description: Rejection queued for checker review
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PendingAction'
+        "422":
+          description: Invalid state (ADMINAPP_KYC_002)
+
+  # --- Wallets ---
+  /wallets:
+    get:
+      summary: Search wallets
+      operationId: listWallets
+      x-permissions: [adminapp.wallets.read]
+      tags: [Wallets]
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, frozen]
+        - name: user_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Paginated wallet list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminWallet'
+                  meta:
+                    $ref: '#/components/schemas/PaginatedMeta'
+
+  /wallets/{wallet_id}/freeze:
+    post:
+      summary: Freeze wallet (maker step)
+      operationId: freezeWallet
+      x-permissions: [adminapp.wallets.freeze]
+      tags: [Wallets]
+      parameters:
+        - name: wallet_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/idempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        "202":
+          description: Freeze pending checker approval
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PendingAction'
+
+  /wallets/{wallet_id}/unfreeze:
+    post:
+      summary: Unfreeze wallet (maker step)
+      operationId: unfreezeWallet
+      x-permissions: [adminapp.wallets.unfreeze]
+      tags: [Wallets]
+      parameters:
+        - name: wallet_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/idempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        "202":
+          description: Unfreeze pending checker approval
+        "422":
+          description: Wallet is not frozen (ADMINAPP_WALLET_002)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # --- Transactions ---
+  /transactions:
+    get:
+      summary: Search transactions
+      operationId: listTransactions
+      x-permissions: [adminapp.transactions.read]
+      tags: [Transactions]
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - name: wallet_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated transaction list with reversal_eligible flag
+
+  /transactions/{transaction_id}/reverse:
+    post:
+      summary: Reverse transaction (maker step)
+      operationId: reverseTransaction
+      x-permissions: [adminapp.transactions.reverse]
+      tags: [Transactions]
+      parameters:
+        - name: transaction_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/idempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        "202":
+          description: Reversal pending checker approval
+        "422":
+          description: |
+            ADMINAPP_015: Transaction type not eligible for reversal (funding, withdrawal, bill_payment).
+            ADMINAPP_TXN_002: Transaction already reversed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # --- Agents ---
+  /agents:
+    get:
+      summary: List agents
+      operationId: listAgents
+      x-permissions: [adminapp.agents.manage]
+      tags: [Agents]
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending_approval, active, suspended]
+      responses:
+        "200":
+          description: Paginated agent list
+
+  /agents/{agent_id}/approve:
+    post:
+      summary: Approve agent application (maker step)
+      operationId: approveAgent
+      x-permissions: [adminapp.agents.approve]
+      tags: [Agents]
+      parameters:
+        - name: agent_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/idempotencyKey'
+      responses:
+        "202":
+          description: Approval pending checker review
+        "422":
+          description: Agent not in pending_approval state (ADMINAPP_AGENT_002)
+
+  # --- Float ---
+  /float:
+    get:
+      summary: List agent float balances
+      operationId: listFloat
+      x-permissions: [adminapp.float.manage]
+      tags: [Float]
+      parameters:
+        - $ref: '#/components/parameters/page'
+      responses:
+        "200":
+          description: Paginated float balances
+
+  /float/{agent_id}/adjust:
+    post:
+      summary: Credit or debit agent float
+      operationId: adjustFloat
+      x-permissions: [adminapp.float.manage]
+      tags: [Float]
+      parameters:
+        - name: agent_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/idempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [direction, amount_minor_units, reason]
+              properties:
+                direction:
+                  type: string
+                  enum: [credit, debit]
+                amount_minor_units:
+                  type: integer
+                  minimum: 1
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Float adjusted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      new_balance_minor_units:
+                        type: integer
+        "422":
+          description: Amount exceeds float limit (ADMINAPP_FLOAT_001)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # --- Reconciliation ---
+  /reconciliation:
+    get:
+      summary: List reconciliation batches
+      operationId: listReconciliation
+      x-permissions: [adminapp.reconciliation.read]
+      tags: [Reconciliation]
+      parameters:
+        - $ref: '#/components/parameters/page'
+      responses:
+        "200":
+          description: Paginated reconciliation batches
+
+  /reconciliation/{batch_id}:
+    get:
+      summary: Get reconciliation batch detail
+      operationId: getReconciliationBatch
+      x-permissions: [adminapp.reconciliation.read]
+      tags: [Reconciliation]
+      parameters:
+        - name: batch_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Batch detail including unmatched_transaction_ids
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ReconciliationBatch'
+
+  # --- Settlement ---
+  /settlement:
+    get:
+      summary: List settlement batches
+      operationId: listSettlement
+      x-permissions: [adminapp.settlement.read]
+      tags: [Settlement]
+      parameters:
+        - $ref: '#/components/parameters/page'
+      responses:
+        "200":
+          description: Paginated settlement list
+
+  # --- Audit ---
+  /audit:
+    get:
+      summary: Query audit log
+      operationId: listAuditEvents
+      x-permissions: [adminapp.audit.read]
+      tags: [Compliance]
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - name: from_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: event_type
+          in: query
+          schema:
+            type: string
+        - name: actor_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Audit events (max 90-day range)
+        "400":
+          description: Date range exceeds 90 days (ADMINAPP_AUDIT_001)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # --- Reports ---
+  /reports:
+    post:
+      summary: Request a report export
+      operationId: createReport
+      x-permissions: [adminapp.reports.read]
+      tags: [Compliance]
+      parameters:
+        - $ref: '#/components/parameters/idempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [report_type, period_start, period_end, format]
+              properties:
+                report_type:
+                  type: string
+                period_start:
+                  type: string
+                  format: date
+                period_end:
+                  type: string
+                  format: date
+                format:
+                  type: string
+                  enum: [csv, xlsx]
+      responses:
+        "202":
+          description: Report job accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ReportJob'
+
+  /reports/{report_id}:
+    get:
+      summary: Poll report status
+      operationId: getReport
+      x-permissions: [adminapp.reports.read]
+      tags: [Compliance]
+      parameters:
+        - name: report_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Report job status and download_url when ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ReportJob'
+
+  # --- Approvals (Checker flow) ---
+  /approvals/{id}/approve:
+    post:
+      summary: Approve a pending admin action (checker step)
+      operationId: approveAction
+      x-permissions: [adminapp.approvals.review]
+      tags: [Approvals]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/idempotencyKey'
+      responses:
+        "200":
+          description: Action approved and executed
+        "422":
+          description: Maker cannot approve own action (MAKER_CANNOT_APPROVE_OWN_ACTION) or expired
+        "404":
+          description: Pending action not found
+
+  /approvals/{id}/reject:
+    post:
+      summary: Reject a pending admin action (checker step)
+      operationId: rejectAction
+      x-permissions: [adminapp.approvals.review]
+      tags: [Approvals]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/idempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Action rejected
+        "422":
+          description: Maker cannot reject own action
+        "404":
+          description: Pending action not found
+
+tags:
+  - name: Dashboards
+    description: Redis-cached operational, financial, and risk metrics (TTL 300s).
+  - name: Users
+    description: Customer user search, detail, and status management.
+  - name: KYC
+    description: KYC review queue with maker-checker approve/reject flow.
+  - name: Wallets
+    description: Wallet search and freeze/unfreeze via maker-checker.
+  - name: Transactions
+    description: Transaction search, investigation, and eligible reversals via maker-checker.
+  - name: Agents
+    description: Agent management, approval, and status changes.
+  - name: Float
+    description: Agent float balance management (Admin and Finance only).
+  - name: Reconciliation
+    description: Reconciliation batch and settlement read views.
+  - name: Settlement
+    description: Settlement record read views.
+  - name: Compliance
+    description: Audit log query (90-day max) and report export.
+  - name: Approvals
+    description: Checker-side approval and rejection of pending admin actions.

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "cat-001",
+    "name": "Airtime & Data",
+    "icon_url": "https://example.com/icons/airtime.png",
+    "description": "Top up mobile airtime and data bundles",
+    "provider_count": 5
+  },
+  {
+    "id": "cat-002",
+    "name": "Utilities",
+    "icon_url": "https://example.com/icons/utilities.png",
+    "description": "Pay electricity, water and other utilities",
+    "provider_count": 3
+  }
+]

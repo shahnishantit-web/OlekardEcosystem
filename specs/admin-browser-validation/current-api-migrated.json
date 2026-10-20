@@ -1,0 +1,1216 @@
+[
+  {
+    "uri": "/v1/admin/configuration/keys",
+    "status": 200,
+    "keys": [
+      "current_page",
+      "data",
+      "first_page_url",
+      "from",
+      "last_page",
+      "last_page_url",
+      "links",
+      "next_page_url",
+      "path",
+      "per_page",
+      "prev_page_url",
+      "to",
+      "total"
+    ],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/configuration/change-requests",
+    "status": 200,
+    "keys": [
+      "current_page",
+      "data",
+      "first_page_url",
+      "from",
+      "last_page",
+      "last_page_url",
+      "links",
+      "next_page_url",
+      "path",
+      "per_page",
+      "prev_page_url",
+      "to",
+      "total"
+    ],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/operations/dead-letter",
+    "status": 200,
+    "keys": [
+      "items",
+      "pagination"
+    ],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/operations/dead-letter/stats",
+    "status": 200,
+    "keys": [
+      "pending",
+      "replayed",
+      "dismissed",
+      "total"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/operations/ledger-integrity/snapshots",
+    "status": 200,
+    "keys": [
+      "items",
+      "pagination"
+    ],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/users/profile",
+    "status": 404,
+    "code": "PROFILE_NOT_FOUND",
+    "message": "Profile not found.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/profile/dashboard/summary",
+    "status": 200,
+    "keys": [
+      "total_users",
+      "active_accounts",
+      "suspended_accounts",
+      "pending_closure_requests",
+      "recent_contact_changes"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/users/profile/status",
+    "status": 404,
+    "code": "PROFILE_NOT_FOUND",
+    "message": "Profile not found.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/auth/sessions",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21",
+      "22",
+      "23",
+      "24",
+      "25",
+      "26",
+      "27",
+      "28",
+      "29",
+      "30",
+      "31",
+      "32",
+      "33",
+      "34",
+      "35",
+      "36",
+      "37",
+      "38",
+      "39",
+      "40",
+      "41",
+      "42",
+      "43",
+      "44",
+      "45",
+      "46",
+      "47",
+      "48",
+      "49",
+      "50",
+      "51",
+      "52",
+      "53",
+      "54",
+      "55",
+      "56",
+      "57",
+      "58",
+      "59",
+      "60",
+      "61",
+      "62",
+      "63",
+      "64",
+      "65",
+      "66",
+      "67",
+      "68",
+      "69",
+      "70",
+      "71",
+      "72",
+      "73",
+      "74",
+      "75",
+      "76",
+      "77",
+      "78",
+      "79",
+      "80",
+      "81",
+      "82",
+      "83",
+      "84",
+      "85",
+      "86",
+      "87",
+      "88",
+      "89",
+      "90",
+      "91",
+      "92",
+      "93",
+      "94",
+      "95",
+      "96",
+      "97",
+      "98",
+      "99",
+      "100",
+      "101",
+      "102"
+    ],
+    "count": 103,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/auth/devices",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "count": 5,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/sessions",
+    "status": 200,
+    "keys": [
+      "sessions",
+      "pagination"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/platform/configuration/security",
+    "status": 200,
+    "keys": [
+      "configuration",
+      "total"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/roles",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19"
+    ],
+    "count": 20,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/permissions",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19"
+    ],
+    "count": 20,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/users",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2"
+    ],
+    "count": 3,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/auth/mfa/methods",
+    "status": 200,
+    "keys": [
+      "methods",
+      "enrolled"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/devices",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "count": 5,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/wallets/my",
+    "status": 404,
+    "code": "WALLET_NOT_FOUND",
+    "message": "No wallet found for the authenticated user.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/ledger/journals",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/kyc/cases/my",
+    "status": 404,
+    "code": "NOT_FOUND",
+    "message": "No KYC case found.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/kyc/cases",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/risk/rules",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/risk/alerts",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/risk/sars",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/security/alerts",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/security/findings",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/notifications/templates",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12"
+    ],
+    "count": 13,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/notifications/log",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/notifications/rules",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21",
+      "22",
+      "23",
+      "24",
+      "25",
+      "26",
+      "27",
+      "28",
+      "29",
+      "30",
+      "31",
+      "32",
+      "33",
+      "34",
+      "35",
+      "36",
+      "37",
+      "38",
+      "39",
+      "40",
+      "41",
+      "42",
+      "43",
+      "44",
+      "45",
+      "46",
+      "47"
+    ],
+    "count": 48,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/commission-rules",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2"
+    ],
+    "count": 3,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/commissions/report",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8"
+    ],
+    "count": 9,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/dashboard",
+    "status": 200,
+    "keys": [
+      "users",
+      "wallets",
+      "transactions",
+      "failures",
+      "kyc",
+      "agents",
+      "risk"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/dashboard/users",
+    "status": 200,
+    "keys": [
+      "total",
+      "active",
+      "new",
+      "suspended"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/dashboard/wallets",
+    "status": 200,
+    "keys": [
+      "total_wallets",
+      "active",
+      "frozen"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/dashboard/transactions",
+    "status": 200,
+    "keys": [
+      "total",
+      "volume",
+      "by_status"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/dashboard/failures",
+    "status": 200,
+    "keys": [
+      "total_failed",
+      "by_type"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/dashboard/kyc",
+    "status": 200,
+    "keys": [
+      "total_submitted",
+      "pending",
+      "approved",
+      "rejected"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/dashboard/agents",
+    "status": 200,
+    "keys": [
+      "total",
+      "active",
+      "new"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/dashboard/risk",
+    "status": 200,
+    "keys": [
+      "open_alerts",
+      "active_holds"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/wallets",
+    "status": 500,
+    "code": "INTERNAL_ERROR",
+    "message": "An unexpected error occurred. Please retry or contact support.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/transactions",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/reconciliation/batches",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/reconciliation/exceptions",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/reconciliation/settlements",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/fees/rules",
+    "status": 200,
+    "keys": [
+      "0"
+    ],
+    "count": 1,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/support/tickets",
+    "status": 200,
+    "keys": [
+      "items",
+      "meta"
+    ],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/disputes",
+    "status": 200,
+    "keys": [
+      "items",
+      "meta"
+    ],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/support/cases",
+    "status": 200,
+    "keys": [
+      "items",
+      "page",
+      "last_page",
+      "total"
+    ],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/audit/events",
+    "status": 200,
+    "keys": [
+      "0"
+    ],
+    "count": 1,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/compliance/dashboard",
+    "status": 200,
+    "keys": [
+      "regulatory_checklist",
+      "open_items",
+      "retention_deadlines"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/compliance/transactions",
+    "status": 500,
+    "code": "INTERNAL_ERROR",
+    "message": "An unexpected error occurred. Please retry or contact support.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/compliance/retention-policies",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/reports/jobs",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/reports/schedules",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/reports/catalogue",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "count": 5,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/integrations/clients",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/integrations/providers",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/integrations/providers/call-logs",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/integrations/webhooks",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/integrations/api-clients",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/integrations/providers",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/webhooks/deliveries",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/security/dashboard",
+    "status": 200,
+    "keys": [
+      "total_open",
+      "findings_by_severity",
+      "findings_by_status"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/security/findings",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/platform/security-config",
+    "status": 200,
+    "keys": [
+      "settings",
+      "roles"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/security/events/export",
+    "error": "Unexpected non-whitespace character after JSON at position 411 (line 2 column 1)"
+  },
+  {
+    "uri": "/v1/admin/security/events",
+    "status": 200,
+    "keys": [
+      "items",
+      "next_cursor"
+    ],
+    "count": 25,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/multi-currency/currencies",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "count": 6,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/multi-currency/wallets",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/multi-currency/fx-fee",
+    "status": 422,
+    "code": "VALIDATION_ERROR",
+    "message": "The given data was invalid.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/multi-currency/fx-transactions",
+    "status": 200,
+    "keys": [
+      "data",
+      "current_page",
+      "last_page",
+      "per_page",
+      "total"
+    ],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/multi-currency/currencies",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "count": 6,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/multi-currency/fx-rates",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/currencies",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "count": 6,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/fx/rates",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/ops/logs",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/ops/metrics",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/ops/providers",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/ops/alert-rules",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/ops/alerts",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/ops/backup-jobs",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/ops/dr/status",
+    "status": 200,
+    "keys": [
+      "runbook_version",
+      "last_dr_test_at",
+      "rto_hours",
+      "rpo_minutes",
+      "runbook_url"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/ops/deployments/versions",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin/ops/deployments/rollbacks",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/dashboard/operational",
+    "status": 200,
+    "keys": [
+      "cached_at",
+      "total_users",
+      "active_users_today",
+      "new_registrations_today",
+      "pending_kyc_count",
+      "approved_kyc_today",
+      "total_transactions_today",
+      "transaction_volume_today_minor_units",
+      "transaction_currency",
+      "active_agents",
+      "pending_agent_approvals",
+      "open_disputes",
+      "open_fraud_alerts"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/dashboard/financial",
+    "status": 200,
+    "keys": [
+      "cached_at",
+      "total_wallet_balance_minor_units",
+      "balance_currency",
+      "total_funding_today_minor_units",
+      "total_withdrawals_today_minor_units",
+      "total_transfers_today_minor_units",
+      "total_fees_collected_today_minor_units",
+      "total_commissions_paid_today_minor_units",
+      "total_float_outstanding_minor_units",
+      "pending_settlements_count",
+      "pending_settlements_amount_minor_units"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/dashboard/risk",
+    "status": 200,
+    "keys": [
+      "cached_at",
+      "active_fraud_alerts",
+      "high_risk_transactions_today",
+      "aml_flags_today",
+      "blocked_users_count",
+      "frozen_wallets_count",
+      "failed_kyc_attempts_today",
+      "suspicious_ip_count_today",
+      "open_support_disputes",
+      "velocity_breach_alerts_today"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/users",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2"
+    ],
+    "count": 3,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/roles",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21",
+      "22",
+      "23",
+      "24"
+    ],
+    "count": 25,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/kyc",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/wallets",
+    "status": 200,
+    "keys": [
+      "0"
+    ],
+    "count": 1,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/transactions",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/agents",
+    "status": 200,
+    "keys": [
+      "0",
+      "1"
+    ],
+    "count": 2,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/float",
+    "status": 200,
+    "keys": [
+      "0",
+      "1"
+    ],
+    "count": 2,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/reconciliation",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/settlement",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/audit",
+    "status": 200,
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21",
+      "22",
+      "23",
+      "24"
+    ],
+    "count": 25,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/admin-app/reports",
+    "status": 500,
+    "code": "INTERNAL_ERROR",
+    "message": "An unexpected error occurred. Please retry or contact support.",
+    "keys": [],
+    "count": null,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/qa/runs",
+    "status": 200,
+    "keys": [],
+    "count": 0,
+    "cors": "http://localhost:3000"
+  },
+  {
+    "uri": "/v1/qa/dashboard",
+    "status": 200,
+    "keys": [
+      "summary",
+      "categories"
+    ],
+    "count": null,
+    "cors": "http://localhost:3000"
+  }
+]

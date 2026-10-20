@@ -1,0 +1,16 @@
+{
+  "route": "/504",
+  "landed": "/504",
+  "status": 504,
+  "headings": [
+    "The service took too long"
+  ],
+  "errors": [],
+  "api": [],
+  "failed": [],
+  "links": [
+    "/login"
+  ],
+  "overflow": false,
+  "text": "OK\nOleKard\n\nERROR 504\n\nThe service took too long\n\nThe server did not respond in time. Check the result of any recent operation before submitting it again.\n\nTry again\nReturn to sign in\n\nAuthorized personnel only. All sessions are logged and monitored."
+}

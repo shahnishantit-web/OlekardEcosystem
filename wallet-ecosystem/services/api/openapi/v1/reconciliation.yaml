@@ -1,0 +1,1283 @@
+openapi: 3.1.0
+info:
+  title: Reconciliation & Settlement API
+  version: 1.0.0
+  description: |
+    E20 Reconciliation & Settlement — consolidated API specification.
+
+    Covers:
+    - US-RECON-001: Import provider transaction file (CSV upload)
+    - US-RECON-002: Receive provider transactions via API/webhook (HMAC-SHA256 auth)
+    - US-RECON-003: Match provider transaction to internal transaction record (three-pass algorithm)
+    - US-RECON-004: Mark transaction reconciled (manual override)
+    - US-RECON-005: Detect unmatched transactions
+    - US-RECON-006: Create reconciliation exception (auto on unmatched)
+    - US-RECON-007: Resolve reconciliation exception
+    - US-RECON-008: Import bank statement
+    - US-RECON-009: Match bank transaction to internal record
+    - US-RECON-010: Identify unmatched deposit
+    - US-RECON-011: Identify unmatched withdrawal
+    - US-RECON-012: Calculate settlement amount
+    - US-RECON-013: Generate settlement batch
+    - US-RECON-014: Approve settlement (maker-checker, reconciliation.approve_settlement)
+    - US-RECON-015: Execute settlement (reconciliation.execute_settlement)
+    - US-RECON-016: Record settlement ledger (E07 double-entry, entry_type='settlement')
+
+    ## Authentication
+
+    All endpoints (except `POST /v1/reconciliation/batches/api`) use JWT Bearer authentication
+    via the `identity.auth` middleware. The webhook endpoint uses HMAC-SHA256 signature
+    verification (`X-Provider-Signature` header, `reconciliation.webhook_auth` middleware).
+
+    ## Idempotency
+
+    State-changing endpoints require an `Idempotency-Key` header (max 128 chars):
+    - `POST /settlements` — create settlement batch
+    - `POST /settlements/{id}/approve`
+    - `POST /settlements/{id}/execute`
+
+    Submit (`POST /settlements/{id}/submit`) uses a natural 409 guard as its idempotency
+    mechanism (no money moves on submit).
+
+    ## Permissions
+
+    | Permission | Role(s) |
+    |-----------|---------|
+    | `reconciliation.read` | reconciliation-officer, settlement-approver, settlement-executor |
+    | `reconciliation.write` | reconciliation-officer, settlement-approver |
+    | `reconciliation.approve_settlement` | settlement-approver |
+    | `reconciliation.execute_settlement` | settlement-executor |
+
+servers:
+  - url: /v1/reconciliation
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: batches
+    description: Reconciliation batch import and management
+  - name: matching
+    description: Three-pass matching algorithm and manual reconciliation
+  - name: exceptions
+    description: Exception lifecycle management
+  - name: settlements
+    description: Settlement batch lifecycle (maker-checker + double-entry ledger)
+
+paths:
+  # ─── Batch Import ─────────────────────────────────────────────────────────────
+
+  /batches:
+    get:
+      operationId: listReconciliationBatches
+      summary: List reconciliation batches
+      tags: [batches]
+      parameters:
+        - name: source_type
+          in: query
+          schema:
+            type: string
+            enum: [provider_file, provider_api, bank_statement]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, processing, matched, completed, failed]
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Paginated batch list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /batches/file:
+    post:
+      operationId: importProviderFile
+      summary: Import provider transaction file (US-RECON-001)
+      tags: [batches]
+      description: |
+        Upload a provider transaction file. The file is stored, a ReconciliationBatch record is
+        created (idempotent — same `idempotency_key` returns existing batch with HTTP 200),
+        and async three-pass matching is queued via `ProcessReconciliationBatchJob`.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [idempotency_key, batch_date, file]
+              properties:
+                idempotency_key:
+                  type: string
+                  maxLength: 128
+                batch_date:
+                  type: string
+                  format: date
+                provider_code:
+                  type: string
+                  maxLength: 50
+                  description: Optional provider identifier (config-driven adapter)
+                file:
+                  type: string
+                  format: binary
+                  description: Provider transaction file (CSV or adapter-supported format, max 10 MB)
+      responses:
+        '201':
+          description: Batch created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResponse'
+        '200':
+          description: Idempotent — returning existing batch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /batches/api:
+    post:
+      operationId: receiveProviderTransactionApi
+      summary: Receive provider transactions via API/webhook (US-RECON-002)
+      tags: [batches]
+      description: |
+        Accepts a push of provider transactions as JSON. Authenticated via HMAC-SHA256 signature
+        (`X-Provider-Signature` header computed over request body). Exempt from standard
+        `identity.auth` — uses `reconciliation.webhook_auth` middleware only.
+        Idempotent: same `idempotency_key` returns existing batch with HTTP 200.
+      security:
+        - webhookHmac: []
+      parameters:
+        - name: X-Provider-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+          description: "HMAC-SHA256 of request body: hash_hmac('sha256', body, RECONCILIATION_WEBHOOK_SECRET)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idempotency_key, batch_date, transactions]
+              properties:
+                idempotency_key:
+                  type: string
+                  maxLength: 128
+                batch_date:
+                  type: string
+                  format: date
+                provider_code:
+                  type: string
+                  maxLength: 50
+                transactions:
+                  type: array
+                  minItems: 1
+                  maxItems: 5000
+                  items:
+                    $ref: '#/components/schemas/ProviderTransactionInput'
+      responses:
+        '201':
+          description: Batch created and queued for matching
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResponse'
+        '200':
+          description: Idempotent — returning existing batch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResponse'
+        '401':
+          description: Invalid or missing HMAC signature
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /batches/bank-statement:
+    post:
+      operationId: importBankStatement
+      summary: Import bank statement (US-RECON-008)
+      tags: [batches]
+      description: |
+        Upload a bank statement file. Creates a ReconciliationBatch with
+        `source_type=bank_statement` and items with `item_type=bank_transaction`.
+        Amounts are signed decimal strings: positive = deposit/credit, negative = withdrawal/debit.
+        Same idempotency pattern as provider file import.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [idempotency_key, batch_date, file]
+              properties:
+                idempotency_key:
+                  type: string
+                  maxLength: 128
+                batch_date:
+                  type: string
+                  format: date
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Bank statement batch created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResponse'
+        '200':
+          description: Idempotent — returning existing batch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /batches/{id}:
+    get:
+      operationId: getReconciliationBatch
+      summary: Get batch detail with item counts
+      tags: [batches]
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Batch detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ─── Matching ─────────────────────────────────────────────────────────────────
+
+  /batches/{id}/match:
+    post:
+      operationId: triggerBatchMatching
+      summary: Trigger (re-)matching for a batch (US-RECON-003, US-RECON-009)
+      tags: [matching]
+      description: |
+        Manually triggers or re-triggers the three-pass matching algorithm:
+        - Pass 1 (exact): provider_reference + amount + currency → confidence=100
+        - Pass 2 (fuzzy): same amount ±1 business day → confidence=75
+        - Pass 3 (unmatched): auto-creates ReconciliationException → confidence=0
+
+        Matching runs automatically when a batch is created. This endpoint re-triggers
+        after exceptions are resolved. Returns 409 if batch is currently processing.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '202':
+          description: Matching job queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchStatusResponse'
+        '409':
+          description: Batch already processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /batches/{id}/items:
+    get:
+      operationId: listBatchItems
+      summary: List reconciliation items in a batch
+      tags: [matching]
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, matched, unmatched, exception]
+        - name: item_type
+          in: query
+          schema:
+            type: string
+            enum: [provider_transaction, bank_transaction]
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Paginated item list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemListResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /batches/{id}/unmatched:
+    get:
+      operationId: listUnmatchedItems
+      summary: List unmatched items in a batch (US-RECON-005, US-RECON-010, US-RECON-011)
+      tags: [matching]
+      description: |
+        Returns items with `status=unmatched`. Use `item_type=bank_transaction` to filter
+        for bank statement unmatched items. Unmatched deposits have positive `amount` values;
+        unmatched withdrawals have negative `amount` values (signed decimal string).
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - name: item_type
+          in: query
+          schema:
+            type: string
+            enum: [provider_transaction, bank_transaction]
+      responses:
+        '200':
+          description: Unmatched items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemListResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /items/{id}/mark-reconciled:
+    post:
+      operationId: markItemReconciled
+      summary: Manually mark an item as reconciled (US-RECON-004)
+      tags: [matching]
+      description: |
+        Allows an authorized admin to manually reconcile an item after review.
+        Requires `reconciliation.write` permission. Records an audit event.
+        Returns 409 if item is already reconciled.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                  minLength: 10
+                  maxLength: 2000
+                internal_transaction_id:
+                  type: string
+                  format: uuid
+                  description: Optionally link to an internal transaction when manually reconciling
+      responses:
+        '200':
+          description: Item marked reconciled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemResponse'
+        '409':
+          description: Item already reconciled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ─── Exceptions ───────────────────────────────────────────────────────────────
+
+  /exceptions:
+    get:
+      operationId: listExceptions
+      summary: List reconciliation exceptions (US-RECON-006)
+      tags: [exceptions]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, investigating, resolved, written_off]
+        - name: exception_type
+          in: query
+          schema:
+            type: string
+            enum: [unmatched_provider, unmatched_bank, amount_mismatch, duplicate]
+        - name: assigned_to
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Paginated exception list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /exceptions/{id}:
+    get:
+      operationId: getException
+      summary: Get exception detail with linked item
+      tags: [exceptions]
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Exception detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /exceptions/{id}/resolve:
+    post:
+      operationId: resolveException
+      summary: Resolve a reconciliation exception (US-RECON-007)
+      tags: [exceptions]
+      description: |
+        Resolves or writes off an exception. Returns 409 if already resolved/written_off.
+        Requires `reconciliation.write` permission. Records audit event.
+        When `resolution_type=manually_matched`, `internal_transaction_id` is required and
+        `ReconciliationMatchingService::markReconciled()` is called to update the linked item.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [resolution_type, resolution]
+              properties:
+                resolution_type:
+                  type: string
+                  enum: [manually_matched, written_off, reversed, duplicate_confirmed]
+                resolution:
+                  type: string
+                  minLength: 10
+                  maxLength: 2000
+                internal_transaction_id:
+                  type: string
+                  format: uuid
+                  description: Required when resolution_type=manually_matched
+      responses:
+        '200':
+          description: Exception resolved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDetailResponse'
+        '409':
+          description: Exception already resolved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ─── Settlements ──────────────────────────────────────────────────────────────
+
+  /settlements:
+    get:
+      operationId: listSettlements
+      summary: List settlement batches
+      tags: [settlements]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, pending_approval, approved, executing, executed, rejected, failed]
+        - name: settlement_type
+          in: query
+          schema:
+            type: string
+            enum: [provider_settlement, bank_settlement]
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Paginated settlement list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlementListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      operationId: createSettlementBatch
+      summary: Calculate and generate a settlement batch (US-RECON-012 + US-RECON-013)
+      tags: [settlements]
+      description: |
+        Calculates the net settlement amount for the specified period and creates a
+        `SettlementBatch` record with `status=draft`. Amounts use bcmath arithmetic (NUMERIC(18,4)).
+        **Idempotency-Key header required.** Same key returns existing batch with HTTP 200.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [settlement_type, period_start, period_end, currency_code]
+              properties:
+                settlement_type:
+                  type: string
+                  enum: [provider_settlement, bank_settlement]
+                period_start:
+                  type: string
+                  format: date
+                period_end:
+                  type: string
+                  format: date
+                currency_code:
+                  type: string
+                  enum: [BWP]
+                provider_code:
+                  type: string
+                  maxLength: 50
+                  description: Optional — config-driven provider identifier
+                reconciliation_item_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: |
+                    Optional explicit list of matched reconciliation item IDs to include.
+                    If omitted, all matched items for the period are included automatically.
+      responses:
+        '201':
+          description: Settlement batch created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlementResponse'
+        '200':
+          description: Idempotent — returning existing batch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlementResponse'
+        '400':
+          description: Missing Idempotency-Key header
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /settlements/{id}:
+    get:
+      operationId: getSettlement
+      summary: Get settlement batch detail
+      tags: [settlements]
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Settlement detail with item count and external reference
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlementDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /settlements/{id}/submit:
+    post:
+      operationId: submitSettlementForApproval
+      summary: Submit a draft settlement for maker-checker approval
+      tags: [settlements]
+      description: |
+        Transitions a draft settlement to `pending_approval`. Only the maker (creator) can submit.
+        Returns 409 if not in draft status. No `Idempotency-Key` required — the 409 guard
+        provides natural idempotency (no money moves on submit).
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Settlement submitted for approval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlementResponse'
+        '409':
+          description: Settlement not in draft status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /settlements/{id}/approve:
+    post:
+      operationId: approveSettlement
+      summary: Approve a settlement batch (US-RECON-014, maker-checker)
+      tags: [settlements]
+      description: |
+        Approves a settlement batch for execution. Implements maker-checker pattern:
+        - Checker must be a **different** user from the maker (422 if same user)
+        - Batch must be in `pending_approval` status (409 otherwise)
+        - Requires `reconciliation.approve_settlement` permission
+        - Wrapped in `DB::connection('reconciliation')->transaction()` with `lockForUpdate()`
+        **Idempotency-Key header required.**
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                  minLength: 10
+                  maxLength: 2000
+      responses:
+        '200':
+          description: Settlement approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlementResponse'
+        '400':
+          description: Missing Idempotency-Key header
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Settlement not in pending_approval status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Maker-checker violation (same user) or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /settlements/{id}/reject:
+    post:
+      operationId: rejectSettlement
+      summary: Reject a settlement batch
+      tags: [settlements]
+      description: |
+        Rejects a settlement batch (terminal state). Same maker-checker rules as approve.
+        Requires `reconciliation.approve_settlement` permission.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                  minLength: 10
+                  maxLength: 2000
+      responses:
+        '200':
+          description: Settlement rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlementResponse'
+        '409':
+          description: Settlement not in pending_approval status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Maker-checker violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /settlements/{id}/execute:
+    post:
+      operationId: executeSettlement
+      summary: Execute an approved settlement (US-RECON-015 + US-RECON-016)
+      tags: [settlements]
+      description: |
+        Dispatches `ExecuteSettlementJob` which:
+        1. Calls `SettlementAdapterInterface::execute($batch)` → external reference
+        2. Posts double-entry ledger journal via E07 `LedgerModuleContract::postEntry()`
+           with `entry_type='settlement'`
+        3. Both adapter call + ledger post inside a single DB transaction (rollback guard)
+
+        Returns 409 if not in `approved` status.
+        Requires `reconciliation.execute_settlement` permission and `Idempotency-Key` header.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      responses:
+        '202':
+          description: Execution job dispatched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlementResponse'
+        '400':
+          description: Missing Idempotency-Key header
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Settlement not in approved status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: JWT issued by E01/E02 identity module
+    webhookHmac:
+      type: apiKey
+      in: header
+      name: X-Provider-Signature
+      description: HMAC-SHA256 signature computed over request body using RECONCILIATION_WEBHOOK_SECRET
+
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    IdempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 128
+      description: Client-generated idempotency key (UUID or opaque string, max 128 chars)
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+
+  schemas:
+    ErrorEnvelope:
+      type: object
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+    ProviderTransactionInput:
+      type: object
+      required: [provider_reference, amount, currency_code, transaction_date]
+      properties:
+        provider_reference:
+          type: string
+          maxLength: 256
+        amount:
+          type: string
+          description: Decimal string (NUMERIC 18,4). Positive = credit; negative = debit.
+        currency_code:
+          type: string
+          enum: [BWP]
+        transaction_date:
+          type: string
+          format: date
+        metadata:
+          type: object
+
+    BatchSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        source_type:
+          type: string
+          enum: [provider_file, provider_api, bank_statement]
+        source_reference:
+          type: string
+        batch_date:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [draft, processing, matched, completed, failed]
+        total_count:
+          type: integer
+        matched_count:
+          type: integer
+        unmatched_count:
+          type: integer
+        exception_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    BatchResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/BatchSummary'
+
+    BatchDetailResponse:
+      type: object
+      properties:
+        data:
+          allOf:
+            - $ref: '#/components/schemas/BatchSummary'
+            - type: object
+              properties:
+                submitted_by:
+                  type: string
+                  format: uuid
+                processed_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+                metadata:
+                  type: object
+
+    BatchListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/BatchSummary'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    BatchStatusResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              type: string
+
+    ItemSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        batch_id:
+          type: string
+          format: uuid
+        item_type:
+          type: string
+          enum: [provider_transaction, bank_transaction]
+        provider_reference:
+          type: string
+        internal_transaction_id:
+          type: string
+          format: uuid
+          nullable: true
+        amount:
+          type: string
+          description: Signed decimal string. Positive = deposit/credit; negative = withdrawal/debit.
+        currency_code:
+          type: string
+        transaction_date:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [pending, matched, unmatched, exception]
+        match_confidence:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: 100=exact match, 75=fuzzy match, 0=unmatched
+        matched_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ItemResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/ItemSummary'
+
+    ItemListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemSummary'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    ExceptionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        item_id:
+          type: string
+          format: uuid
+        batch_id:
+          type: string
+          format: uuid
+        exception_type:
+          type: string
+          enum: [unmatched_provider, unmatched_bank, amount_mismatch, duplicate]
+        status:
+          type: string
+          enum: [open, investigating, resolved, written_off]
+        assigned_to:
+          type: string
+          format: uuid
+          nullable: true
+        opened_at:
+          type: string
+          format: date-time
+        resolved_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ExceptionDetailResponse:
+      type: object
+      properties:
+        data:
+          allOf:
+            - $ref: '#/components/schemas/ExceptionSummary'
+            - type: object
+              properties:
+                item:
+                  $ref: '#/components/schemas/ItemSummary'
+                resolved_by:
+                  type: string
+                  format: uuid
+                  nullable: true
+                resolution:
+                  type: string
+                  nullable: true
+                resolution_type:
+                  type: string
+                  nullable: true
+
+    ExceptionListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExceptionSummary'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    SettlementSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        settlement_type:
+          type: string
+          enum: [provider_settlement, bank_settlement]
+        period_start:
+          type: string
+          format: date
+        period_end:
+          type: string
+          format: date
+        currency_code:
+          type: string
+        gross_amount:
+          type: string
+          description: Decimal string NUMERIC(18,4)
+        fee_amount:
+          type: string
+          description: Decimal string NUMERIC(18,4)
+        net_amount:
+          type: string
+          description: Decimal string NUMERIC(18,4); net_amount = gross_amount - fee_amount
+        status:
+          type: string
+          enum: [draft, pending_approval, approved, executing, executed, rejected, failed]
+        maker_id:
+          type: string
+          format: uuid
+        checker_id:
+          type: string
+          format: uuid
+          nullable: true
+        approved_at:
+          type: string
+          format: date-time
+          nullable: true
+        executed_at:
+          type: string
+          format: date-time
+          nullable: true
+        ledger_transaction_id:
+          type: string
+          nullable: true
+          description: E07 journal entry ID set after ExecuteSettlementJob posts the ledger entry
+        created_at:
+          type: string
+          format: date-time
+
+    SettlementResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/SettlementSummary'
+
+    SettlementDetailResponse:
+      type: object
+      properties:
+        data:
+          allOf:
+            - $ref: '#/components/schemas/SettlementSummary'
+            - type: object
+              properties:
+                item_count:
+                  type: integer
+                external_reference:
+                  type: string
+                  nullable: true
+                  description: Reference returned by SettlementAdapterInterface::execute()
+                rejection_reason:
+                  type: string
+                  nullable: true
+
+    SettlementListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SettlementSummary'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+        last_page:
+          type: integer

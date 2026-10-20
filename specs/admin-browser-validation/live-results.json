@@ -1,0 +1,216 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config=playwright.audit.config.ts",
+      "e2e/admin-live-workflows.spec.ts",
+      "--grep",
+      "live detail /agents"
+    ],
+    "configFile": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\playwright.audit.config.ts",
+    "rootDir": "C:/Projects/OleKardEcosystem/wallet-ecosystem/apps/admin/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Projects/OleKardEcosystem/wallet-ecosystem/apps/admin/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Projects/OleKardEcosystem/wallet-ecosystem/apps/admin/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "admin-live-audit.spec.ts",
+          "admin-fixture-*.spec.ts",
+          "admin-live-workflows.spec.ts",
+          "admin-live-read-models.spec.ts"
+        ],
+        "timeout": 150000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "",
+        "testDir": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e",
+        "snapshotDir": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "admin-live-audit.spec.ts",
+          "admin-fixture-*.spec.ts",
+          "admin-live-workflows.spec.ts",
+          "admin-live-read-models.spec.ts"
+        ],
+        "timeout": 150000,
+        "use": {
+          "baseURL": "http://localhost:3030",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium",
+          "channel": "chrome"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": ""
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../../../specs/admin-browser-validation/live-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.0",
+    "workers": 1,
+    "webServer": {
+      "command": "node node_modules/next/dist/bin/next dev -p 3030",
+      "url": "http://localhost:3030/login",
+      "timeout": 120000,
+      "reuseExistingServer": true,
+      "env": {
+        "NEXT_PUBLIC_API_URL": "http://localhost:8001",
+        "MAINTENANCE_MODE": "false"
+      }
+    }
+  },
+  "suites": [
+    {
+      "title": "admin-live-workflows.spec.ts",
+      "file": "admin-live-workflows.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "live detail /agents/[id]",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 150000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "timedOut",
+                  "duration": 150291,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 150000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 150000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts:32:6",
+                    "location": {
+                      "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                      "column": 6,
+                      "line": 32
+                    },
+                    "snippet": "  30 |   try{return Number(JSON.parse(Buffer.from(token!.split('.')[1]!, 'base64url').toString('utf8')).exp??0);}catch{return 0;}\n  31 | }\n> 32 | test.beforeEach(async ({page,context}) => {\n     |      ^\n  33 |   await context.clearCookies();\n  34 |   if(fs.existsSync(authStatePath)){\n  35 |     const state=JSON.parse(fs.readFileSync(authStatePath,'utf8')) as {cookies:Array<{name:string;value:string;expires?:number}>};"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "column": 6,
+                        "line": 32
+                      },
+                      "message": "\u001b[31mTest timeout of 150000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  30 |   try{return Number(JSON.parse(Buffer.from(token!.split('.')[1]!, 'base64url').toString('utf8')).exp??0);}catch{return 0;}\n  31 | }\n> 32 | test.beforeEach(async ({page,context}) => {\n     |      ^\n  33 |   await context.clearCookies();\n  34 |   if(fs.existsSync(authStatePath)){\n  35 |     const state=JSON.parse(fs.readFileSync(authStatePath,'utf8')) as {cookies:Array<{name:string;value:string;expires?:number}>};\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts:32:6"
+                    },
+                    {
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "column": 20,
+                        "line": 47
+                      },
+                      "message": "Error: page.waitForResponse: Test timeout of 150000ms exceeded.\n\n  45 |   await page.locator('#email-input').fill('admin@olekard.local');\n  46 |   await page.locator('#password-input').fill('Admin123!');\n> 47 |   const login=page.waitForResponse(r=>r.url().includes('/v1/auth/login')&&r.request().method()==='POST');\n     |                    ^\n  48 |   await page.getByRole('button',{name:'Sign in',exact:true}).click();\n  49 |   expect((await login).status()).toBe(200);\n  50 |   await expect(page).toHaveURL(/\\/dashboard$/,{timeout:20000});\n    at C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts:47:20"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T13:20:03.230Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results\\admin-live-workflows-live-detail-agents-id-\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                    "column": 6,
+                    "line": 32
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-e8ec5dfbfb64c6726cea",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 54,
+          "column": 46
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-17T13:20:01.521Z",
+    "duration": 155678.58200000002,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

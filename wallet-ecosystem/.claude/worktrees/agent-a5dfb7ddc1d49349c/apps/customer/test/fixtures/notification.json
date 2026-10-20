@@ -1,0 +1,9 @@
+{
+  "id": "01919f3d-0000-7000-8000-000000000020",
+  "title": "Transfer Received",
+  "body": "You have received KES 500.00 from Test Sender.",
+  "type": "transaction",
+  "is_read": false,
+  "deep_link": "/transactions",
+  "created_at": "2024-01-01T10:00:00.000Z"
+}

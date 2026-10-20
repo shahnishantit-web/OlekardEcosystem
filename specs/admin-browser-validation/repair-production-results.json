@@ -1,0 +1,1557 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\node_modules\\playwright\\cli.js",
+      "test",
+      "--config",
+      "playwright.audit-production.config.ts",
+      "--grep",
+      "real browser login|live FX unavailable|live full-permission|live expired|live tampered|live detail|standalone HTTP|authenticated proxy|offline state|legacy browser|repaired role dialog"
+    ],
+    "configFile": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\playwright.audit-production.config.ts",
+    "rootDir": "C:/Projects/OleKardEcosystem/wallet-ecosystem/apps/admin/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Projects/OleKardEcosystem/wallet-ecosystem/apps/admin/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Projects/OleKardEcosystem/wallet-ecosystem/apps/admin/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "admin-live-audit.spec.ts",
+          "admin-live-workflows.spec.ts",
+          "admin-status-regression.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "",
+        "testDir": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e",
+        "snapshotDir": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "admin-live-audit.spec.ts",
+          "admin-live-workflows.spec.ts",
+          "admin-status-regression.spec.ts"
+        ],
+        "timeout": 60000,
+        "use": {
+          "baseURL": "http://localhost:3030",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": ""
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../../../specs/admin-browser-validation/repair-production-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.0",
+    "workers": 1,
+    "webServer": {
+      "command": "node node_modules/next/dist/bin/next start -p 3030",
+      "url": "http://localhost:3030/login",
+      "timeout": 120000,
+      "reuseExistingServer": false,
+      "env": {
+        "NEXT_PUBLIC_API_URL": "http://localhost:8001",
+        "MAINTENANCE_MODE": "false"
+      }
+    }
+  },
+  "suites": [
+    {
+      "title": "admin-live-audit.spec.ts",
+      "file": "admin-live-audit.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "real browser login",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3056,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:02.942Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "aed016b09d79f1a6f8c8-f19b2188c0fcfe8a152f",
+          "file": "admin-live-audit.spec.ts",
+          "line": 5,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "admin-live-workflows.spec.ts",
+      "file": "admin-live-workflows.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "live detail /admin-portal/agents/[id]",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "No real record link exists in the isolated snapshot; not verified.",
+                  "location": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                    "line": 15,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 137,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:06.152Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No real record link exists in the isolated snapshot; not verified.",
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "line": 15,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-b26222af176527a9d70b",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 11,
+          "column": 46
+        },
+        {
+          "title": "live detail /admin-portal/roles/[id]",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "No real record link exists in the isolated snapshot; not verified.",
+                  "location": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                    "line": 15,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 124,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:06.320Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No real record link exists in the isolated snapshot; not verified.",
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "line": 15,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-f1000a413ee40381247d",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 11,
+          "column": 46
+        },
+        {
+          "title": "live detail /admin-portal/transactions/[id]",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "No real record link exists in the isolated snapshot; not verified.",
+                  "location": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                    "line": 15,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 105,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:06.456Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No real record link exists in the isolated snapshot; not verified.",
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "line": 15,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-1ae4c518995f119cfb32",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 11,
+          "column": 46
+        },
+        {
+          "title": "live detail /admin-portal/users/[id]",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "No real record link exists in the isolated snapshot; not verified.",
+                  "location": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                    "line": 15,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 101,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:06.571Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No real record link exists in the isolated snapshot; not verified.",
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "line": 15,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-fe64c55286de309240cb",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 11,
+          "column": 46
+        },
+        {
+          "title": "live detail /admin-portal/wallets/[id]",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "No real record link exists in the isolated snapshot; not verified.",
+                  "location": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                    "line": 15,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 110,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:06.686Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No real record link exists in the isolated snapshot; not verified.",
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "line": 15,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-50fc70f2cb2e75f2e215",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 11,
+          "column": 46
+        },
+        {
+          "title": "live detail /agents/[id]",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "No real record link exists in the isolated snapshot; not verified.",
+                  "location": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                    "line": 15,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 97,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:06.807Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No real record link exists in the isolated snapshot; not verified.",
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "line": 15,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-e8ec5dfbfb64c6726cea",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 11,
+          "column": 46
+        },
+        {
+          "title": "live detail /configuration/approvals/[id]",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "No real record link exists in the isolated snapshot; not verified.",
+                  "location": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                    "line": 15,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 103,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:06.914Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No real record link exists in the isolated snapshot; not verified.",
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "line": 15,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-3c2a82b3fe39bfc92f85",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 11,
+          "column": 46
+        },
+        {
+          "title": "live detail /configuration/[domain]/[key]",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "No real record link exists in the isolated snapshot; not verified.",
+                  "location": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                    "line": 15,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 105,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:07.026Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No real record link exists in the isolated snapshot; not verified.",
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "line": 15,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-593915565faf618444ff",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 11,
+          "column": 46
+        },
+        {
+          "title": "live detail /fees/rules/[id]",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "No real record link exists in the isolated snapshot; not verified.",
+                  "location": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                    "line": 15,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 124,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:07.142Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No real record link exists in the isolated snapshot; not verified.",
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "line": 15,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-2c33071ce830c9e1f0c1",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 11,
+          "column": 46
+        },
+        {
+          "title": "live detail /integrations/providers/[id]/health",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "No real record link exists in the isolated snapshot; not verified.",
+                  "location": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                    "line": 15,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 120,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:07.277Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No real record link exists in the isolated snapshot; not verified.",
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "line": 15,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-a4582eaf49afee042558",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 11,
+          "column": 46
+        },
+        {
+          "title": "live detail /integrations/[id]",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "No real record link exists in the isolated snapshot; not verified.",
+                  "location": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                    "line": 15,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 106,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:07.407Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No real record link exists in the isolated snapshot; not verified.",
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "line": 15,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-90375ef311c87f5de00b",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 11,
+          "column": 46
+        },
+        {
+          "title": "live detail /kyc/[id]",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "No real record link exists in the isolated snapshot; not verified.",
+                  "location": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                    "line": 15,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 98,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:07.523Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No real record link exists in the isolated snapshot; not verified.",
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "line": 15,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-1869489a1b1c41ac6702",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 11,
+          "column": 46
+        },
+        {
+          "title": "live detail /qa/runs/[id]",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "No real record link exists in the isolated snapshot; not verified.",
+                  "location": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                    "line": 15,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 112,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:07.631Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No real record link exists in the isolated snapshot; not verified.",
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "line": 15,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-6f66dc2c6b79b135f4c7",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 11,
+          "column": 46
+        },
+        {
+          "title": "live detail /reconciliation/batches/[id]",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "No real record link exists in the isolated snapshot; not verified.",
+                  "location": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                    "line": 15,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 98,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:07.756Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No real record link exists in the isolated snapshot; not verified.",
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "line": 15,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-eb916ecf6c7b16872f42",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 11,
+          "column": 46
+        },
+        {
+          "title": "live detail /reconciliation/settlements/[id]",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "No real record link exists in the isolated snapshot; not verified.",
+                  "location": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                    "line": 15,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 105,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:07.875Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No real record link exists in the isolated snapshot; not verified.",
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "line": 15,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-53bbe418900bc31312fe",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 11,
+          "column": 46
+        },
+        {
+          "title": "live detail /reports/[id]",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "No real record link exists in the isolated snapshot; not verified.",
+                  "location": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                    "line": 15,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 104,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:07.989Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No real record link exists in the isolated snapshot; not verified.",
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "line": 15,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-5f51981fc477116e781f",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 11,
+          "column": 46
+        },
+        {
+          "title": "live detail /security/alerts/[id]",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "No real record link exists in the isolated snapshot; not verified.",
+                  "location": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                    "line": 15,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 104,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:08.103Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No real record link exists in the isolated snapshot; not verified.",
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "line": 15,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-7aabc9e299b315030e96",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 11,
+          "column": 46
+        },
+        {
+          "title": "live detail /security/findings/[id]",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "No real record link exists in the isolated snapshot; not verified.",
+                  "location": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                    "line": 15,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 106,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:08.216Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No real record link exists in the isolated snapshot; not verified.",
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "line": 15,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-d0adf8291e45ad51972a",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 11,
+          "column": 46
+        },
+        {
+          "title": "live detail /support/cases/[id]",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "No real record link exists in the isolated snapshot; not verified.",
+                  "location": {
+                    "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                    "line": 15,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 95,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:08.339Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No real record link exists in the isolated snapshot; not verified.",
+                      "location": {
+                        "file": "C:\\Projects\\OleKardEcosystem\\wallet-ecosystem\\apps\\admin\\e2e\\admin-live-workflows.spec.ts",
+                        "line": 15,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-2fd3c0ea7923f349b689",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 11,
+          "column": 46
+        },
+        {
+          "title": "live FX unavailable provider stays actionable without replay",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2004,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:08.443Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-537618fe2cf366e26a77",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 34,
+          "column": 5
+        },
+        {
+          "title": "live full-permission session reloads, navigates and clears chunks on logout",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 880,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:10.457Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-7b1249dfe46db1b053c9",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 45,
+          "column": 5
+        },
+        {
+          "title": "live full-permission MFA enrollment gate remains enforced",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 257,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:11.352Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-0e7af762ce221376bde3",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 52,
+          "column": 5
+        },
+        {
+          "title": "live expired chunked session returns to login",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 325,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:11.620Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-519a341ebfe99768f660",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 56,
+          "column": 5
+        },
+        {
+          "title": "live tampered chunked token is rejected by API and cleared",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 713,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:11.958Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e20e968b23da72de8ca9-3c07869e547a09bb1912",
+          "file": "admin-live-workflows.spec.ts",
+          "line": 60,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "admin-status-regression.spec.ts",
+      "file": "admin-status-regression.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "standalone HTTP routes preserve codes and recovery actions",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 706,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:12.691Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2f75cc58a171126a8cd0-ec48d59f9ddfd8be54c3",
+          "file": "admin-status-regression.spec.ts",
+          "line": 7,
+          "column": 5
+        },
+        {
+          "title": "authenticated proxy errors retain shell without replay",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 851,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:13.410Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2f75cc58a171126a8cd0-12e9d0c911425438c337",
+          "file": "admin-status-regression.spec.ts",
+          "line": 13,
+          "column": 5
+        },
+        {
+          "title": "offline state and connection recovery preserve shell",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 369,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:14.271Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2f75cc58a171126a8cd0-9ac7bf5ded80c8c446ed",
+          "file": "admin-status-regression.spec.ts",
+          "line": 32,
+          "column": 5
+        },
+        {
+          "title": "legacy browser has a script-free no-JS fallback",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 211,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:14.652Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2f75cc58a171126a8cd0-ff9627ed1206ee7011ec",
+          "file": "admin-status-regression.spec.ts",
+          "line": 33,
+          "column": 5
+        },
+        {
+          "title": "repaired role dialog keeps layout, keyboard dismissal and action payload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 677,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-16T06:24:14.872Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2f75cc58a171126a8cd0-3ee82f2e786855d4adf5",
+          "file": "admin-status-regression.spec.ts",
+          "line": 35,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-16T06:24:01.579Z",
+    "duration": 14499.862,
+    "expected": 11,
+    "skipped": 19,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,1362 @@
+{
+  "generatedAt": "2026-10-19T08:48:05.822Z",
+  "keyCount": 76,
+  "results": [
+    {
+      "key": "auth.biometric.enabled",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.lockout.initial_duration",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.lockout.max_failed_attempts",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.lockout.progressive_enabled",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.mfa.admin.fido2_enabled",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.mfa.admin.sms_enabled",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.mfa.admin.totp_enabled",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.otp.max_attempts",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.otp.max_sends_per_hour",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.otp.provider",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.otp.resend_cooldown",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.otp.ttl",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.permission_cache_ttl",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.pin.length",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.pin.reject_common",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.pin.reject_repeated",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.pin.reject_sequential",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.refresh_token.reuse_detection_enabled",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.refresh_token.rotation_enabled",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.refresh_token.ttl",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.session.inactivity_ttl_admin",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.session.inactivity_ttl_agent",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.session.inactivity_ttl_customer",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.step_up_threshold",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "auth.step_up_threshold_currency",
+      "domain": "auth",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "device.change_detection_enabled",
+      "domain": "device",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "device.fingerprint_min_entropy_bits",
+      "domain": "device",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "device.max_accounts_per_fingerprint",
+      "domain": "device",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "device.max_device_changes_per_window",
+      "domain": "device",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "device.max_devices_per_user",
+      "domain": "device",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "device.new_device_acknowledgment_ttl",
+      "domain": "device",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "device.new_device_notification_enabled",
+      "domain": "device",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "device.suspicious_change_window_hours",
+      "domain": "device",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "device.suspicious_detection_enabled",
+      "domain": "device",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "funding.bank_reference.expiry_days",
+      "domain": "funding",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "funding.idempotency.ttl_seconds",
+      "domain": "funding",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "funding.mock.success_rate",
+      "domain": "funding",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "funding.processing.timeout_minutes",
+      "domain": "funding",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "kyc.accepted_mime_types",
+      "domain": "kyc",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "kyc.auto_verify_enabled",
+      "domain": "kyc",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "kyc.max_document_size_bytes",
+      "domain": "kyc",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "kyc.provider",
+      "domain": "kyc",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "kyc.provider_max_retries",
+      "domain": "kyc",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "kyc.validity_period_days",
+      "domain": "kyc",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "ledger.commission_expense_account.BWP",
+      "domain": "ledger",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "ledger.float_account.BWP",
+      "domain": "ledger",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "ledger.system.commission_account_ref",
+      "domain": "ledger",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "ledger.system.fee_account_ref",
+      "domain": "ledger",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "ledger.system.float_account_ref",
+      "domain": "ledger",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "ledger.system.revenue_account_ref",
+      "domain": "ledger",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "ledger.system.suspense_account_ref",
+      "domain": "ledger",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "profile.contact_change.otp_rate_limit_per_hour",
+      "domain": "profile",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "profile.maker_checker.enabled",
+      "domain": "profile",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "profile.minimum_user_age_years",
+      "domain": "profile",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "profile.photo.accepted_mime_types",
+      "domain": "profile",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "profile.photo.max_size_bytes",
+      "domain": "profile",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "profile.photo.min_height_px",
+      "domain": "profile",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "profile.photo.min_width_px",
+      "domain": "profile",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "profile.photo.signed_url_ttl_seconds",
+      "domain": "profile",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "profile.rate_limit.photo_per_minute",
+      "domain": "profile",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "profile.rate_limit.user_per_minute",
+      "domain": "profile",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "qr.dynamic_expiry_seconds",
+      "domain": "qr",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "qr.payment.fee_type",
+      "domain": "qr",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "qr.payment.fee_value",
+      "domain": "qr",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "qr.payment.max_amount",
+      "domain": "qr",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "qr.payment.min_amount",
+      "domain": "qr",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "qr.reservation_ttl_seconds",
+      "domain": "qr",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "qr.signing_key",
+      "domain": "qr",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "risk.block_score_threshold",
+      "domain": "risk",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "risk.review_score_threshold",
+      "domain": "risk",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "security.ip_audit.hash_algorithm",
+      "domain": "security",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "service.payment.provider_timeout_seconds",
+      "domain": "service",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "service.payment.requery_interval_seconds",
+      "domain": "service",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "service.payment.requery_max_attempts",
+      "domain": "service",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "service.payment.stale_initiated_timeout_minutes",
+      "domain": "service",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    },
+    {
+      "key": "service.payment.validation_timeout_seconds",
+      "domain": "service",
+      "matches": true,
+      "valueUnchanged": true,
+      "versions": 0
+    }
+  ],
+  "checks": [
+    {
+      "uri": "/v1/admin/configuration/keys?include_inactive=true&per_page=50&page=1",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys?include_inactive=true&per_page=50&page=2",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.biometric.enabled",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.biometric.enabled/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.lockout.initial_duration",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.lockout.initial_duration/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.lockout.max_failed_attempts",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.lockout.max_failed_attempts/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.lockout.progressive_enabled",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.lockout.progressive_enabled/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.mfa.admin.fido2_enabled",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.mfa.admin.fido2_enabled/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.mfa.admin.sms_enabled",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.mfa.admin.sms_enabled/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.mfa.admin.totp_enabled",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.mfa.admin.totp_enabled/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.otp.max_attempts",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.otp.max_attempts/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.otp.max_sends_per_hour",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.otp.max_sends_per_hour/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.otp.provider",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.otp.provider/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.otp.resend_cooldown",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.otp.resend_cooldown/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.otp.ttl",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.otp.ttl/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.permission_cache_ttl",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.permission_cache_ttl/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.pin.length",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.pin.length/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.pin.reject_common",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.pin.reject_common/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.pin.reject_repeated",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.pin.reject_repeated/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.pin.reject_sequential",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.pin.reject_sequential/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.refresh_token.reuse_detection_enabled",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.refresh_token.reuse_detection_enabled/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.refresh_token.rotation_enabled",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.refresh_token.rotation_enabled/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.refresh_token.ttl",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.refresh_token.ttl/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.session.inactivity_ttl_admin",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.session.inactivity_ttl_admin/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.session.inactivity_ttl_agent",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.session.inactivity_ttl_agent/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.session.inactivity_ttl_customer",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.session.inactivity_ttl_customer/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.step_up_threshold",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.step_up_threshold/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.step_up_threshold_currency",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/auth.step_up_threshold_currency/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/device.change_detection_enabled",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/device.change_detection_enabled/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/device.fingerprint_min_entropy_bits",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/device.fingerprint_min_entropy_bits/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/device.max_accounts_per_fingerprint",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/device.max_accounts_per_fingerprint/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/device.max_device_changes_per_window",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/device.max_device_changes_per_window/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/device.max_devices_per_user",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/device.max_devices_per_user/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/device.new_device_acknowledgment_ttl",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/device.new_device_acknowledgment_ttl/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/device.new_device_notification_enabled",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/device.new_device_notification_enabled/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/device.suspicious_change_window_hours",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/device.suspicious_change_window_hours/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/device.suspicious_detection_enabled",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/device.suspicious_detection_enabled/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/funding.bank_reference.expiry_days",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/funding.bank_reference.expiry_days/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/funding.idempotency.ttl_seconds",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/funding.idempotency.ttl_seconds/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/funding.mock.success_rate",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/funding.mock.success_rate/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/funding.processing.timeout_minutes",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/funding.processing.timeout_minutes/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/kyc.accepted_mime_types",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/kyc.accepted_mime_types/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/kyc.auto_verify_enabled",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/kyc.auto_verify_enabled/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/kyc.max_document_size_bytes",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/kyc.max_document_size_bytes/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/kyc.provider",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/kyc.provider/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/kyc.provider_max_retries",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/kyc.provider_max_retries/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/kyc.validity_period_days",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/kyc.validity_period_days/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/ledger.commission_expense_account.BWP",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/ledger.commission_expense_account.BWP/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/ledger.float_account.BWP",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/ledger.float_account.BWP/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/ledger.system.commission_account_ref",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/ledger.system.commission_account_ref/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/ledger.system.fee_account_ref",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/ledger.system.fee_account_ref/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/ledger.system.float_account_ref",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/ledger.system.float_account_ref/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/ledger.system.revenue_account_ref",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/ledger.system.revenue_account_ref/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/ledger.system.suspense_account_ref",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/ledger.system.suspense_account_ref/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/profile.contact_change.otp_rate_limit_per_hour",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/profile.contact_change.otp_rate_limit_per_hour/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/profile.maker_checker.enabled",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/profile.maker_checker.enabled/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/profile.minimum_user_age_years",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/profile.minimum_user_age_years/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/profile.photo.accepted_mime_types",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/profile.photo.accepted_mime_types/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/profile.photo.max_size_bytes",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/profile.photo.max_size_bytes/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/profile.photo.min_height_px",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/profile.photo.min_height_px/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/profile.photo.min_width_px",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/profile.photo.min_width_px/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/profile.photo.signed_url_ttl_seconds",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/profile.photo.signed_url_ttl_seconds/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/profile.rate_limit.photo_per_minute",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/profile.rate_limit.photo_per_minute/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/profile.rate_limit.user_per_minute",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/profile.rate_limit.user_per_minute/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/qr.dynamic_expiry_seconds",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/qr.dynamic_expiry_seconds/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/qr.payment.fee_type",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/qr.payment.fee_type/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/qr.payment.fee_value",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/qr.payment.fee_value/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/qr.payment.max_amount",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/qr.payment.max_amount/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/qr.payment.min_amount",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/qr.payment.min_amount/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/qr.reservation_ttl_seconds",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/qr.reservation_ttl_seconds/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/qr.signing_key",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/qr.signing_key/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/risk.block_score_threshold",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/risk.block_score_threshold/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/risk.review_score_threshold",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/risk.review_score_threshold/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/security.ip_audit.hash_algorithm",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/security.ip_audit.hash_algorithm/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/service.payment.provider_timeout_seconds",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/service.payment.provider_timeout_seconds/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/service.payment.requery_interval_seconds",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/service.payment.requery_interval_seconds/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/service.payment.requery_max_attempts",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/service.payment.requery_max_attempts/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/service.payment.stale_initiated_timeout_minutes",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/service.payment.stale_initiated_timeout_minutes/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/service.payment.validation_timeout_seconds",
+      "status": 200,
+      "cors": true
+    },
+    {
+      "uri": "/v1/admin/configuration/keys/service.payment.validation_timeout_seconds/versions?per_page=20",
+      "status": 200,
+      "cors": true
+    }
+  ],
+  "browserChecks": [
+    {
+      "key": "auth.biometric.enabled",
+      "detail": 200,
+      "history": 200
+    },
+    {
+      "key": "device.change_detection_enabled",
+      "detail": 200,
+      "history": 200
+    },
+    {
+      "key": "funding.bank_reference.expiry_days",
+      "detail": 200,
+      "history": 200
+    },
+    {
+      "key": "kyc.accepted_mime_types",
+      "detail": 200,
+      "history": 200
+    },
+    {
+      "key": "ledger.commission_expense_account.BWP",
+      "detail": 200,
+      "history": 200
+    },
+    {
+      "key": "profile.contact_change.otp_rate_limit_per_hour",
+      "detail": 200,
+      "history": 200
+    },
+    {
+      "key": "qr.dynamic_expiry_seconds",
+      "detail": 200,
+      "history": 200
+    },
+    {
+      "key": "risk.block_score_threshold",
+      "detail": 200,
+      "history": 200
+    },
+    {
+      "key": "security.ip_audit.hash_algorithm",
+      "detail": 200,
+      "history": 200
+    },
+    {
+      "key": "service.payment.provider_timeout_seconds",
+      "detail": 200,
+      "history": 200
+    }
+  ]
+}

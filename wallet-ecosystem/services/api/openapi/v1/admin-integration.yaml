@@ -1,0 +1,146 @@
+openapi: 3.0.3
+info:
+  title: OleKard Admin Integration Management
+  version: 1.0.0
+servers:
+  - url: /v1/admin
+security:
+  - bearerAuth: []
+paths:
+  /integrations/api-clients:
+    get:
+      operationId: listAdminApiClients
+      description: Requires integrations.manage. Safe paginated clients; key prefix only, no secret/hash.
+      parameters:
+        - {name: page, in: query, schema: {type: integer, minimum: 1, maximum: 100000}}
+        - {name: integration_id, in: query, schema: {type: string, format: uuid}}
+      responses:
+        '200': {description: data array and meta current_page/last_page/total}
+        '401': {description: Authentication required}
+        '403': {description: integrations.manage missing}
+    post:
+      operationId: createAdminApiClient
+      description: Requires integrations.manage. Cryptographically random credentials; bcrypt secret only in storage. Returned credentials are one-time and Cache-Control no-store.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, integration_id, permissions, ip_whitelist]
+              properties:
+                name: {type: string, maxLength: 255}
+                integration_id: {type: string, format: uuid, description: Active registered partner}
+                permissions: {type: array, maxItems: 100, items: {type: string, maxLength: 100}}
+                ip_whitelist: {type: array, maxItems: 100, items: {type: string, maxLength: 50}, description: IPv4/IPv6 addresses or CIDRs; empty preserves unrestricted policy}
+                rate_limit_per_minute: {type: integer, minimum: 1, maximum: 10000, default: 60}
+      responses:
+        '201':
+          description: Safe client plus full public api_key and raw_secret once. Never log or persist raw_secret.
+          headers:
+            Cache-Control: {schema: {type: string}, description: no-store, private}
+        '422': {description: Invalid partner/permissions/IP/CIDR/input; standard error envelope}
+  /integrations/api-clients/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+    get:
+      operationId: getAdminApiClient
+      description: Requires integrations.manage. Never returns raw_secret or secret_hash.
+      responses:
+        '200': {description: Safe client data}
+        '404': {description: Client not found}
+    delete:
+      operationId: revokeAdminApiClient
+      description: Requires integrations.manage. Repeat-safe terminal revoke; disables authentication immediately. Existing legacy activation cannot undo revoked_at.
+      responses:
+        '200': {description: Safe client with revoked status}
+        '404': {description: Client not found}
+  /integrations/api-clients/{id}/rotate:
+    post:
+      operationId: rotateAdminApiClient
+      description: Requires integrations.manage; 10/min throttle. Row-locked rotation invalidates old secret immediately; no-store response.
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: {type: string, nullable: true, maxLength: 255}
+      responses:
+        '200': {description: Safe client and one-time api_key/raw_secret}
+        '404': {description: Unknown client}
+        '409': {description: Revoked client}
+        '429': {description: Rate limit}
+  /integrations/providers:
+    get:
+      operationId: listAdminIntegrationHealth
+      description: Requires integrations.manage. Safe partner metadata plus attributable latest health/timestamp; no configuration or credential reference.
+      parameters:
+        - {name: page, in: query, schema: {type: integer, minimum: 1, maximum: 100000}}
+        - {name: provider_type, in: query, schema: {type: string, enum: [otp, sms, email, kyc, payment, bank, mobile_money]}}
+      responses:
+        '200': {description: data providers and pagination meta; health healthy/degraded/down/unknown; null timestamp if no attributable probe in window}
+  /integrations/providers/{id}/health:
+    get:
+      operationId: getAdminIntegrationHealth
+      description: Requires integrations.manage. Twenty-four UTC hourly observed-uptime buckets. Only this integration's samples; never infer from type-only or another partner's observations.
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: data integration_id/display_name/health/last_checked_at/sample_count/buckets/recent_errors. Unknown buckets have null uptime_percent.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      buckets:
+                        type: array
+                        minItems: 24
+                        maxItems: 24
+                        items:
+                          type: object
+                          properties:
+                            hour: {type: string, format: date-time}
+                            samples: {type: integer}
+                            uptime_percent: {type: number, nullable: true, minimum: 0, maximum: 100}
+                      recent_errors:
+                        type: array
+                        maxItems: 20
+                        items:
+                          type: object
+                          properties:
+                            timestamp: {type: string, format: date-time}
+                            status: {type: string}
+                            message: {type: string, description: Generic safe probe outcome; raw provider text excluded}
+        '404': {description: Integration not found}
+  /webhooks/deliveries:
+    get:
+      operationId: listAdminWebhookDeliveries
+      description: Requires integrations.manage. Inbound provider callback processing; delivered means processed by platform. Endpoint is receiver /v1/webhooks/{provider_slug}, not provider API endpoint.
+      parameters:
+        - {name: status, in: query, schema: {type: string, enum: [delivered, failed, retrying]}}
+        - {name: event_type, in: query, schema: {type: string, maxLength: 100}}
+        - {name: page, in: query, schema: {type: integer, minimum: 1, maximum: 100000}}
+      responses:
+        '200': {description: data rows id/event/provider_slug/endpoint/status/processing_status/attempts/last_attempt_at/received_at and pagination meta}
+        '422': {description: Invalid filters}
+  /webhooks/deliveries/{id}/retry:
+    post:
+      operationId: retryAdminWebhookDelivery
+      description: Requires integrations.manage;20/min throttle. Failed/dead_letter only, durable platform retry intent, audited actor. Shared worker lock/generation guards protect delayed automatic/manual retries and completed events.
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '202': {description: data id and retrying status}
+        '404': {description: Unknown callback}
+        '409': {description: Already queued/processing/completed}
+        '429': {description: Retry request rate limit}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer}

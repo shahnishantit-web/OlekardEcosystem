@@ -1,0 +1,385 @@
+openapi: "3.1.0"
+info:
+  title: E26 Security — Admin API
+  version: "1.0.0"
+  description: |
+    Admin-only endpoints for vulnerability finding management and the security dashboard.
+    All endpoints require authentication via the identity.auth middleware and the
+    appropriate security permission.
+
+servers:
+  - url: /api/v1
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    VulnerabilityFinding:
+      type: object
+      required: [id, scanner, severity, component, title, status, detected_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        scanner:
+          type: string
+          enum: [composer-audit, phpstan, zap, manual, pen-test]
+        finding_ref:
+          type: string
+          nullable: true
+          description: CVE ID, GHSA ID, or manual reference
+        severity:
+          type: string
+          enum: [CRITICAL, HIGH, MEDIUM, LOW, INFO]
+        component:
+          type: string
+          description: Package name, file path, or endpoint affected
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [open, suppressed, resolved]
+        suppression_justification:
+          type: string
+          nullable: true
+        detected_at:
+          type: string
+          format: date-time
+        resolved_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    SecurityDashboard:
+      type: object
+      description: |
+        Current-state snapshot of vulnerability findings.
+        Time-series trend tracking is descoped from E26; deferred to a future analytics release.
+      required: [findings_by_severity, findings_by_status, total_open, as_of]
+      properties:
+        total_open:
+          type: integer
+          description: Total findings with status=open
+        findings_by_severity:
+          type: object
+          description: Count of open findings per severity level
+          properties:
+            CRITICAL:
+              type: integer
+            HIGH:
+              type: integer
+            MEDIUM:
+              type: integer
+            LOW:
+              type: integer
+            INFO:
+              type: integer
+        findings_by_status:
+          type: object
+          description: Count of all findings per status
+          properties:
+            open:
+              type: integer
+            suppressed:
+              type: integer
+            resolved:
+              type: integer
+        as_of:
+          type: string
+          format: date-time
+          description: UTC timestamp of when these counts were computed
+
+    ErrorResponse:
+      type: object
+      required: [success, error]
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+
+paths:
+  # ── Security Dashboard ────────────────────────────────────────────────────
+
+  /security/dashboard:
+    get:
+      operationId: getSecurityDashboard
+      summary: Security findings summary dashboard
+      description: Returns aggregate counts of vulnerability findings by severity and status.
+      tags: [Security]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: header
+          name: X-Correlation-ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, data]
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    $ref: "#/components/schemas/SecurityDashboard"
+        "401":
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Missing security.findings.read permission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── Vulnerability Findings ────────────────────────────────────────────────
+
+  /security/findings:
+    get:
+      operationId: listVulnerabilityFindings
+      summary: List vulnerability findings
+      description: |
+        Returns a paginated list of vulnerability findings. Requires security.findings.read permission.
+      tags: [Security]
+      parameters:
+        - in: query
+          name: severity
+          schema:
+            type: string
+            enum: [CRITICAL, HIGH, MEDIUM, LOW, INFO]
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [open, suppressed, resolved]
+        - in: query
+          name: scanner
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        "200":
+          description: Paginated findings list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, data, meta]
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/VulnerabilityFinding"
+                  meta:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      per_page:
+                        type: integer
+        "401":
+          description: Unauthenticated
+        "403":
+          description: Missing security.findings.read permission
+
+    post:
+      operationId: createVulnerabilityFinding
+      summary: Create a vulnerability finding (manual entry)
+      description: |
+        Manually records a vulnerability finding. For automated scanner imports,
+        findings are created programmatically. Requires security.findings.write permission.
+      tags: [Security]
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scanner, severity, component, title, detected_at]
+              properties:
+                scanner:
+                  type: string
+                  enum: [composer-audit, phpstan, zap, manual, pen-test]
+                finding_ref:
+                  type: string
+                  nullable: true
+                severity:
+                  type: string
+                  enum: [CRITICAL, HIGH, MEDIUM, LOW, INFO]
+                component:
+                  type: string
+                title:
+                  type: string
+                description:
+                  type: string
+                  nullable: true
+                detected_at:
+                  type: string
+                  format: date-time
+      responses:
+        "201":
+          description: Finding created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, data]
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    $ref: "#/components/schemas/VulnerabilityFinding"
+        "422":
+          description: Validation error
+        "401":
+          description: Unauthenticated
+        "403":
+          description: Missing security.findings.write permission
+
+  /security/findings/{id}:
+    get:
+      operationId: getVulnerabilityFinding
+      summary: Get a single vulnerability finding
+      tags: [Security]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Finding detail
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, data]
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    $ref: "#/components/schemas/VulnerabilityFinding"
+        "404":
+          description: Finding not found
+        "401":
+          description: Unauthenticated
+        "403":
+          description: Missing security.findings.read permission
+
+  /security/findings/{id}/status:
+    patch:
+      operationId: updateVulnerabilityFindingStatus
+      summary: Update finding status (suppress or resolve)
+      description: |
+        Transitions a finding between open / suppressed / resolved states.
+        Suppression requires a non-empty justification.
+        Status changes are audit-logged (security.vuln_finding.suppressed / resolved).
+        Requires security.findings.write permission.
+      tags: [Security]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [open, suppressed, resolved]
+                suppression_justification:
+                  type: string
+                  description: Required when status = suppressed
+      responses:
+        "200":
+          description: Finding status updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, data]
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    $ref: "#/components/schemas/VulnerabilityFinding"
+        "422":
+          description: Validation error (e.g. suppression_justification required)
+        "404":
+          description: Finding not found
+        "401":
+          description: Unauthenticated
+        "403":
+          description: Missing security.findings.write permission

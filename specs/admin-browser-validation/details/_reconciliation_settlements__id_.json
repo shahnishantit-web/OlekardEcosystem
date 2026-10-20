@@ -1,0 +1,26 @@
+{
+  "pattern": "/reconciliation/settlements/[id]",
+  "route": "/reconciliation/settlements/d026a4eb-0e40-4fa7-a67b-d815f021ad18",
+  "landed": "/reconciliation/settlements/d026a4eb-0e40-4fa7-a67b-d815f021ad18",
+  "errors": [],
+  "failures": [],
+  "detailResponses": [
+    {
+      "url": "/v1/admin-app/settlement/d026a4eb-0e40-4fa7-a67b-d815f021ad18",
+      "status": 200,
+      "body": {
+        "data": {
+          "settlement_id": "d026a4eb-0e40-4fa7-a67b-d815f021ad18",
+          "settlement_date": "2026-10-17",
+          "status": "draft",
+          "total_amount_minor_units": 0,
+          "currency_code": "BWP",
+          "net_position_minor_units": 0,
+          "provider": "QA",
+          "reference": null
+        }
+      }
+    }
+  ],
+  "text": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nD026a4eb 0e40 4fa7 A67b D815f021ad18\n⌘K\nA\nadmin@olekard.local\nSettlement Detail\n← Back\nSettlement ID\nd026a4eb-0e40-4fa7-a67b-d815f021ad18\nStatus\nDRAFT\nSettlement Date\n2026-10-17\nCurrency\nBWP\nTotal Amount\nBWP 0.00\nNet Position\nBWP 0.00\nProvider\nQA\nReference\n—"
+}

@@ -1,0 +1,2039 @@
+openapi: "3.1.0"
+info:
+  title: Risk, Fraud & AML API (E18)
+  description: |
+    Consolidated Risk module endpoints covering:
+    - Pre-transaction risk evaluation (US-RISK-001 – 009)
+    - Rule configuration (US-RISK-010 – 015)
+    - Pattern detection (US-RISK-016 – 018)
+    - Alert lifecycle management (US-RISK-019 – 021)
+    - Account freeze / hold (US-RISK-022)
+    - Suspicious Activity Report (SAR) workflow
+    - Watchlist management
+  version: "1.0.0"
+
+tags:
+  - name: evaluation
+    description: Pre-transaction risk evaluation
+  - name: rules
+    description: Risk rule configuration
+  - name: detection
+    description: Async pattern detection
+  - name: alerts
+    description: Risk alert lifecycle management
+  - name: sars
+    description: Suspicious Activity Report workflow
+  - name: watchlist
+    description: Watchlist entry management
+
+paths:
+  # ─── Evaluation ────────────────────────────────────────────────────────────
+
+  /v1/risk/evaluate-transaction-risk:
+    post:
+      tags: [evaluation]
+      operationId: evaluateTransactionRisk
+      summary: Evaluate overall transaction risk (US-RISK-001)
+      description: |
+        Synchronous evaluation against all active rules. Returns allow/block/review.
+        Must complete in <200ms p99. Idempotent by idempotency_key.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRiskRequest'
+      responses:
+        "200":
+          description: Risk decision (decision=block is still HTTP 200)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskEvaluationResponse'
+        "409":
+          description: Idempotency key conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/risk/evaluate-transaction-velocity:
+    post:
+      tags: [evaluation]
+      operationId: evaluateTransactionVelocity
+      summary: Evaluate velocity risk (US-RISK-002)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VelocityRiskRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskEvaluationResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/risk/evaluate-amount-threshold:
+    post:
+      tags: [evaluation]
+      operationId: evaluateAmountThreshold
+      summary: Evaluate per-transaction and daily/monthly amount limits (US-RISK-003)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AmountThresholdRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskEvaluationResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/risk/evaluate-device-risk:
+    post:
+      tags: [evaluation]
+      operationId: evaluateDeviceRisk
+      summary: Evaluate risk from device context (US-RISK-004)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceRiskRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskEvaluationResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/risk/evaluate-ip-risk:
+    post:
+      tags: [evaluation]
+      operationId: evaluateIpRisk
+      summary: Evaluate risk from IP address (US-RISK-005)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IpRiskRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskEvaluationResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/risk/evaluate-beneficiary-risk:
+    post:
+      tags: [evaluation]
+      operationId: evaluateBeneficiaryRisk
+      summary: Evaluate risk from beneficiary profile (US-RISK-006)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BeneficiaryRiskRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskEvaluationResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/risk/allow-transaction:
+    post:
+      tags: [evaluation]
+      operationId: allowTransaction
+      summary: Explicitly allow a transaction under manual review (US-RISK-007)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManualDecisionRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManualDecisionResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          description: Decision already made
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/risk/block-transaction:
+    post:
+      tags: [evaluation]
+      operationId: blockTransaction
+      summary: Explicitly block a transaction under manual review (US-RISK-008)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManualDecisionRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManualDecisionResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/risk/send-transaction-for-manual-review:
+    post:
+      tags: [evaluation]
+      operationId: sendTransactionForManualReview
+      summary: Route an evaluation for manual review (US-RISK-009)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendForReviewRequest'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskAlertSummary'
+        "409":
+          description: Already under review
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # ─── Rules ─────────────────────────────────────────────────────────────────
+
+  /v1/risk/configure-per-transaction-limit:
+    post:
+      tags: [rules]
+      operationId: configurePerTransactionLimit
+      summary: Set or update the per-transaction amount limit (US-RISK-010)
+      description: Idempotent by (rule_name, subject_id). Creates or replaces.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AmountLimitRuleRequest'
+      responses:
+        "200":
+          description: Rule updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskRuleResponse'
+        "201":
+          description: Rule created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskRuleResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/risk/configure-daily-limit:
+    post:
+      tags: [rules]
+      operationId: configureDailyLimit
+      summary: Set or update the rolling 24-hour cumulative limit (US-RISK-011)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VelocityAmountRuleRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskRuleResponse'
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskRuleResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/risk/configure-monthly-limit:
+    post:
+      tags: [rules]
+      operationId: configureMonthlyLimit
+      summary: Set or update the rolling 30-day cumulative limit (US-RISK-012)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VelocityAmountRuleRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskRuleResponse'
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskRuleResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/risk/configure-customer-limits:
+    post:
+      tags: [rules]
+      operationId: configureCustomerLimits
+      summary: Set or update limits scoped to a customer (US-RISK-013)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubjectLimitsRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubjectLimitsResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/risk/configure-agent-limits:
+    post:
+      tags: [rules]
+      operationId: configureAgentLimits
+      summary: Set or update limits scoped to an agent (US-RISK-014)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubjectLimitsRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubjectLimitsResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/risk/configure-wallet-limits:
+    post:
+      tags: [rules]
+      operationId: configureWalletLimits
+      summary: Set or update limits scoped to a wallet (US-RISK-015)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubjectLimitsRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubjectLimitsResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/risk/rules:
+    get:
+      tags: [rules]
+      operationId: listRules
+      summary: List all active risk rules
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: rule_type
+          schema:
+            type: string
+        - in: query
+          name: applies_to
+          schema:
+            type: string
+        - in: query
+          name: subject_id
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RiskRuleResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  # ─── Detection ─────────────────────────────────────────────────────────────
+
+  /v1/risk/detect-unusual-transaction-pattern:
+    post:
+      tags: [detection]
+      operationId: detectUnusualTransactionPattern
+      summary: Trigger unusual pattern detection (US-RISK-016)
+      description: Asynchronous — returns 202. Alerts created when pattern confirmed.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatternDetectionRequest'
+      responses:
+        "202":
+          description: Analysis queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetectionQueuedResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/risk/detect-rapid-fund-movement:
+    post:
+      tags: [detection]
+      operationId: detectRapidFundMovement
+      summary: Trigger rapid fund movement (layering) detection (US-RISK-017)
+      description: Asynchronous — returns 202.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatternDetectionRequest'
+      responses:
+        "202":
+          description: Analysis queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetectionQueuedResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/risk/detect-repeated-failed-authentication:
+    post:
+      tags: [detection]
+      operationId: detectRepeatedFailedAuthentication
+      summary: Record auth failure and evaluate threshold (US-RISK-018)
+      description: Synchronous. Creates a RiskAlert if threshold exceeded.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthFailureRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthFailureResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # ─── Alert Lifecycle ────────────────────────────────────────────────────────
+
+  /v1/risk/create-risk-alert:
+    post:
+      tags: [alerts]
+      operationId: createRiskAlert
+      summary: Manually create a risk alert (US-RISK-019)
+      description: Idempotent by (alert_type, subject_id, correlation_id).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAlertRequest'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertDetailResponse'
+        "409":
+          description: Alert already exists for this correlation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/risk/alerts:
+    get:
+      tags: [alerts]
+      operationId: listAlerts
+      summary: List risk alerts with filtering
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [open, under_investigation, escalated, resolved_true_positive, resolved_false_positive, closed]
+        - in: query
+          name: severity
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - in: query
+          name: subject_id
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: assigned_to
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertListResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/risk/alerts/{id}:
+    get:
+      tags: [alerts]
+      operationId: getAlert
+      summary: Get a single alert with full details and decisions
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertDetailResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/risk/investigate-risk-alert:
+    post:
+      tags: [alerts]
+      operationId: investigateRiskAlert
+      summary: Assign and begin investigation of an alert (US-RISK-020)
+      description: Uses optimistic locking — supply version from last GET.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvestigateAlertRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertDetailResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          description: Optimistic lock conflict — version mismatch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/risk/resolve-risk-alert:
+    post:
+      tags: [alerts]
+      operationId: resolveRiskAlert
+      summary: Resolve an alert with a final determination (US-RISK-021)
+      description: |
+        Decisions freeze_account and file_sar require checker_id (maker-checker).
+        decision=file_sar automatically creates a SAR draft.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveAlertRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertDetailResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          description: Optimistic lock conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/risk/freeze-account-due-to-risk:
+    post:
+      tags: [alerts]
+      operationId: freezeAccountDueToRisk
+      summary: Place an account hold to freeze transactions (US-RISK-022)
+      description: |
+        Requires maker-checker (checker_id). Creates AccountHold. Does not
+        modify the ledger — evaluation blocks future transactions.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreezeAccountRequest'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountHoldResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          description: Account already frozen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/risk/lift-account-hold:
+    post:
+      tags: [alerts]
+      operationId: liftAccountHold
+      summary: Lift an existing account hold (US-RISK-022)
+      description: Requires risk.freeze_account permission. Clears Redis cache.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LiftHoldRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountHoldResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          description: Hold already lifted or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # ─── SAR Workflow ───────────────────────────────────────────────────────────
+
+  /v1/risk/sars:
+    get:
+      tags: [sars]
+      operationId: listSars
+      summary: List Suspicious Activity Reports
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [draft, approved, submitted, submission_failed]
+        - in: query
+          name: subject_id
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SarListResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/risk/sars/{id}:
+    get:
+      tags: [sars]
+      operationId: getSar
+      summary: Get a single SAR with full narrative and metadata
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SarResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/risk/sars/{id}/approve:
+    post:
+      tags: [sars]
+      operationId: approveSar
+      summary: Approve a SAR draft for submission
+      description: |
+        Maker-checker: approver_id must differ from filer_id.
+        Sets status=approved; required before submit.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveSarRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SarResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          description: Already approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/risk/sars/{id}/submit:
+    post:
+      tags: [sars]
+      operationId: submitSar
+      summary: Submit an approved SAR to Botswana FIA
+      description: |
+        Requires status=approved. On success: status=submitted with fia_reference.
+        On FIA failure: status=submission_failed; returns HTTP 502.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SarResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "422":
+          description: SAR not yet approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "502":
+          description: FIA portal submission failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+  # ─── Watchlist Management ────────────────────────────────────────────────────
+
+  /v1/risk/watchlist:
+    post:
+      tags: [watchlist]
+      operationId: createWatchlistEntry
+      summary: Add an entry to the watchlist
+      description: Requires risk.configure_rules permission.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WatchlistEntryRequest'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WatchlistEntryResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/risk/watchlist/{id}:
+    put:
+      tags: [watchlist]
+      operationId: updateWatchlistEntry
+      summary: Update a watchlist entry
+      description: Requires risk.configure_rules permission. Re-normalizes name on update.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WatchlistEntryUpdateRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WatchlistEntryResponse'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "422":
+          $ref: '#/components/responses/UnprocessableEntity'
+
+    delete:
+      tags: [watchlist]
+      operationId: deactivateWatchlistEntry
+      summary: Deactivate a watchlist entry (soft-delete)
+      description: Sets is_active=false. Entry remains for audit history.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Entry deactivated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "409":
+          description: Entry already inactive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid auth token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Authenticated but lacks required permission
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UnprocessableEntity:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+
+    # ── Requests ───────────────────────────────────────────────────────────────
+
+    TransactionRiskRequest:
+      type: object
+      required: [idempotency_key, transaction_reference, transaction_type, amount, currency, customer_id]
+      properties:
+        idempotency_key:
+          type: string
+          maxLength: 128
+        transaction_reference:
+          type: string
+          maxLength: 128
+        transaction_type:
+          type: string
+          enum: [funding, transfer, withdrawal, bill_payment, qr_payment]
+        amount:
+          type: string
+          example: "500.00"
+        currency:
+          type: string
+          enum: [BWP]
+          default: BWP
+        customer_id:
+          type: string
+          format: uuid
+        wallet_id:
+          type: string
+          format: uuid
+          nullable: true
+        agent_id:
+          type: string
+          format: uuid
+          nullable: true
+        beneficiary_id:
+          type: string
+          format: uuid
+          nullable: true
+        device_id:
+          type: string
+          nullable: true
+        ip_address:
+          type: string
+          nullable: true
+        kyc_tier:
+          type: string
+          enum: [basic, standard, enhanced]
+          nullable: true
+
+    VelocityRiskRequest:
+      type: object
+      required: [customer_id, transaction_type, amount, currency]
+      properties:
+        customer_id:
+          type: string
+          format: uuid
+        agent_id:
+          type: string
+          format: uuid
+          nullable: true
+        wallet_id:
+          type: string
+          format: uuid
+          nullable: true
+        transaction_type:
+          type: string
+          enum: [funding, transfer, withdrawal, bill_payment, qr_payment]
+        amount:
+          type: string
+        currency:
+          type: string
+          default: BWP
+
+    AmountThresholdRequest:
+      type: object
+      required: [customer_id, amount, currency, limit_type]
+      properties:
+        customer_id:
+          type: string
+          format: uuid
+        agent_id:
+          type: string
+          format: uuid
+          nullable: true
+        wallet_id:
+          type: string
+          format: uuid
+          nullable: true
+        amount:
+          type: string
+        currency:
+          type: string
+          default: BWP
+        limit_type:
+          type: string
+          enum: [per_transaction, daily, monthly]
+
+    DeviceRiskRequest:
+      type: object
+      required: [device_id, customer_id]
+      properties:
+        device_id:
+          type: string
+        customer_id:
+          type: string
+          format: uuid
+        is_new_device:
+          type: boolean
+          default: false
+        device_trust_score:
+          type: number
+          minimum: 0
+          maximum: 100
+          nullable: true
+
+    IpRiskRequest:
+      type: object
+      required: [ip_address, customer_id]
+      properties:
+        ip_address:
+          type: string
+        customer_id:
+          type: string
+          format: uuid
+
+    BeneficiaryRiskRequest:
+      type: object
+      required: [beneficiary_id, customer_id]
+      properties:
+        beneficiary_id:
+          type: string
+          format: uuid
+        customer_id:
+          type: string
+          format: uuid
+        is_new_beneficiary:
+          type: boolean
+          default: false
+
+    ManualDecisionRequest:
+      type: object
+      required: [evaluation_id, rationale]
+      properties:
+        evaluation_id:
+          type: string
+          format: uuid
+        rationale:
+          type: string
+          minLength: 10
+          maxLength: 2000
+
+    SendForReviewRequest:
+      type: object
+      required: [evaluation_id, reason]
+      properties:
+        evaluation_id:
+          type: string
+          format: uuid
+        reason:
+          type: string
+          minLength: 10
+
+    AmountLimitRuleRequest:
+      type: object
+      required: [applies_to, threshold_amount, action]
+      properties:
+        applies_to:
+          type: string
+          enum: [global, customer, agent, wallet]
+        subject_id:
+          type: string
+          format: uuid
+          nullable: true
+        threshold_amount:
+          type: string
+          example: "5000.00"
+        action:
+          type: string
+          enum: [block, review]
+        effective_from:
+          type: string
+          format: date-time
+          nullable: true
+        effective_until:
+          type: string
+          format: date-time
+          nullable: true
+
+    VelocityAmountRuleRequest:
+      type: object
+      required: [applies_to, threshold_amount, window_seconds, action]
+      properties:
+        applies_to:
+          type: string
+          enum: [global, customer, agent, wallet]
+        subject_id:
+          type: string
+          format: uuid
+          nullable: true
+        threshold_amount:
+          type: string
+          example: "20000.00"
+        window_seconds:
+          type: integer
+          description: "86400=daily, 2592000=30-day"
+        action:
+          type: string
+          enum: [block, review]
+
+    SubjectLimitsRequest:
+      type: object
+      required: [subject_id]
+      properties:
+        subject_id:
+          type: string
+          format: uuid
+        per_transaction_limit:
+          type: string
+          nullable: true
+        daily_limit:
+          type: string
+          nullable: true
+        monthly_limit:
+          type: string
+          nullable: true
+        per_transaction_action:
+          type: string
+          enum: [block, review]
+          default: block
+        daily_action:
+          type: string
+          enum: [block, review]
+          default: block
+        monthly_action:
+          type: string
+          enum: [block, review]
+          default: review
+
+    PatternDetectionRequest:
+      type: object
+      required: [subject_type, subject_id]
+      properties:
+        subject_type:
+          type: string
+          enum: [customer, agent, wallet]
+        subject_id:
+          type: string
+          format: uuid
+        lookback_days:
+          type: integer
+          default: 30
+
+    AuthFailureRequest:
+      type: object
+      required: [subject_type, subject_id, device_id]
+      properties:
+        subject_type:
+          type: string
+          enum: [customer, agent]
+        subject_id:
+          type: string
+          format: uuid
+        device_id:
+          type: string
+        ip_address:
+          type: string
+          nullable: true
+        failure_reason:
+          type: string
+          enum: [wrong_pin, wrong_password, biometric_failed, otp_expired, otp_wrong]
+
+    CreateAlertRequest:
+      type: object
+      required: [alert_type, severity, subject_type, subject_id, title, description]
+      properties:
+        alert_type:
+          type: string
+          maxLength: 100
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+        subject_type:
+          type: string
+          enum: [customer, agent, wallet]
+        subject_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        event_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        correlation_id:
+          type: string
+          nullable: true
+
+    InvestigateAlertRequest:
+      type: object
+      required: [alert_id, version]
+      properties:
+        alert_id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+        assigned_to:
+          type: string
+          format: uuid
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    ResolveAlertRequest:
+      type: object
+      required: [alert_id, version, decision, rationale]
+      properties:
+        alert_id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+        decision:
+          type: string
+          enum: [clear, escalate, freeze_account, file_sar, false_positive]
+        rationale:
+          type: string
+          minLength: 20
+          maxLength: 2000
+        checker_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    FreezeAccountRequest:
+      type: object
+      required: [subject_type, subject_id, reason, alert_id, checker_id]
+      properties:
+        subject_type:
+          type: string
+          enum: [customer, agent]
+        subject_id:
+          type: string
+          format: uuid
+        wallet_id:
+          type: string
+          format: uuid
+          nullable: true
+        reason:
+          type: string
+          minLength: 10
+        alert_id:
+          type: string
+          format: uuid
+        checker_id:
+          type: string
+          format: uuid
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    LiftHoldRequest:
+      type: object
+      required: [hold_id, lift_reason]
+      properties:
+        hold_id:
+          type: string
+          format: uuid
+        lift_reason:
+          type: string
+          minLength: 10
+
+    ApproveSarRequest:
+      type: object
+      required: [approver_id]
+      properties:
+        approver_id:
+          type: string
+          format: uuid
+
+    WatchlistEntryRequest:
+      type: object
+      required: [full_name, entry_type]
+      properties:
+        full_name:
+          type: string
+          maxLength: 255
+        entry_type:
+          type: string
+          enum: [sanctions, pep, internal_blocklist, adverse_media]
+        source:
+          type: string
+          maxLength: 255
+          nullable: true
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        nationality:
+          type: string
+          minLength: 2
+          maxLength: 2
+          nullable: true
+        id_numbers:
+          type: array
+          items:
+            type: string
+          nullable: true
+        aliases:
+          type: array
+          items:
+            type: string
+          nullable: true
+        listed_at:
+          type: string
+          format: date
+          nullable: true
+        expires_at:
+          type: string
+          format: date
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    WatchlistEntryUpdateRequest:
+      type: object
+      properties:
+        full_name:
+          type: string
+          maxLength: 255
+        entry_type:
+          type: string
+          enum: [sanctions, pep, internal_blocklist, adverse_media]
+        source:
+          type: string
+          nullable: true
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        nationality:
+          type: string
+          minLength: 2
+          maxLength: 2
+          nullable: true
+        id_numbers:
+          type: array
+          items:
+            type: string
+          nullable: true
+        aliases:
+          type: array
+          items:
+            type: string
+          nullable: true
+        expires_at:
+          type: string
+          format: date
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    # ── Responses ──────────────────────────────────────────────────────────────
+
+    RiskEvaluationResponse:
+      type: object
+      properties:
+        evaluation_id:
+          type: string
+          format: uuid
+        decision:
+          type: string
+          enum: [allow, block, review]
+        risk_level:
+          type: string
+          enum: [low, medium, high, critical]
+        overall_score:
+          type: number
+          description: Aggregated risk score 0.00–100.00
+        rules_applied:
+          type: array
+          items:
+            type: object
+            properties:
+              rule_id:
+                type: string
+                format: uuid
+              rule_name:
+                type: string
+              triggered:
+                type: boolean
+              score_contribution:
+                type: number
+        evaluation_ms:
+          type: integer
+        evaluated_at:
+          type: string
+          format: date-time
+
+    ManualDecisionResponse:
+      type: object
+      properties:
+        decision_id:
+          type: string
+          format: uuid
+        evaluation_id:
+          type: string
+          format: uuid
+        decision:
+          type: string
+          enum: [allow, block]
+        decided_by:
+          type: string
+          format: uuid
+        decided_at:
+          type: string
+          format: date-time
+
+    RiskAlertSummary:
+      type: object
+      properties:
+        alert_id:
+          type: string
+          format: uuid
+        alert_number:
+          type: integer
+        status:
+          type: string
+        severity:
+          type: string
+        sla_due_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    RiskRuleResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        rule_type:
+          type: string
+        applies_to:
+          type: string
+        subject_id:
+          type: string
+          format: uuid
+          nullable: true
+        threshold_amount:
+          type: string
+          nullable: true
+        threshold_count:
+          type: integer
+          nullable: true
+        window_seconds:
+          type: integer
+          nullable: true
+        action:
+          type: string
+        is_active:
+          type: boolean
+        effective_from:
+          type: string
+          format: date-time
+        effective_until:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    SubjectLimitsResponse:
+      type: object
+      properties:
+        subject_id:
+          type: string
+          format: uuid
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskRuleResponse'
+
+    DetectionQueuedResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+        subject_id:
+          type: string
+          format: uuid
+        queued_at:
+          type: string
+          format: date-time
+
+    AuthFailureResponse:
+      type: object
+      properties:
+        failure_count:
+          type: integer
+        threshold:
+          type: integer
+        alert_created:
+          type: boolean
+        alert_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    AlertSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        alert_number:
+          type: integer
+        alert_type:
+          type: string
+        status:
+          type: string
+        severity:
+          type: string
+        subject_type:
+          type: string
+        subject_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        assigned_to:
+          type: string
+          format: uuid
+          nullable: true
+        sla_due_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    AlertDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/AlertSummary'
+        - type: object
+          properties:
+            description:
+              type: string
+            version:
+              type: integer
+            events:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  event_type:
+                    type: string
+                  severity:
+                    type: string
+                  detected_at:
+                    type: string
+                    format: date-time
+            decisions:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  decision:
+                    type: string
+                  rationale:
+                    type: string
+                  decided_by:
+                    type: string
+                    format: uuid
+                  decided_at:
+                    type: string
+                    format: date-time
+            resolved_at:
+              type: string
+              format: date-time
+              nullable: true
+            resolution_notes:
+              type: string
+              nullable: true
+            updated_at:
+              type: string
+              format: date-time
+
+    AlertListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertSummary'
+        meta:
+          type: object
+          properties:
+            total:
+              type: integer
+            page:
+              type: integer
+            per_page:
+              type: integer
+
+    AccountHoldResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        subject_type:
+          type: string
+        subject_id:
+          type: string
+          format: uuid
+        wallet_id:
+          type: string
+          format: uuid
+          nullable: true
+        hold_type:
+          type: string
+        status:
+          type: string
+          enum: [active, lifted, expired]
+        reason:
+          type: string
+        placed_by:
+          type: string
+          format: uuid
+        checker_id:
+          type: string
+          format: uuid
+          nullable: true
+        placed_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        lifted_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    SarResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        alert_id:
+          type: string
+          format: uuid
+          nullable: true
+        decision_id:
+          type: string
+          format: uuid
+          nullable: true
+        filer_id:
+          type: string
+          format: uuid
+        approver_id:
+          type: string
+          format: uuid
+          nullable: true
+        status:
+          type: string
+          enum: [draft, approved, submitted, submission_failed]
+        narrative:
+          type: string
+        suspected_offences:
+          type: array
+          items:
+            type: string
+        transaction_references:
+          type: array
+          items:
+            type: string
+        fia_reference:
+          type: string
+          nullable: true
+        submission_attempts:
+          type: integer
+        last_submission_error:
+          type: string
+          nullable: true
+        approved_at:
+          type: string
+          format: date-time
+          nullable: true
+        submitted_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    SarListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SarResponse'
+        meta:
+          type: object
+          properties:
+            total:
+              type: integer
+            page:
+              type: integer
+            per_page:
+              type: integer
+
+    WatchlistEntryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+        normalized_name:
+          type: string
+        entry_type:
+          type: string
+        source:
+          type: string
+          nullable: true
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        nationality:
+          type: string
+          nullable: true
+        id_numbers:
+          type: array
+          items:
+            type: string
+        aliases:
+          type: array
+          items:
+            type: string
+        is_active:
+          type: boolean
+        listed_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string

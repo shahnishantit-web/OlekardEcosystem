@@ -1,0 +1,39 @@
+openapi: 3.0.3
+info:
+  title: OleKard Admin internal maintenance form
+  version: 1.0.0
+  description: >
+    Internal Next.js HTML form handler, not a platform business API. Existing versioned
+    Laravel API contracts and authentication are unchanged. This handler only provisions
+    a maintenance-scoped capability cookie; it cannot authenticate or grant API permissions.
+paths:
+  /api/system/maintenance-bypass:
+    post:
+      summary: Submit trusted-operations superadmin maintenance capability
+      description: >
+        Same-origin application/x-www-form-urlencoded POST. Actual body is bounded to4096 bytes.
+        HMAC-SHA256 payload must have purpose maintenance, role superadmin, and integer expiry
+        in the next3600 seconds. Missing secret, wrong purpose/role, invalid signature or expired
+        token fails closed. No query token accepted. Security events exclude token and secret.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: {type: string, format: password, maxLength: 2048, writeOnly: true}
+      responses:
+        '303':
+          description: Redirect to dashboard; normal login/MFA/RBAC gates still apply.
+          headers:
+            Location: {schema: {type: string}}
+            Set-Cookie:
+              description: maintenance_bypass; HttpOnly; SameSite=Strict; Path=/; bounded Max-Age; Secure in production.
+              schema: {type: string}
+            Cache-Control: {schema: {type: string, enum: [no-store]}}
+        '403':
+          description: Invalid submission or capability; plain-text recovery guidance, no-store.
+        '405':
+          description: Only POST supported.

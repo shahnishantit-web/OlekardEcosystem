@@ -1,0 +1,1190 @@
+openapi: 3.1.0
+info:
+  title: Support & Dispute Management API
+  version: 1.0.0
+  description: |
+    E22 — Support & Dispute Management API for the OleKard Wallet Ecosystem.
+    Covers support ticket lifecycle (create, view, assign, status, notes)
+    and dispute lifecycle (raise, reason, evidence, investigate, approve, reject, refund, escalate).
+
+servers:
+  - url: /v1
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    StandardEnvelope:
+      type: object
+      required: [success, data, correlation_id]
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+        error:
+          type: object
+          nullable: true
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+        correlation_id:
+          type: string
+
+    SupportTicket:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ticket_number:
+          type: string
+          example: TKT-000001
+        subject:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [account, transaction, kyc, float, commission, technical, general]
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        status:
+          type: string
+          enum: [open, in_progress, resolved, closed]
+        reporter_id:
+          type: string
+          format: uuid
+        reporter_type:
+          type: string
+          enum: [customer, agent]
+        assignee_id:
+          type: string
+          format: uuid
+          nullable: true
+        dispute_id:
+          type: string
+          format: uuid
+          nullable: true
+        resolution_note:
+          type: string
+          nullable: true
+        resolved_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TicketNote:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ticket_id:
+          type: string
+          format: uuid
+        author_id:
+          type: string
+          format: uuid
+        author_type:
+          type: string
+          enum: [customer, agent, admin]
+        content:
+          type: string
+        is_internal:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    Dispute:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        dispute_reference:
+          type: string
+          example: DSP-000001
+        transaction_id:
+          type: string
+          format: uuid
+        ticket_id:
+          type: string
+          format: uuid
+          nullable: true
+        reporter_id:
+          type: string
+          format: uuid
+        reporter_type:
+          type: string
+          enum: [customer, agent]
+        reason_code:
+          type: string
+          nullable: true
+          enum:
+            - unauthorized_transaction
+            - incorrect_amount
+            - transaction_not_received
+            - duplicate_transaction
+            - service_not_delivered
+            - technical_error
+            - other
+        reason_description:
+          type: string
+          nullable: true
+        description:
+          type: string
+        status:
+          type: string
+          enum:
+            - raised
+            - evidence_submitted
+            - under_investigation
+            - pending_confirmation
+            - approved
+            - rejected
+            - refunded
+        escalated:
+          type: boolean
+        escalated_at:
+          type: string
+          format: date-time
+          nullable: true
+        refunded_amount_minor:
+          type: integer
+          nullable: true
+        currency_code:
+          type: string
+          nullable: true
+        dispute_refunded_at:
+          type: string
+          format: date-time
+          nullable: true
+        refund_pending_confirmation:
+          type: boolean
+          description: True while refund awaits second-approver confirmation (maker-checker refund flow)
+        refund_initiator_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Admin who submitted the initial refund request (maker-checker only)
+        refund_confirmer_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Admin who confirmed the refund (maker-checker only)
+        refund_confirmed_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    DisputeEvidence:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        dispute_id:
+          type: string
+          format: uuid
+        file_type:
+          type: string
+          enum: [image_jpeg, image_png, image_webp, pdf]
+        original_filename:
+          type: string
+        size_bytes:
+          type: integer
+        signed_url:
+          type: string
+          description: Time-limited signed URL (15-minute TTL); present only in detail responses
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+        per_page:
+          type: integer
+        next_cursor:
+          type: string
+          nullable: true
+        prev_cursor:
+          type: string
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        data:
+          type: "null"
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+        correlation_id:
+          type: string
+
+paths:
+
+  # ─────────────────────────────────────────────────────────────
+  # Support Tickets
+  # ─────────────────────────────────────────────────────────────
+
+  /v1/support/tickets:
+    post:
+      tags: [support_tickets]
+      operationId: createSupportTicket
+      summary: US-SUPPORT-001 — Create support request
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subject, description, category]
+              properties:
+                subject:
+                  type: string
+                  maxLength: 255
+                description:
+                  type: string
+                category:
+                  type: string
+                  enum: [account, transaction, kyc, float, commission, technical, general]
+                priority:
+                  type: string
+                  enum: [low, medium, high, critical]
+                  default: medium
+      responses:
+        '201':
+          description: Ticket created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SupportTicket'
+        '409':
+          description: Duplicate idempotency key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags: [support_tickets]
+      operationId: listSupportTickets
+      summary: US-SUPPORT-002 — View support requests (list)
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, in_progress, resolved, closed]
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: assignee_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: reporter_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: Paginated ticket list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/SupportTicket'
+                          meta:
+                            $ref: '#/components/schemas/PaginationMeta'
+
+  /v1/support/tickets/{id}:
+    get:
+      tags: [support_tickets]
+      operationId: getSupportTicket
+      summary: US-SUPPORT-002 — View support request (detail)
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Ticket detail with notes
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        allOf:
+                          - $ref: '#/components/schemas/SupportTicket'
+                          - type: object
+                            properties:
+                              notes:
+                                type: array
+                                items:
+                                  $ref: '#/components/schemas/TicketNote'
+        '403':
+          description: Forbidden — not reporter or support agent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Ticket not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/support/tickets/{id}/assign:
+    patch:
+      tags: [support_tickets]
+      operationId: assignSupportTicket
+      summary: US-SUPPORT-003 — Assign support request
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [assignee_id]
+              properties:
+                assignee_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Ticket assigned
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SupportTicket'
+        '403':
+          description: Missing support.assign permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: TICKET_ALREADY_CLOSED or INVALID_ASSIGNEE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/support/tickets/{id}/status:
+    patch:
+      tags: [support_tickets]
+      operationId: updateTicketStatus
+      summary: US-SUPPORT-004 — Update support status
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [in_progress, resolved, closed, open]
+                resolution_note:
+                  type: string
+                  description: Required when status is 'resolved' or 'closed'
+      responses:
+        '200':
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SupportTicket'
+        '422':
+          description: INVALID_STATUS_TRANSITION or RESOLUTION_NOTE_REQUIRED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/support/tickets/{id}/notes:
+    post:
+      tags: [support_tickets]
+      operationId: addTicketNote
+      summary: US-SUPPORT-005 — Add support notes
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                is_internal:
+                  type: boolean
+                  default: false
+                  description: Admins only; ignored for customer/agent callers (always false)
+      responses:
+        '201':
+          description: Note added
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/TicketNote'
+        '422':
+          description: TICKET_IS_CLOSED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ─────────────────────────────────────────────────────────────
+  # Disputes
+  # ─────────────────────────────────────────────────────────────
+
+  /v1/disputes:
+    post:
+      tags: [disputes]
+      operationId: raiseDispute
+      summary: US-DISPUTE-001 — Raise transaction dispute
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [transaction_id, description]
+              properties:
+                transaction_id:
+                  type: string
+                  format: uuid
+                description:
+                  type: string
+                ticket_id:
+                  type: string
+                  format: uuid
+                  description: Optional — link to an existing support ticket
+      responses:
+        '201':
+          description: Dispute raised
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Dispute'
+        '409':
+          description: DISPUTE_ALREADY_EXISTS or duplicate idempotency key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: TRANSACTION_NOT_DISPUTABLE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags: [disputes]
+      operationId: listDisputes
+      summary: View disputes (list)
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: reporter_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: escalated
+          in: query
+          schema:
+            type: boolean
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Paginated dispute list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Dispute'
+                          meta:
+                            $ref: '#/components/schemas/PaginationMeta'
+
+  /v1/disputes/{id}:
+    get:
+      tags: [disputes]
+      operationId: getDispute
+      summary: View dispute detail
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Dispute detail
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        allOf:
+                          - $ref: '#/components/schemas/Dispute'
+                          - type: object
+                            properties:
+                              evidence:
+                                type: array
+                                items:
+                                  $ref: '#/components/schemas/DisputeEvidence'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/disputes/{id}/reason:
+    patch:
+      tags: [disputes]
+      operationId: selectDisputeReason
+      summary: US-DISPUTE-002 — Select dispute reason
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason_code]
+              properties:
+                reason_code:
+                  type: string
+                  enum:
+                    - unauthorized_transaction
+                    - incorrect_amount
+                    - transaction_not_received
+                    - duplicate_transaction
+                    - service_not_delivered
+                    - technical_error
+                    - other
+                reason_description:
+                  type: string
+                  description: Required when reason_code is 'other' (min 20 chars)
+      responses:
+        '200':
+          description: Reason updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Dispute'
+        '422':
+          description: DISPUTE_REASON_LOCKED or INVALID_REASON_CODE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/disputes/{id}/evidence:
+    post:
+      tags: [disputes]
+      operationId: attachEvidence
+      summary: US-DISPUTE-003 — Attach evidence
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: JPEG, PNG, WebP, or PDF; max 10 MB
+      responses:
+        '201':
+          description: Evidence attached
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DisputeEvidence'
+        '422':
+          description: EVIDENCE_LIMIT_REACHED, FILE_TOO_LARGE, UNSUPPORTED_FILE_TYPE, or EVIDENCE_LOCKED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/disputes/{id}/evidence/{evidenceId}/signed-url:
+    get:
+      tags: [disputes]
+      operationId: getEvidenceSignedUrl
+      summary: Get time-limited signed URL for evidence file (15-minute TTL)
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: evidenceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Signed URL
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          signed_url:
+                            type: string
+                          expires_at:
+                            type: string
+                            format: date-time
+
+  /v1/disputes/{id}/investigate:
+    patch:
+      tags: [disputes]
+      operationId: investigateDispute
+      summary: US-DISPUTE-004 — Investigate dispute
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Investigation started
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Dispute'
+        '403':
+          description: Missing support.investigate permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: DISPUTE_ALREADY_UNDER_INVESTIGATION
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/disputes/{id}/approve:
+    patch:
+      tags: [disputes]
+      operationId: approveDispute
+      summary: US-DISPUTE-005 — Approve dispute
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [resolution_notes]
+              properties:
+                resolution_notes:
+                  type: string
+      responses:
+        '200':
+          description: Approved (or pending_confirmation if maker-checker enabled)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Dispute'
+        '403':
+          description: Missing dispute.approve permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: INVALID_STATUS_TRANSITION or RESOLUTION_NOTES_REQUIRED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/disputes/{id}/confirm-approval:
+    patch:
+      tags: [disputes]
+      operationId: confirmDisputeApproval
+      summary: Maker-checker second approval for dispute
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Approval confirmed; dispute now approved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Dispute'
+        '403':
+          description: Same actor as first approver or missing dispute.approve permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: DISPUTE_NOT_PENDING_CONFIRMATION
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/disputes/{id}/reject:
+    patch:
+      tags: [disputes]
+      operationId: rejectDispute
+      summary: US-DISPUTE-006 — Reject dispute
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rejection_reason, rejection_notes]
+              properties:
+                rejection_reason:
+                  type: string
+                  maxLength: 100
+                rejection_notes:
+                  type: string
+      responses:
+        '200':
+          description: Dispute rejected
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Dispute'
+        '403':
+          description: Missing dispute.reject permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: INVALID_STATUS_TRANSITION or REJECTION_NOTES_REQUIRED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/disputes/{id}/refund:
+    post:
+      tags: [disputes]
+      operationId: refundDispute
+      summary: US-DISPUTE-007 — Refund disputed transaction
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refund_amount_minor:
+                  type: integer
+                  description: Optional override for partial refund; defaults to full transaction amount
+                partial_refund_justification:
+                  type: string
+                  description: Required when refund_amount_minor is less than the original transaction amount
+      responses:
+        '200':
+          description: >
+            Refund initiated. If maker-checker is disabled: ledger posted, status = `refunded`.
+            If `support.dispute.refund.require_second_approval` is enabled: status remains `approved`,
+            `refund_pending_confirmation = true` — awaiting confirmation via
+            `PATCH /v1/disputes/{id}/confirm-refund`.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Dispute'
+        '403':
+          description: Missing dispute.refund permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: DISPUTE_NOT_APPROVED or PARTIAL_REFUND_JUSTIFICATION_REQUIRED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/disputes/{id}/confirm-refund:
+    patch:
+      tags: [disputes]
+      operationId: confirmDisputeRefund
+      summary: US-DISPUTE-007 AS8 — Maker-checker second approval for dispute refund
+      description: |
+        Confirms a pending refund initiated by a first admin when `support.dispute.refund.require_second_approval` is enabled.
+        The confirming admin must differ from the initiating admin. Ledger posting occurs only after this confirmation.
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Refund confirmed; ledger posted; dispute status = refunded
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Dispute'
+        '403':
+          description: Same actor as refund initiator, or missing dispute.refund permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: DISPUTE_NOT_PENDING_REFUND_CONFIRMATION — dispute is not awaiting refund confirmation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/disputes/{id}/escalate:
+    patch:
+      tags: [disputes]
+      operationId: escalateDispute
+      summary: US-DISPUTE-008 — Escalate dispute
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [escalation_reason]
+              properties:
+                escalation_reason:
+                  type: string
+      responses:
+        '200':
+          description: Dispute escalated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Dispute'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: DISPUTE_ALREADY_ESCALATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: DISPUTE_ALREADY_RESOLVED or ESCALATION_REASON_REQUIRED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'

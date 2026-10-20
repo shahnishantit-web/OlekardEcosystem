@@ -1,0 +1,519 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ADM-P1-022 Admin Currency and FX",
+    "version": "1.0",
+    "description": "Additive aliases for existing E29 APIs. Existing financial status mutations now require approval; no effect before a distinct checker. Provider vendor remains TBD; unavailable provider returns 503. Spread remains a decimal fraction in the API; UI displays percent. Precision changes require a separate financial migration."
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/v1/admin/currencies": {
+      "get": {
+        "operationId": "adminFxCurrencies",
+        "description": "Requires multi_currency.manage_currencies. Base is null when not configured.",
+        "responses": {
+          "200": {
+            "description": "Currencies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Currency"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/currencies/{code}": {
+      "patch": {
+        "operationId": "adminFxCurrencyChange",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "description": "Status creates an E28 pending change. Metadata edits remain supported. Precision changes rejected.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "is_active": {
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "symbol": {
+                    "type": "string",
+                    "maxLength": 10
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Currency"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown currency"
+          },
+          "422": {
+            "description": "Invalid proposal or idempotency conflict"
+          }
+        }
+      }
+    },
+    "/v1/admin/currencies/{code}/activate/{request}": {
+      "post": {
+        "operationId": "adminFxCurrencyActivate",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "request",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "description": "Requires manage_currencies and configuration.approve, distinct checker. E28 approval and application atomic. Applied request retries never overwrite a later decision.",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Currency"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient permission"
+          },
+          "422": {
+            "description": "Self approval or invalid request"
+          }
+        }
+      }
+    },
+    "/v1/admin/fx/rates": {
+      "get": {
+        "operationId": "adminFxRates",
+        "description": "Requires multi_currency.configure_rate. Active and pending rows for active supported currencies; statuses explicitly distinguished.",
+        "responses": {
+          "200": {
+            "description": "Rates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Rate"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "adminFxRatePropose",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "from_currency_code",
+                  "to_currency_code",
+                  "spread"
+                ],
+                "properties": {
+                  "from_currency_code": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z]{3}$"
+                  },
+                  "to_currency_code": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z]{3}$"
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "manual",
+                      "provider"
+                    ],
+                    "default": "manual"
+                  },
+                  "rate": {
+                    "type": "string",
+                    "description": "Required for manual mode, positive decimal(18,8)",
+                    "pattern": "^(0|[1-9][0-9]{0,9})(\\.[0-9]{1,8})?$"
+                  },
+                  "spread": {
+                    "type": "string",
+                    "pattern": "^0(\\.[0-9]{1,5})?$"
+                  },
+                  "effective_from": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Rate"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid decimal/currency/idempotency"
+          },
+          "503": {
+            "description": "Provider unconfigured or unavailable; no invented provider rate"
+          }
+        }
+      }
+    },
+    "/v1/admin/fx/rates/{id}/activate": {
+      "post": {
+        "operationId": "adminFxRateActivate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "description": "Requires configure_rate and configuration.approve. Distinct checker approves E28 and activates atomically. Future rates cannot activate early.",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Rate"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing permission"
+          },
+          "422": {
+            "description": "Self approval, mismatched approved content, or future rate"
+          }
+        }
+      }
+    },
+    "/v1/admin/fx/rates/{pair}/history": {
+      "get": {
+        "operationId": "adminFxRateHistory",
+        "parameters": [
+          {
+            "name": "pair",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}-[A-Z]{3}$"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "30-day chart and complete paginated effective rate history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "chart": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Rate"
+                          }
+                        },
+                        "history": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Rate"
+                          }
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "page": {
+                              "type": "integer"
+                            },
+                            "last_page": {
+                              "type": "integer"
+                            },
+                            "total": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid pair or pagination"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Rate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "from_currency_code": {
+            "type": "string"
+          },
+          "to_currency_code": {
+            "type": "string"
+          },
+          "rate": {
+            "type": "string"
+          },
+          "spread": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "provider": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "observed_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "last_updated": {
+            "type": "string"
+          },
+          "effective_from": {
+            "type": "string"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "approved_by": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "change_request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "Currency": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "decimal_places": {
+            "type": "integer"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "is_base": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "base_currency": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pending_change_request_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pending_is_active": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

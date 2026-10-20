@@ -1,0 +1,1284 @@
+{
+  "pattern": "/admin-portal/users/[id]",
+  "route": "/admin-portal/users/303a0ea8-1d03-4b25-832f-ab4907f3a2f5",
+  "landed": "/admin-portal/users/303a0ea8-1d03-4b25-832f-ab4907f3a2f5",
+  "errors": [],
+  "failures": [],
+  "detailResponses": [
+    {
+      "url": "/v1/admin-app/users/303a0ea8-1d03-4b25-832f-ab4907f3a2f5",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "303a0ea8-1d03-4b25-832f-ab4907f3a2f5",
+          "user_id": "303a0ea8-1d03-4b25-832f-ab4907f3a2f5",
+          "full_name": "",
+          "phone_number": null,
+          "email": null,
+          "status": "active",
+          "account_status": "active",
+          "actor_type": "CUSTOMER",
+          "kyc_status": "not_started",
+          "kyc_tier": null,
+          "created_at": "2026-10-16 13:13:44+00",
+          "registered_at": "2026-10-16T13:13:44+00:00",
+          "last_active_at": null,
+          "wallet_count": 1
+        }
+      }
+    },
+    {
+      "url": "/v1/admin-app/wallets",
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "id": "278a9238-6e9c-46d2-b098-c325f2cd0965",
+            "user_id": "303a0ea8-1d03-4b25-832f-ab4907f3a2f5",
+            "wallet_id": "278a9238-6e9c-46d2-b098-c325f2cd0965",
+            "wallet_number": "WLT-QA-278A9238",
+            "owner_user_id": "303a0ea8-1d03-4b25-832f-ab4907f3a2f5",
+            "owner_name": "",
+            "wallet_type": "customer",
+            "status": "active",
+            "balance_minor_units": 0,
+            "currency_code": "BWP",
+            "currency": "BWP",
+            "created_at": "2026-10-16 13:13:44+00",
+            "frozen_at": null,
+            "frozen_by": null,
+            "freeze_reason": null
+          }
+        ],
+        "meta": {
+          "total": 1,
+          "per_page": 10,
+          "current_page": 1,
+          "last_page": 1
+        }
+      }
+    },
+    {
+      "url": "/v1/admin-app/transactions",
+      "status": 200,
+      "body": {
+        "data": [],
+        "meta": {
+          "total": 0,
+          "per_page": 10,
+          "current_page": 1,
+          "last_page": 1
+        }
+      }
+    },
+    {
+      "url": "/v1/admin-app/roles",
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "role_id": "a300dd8f-5b8b-4637-bbae-9ae12a332d0f",
+            "role_name": "browser_qa_1792241114861",
+            "permission_slugs": [],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-17T12:45:24Z"
+          },
+          {
+            "role_id": "a300825c-5f6f-4a48-959c-babad2e6baa2",
+            "role_name": "browser_qa_1792225817726",
+            "permission_slugs": [],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-17T08:30:24Z"
+          },
+          {
+            "role_id": "a3007a43-913c-4e8a-89c3-17ceb428d35e",
+            "role_name": "browser_qa_1792224459769",
+            "permission_slugs": [],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-17T08:07:45Z"
+          },
+          {
+            "role_id": "a3006c58-59ce-4e58-91d7-2dc68fbf4a1b",
+            "role_name": "browser_qa_1792222123753",
+            "permission_slugs": [],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-17T07:28:50Z"
+          },
+          {
+            "role_id": "a2fef0c5-4e3f-48fe-b6d0-30e18e19acfe",
+            "role_name": "browser_qa_1792158445112",
+            "permission_slugs": [],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:47:28Z"
+          },
+          {
+            "role_id": "01a144eb-8735-723c-8e6b-adc6ee268e27",
+            "role_name": "test-config-01a144eb8735723c8e6badc6ee268e27",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:08Z"
+          },
+          {
+            "role_id": "01a144eb-86fd-72bc-94c0-9af97fb8c7be",
+            "role_name": "test-config-01a144eb86fd72bc94c09af97fb8c7be",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:08Z"
+          },
+          {
+            "role_id": "01a144eb-857d-7070-9fcf-dfd7e871b06c",
+            "role_name": "test-config-01a144eb857d70709fcfdfd7e871b06c",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:08Z"
+          },
+          {
+            "role_id": "01a144eb-8536-703c-8888-2b331d460791",
+            "role_name": "test-config-01a144eb8536703c88882b331d460791",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:08Z"
+          },
+          {
+            "role_id": "01a144eb-8382-7020-96ce-26e0ee46e4cb",
+            "role_name": "test-config-01a144eb8382702096ce26e0ee46e4cb",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:07Z"
+          },
+          {
+            "role_id": "01a144eb-8348-7025-b831-88e0b70cb0e2",
+            "role_name": "test-config-01a144eb83487025b83188e0b70cb0e2",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:07Z"
+          },
+          {
+            "role_id": "01a144eb-81cf-7172-8355-a858b4568935",
+            "role_name": "test-config-01a144eb81cf71728355a858b4568935",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:07Z"
+          },
+          {
+            "role_id": "01a144eb-819b-7356-9a77-3572759cdeb0",
+            "role_name": "test-config-01a144eb819b73569a773572759cdeb0",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:07Z"
+          },
+          {
+            "role_id": "01a144eb-802b-7204-95e3-7b2461048df3",
+            "role_name": "test-config-01a144eb802b720495e37b2461048df3",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:06Z"
+          },
+          {
+            "role_id": "01a144eb-7ff7-7173-ba1a-8922de99acd3",
+            "role_name": "test-config-01a144eb7ff77173ba1a8922de99acd3",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:06Z"
+          },
+          {
+            "role_id": "01a144eb-7e4c-70f0-a2aa-6b7ecb7db221",
+            "role_name": "test-config-01a144eb7e4c70f0a2aa6b7ecb7db221",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:06Z"
+          },
+          {
+            "role_id": "01a144eb-7e1f-7308-87fd-2158dd8fa879",
+            "role_name": "test-config-01a144eb7e1f730887fd2158dd8fa879",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:06Z"
+          },
+          {
+            "role_id": "01a144eb-7c04-7254-8a6c-4b2422e1a8ee",
+            "role_name": "test-config-01a144eb7c0472548a6c4b2422e1a8ee",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:05Z"
+          },
+          {
+            "role_id": "01a144eb-7bc7-736b-a37f-72375d15d26a",
+            "role_name": "test-config-01a144eb7bc7736ba37f72375d15d26a",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:05Z"
+          },
+          {
+            "role_id": "01a144eb-7948-7296-9b93-11e6200e2fd6",
+            "role_name": "test-config-01a144eb794872969b9311e6200e2fd6",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:05Z"
+          },
+          {
+            "role_id": "01a144eb-78fd-7359-b5a2-b7cd71e456c6",
+            "role_name": "test-config-01a144eb78fd7359b5a2b7cd71e456c6",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:05Z"
+          },
+          {
+            "role_id": "01a144e7-578b-72db-9cb8-58aa990f9f45",
+            "role_name": "test-config-01a144e7578b72db9cb858aa990f9f45",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:34Z"
+          },
+          {
+            "role_id": "01a144e7-5747-719b-9d12-3dbc2d4eb95d",
+            "role_name": "test-config-01a144e75747719b9d123dbc2d4eb95d",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:34Z"
+          },
+          {
+            "role_id": "01a144e7-5555-70bb-a65c-6ed7abbb0d8c",
+            "role_name": "test-config-01a144e7555570bba65c6ed7abbb0d8c",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:33Z"
+          },
+          {
+            "role_id": "01a144e7-551c-73b3-9b51-bfc8fe0bd72d",
+            "role_name": "test-config-01a144e7551c73b39b51bfc8fe0bd72d",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:33Z"
+          },
+          {
+            "role_id": "01a144e7-5311-7314-a00a-c7b607f25ff7",
+            "role_name": "test-config-01a144e753117314a00ac7b607f25ff7",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:33Z"
+          },
+          {
+            "role_id": "01a144e7-52a0-70b1-aafd-b662eab392d8",
+            "role_name": "test-config-01a144e752a070b1aafdb662eab392d8",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:33Z"
+          },
+          {
+            "role_id": "01a144e7-5097-7323-9ab2-2e110834b8da",
+            "role_name": "test-config-01a144e7509773239ab22e110834b8da",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:32Z"
+          },
+          {
+            "role_id": "01a144e7-5052-7129-b6ac-08e0d71f0f78",
+            "role_name": "test-config-01a144e750527129b6ac08e0d71f0f78",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:32Z"
+          },
+          {
+            "role_id": "01a144e7-4e78-72e2-8642-44c111a9d53f",
+            "role_name": "test-config-01a144e74e7872e2864244c111a9d53f",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:32Z"
+          },
+          {
+            "role_id": "01a144e7-4e36-7107-8508-9ec793a2b86d",
+            "role_name": "test-config-01a144e74e36710785089ec793a2b86d",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:31Z"
+          },
+          {
+            "role_id": "01a144e7-4b63-72d8-9b99-6ec02c5f89a7",
+            "role_name": "test-config-01a144e74b6372d89b996ec02c5f89a7",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:31Z"
+          },
+          {
+            "role_id": "01a144e7-4b2f-7097-aff2-59b0d97d7097",
+            "role_name": "test-config-01a144e74b2f7097aff259b0d97d7097",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:31Z"
+          },
+          {
+            "role_id": "01a144e7-476b-71df-98db-fedd1e06799d",
+            "role_name": "test-config-01a144e7476b71df98dbfedd1e06799d",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:30Z"
+          },
+          {
+            "role_id": "01a144e7-4737-7343-8f51-66fed412391c",
+            "role_name": "test-config-01a144e7473773438f5166fed412391c",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:30Z"
+          },
+          {
+            "role_id": "01a144e7-448e-7365-b87a-325410411a38",
+            "role_name": "test-config-01a144e7448e7365b87a325410411a38",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:29Z"
+          },
+          {
+            "role_id": "01a144e7-4455-73df-ae99-5db0c3613f63",
+            "role_name": "test-config-01a144e7445573dfae995db0c3613f63",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:29Z"
+          },
+          {
+            "role_id": "01a144e7-0276-73d8-af88-3a3172a4f2eb",
+            "role_name": "test-config-01a144e7027673d8af883a3172a4f2eb",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:12Z"
+          },
+          {
+            "role_id": "01a144e7-023e-7332-9707-fb6eb7fda208",
+            "role_name": "test-config-01a144e7023e73329707fb6eb7fda208",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:12Z"
+          },
+          {
+            "role_id": "01a144e7-00db-7298-a2bb-7c28e883e029",
+            "role_name": "test-config-01a144e700db7298a2bb7c28e883e029",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:12Z"
+          },
+          {
+            "role_id": "01a144e7-00a9-72d4-9d04-63a2b5e47a6b",
+            "role_name": "test-config-01a144e700a972d49d0463a2b5e47a6b",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:12Z"
+          },
+          {
+            "role_id": "01a144e6-ff4f-71b0-a542-231bbac263f3",
+            "role_name": "test-config-01a144e6ff4f71b0a542231bbac263f3",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:11Z"
+          },
+          {
+            "role_id": "01a144e6-ff1c-71c1-a5a4-1acaffceabb4",
+            "role_name": "test-config-01a144e6ff1c71c1a5a41acaffceabb4",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:11Z"
+          },
+          {
+            "role_id": "01a144e6-fda8-736e-a2a1-b4fa90b64a45",
+            "role_name": "test-config-01a144e6fda8736ea2a1b4fa90b64a45",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:11Z"
+          },
+          {
+            "role_id": "01a144e6-fd78-72e5-9937-543b0c1ceaf1",
+            "role_name": "test-config-01a144e6fd7872e59937543b0c1ceaf1",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:11Z"
+          },
+          {
+            "role_id": "01a144e6-fbcc-72cc-b20c-f48b4e40899a",
+            "role_name": "test-config-01a144e6fbcc72ccb20cf48b4e40899a",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:10Z"
+          },
+          {
+            "role_id": "01a144e6-fb90-70ef-9f6f-1e141a597e7d",
+            "role_name": "test-config-01a144e6fb9070ef9f6f1e141a597e7d",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:10Z"
+          },
+          {
+            "role_id": "01a144e6-f981-719d-bb0e-71cf24740967",
+            "role_name": "test-config-01a144e6f981719dbb0e71cf24740967",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:10Z"
+          },
+          {
+            "role_id": "01a144e6-f94c-71d5-8173-880c410d7408",
+            "role_name": "test-config-01a144e6f94c71d58173880c410d7408",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:10Z"
+          },
+          {
+            "role_id": "01a144e6-f7c3-72d4-b885-4f04f58b0c5f",
+            "role_name": "test-config-01a144e6f7c372d4b8854f04f58b0c5f",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:09Z"
+          }
+        ],
+        "meta": {
+          "total": 271,
+          "per_page": 50,
+          "current_page": 1,
+          "last_page": 6
+        }
+      }
+    },
+    {
+      "url": "/v1/admin-app/users/303a0ea8-1d03-4b25-832f-ab4907f3a2f5",
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "303a0ea8-1d03-4b25-832f-ab4907f3a2f5",
+          "user_id": "303a0ea8-1d03-4b25-832f-ab4907f3a2f5",
+          "full_name": "",
+          "phone_number": null,
+          "email": null,
+          "status": "active",
+          "account_status": "active",
+          "actor_type": "CUSTOMER",
+          "kyc_status": "not_started",
+          "kyc_tier": null,
+          "created_at": "2026-10-16 13:13:44+00",
+          "registered_at": "2026-10-16T13:13:44+00:00",
+          "last_active_at": null,
+          "wallet_count": 1
+        }
+      }
+    },
+    {
+      "url": "/v1/admin-app/wallets",
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "id": "278a9238-6e9c-46d2-b098-c325f2cd0965",
+            "user_id": "303a0ea8-1d03-4b25-832f-ab4907f3a2f5",
+            "wallet_id": "278a9238-6e9c-46d2-b098-c325f2cd0965",
+            "wallet_number": "WLT-QA-278A9238",
+            "owner_user_id": "303a0ea8-1d03-4b25-832f-ab4907f3a2f5",
+            "owner_name": "",
+            "wallet_type": "customer",
+            "status": "active",
+            "balance_minor_units": 0,
+            "currency_code": "BWP",
+            "currency": "BWP",
+            "created_at": "2026-10-16 13:13:44+00",
+            "frozen_at": null,
+            "frozen_by": null,
+            "freeze_reason": null
+          }
+        ],
+        "meta": {
+          "total": 1,
+          "per_page": 10,
+          "current_page": 1,
+          "last_page": 1
+        }
+      }
+    },
+    {
+      "url": "/v1/admin-app/transactions",
+      "status": 200,
+      "body": {
+        "data": [],
+        "meta": {
+          "total": 0,
+          "per_page": 10,
+          "current_page": 1,
+          "last_page": 1
+        }
+      }
+    },
+    {
+      "url": "/v1/admin-app/roles",
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "role_id": "a300dd8f-5b8b-4637-bbae-9ae12a332d0f",
+            "role_name": "browser_qa_1792241114861",
+            "permission_slugs": [],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-17T12:45:24Z"
+          },
+          {
+            "role_id": "a300825c-5f6f-4a48-959c-babad2e6baa2",
+            "role_name": "browser_qa_1792225817726",
+            "permission_slugs": [],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-17T08:30:24Z"
+          },
+          {
+            "role_id": "a3007a43-913c-4e8a-89c3-17ceb428d35e",
+            "role_name": "browser_qa_1792224459769",
+            "permission_slugs": [],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-17T08:07:45Z"
+          },
+          {
+            "role_id": "a3006c58-59ce-4e58-91d7-2dc68fbf4a1b",
+            "role_name": "browser_qa_1792222123753",
+            "permission_slugs": [],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-17T07:28:50Z"
+          },
+          {
+            "role_id": "a2fef0c5-4e3f-48fe-b6d0-30e18e19acfe",
+            "role_name": "browser_qa_1792158445112",
+            "permission_slugs": [],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:47:28Z"
+          },
+          {
+            "role_id": "01a144eb-8735-723c-8e6b-adc6ee268e27",
+            "role_name": "test-config-01a144eb8735723c8e6badc6ee268e27",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:08Z"
+          },
+          {
+            "role_id": "01a144eb-86fd-72bc-94c0-9af97fb8c7be",
+            "role_name": "test-config-01a144eb86fd72bc94c09af97fb8c7be",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:08Z"
+          },
+          {
+            "role_id": "01a144eb-857d-7070-9fcf-dfd7e871b06c",
+            "role_name": "test-config-01a144eb857d70709fcfdfd7e871b06c",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:08Z"
+          },
+          {
+            "role_id": "01a144eb-8536-703c-8888-2b331d460791",
+            "role_name": "test-config-01a144eb8536703c88882b331d460791",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:08Z"
+          },
+          {
+            "role_id": "01a144eb-8382-7020-96ce-26e0ee46e4cb",
+            "role_name": "test-config-01a144eb8382702096ce26e0ee46e4cb",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:07Z"
+          },
+          {
+            "role_id": "01a144eb-8348-7025-b831-88e0b70cb0e2",
+            "role_name": "test-config-01a144eb83487025b83188e0b70cb0e2",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:07Z"
+          },
+          {
+            "role_id": "01a144eb-81cf-7172-8355-a858b4568935",
+            "role_name": "test-config-01a144eb81cf71728355a858b4568935",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:07Z"
+          },
+          {
+            "role_id": "01a144eb-819b-7356-9a77-3572759cdeb0",
+            "role_name": "test-config-01a144eb819b73569a773572759cdeb0",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:07Z"
+          },
+          {
+            "role_id": "01a144eb-802b-7204-95e3-7b2461048df3",
+            "role_name": "test-config-01a144eb802b720495e37b2461048df3",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:06Z"
+          },
+          {
+            "role_id": "01a144eb-7ff7-7173-ba1a-8922de99acd3",
+            "role_name": "test-config-01a144eb7ff77173ba1a8922de99acd3",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:06Z"
+          },
+          {
+            "role_id": "01a144eb-7e4c-70f0-a2aa-6b7ecb7db221",
+            "role_name": "test-config-01a144eb7e4c70f0a2aa6b7ecb7db221",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:06Z"
+          },
+          {
+            "role_id": "01a144eb-7e1f-7308-87fd-2158dd8fa879",
+            "role_name": "test-config-01a144eb7e1f730887fd2158dd8fa879",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:06Z"
+          },
+          {
+            "role_id": "01a144eb-7c04-7254-8a6c-4b2422e1a8ee",
+            "role_name": "test-config-01a144eb7c0472548a6c4b2422e1a8ee",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:05Z"
+          },
+          {
+            "role_id": "01a144eb-7bc7-736b-a37f-72375d15d26a",
+            "role_name": "test-config-01a144eb7bc7736ba37f72375d15d26a",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:05Z"
+          },
+          {
+            "role_id": "01a144eb-7948-7296-9b93-11e6200e2fd6",
+            "role_name": "test-config-01a144eb794872969b9311e6200e2fd6",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:05Z"
+          },
+          {
+            "role_id": "01a144eb-78fd-7359-b5a2-b7cd71e456c6",
+            "role_name": "test-config-01a144eb78fd7359b5a2b7cd71e456c6",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:34:05Z"
+          },
+          {
+            "role_id": "01a144e7-578b-72db-9cb8-58aa990f9f45",
+            "role_name": "test-config-01a144e7578b72db9cb858aa990f9f45",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:34Z"
+          },
+          {
+            "role_id": "01a144e7-5747-719b-9d12-3dbc2d4eb95d",
+            "role_name": "test-config-01a144e75747719b9d123dbc2d4eb95d",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:34Z"
+          },
+          {
+            "role_id": "01a144e7-5555-70bb-a65c-6ed7abbb0d8c",
+            "role_name": "test-config-01a144e7555570bba65c6ed7abbb0d8c",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:33Z"
+          },
+          {
+            "role_id": "01a144e7-551c-73b3-9b51-bfc8fe0bd72d",
+            "role_name": "test-config-01a144e7551c73b39b51bfc8fe0bd72d",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:33Z"
+          },
+          {
+            "role_id": "01a144e7-5311-7314-a00a-c7b607f25ff7",
+            "role_name": "test-config-01a144e753117314a00ac7b607f25ff7",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:33Z"
+          },
+          {
+            "role_id": "01a144e7-52a0-70b1-aafd-b662eab392d8",
+            "role_name": "test-config-01a144e752a070b1aafdb662eab392d8",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:33Z"
+          },
+          {
+            "role_id": "01a144e7-5097-7323-9ab2-2e110834b8da",
+            "role_name": "test-config-01a144e7509773239ab22e110834b8da",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:32Z"
+          },
+          {
+            "role_id": "01a144e7-5052-7129-b6ac-08e0d71f0f78",
+            "role_name": "test-config-01a144e750527129b6ac08e0d71f0f78",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:32Z"
+          },
+          {
+            "role_id": "01a144e7-4e78-72e2-8642-44c111a9d53f",
+            "role_name": "test-config-01a144e74e7872e2864244c111a9d53f",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:32Z"
+          },
+          {
+            "role_id": "01a144e7-4e36-7107-8508-9ec793a2b86d",
+            "role_name": "test-config-01a144e74e36710785089ec793a2b86d",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:31Z"
+          },
+          {
+            "role_id": "01a144e7-4b63-72d8-9b99-6ec02c5f89a7",
+            "role_name": "test-config-01a144e74b6372d89b996ec02c5f89a7",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:31Z"
+          },
+          {
+            "role_id": "01a144e7-4b2f-7097-aff2-59b0d97d7097",
+            "role_name": "test-config-01a144e74b2f7097aff259b0d97d7097",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:31Z"
+          },
+          {
+            "role_id": "01a144e7-476b-71df-98db-fedd1e06799d",
+            "role_name": "test-config-01a144e7476b71df98dbfedd1e06799d",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:30Z"
+          },
+          {
+            "role_id": "01a144e7-4737-7343-8f51-66fed412391c",
+            "role_name": "test-config-01a144e7473773438f5166fed412391c",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:30Z"
+          },
+          {
+            "role_id": "01a144e7-448e-7365-b87a-325410411a38",
+            "role_name": "test-config-01a144e7448e7365b87a325410411a38",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:29Z"
+          },
+          {
+            "role_id": "01a144e7-4455-73df-ae99-5db0c3613f63",
+            "role_name": "test-config-01a144e7445573dfae995db0c3613f63",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:29Z"
+          },
+          {
+            "role_id": "01a144e7-0276-73d8-af88-3a3172a4f2eb",
+            "role_name": "test-config-01a144e7027673d8af883a3172a4f2eb",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:12Z"
+          },
+          {
+            "role_id": "01a144e7-023e-7332-9707-fb6eb7fda208",
+            "role_name": "test-config-01a144e7023e73329707fb6eb7fda208",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:12Z"
+          },
+          {
+            "role_id": "01a144e7-00db-7298-a2bb-7c28e883e029",
+            "role_name": "test-config-01a144e700db7298a2bb7c28e883e029",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:12Z"
+          },
+          {
+            "role_id": "01a144e7-00a9-72d4-9d04-63a2b5e47a6b",
+            "role_name": "test-config-01a144e700a972d49d0463a2b5e47a6b",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:12Z"
+          },
+          {
+            "role_id": "01a144e6-ff4f-71b0-a542-231bbac263f3",
+            "role_name": "test-config-01a144e6ff4f71b0a542231bbac263f3",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:11Z"
+          },
+          {
+            "role_id": "01a144e6-ff1c-71c1-a5a4-1acaffceabb4",
+            "role_name": "test-config-01a144e6ff1c71c1a5a41acaffceabb4",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:11Z"
+          },
+          {
+            "role_id": "01a144e6-fda8-736e-a2a1-b4fa90b64a45",
+            "role_name": "test-config-01a144e6fda8736ea2a1b4fa90b64a45",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:11Z"
+          },
+          {
+            "role_id": "01a144e6-fd78-72e5-9937-543b0c1ceaf1",
+            "role_name": "test-config-01a144e6fd7872e59937543b0c1ceaf1",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:11Z"
+          },
+          {
+            "role_id": "01a144e6-fbcc-72cc-b20c-f48b4e40899a",
+            "role_name": "test-config-01a144e6fbcc72ccb20cf48b4e40899a",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:10Z"
+          },
+          {
+            "role_id": "01a144e6-fb90-70ef-9f6f-1e141a597e7d",
+            "role_name": "test-config-01a144e6fb9070ef9f6f1e141a597e7d",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:10Z"
+          },
+          {
+            "role_id": "01a144e6-f981-719d-bb0e-71cf24740967",
+            "role_name": "test-config-01a144e6f981719dbb0e71cf24740967",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:10Z"
+          },
+          {
+            "role_id": "01a144e6-f94c-71d5-8173-880c410d7408",
+            "role_name": "test-config-01a144e6f94c71d58173880c410d7408",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.policy.update",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:10Z"
+          },
+          {
+            "role_id": "01a144e6-f7c3-72d4-b885-4f04f58b0c5f",
+            "role_name": "test-config-01a144e6f7c372d4b8854f04f58b0c5f",
+            "permission_slugs": [
+              "configuration.policy.view",
+              "configuration.approve"
+            ],
+            "user_count": 0,
+            "is_system_role": false,
+            "created_at": "2026-10-16T13:29:09Z"
+          }
+        ],
+        "meta": {
+          "total": 271,
+          "per_page": 50,
+          "current_page": 1,
+          "last_page": 6
+        }
+      }
+    }
+  ],
+  "text": "O\nOleKard / Admin\nWORKSPACE\nDashboard\nFinancial Dashboard\nRisk Dashboard\nOPERATIONS\nUsers\nDevices\nSessions\nKYC Reviews\nAgents\nAgent Float\nWallets\nTransactions\nReconciliation\nFee Rules\nMANAGEMENT\nRoles\nSupport & Disputes\nNotification Templates\nDelivery Log\nNotification Rules\nAudit Events\nCompliance\nReports\nSecurity\nVulnerabilities\nCurrencies\nFX Rates\nConfiguration\nIntegrations\nDead Letter\nOps Center\nQA Dashboard\nSecurity Policies\nSecurity Events\nAD\n\nadmin@olekard.local\n\nWorkspace Admin\n\nDashboard\n/\nOperations\n/\nUsers\n⌘K\nA\nadmin@olekard.local\nUser Detail\n← Back\n?\n\nACTIVE\nPHONE\n—\nKYC TIER\nTier\nWALLETS\n1\nJOINED\n10/16/2026\nSuspend\nWallets\nView all →\nBWP\nactive\n\nBWP 0.00\n\nRecent Transactions\nView all →\n\nNo transactions found.\n\nKYC\nView all →\nTIER\nTier\nACTOR TYPE\nCUSTOMER\nRoles\nEdit Roles\n\nUse Edit Roles to assign a role to this user.\n\nDevices & Sessions\nEnrolled Devices\n→\nActive Sessions\n→"
+}

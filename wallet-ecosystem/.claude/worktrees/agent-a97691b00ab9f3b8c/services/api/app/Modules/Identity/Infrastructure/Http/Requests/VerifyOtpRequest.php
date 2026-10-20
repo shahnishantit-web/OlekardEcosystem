@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Identity\Infrastructure\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+final class VerifyOtpRequest extends FormRequest
+{
+    public function rules(): array
+    {
+        return [
+            'challenge_id' => ['required', 'uuid'],
+            'otp'          => ['required', 'string', 'digits_between:4,8'],
+        ];
+    }
+}

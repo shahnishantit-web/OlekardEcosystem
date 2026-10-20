@@ -1,0 +1,35 @@
+import 'package:flutter/material.dart';
+
+class OkPrimaryButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onPressed;
+  final bool isLoading;
+
+  const OkPrimaryButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.isLoading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: label,
+      button: true,
+      child: ElevatedButton(
+        onPressed: isLoading ? null : onPressed,
+        child: isLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : Text(label),
+      ),
+    );
+  }
+}

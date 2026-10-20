@@ -1,0 +1,376 @@
+{
+  "groups": {
+    "fixture": {
+      "total": 19,
+      "passed": 18,
+      "failed": 1
+    },
+    "live": {
+      "total": 75,
+      "passed": 16,
+      "failed": 59
+    }
+  },
+  "failures": [
+    {
+      "title": "rate history chart and provider failure are explicit",
+      "file": "admin-fixture-p1022-fx.spec.ts",
+      "status": "failed",
+      "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('status')\nExpected substring: \u001b[32m\"FX provider is not configured\"\u001b[39m\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByRole('status') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('status')\u001b[22m\n"
+    },
+    {
+      "title": "live route /admin-portal/agents",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /admin-portal/dashboard",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /admin-portal/float",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /admin-portal/roles",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /admin-portal/transactions",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /admin-portal/users",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /admin-portal/wallets",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /agents",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /audit",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /compliance",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /compliance/retention",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /configuration/approvals",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /configuration",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /dashboard",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /devices",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /fees/rules/create",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /fees/rules",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /financial-dashboard",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /integrations/clients",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /integrations",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /integrations/providers",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /integrations/webhooks",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /kyc",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /multi-currency/currencies",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /multi-currency/fx-rates",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /notifications/log",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /notifications",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /notifications/rules",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /notifications/templates",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /operations/dead-letter",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /ops/alert-rules",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /ops/alerts",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /ops/backup-jobs",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /ops/db-monitoring",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /ops/deployments",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /ops/logs",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /ops/metrics",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /ops",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /ops/providers",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /ops/queue-monitoring",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /platform/security-config",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /profile/notifications",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /profile",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /profile/security",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /profile/sessions",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /qa",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /reconciliation/batches",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /reconciliation/settlements",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /reports",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /reports/reconciliation",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /reports/schedules",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /reports/settlement",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /risk-dashboard",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /security/dashboard",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /security/events",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /security/findings",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /security/overview",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /sessions",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    },
+    {
+      "title": "live route /support/cases",
+      "file": "admin-live-audit.spec.ts",
+      "status": "failed",
+      "error": "Error: Unexpected authentication/permission redirect\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/^\\/(login|403)$/\u001b[39m\nReceived string:      \u001b[31m\"\u001b[7m/login\u001b[27m\"\u001b[39m"
+    }
+  ]
+}

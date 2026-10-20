@@ -1,0 +1,29 @@
+{
+  "data": [
+    {
+      "id": "01919f3d-0000-7000-8000-000000000010",
+      "reference_number": "TXN-20240101-0001",
+      "type": "transfer",
+      "status": "completed",
+      "amount_minor_units": 5000,
+      "fee_minor_units": 50,
+      "currency_code": "KES",
+      "description": "Transfer to Test Recipient",
+      "created_at": "2024-01-01T10:00:00.000Z"
+    },
+    {
+      "id": "01919f3d-0000-7000-8000-000000000011",
+      "reference_number": "TXN-20240101-0002",
+      "type": "funding",
+      "status": "completed",
+      "amount_minor_units": 100000,
+      "fee_minor_units": 0,
+      "currency_code": "KES",
+      "description": "Bank transfer",
+      "created_at": "2024-01-01T09:00:00.000Z"
+    }
+  ],
+  "current_page": 1,
+  "total": 2,
+  "last_page": 1
+}

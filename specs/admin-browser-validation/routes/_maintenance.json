@@ -1,0 +1,16 @@
+{
+  "route": "/maintenance",
+  "landed": "/maintenance",
+  "status": 200,
+  "headings": [
+    "Scheduled maintenance"
+  ],
+  "errors": [],
+  "api": [],
+  "failed": [],
+  "links": [
+    "/login"
+  ],
+  "overflow": false,
+  "text": "OK\nOleKard\nScheduled maintenance\n\nOleKard Admin is temporarily unavailable while maintenance is in progress.\n\nEstimated return: Not yet available. Please check again later.\n\nSuperadmin maintenance access\nCheck availability\nReturn to sign in\n\nAuthorized personnel only. All sessions are logged and monitored."
+}

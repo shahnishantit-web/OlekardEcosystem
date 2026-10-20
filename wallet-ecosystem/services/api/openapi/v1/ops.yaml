@@ -1,0 +1,494 @@
+openapi: "3.1.0"
+info:
+  title: Wallet Ecosystem — E30 DevOps & Operations API
+  version: "1.0.0"
+  description: |
+    Admin API endpoints for the E30 DevOps & Operations module.
+    All endpoints (except health probes) require `Authorization: Bearer <token>`.
+
+servers:
+  - url: /
+
+tags:
+  - name: Health Probes
+    description: Unauthenticated liveness and readiness probes
+  - name: Logs
+    description: Structured log search
+  - name: Metrics
+    description: Service metrics
+  - name: Providers
+    description: External provider health monitoring
+  - name: Alert Rules
+    description: Alert rule management
+  - name: Alerts
+    description: Alert history
+  - name: Backup
+    description: Backup job management
+  - name: Disaster Recovery
+    description: DR status and test recording
+  - name: Deployments
+    description: Deployment version history and rollback
+
+paths:
+  /health:
+    get:
+      tags: [Health Probes]
+      summary: Full health check
+      operationId: ops.health
+      responses:
+        "200":
+          description: System healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "503":
+          description: System unhealthy
+
+  /health/ready:
+    get:
+      tags: [Health Probes]
+      summary: Readiness probe
+      operationId: ops.ready
+      responses:
+        "200":
+          description: Ready
+        "503":
+          description: Not ready
+
+  /health/live:
+    get:
+      tags: [Health Probes]
+      summary: Liveness probe
+      operationId: ops.live
+      responses:
+        "200":
+          description: Alive
+
+  /v1/admin/ops/logs:
+    get:
+      tags: [Logs]
+      summary: Search log entries
+      operationId: ops.logs.index
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: level
+          in: query
+          schema:
+            type: string
+            enum: [debug, info, notice, warning, error, critical, alert, emergency]
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 25
+            maximum: 100
+      responses:
+        "200":
+          description: Log entries
+
+  /v1/admin/ops/metrics:
+    get:
+      tags: [Metrics]
+      summary: Query service metrics
+      operationId: ops.metrics.index
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: service_name
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: metric_name
+          in: query
+          schema:
+            type: string
+        - name: granularity
+          in: query
+          schema:
+            type: string
+            enum: [raw, minute, hour]
+            default: minute
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Metric data points
+
+  /v1/admin/ops/providers:
+    get:
+      tags: [Providers]
+      summary: List all provider statuses
+      operationId: ops.providers.index
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Provider status list
+
+  /v1/admin/ops/providers/{providerType}:
+    get:
+      tags: [Providers]
+      summary: Get provider status
+      operationId: ops.providers.show
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: providerType
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Provider status
+        "404":
+          description: Not found
+
+  /v1/admin/ops/providers/{providerType}/history:
+    get:
+      tags: [Providers]
+      summary: Get provider health check history
+      operationId: ops.providers.history
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: providerType
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        "200":
+          description: Health check records
+
+  /v1/admin/ops/alert-rules:
+    get:
+      tags: [Alert Rules]
+      summary: List alert rules
+      operationId: ops.alertRules.index
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Alert rule list
+    post:
+      tags: [Alert Rules]
+      summary: Create alert rule
+      operationId: ops.alertRules.store
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlertRuleRequest"
+      responses:
+        "201":
+          description: Created
+
+  /v1/admin/ops/alert-rules/{id}:
+    get:
+      tags: [Alert Rules]
+      summary: Get alert rule
+      operationId: ops.alertRules.show
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Alert rule
+        "404":
+          description: Not found
+    put:
+      tags: [Alert Rules]
+      summary: Update alert rule
+      operationId: ops.alertRules.update
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: Idempotency-Key
+          in: header
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlertRuleRequest"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      tags: [Alert Rules]
+      summary: Delete alert rule
+      operationId: ops.alertRules.destroy
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Deleted
+
+  /v1/admin/ops/alerts:
+    get:
+      tags: [Alerts]
+      summary: List alerts with cursor pagination
+      operationId: ops.alerts.index
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [firing, resolved]
+        - name: severity
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 25
+        - name: cursor
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Alert list
+
+  /v1/admin/ops/backup-jobs:
+    get:
+      tags: [Backup]
+      summary: List backup jobs
+      operationId: ops.backupJobs.index
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Backup job list
+    post:
+      tags: [Backup]
+      summary: Trigger backup
+      operationId: ops.backupJobs.store
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum: [full, incremental, differential]
+                  default: full
+      responses:
+        "202":
+          description: Accepted
+
+  /v1/admin/ops/dr/status:
+    get:
+      tags: [Disaster Recovery]
+      summary: Get DR status
+      operationId: ops.dr.status
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: DR status
+
+  /v1/admin/ops/dr/tests:
+    post:
+      tags: [Disaster Recovery]
+      summary: Record DR test result
+      operationId: ops.dr.recordTest
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [outcome]
+              properties:
+                outcome:
+                  type: string
+                  enum: [pass, fail, partial]
+                notes:
+                  type: string
+                  maxLength: 2000
+      responses:
+        "201":
+          description: Test recorded
+
+  /v1/admin/ops/deployments/versions:
+    get:
+      tags: [Deployments]
+      summary: List deployment versions
+      operationId: ops.deployments.versions
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Version list
+
+  /v1/admin/ops/deployments/rollbacks:
+    get:
+      tags: [Deployments]
+      summary: List recent rollbacks
+      operationId: ops.deployments.rollbacks
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Rollback list
+
+  /v1/admin/ops/deployments/rollback:
+    post:
+      tags: [Deployments]
+      summary: Initiate rollback
+      operationId: ops.deployments.rollback
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to_version]
+              properties:
+                to_version:
+                  type: string
+                reason:
+                  type: string
+                  maxLength: 500
+      responses:
+        "202":
+          description: Rollback initiated
+        "409":
+          description: Another rollback in progress
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        components:
+          type: object
+        checked_at:
+          type: string
+          format: date-time
+
+    AlertRuleRequest:
+      type: object
+      required: [name, metric_condition, severity, notification_channels]
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        metric_condition:
+          type: object
+        severity:
+          type: string
+          enum: [info, warning, critical]
+        notification_channels:
+          type: array
+          items:
+            type: string
+        grouping_key:
+          type: string
+        is_enabled:
+          type: boolean
+          default: true

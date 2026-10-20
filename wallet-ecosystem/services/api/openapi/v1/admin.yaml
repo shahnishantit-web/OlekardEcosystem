@@ -1,0 +1,689 @@
+openapi: "3.1.0"
+info:
+  title: Admin Portal API (E19)
+  description: |
+    Consolidated Admin Portal module endpoints covering:
+    - Dashboard KPIs aggregated across all modules (US-ADMIN-001 – 008)
+    - User management: search, profile, suspend, reactivate, reset auth (US-ADMIN-009 – 014)
+    - Session management: list, terminate (US-ADMIN-015)
+    - Wallet management: search, view, freeze, unfreeze, ledger (US-ADMIN-015 – 019)
+    - Wallet adjustments: create, approve (maker-checker), reject (US-ADMIN-020)
+    - Transaction management: search, investigate, reverse, refund (US-ADMIN-022 – 025)
+    - Transaction export: queue CSV/JSON export, poll status (US-ADMIN-026 – 027)
+
+    All endpoints require `Authorization: Bearer <token>` and the appropriate
+    `admin.*` permission scope. State-changing endpoints require `Idempotency-Key`
+    where noted (constitution P8).
+  version: "1.0.0"
+
+tags:
+  - name: dashboard
+    description: Ecosystem health KPI dashboard
+  - name: users
+    description: Customer user administration
+  - name: wallets
+    description: Wallet administration and adjustments
+  - name: transactions
+    description: Transaction investigation, reversal, refund, and export
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page: { type: integer }
+        per_page:     { type: integer }
+        total:        { type: integer }
+        last_page:    { type: integer }
+      required: [current_page, per_page, total, last_page]
+
+    DashboardStats:
+      type: object
+      properties:
+        total_customers:                { type: integer }
+        active_wallets:                 { type: integer }
+        total_transaction_volume_today: { type: number }
+        failed_transactions_today:      { type: integer }
+        pending_kyc_cases:              { type: integer }
+        active_agents:                  { type: integer }
+        open_risk_alerts:               { type: integer }
+        active_account_holds:           { type: integer }
+        currency:                       { type: string, example: BWP }
+        period:                         { type: string, example: today }
+        cache_age_seconds:              { type: integer }
+      required: [total_customers, active_wallets, currency, period, cache_age_seconds]
+
+    UserSummary:
+      type: object
+      properties:
+        id:         { type: string, format: uuid }
+        email:      { type: string, format: email }
+        status:     { type: string, enum: [active, suspended, pending_closure] }
+        kyc_tier:   { type: integer, nullable: true }
+        created_at: { type: string, format: date-time }
+      required: [id, email, status, created_at]
+
+    WalletSummary:
+      type: object
+      properties:
+        id:          { type: string, format: uuid }
+        owner_id:    { type: string, format: uuid }
+        owner_email: { type: string, format: email, nullable: true }
+        status:      { type: string }
+        currency:    { type: string }
+        created_at:  { type: string, format: date-time }
+      required: [id, owner_id, status, currency, created_at]
+
+    AdjustmentSummary:
+      type: object
+      properties:
+        id:                    { type: string, format: uuid }
+        wallet_id:             { type: string, format: uuid }
+        adjustment_type:       { type: string, enum: [credit, debit] }
+        amount:                { type: string, example: "100.00" }
+        currency:              { type: string, example: BWP }
+        reason:                { type: string }
+        status:                { type: string, enum: [pending_approval, approved, rejected, posted] }
+        maker_id:              { type: string, format: uuid }
+        checker_id:            { type: string, format: uuid, nullable: true }
+        ledger_transaction_id: { type: string, format: uuid, nullable: true }
+        rejection_reason:      { type: string, nullable: true }
+        approved_at:           { type: string, format: date-time, nullable: true }
+        posted_at:             { type: string, format: date-time, nullable: true }
+        rejected_at:           { type: string, format: date-time, nullable: true }
+        created_at:            { type: string, format: date-time }
+      required: [id, wallet_id, adjustment_type, amount, currency, reason, status, maker_id, created_at]
+
+    TransactionSummary:
+      type: object
+      properties:
+        id:             { type: string, format: uuid }
+        reference:      { type: string }
+        type:           { type: string, enum: [funding, transfer, withdrawal, refund] }
+        status:         { type: string, enum: [pending, completed, failed, reversed] }
+        amount:         { type: integer, description: Amount in minor currency units }
+        currency_code:  { type: string }
+        direction:      { type: string, enum: [debit, credit] }
+        wallet_id:      { type: string, format: uuid }
+        customer_id:    { type: string, format: uuid }
+        customer_email: { type: string, nullable: true }
+        source_module:  { type: string }
+        created_at:     { type: string, format: date-time }
+        completed_at:   { type: string, format: date-time, nullable: true }
+        failed_at:      { type: string, format: date-time, nullable: true }
+      required: [id, reference, type, status, amount, currency_code, direction, wallet_id, customer_id, source_module, created_at]
+
+    ExportStatus:
+      type: object
+      properties:
+        export_id:    { type: string, format: uuid }
+        status:       { type: string, enum: [queued, processing, completed, failed] }
+        format:       { type: string, enum: [csv, json] }
+        row_count:    { type: integer, nullable: true }
+        download_url: { type: string, nullable: true }
+        expires_at:   { type: string, format: date-time, nullable: true }
+        queued_at:    { type: string, format: date-time }
+        completed_at: { type: string, format: date-time, nullable: true }
+      required: [export_id, status, format, queued_at]
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ─── Dashboard ───────────────────────────────────────────────────────────────
+
+  /v1/admin/dashboard:
+    get:
+      tags: [dashboard]
+      operationId: getAdminDashboard
+      summary: Ecosystem health KPIs
+      parameters:
+        - name: period
+          in: query
+          schema: { type: string, default: today }
+      responses:
+        '200':
+          description: Dashboard statistics (may be cached up to 5 minutes)
+          headers:
+            X-Stats-Age: { description: Cache age in seconds, schema: { type: integer } }
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/DashboardStats' }
+        '401': { description: Unauthenticated }
+        '403': { description: Insufficient permissions (requires admin.read) }
+
+  # ─── Users ───────────────────────────────────────────────────────────────────
+
+  /v1/admin/users:
+    get:
+      tags: [users]
+      operationId: searchAdminUsers
+      summary: Search customer users
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string, enum: [active, suspended, all] }
+        - name: kyc_tier
+          in: query
+          schema: { type: integer }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, default: 20, maximum: 100 }
+      responses:
+        '200':
+          description: Paginated user list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/UserSummary' } }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+        '401': { description: Unauthenticated }
+        '403': { description: Insufficient permissions (requires admin.read) }
+
+  /v1/admin/users/{userId}:
+    get:
+      tags: [users]
+      operationId: getAdminUser
+      summary: Get user profile
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: User profile with KYC and wallet info }
+        '404': { description: User not found }
+        '401': { description: Unauthenticated }
+        '403': { description: Insufficient permissions }
+
+  /v1/admin/users/{userId}/suspend:
+    post:
+      tags: [users]
+      operationId: suspendUser
+      summary: Suspend a user account
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string, minLength: 10, maxLength: 2000 }
+              required: [reason]
+      responses:
+        '200': { description: User suspended }
+        '404': { description: User not found }
+        '409': { description: User already suspended }
+        '401': { description: Unauthenticated }
+        '403': { description: Insufficient permissions (requires admin.write) }
+
+  /v1/admin/users/{userId}/reactivate:
+    post:
+      tags: [users]
+      operationId: reactivateUser
+      summary: Reactivate a suspended user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string, minLength: 10, maxLength: 2000 }
+              required: [reason]
+      responses:
+        '200': { description: User reactivated }
+        '404': { description: User not found }
+        '409': { description: User is not suspended }
+        '401': { description: Unauthenticated }
+        '403': { description: Insufficient permissions (requires admin.write) }
+
+  /v1/admin/users/{userId}/reset-auth:
+    post:
+      tags: [users]
+      operationId: resetUserAuth
+      summary: Reset user authentication (revoke sessions, require credential reset)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string, minLength: 10, maxLength: 2000 }
+              required: [reason]
+      responses:
+        '200': { description: Auth reset complete; all sessions revoked }
+        '404': { description: User not found }
+        '401': { description: Unauthenticated }
+        '403': { description: Insufficient permissions (requires admin.write) }
+
+  # ─── Wallets ─────────────────────────────────────────────────────────────────
+
+  /v1/admin/wallets:
+    get:
+      tags: [wallets]
+      operationId: searchAdminWallets
+      summary: Search wallets
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, default: 20, maximum: 100 }
+      responses:
+        '200':
+          description: Paginated wallet list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/WalletSummary' } }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+        '401': { description: Unauthenticated }
+        '403': { description: Insufficient permissions (requires admin.read) }
+
+  /v1/admin/wallets/{walletId}:
+    get:
+      tags: [wallets]
+      operationId: getAdminWallet
+      summary: Get wallet detail with pockets and hold
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Wallet detail }
+        '404': { description: Wallet not found }
+        '401': { description: Unauthenticated }
+        '403': { description: Insufficient permissions }
+
+  /v1/admin/wallets/{walletId}/freeze:
+    post:
+      tags: [wallets]
+      operationId: freezeWallet
+      summary: Place a compliance hold on a wallet (maker-checker)
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:     { type: string, minLength: 10, maxLength: 2000 }
+                checker_id: { type: string, format: uuid }
+                hold_type:  { type: string, enum: [risk_freeze, compliance_hold, aml_investigation] }
+              required: [reason, checker_id, hold_type]
+      responses:
+        '201': { description: Wallet frozen; hold created }
+        '404': { description: Wallet not found }
+        '409': { description: Wallet is already frozen }
+        '422': { description: Maker-checker violation }
+        '401': { description: Unauthenticated }
+        '403': { description: Insufficient permissions (requires admin.freeze_wallet) }
+
+  /v1/admin/wallets/{walletId}/unfreeze:
+    post:
+      tags: [wallets]
+      operationId: unfreezeWallet
+      summary: Lift compliance hold on a wallet
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string, minLength: 10, maxLength: 2000 }
+              required: [reason]
+      responses:
+        '200': { description: Wallet unfrozen }
+        '404': { description: Wallet not found }
+        '409': { description: Wallet is not currently frozen }
+        '401': { description: Unauthenticated }
+        '403': { description: Insufficient permissions (requires admin.freeze_wallet) }
+
+  /v1/admin/wallets/{walletId}/adjustments:
+    post:
+      tags: [wallets]
+      operationId: createWalletAdjustment
+      summary: Create a pending wallet adjustment (maker)
+      description: |
+        Creates a `pending_approval` adjustment. The maker cannot approve their own adjustment
+        (constitution P4 maker-checker). Idempotent on `idempotency_key`.
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idempotency_key:  { type: string, maxLength: 128 }
+                adjustment_type:  { type: string, enum: [credit, debit] }
+                amount:           { type: string, pattern: '^\d+(\.\d{1,4})?$' }
+                currency:         { type: string, example: BWP }
+                reason:           { type: string, minLength: 10, maxLength: 2000 }
+              required: [idempotency_key, adjustment_type, amount, currency, reason]
+      responses:
+        '201':
+          description: Adjustment created in pending_approval status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/AdjustmentSummary' }
+        '401': { description: Unauthenticated }
+        '403': { description: Insufficient permissions (requires admin.write) }
+        '422': { description: Validation error }
+
+  /v1/admin/adjustments/{adjustmentId}/approve:
+    post:
+      tags: [wallets]
+      operationId: approveWalletAdjustment
+      summary: Approve and post a wallet adjustment (checker)
+      description: |
+        **Idempotent**: the adjustment UUID in the path is the natural idempotency key. A second
+        approve request on the same adjustment (regardless of caller) returns HTTP 409 without
+        double-posting — enforced via `SELECT … FOR UPDATE` inside a DB transaction (constitution P8).
+
+        The checker must be a different user than the maker (constitution P4).
+        On success the adjustment transitions: `pending_approval → approved → posted`
+        and ledger entries are created atomically.
+      parameters:
+        - name: adjustmentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Adjustment approved and posted to ledger
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/AdjustmentSummary' }
+        '404': { description: Adjustment not found }
+        '409': { description: Adjustment is not in pending_approval status }
+        '422': { description: Checker is the same as maker (maker-checker violation) }
+        '401': { description: Unauthenticated }
+        '403': { description: Insufficient permissions (requires admin.approve_adjustment) }
+
+  /v1/admin/adjustments/{adjustmentId}/reject:
+    post:
+      tags: [wallets]
+      operationId: rejectWalletAdjustment
+      summary: Reject a pending wallet adjustment (checker)
+      parameters:
+        - name: adjustmentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string, minLength: 10, maxLength: 2000 }
+              required: [reason]
+      responses:
+        '200': { description: Adjustment rejected }
+        '404': { description: Adjustment not found }
+        '409': { description: Adjustment is not in pending_approval status }
+        '422': { description: Checker is the same as maker }
+        '401': { description: Unauthenticated }
+        '403': { description: Insufficient permissions (requires admin.approve_adjustment) }
+
+  # ─── Transactions ─────────────────────────────────────────────────────────────
+
+  /v1/admin/transactions:
+    get:
+      tags: [transactions]
+      operationId: searchAdminTransactions
+      summary: Search transactions
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: type
+          in: query
+          schema: { type: string, enum: [funding, transfer, withdrawal, refund] }
+        - name: status
+          in: query
+          schema: { type: string, enum: [pending, completed, failed, reversed, all] }
+        - name: wallet_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: from
+          in: query
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          schema: { type: string, format: date }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, default: 20, maximum: 100 }
+      responses:
+        '200':
+          description: Paginated transaction list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/TransactionSummary' } }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+        '401': { description: Unauthenticated }
+        '403': { description: Insufficient permissions (requires admin.read) }
+
+  /v1/admin/transactions/{transactionId}:
+    get:
+      tags: [transactions]
+      operationId: getAdminTransaction
+      summary: Get transaction detail with ledger entries
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Transaction detail with ledger entries }
+        '404': { description: Transaction not found }
+        '401': { description: Unauthenticated }
+        '403': { description: Insufficient permissions }
+
+  /v1/admin/transactions/{transactionId}/investigate:
+    post:
+      tags: [transactions]
+      operationId: investigateTransaction
+      summary: Investigate a failed transaction
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Investigation details including failure reason and metadata }
+        '404': { description: Transaction not found }
+        '401': { description: Unauthenticated }
+        '403': { description: Insufficient permissions (requires admin.read) }
+
+  /v1/admin/transactions/{transactionId}/reverse:
+    post:
+      tags: [transactions]
+      operationId: reverseTransaction
+      summary: Initiate a transaction reversal
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string, minLength: 5, maxLength: 2000 }
+      responses:
+        '201': { description: Reversal initiated }
+        '400': { description: Idempotency-Key header is required }
+        '404': { description: Transaction not found }
+        '409': { description: Active reversal already exists for this transaction }
+        '422': { description: Transaction type or status does not support reversal }
+        '401': { description: Unauthenticated }
+        '403': { description: Insufficient permissions (requires admin.reverse_transaction) }
+
+  /v1/admin/transactions/{transactionId}/refund:
+    post:
+      tags: [transactions]
+      operationId: refundTransaction
+      summary: Initiate a transaction refund
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string, minLength: 5, maxLength: 2000 }
+      responses:
+        '201': { description: Refund initiated }
+        '400': { description: Idempotency-Key header is required }
+        '404': { description: Transaction not found }
+        '422': { description: Transaction type or status does not support refund }
+        '401': { description: Unauthenticated }
+        '403': { description: Insufficient permissions (requires admin.refund_transaction) }
+
+  /v1/admin/transactions/export:
+    post:
+      tags: [transactions]
+      operationId: exportTransactions
+      summary: Queue a transaction export (CSV or JSON)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                format:    { type: string, enum: [csv, json], default: csv }
+                type:      { type: string, enum: [funding, transfer, withdrawal, refund] }
+                status:    { type: string }
+                wallet_id: { type: string, format: uuid }
+                from:      { type: string, format: date }
+                to:        { type: string, format: date }
+      responses:
+        '202':
+          description: Export queued; poll status with export_id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ExportStatus' }
+        '401': { description: Unauthenticated }
+        '403': { description: Insufficient permissions (requires admin.export_transactions) }
+
+  /v1/admin/transactions/export/{exportId}:
+    get:
+      tags: [transactions]
+      operationId: getExportStatus
+      summary: Poll export status
+      parameters:
+        - name: exportId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Export status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ExportStatus' }
+        '404': { description: Export not found or expired (TTL 90000 seconds) }
+        '401': { description: Unauthenticated }
+        '403': { description: Insufficient permissions }

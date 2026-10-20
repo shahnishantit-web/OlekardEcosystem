@@ -1,0 +1,75 @@
+./components/dashboard/PendingTasksCard.tsx 1:15  Error: 'ElementType' is defined but never used. Allowed unused vars must match /^_/u.  
+./components/dashboard/PendingTasksCard.tsx 106:9  Error: The element ul has an implicit role of list. Defining this explicitly is redundant and should be 
+./components/ui/Button.tsx 32:5  Error: The element button has an implicit role of button. Defining this explicitly is redundant and should be 
+./src/modules/agents/pages/agent-detail.tsx 316:9  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/agents/pages/agent-detail.tsx 316:9  Error: Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and 
+./src/modules/agents/pages/agent-detail.tsx 320:11  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/agents/pages/agent-detail.tsx 320:11  Error: Non-interactive elements should not be assigned mouse or keyboard event listeners.  
+./src/modules/agents/pages/agent-detail.tsx 349:19  Error: The autoFocus prop should not be used, as it can reduce usability and accessibility for users.  
+./src/modules/audit/pages/audit-events.tsx 239:9  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/audit/pages/audit-events.tsx 239:9  Error: Non-interactive elements should not be assigned mouse or keyboard event listeners.  
+./src/modules/audit/pages/audit-events.tsx 246:11  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/audit/pages/audit-events.tsx 246:11  Error: Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role 
+./src/modules/auth/pages/forgot-password.tsx 81:48  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+./src/modules/auth/pages/forgot-password.tsx 160:101  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+./src/modules/auth/pages/forgot-password.tsx 160:190  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+./src/modules/auth/pages/verify-email.tsx 204:17  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+./src/modules/auth/pages/verify-email.tsx 267:48  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+./src/modules/dashboard/pages/financial-dashboard.tsx 12:15  Error: 'AuthenticatedApiClient' is defined but never used. Allowed unused vars must match /^_/u.  
+./src/modules/dashboard/pages/risk-dashboard.tsx 12:15  Error: 'AuthenticatedApiClient' is defined but never used. Allowed unused vars must match /^_/u.  
+./src/modules/float/pages/float-management.tsx 372:9  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/float/pages/float-management.tsx 372:9  Error: Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and 
+./src/modules/float/pages/float-management.tsx 376:11  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/float/pages/float-management.tsx 376:11  Error: Non-interactive elements should not be assigned mouse or keyboard event listeners.  
+./src/modules/float/pages/float-management.tsx 404:17  Error: The autoFocus prop should not be used, as it can reduce usability and accessibility for users.  
+./src/modules/float/pages/float-management.tsx 438:9  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/float/pages/float-management.tsx 438:9  Error: Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and 
+./src/modules/float/pages/float-management.tsx 442:11  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/float/pages/float-management.tsx 442:11  Error: Non-interactive elements should not be assigned mouse or keyboard event listeners.  
+./src/modules/float/pages/float-management.tsx 470:17  Error: The autoFocus prop should not be used, as it can reduce usability and accessibility for users.  
+./src/modules/kyc/api/kyc.ts 3:30  Error: 'PaginatedResponse' is defined but never used. Allowed unused vars must match /^_/u.  
+./src/modules/kyc/pages/kyc-detail.tsx 85:9  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/kyc/pages/kyc-detail.tsx 85:9  Error: Non-interactive elements should not be assigned mouse or keyboard event listeners.  
+./src/modules/kyc/pages/kyc-detail.tsx 92:11  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/kyc/pages/kyc-detail.tsx 92:11  Error: Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and 
+./src/modules/kyc/pages/kyc-detail.tsx 388:9  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/kyc/pages/kyc-detail.tsx 388:9  Error: Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and 
+./src/modules/kyc/pages/kyc-detail.tsx 392:11  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/kyc/pages/kyc-detail.tsx 392:11  Error: Non-interactive elements should not be assigned mouse or keyboard event listeners.  
+./src/modules/kyc/pages/kyc-detail.tsx 426:9  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/kyc/pages/kyc-detail.tsx 426:9  Error: Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and 
+./src/modules/kyc/pages/kyc-detail.tsx 430:11  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/kyc/pages/kyc-detail.tsx 430:11  Error: Non-interactive elements should not be assigned mouse or keyboard event listeners.  
+./src/modules/kyc/pages/kyc-detail.tsx 450:17  Error: The autoFocus prop should not be used, as it can reduce usability and accessibility for users.  
+./src/modules/profile/pages/own-sessions.tsx 29:32  Error: 'user' is assigned a value but never used. Allowed unused vars must match /^_/u.  
+./src/modules/profile/pages/user-profile.tsx 186:17  Error: Redundant alt attribute. Screen-readers already announce `img` tags as an image. You don’t need to use 
+./src/modules/reports/pages/settlement-report.tsx 10:15  Error: 'AuthenticatedApiClient' is defined but never used. Allowed unused vars must match /^_/u.  
+./src/modules/roles/pages/role-management.tsx 216:9  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/roles/pages/role-management.tsx 216:9  Error: Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and 
+./src/modules/roles/pages/role-management.tsx 220:11  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/roles/pages/role-management.tsx 220:11  Error: Non-interactive elements should not be assigned mouse or keyboard event listeners.  
+./src/modules/roles/pages/role-management.tsx 242:17  Error: The autoFocus prop should not be used, as it can reduce usability and accessibility for users.  
+./src/modules/transactions/pages/transaction-detail.tsx 314:9  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/transactions/pages/transaction-detail.tsx 314:9  Error: Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and 
+./src/modules/transactions/pages/transaction-detail.tsx 318:11  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/transactions/pages/transaction-detail.tsx 318:11  Error: Non-interactive elements should not be assigned mouse or keyboard event listeners.  
+./src/modules/transactions/pages/transaction-detail.tsx 343:17  Error: The autoFocus prop should not be used, as it can reduce usability and accessibility for users.  
+./src/modules/users/pages/user-detail.tsx 421:9  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/users/pages/user-detail.tsx 421:9  Error: Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and 
+./src/modules/users/pages/user-detail.tsx 425:11  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/users/pages/user-detail.tsx 425:11  Error: Non-interactive elements should not be assigned mouse or keyboard event listeners.  
+./src/modules/users/pages/user-detail.tsx 478:9  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/users/pages/user-detail.tsx 478:9  Error: Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and 
+./src/modules/users/pages/user-detail.tsx 482:11  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/users/pages/user-detail.tsx 482:11  Error: Non-interactive elements should not be assigned mouse or keyboard event listeners.  
+./src/modules/users/pages/user-detail.tsx 508:17  Error: The autoFocus prop should not be used, as it can reduce usability and accessibility for users.  
+./src/modules/wallets/pages/wallet-detail.tsx 369:9  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/wallets/pages/wallet-detail.tsx 369:9  Error: Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and 
+./src/modules/wallets/pages/wallet-detail.tsx 373:11  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/wallets/pages/wallet-detail.tsx 373:11  Error: Non-interactive elements should not be assigned mouse or keyboard event listeners.  
+./src/modules/wallets/pages/wallet-detail.tsx 399:17  Error: The autoFocus prop should not be used, as it can reduce usability and accessibility for users.  
+./src/modules/wallets/pages/wallet-detail.tsx 422:9  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/wallets/pages/wallet-detail.tsx 422:9  Error: Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and 
+./src/modules/wallets/pages/wallet-detail.tsx 426:11  Error: Visible, non-interactive elements with click handlers must have at least one keyboard listener.  
+./src/modules/wallets/pages/wallet-detail.tsx 426:11  Error: Non-interactive elements should not be assigned mouse or keyboard event listeners.  
+./src/modules/wallets/pages/wallet-detail.tsx 470:19  Error: The autoFocus prop should not be used, as it can reduce usability and accessibility for users.  

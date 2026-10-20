@@ -1,0 +1,37 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  plugins:
+    - custom_lint
+  errors:
+    invalid_annotation_target: ignore
+    avoid_print: error
+    prefer_const_constructors: warning
+  exclude:
+    - lib/**/*.g.dart
+    - lib/**/*.freezed.dart
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
+
+linter:
+  rules:
+    - always_declare_return_types
+    - always_use_package_imports
+    - avoid_print
+    - avoid_unused_constructor_parameters
+    - cancel_subscriptions
+    - close_sinks
+    - prefer_const_constructors
+    - prefer_const_declarations
+    - prefer_final_fields
+    - prefer_single_quotes
+    - unnecessary_this
+    - use_key_in_widget_constructors
+    - use_super_parameters
+    - sized_box_for_whitespace
+    - avoid_unnecessary_containers

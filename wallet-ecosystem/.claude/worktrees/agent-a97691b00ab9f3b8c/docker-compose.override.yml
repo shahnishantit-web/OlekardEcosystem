@@ -1,0 +1,45 @@
+# Local development overrides — bind-mounts for hot reload
+# This file is automatically loaded by docker compose alongside docker-compose.yml.
+# Do NOT commit secrets here. Set real values in your local .env file.
+
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  api:
+    build:
+      target: dev
+    volumes:
+      - ./services/api:/var/www/html
+      - /var/www/html/vendor
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      XDEBUG_MODE: coverage
+    ports:
+      - "${API_PORT:-8080}:8080"
+
+  horizon:
+    build:
+      target: dev
+    volumes:
+      - ./services/api:/var/www/html
+      - /var/www/html/vendor
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+
+  admin:
+    build:
+      target: deps
+    volumes:
+      - ./apps/admin:/app
+      - /app/node_modules
+    command: npm run dev
+    environment:
+      NODE_ENV: development

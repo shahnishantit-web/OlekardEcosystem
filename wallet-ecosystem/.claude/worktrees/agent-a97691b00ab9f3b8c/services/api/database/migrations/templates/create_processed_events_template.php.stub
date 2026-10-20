@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * TEMPLATE — Copy this file into your module's migrations directory and rename it.
+ * Replace {schema} with your module's PostgreSQL schema name.
+ *
+ * Each consuming module MUST create its own processed_events table in its own schema.
+ * A shared cross-module table is FORBIDDEN (violates schema-per-module isolation).
+ */
+
+declare(strict_types=1);
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    // Replace 'platform' with your module's named connection (e.g., 'identity', 'wallet')
+    protected $connection = 'platform';
+
+    public function up(): void
+    {
+        // Replace '{schema}' with your module's schema name (e.g., 'identity')
+        Schema::connection($this->connection)->create('{schema}.processed_events', function (Blueprint $table) {
+            $table->uuid('event_id')->notNull();
+            $table->string('consumer_class', 255)->notNull();
+            $table->timestampTz('processed_at')->notNull();
+
+            $table->primary(['event_id', 'consumer_class']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::connection($this->connection)->dropIfExists('{schema}.processed_events');
+    }
+};
