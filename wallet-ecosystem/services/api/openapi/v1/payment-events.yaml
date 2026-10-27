@@ -1,0 +1,206 @@
+openapi: "3.1.0"
+info:
+  title: OleKard Payment — Event Schemas
+  version: "1.0.0"
+  description: |
+    Event payload schemas for payment domain events.
+    All events use in-process Laravel event dispatch (P02).
+    Outbox/broker integration: P09 scope.
+
+components:
+  schemas:
+
+    # ── Base Envelope ────────────────────────────────────────────────────────
+    PaymentEventEnvelope:
+      type: object
+      required: [event_id, event_type, schema_version, occurred_at, correlation_id, data]
+      properties:
+        event_id:
+          type: string
+          format: uuid
+          description: UUID v7 unique event identifier
+        event_type:
+          type: string
+          description: Stable dotted event name (e.g. payment.confirmed)
+        schema_version:
+          type: integer
+          minimum: 1
+          description: Schema version integer; start at 1, increment on breaking changes
+        occurred_at:
+          type: string
+          format: date-time
+          description: UTC timestamp of the state change that triggered the event
+        correlation_id:
+          type: string
+          format: uuid
+        data:
+          type: object
+          description: Event-type-specific payload; see typed event schemas
+
+    # ── payment.confirmed ────────────────────────────────────────────────────
+    PaymentConfirmedEvent:
+      allOf:
+        - $ref: '#/components/schemas/PaymentEventEnvelope'
+        - type: object
+          properties:
+            event_type:
+              type: string
+              enum: [payment.confirmed]
+            schema_version:
+              type: integer
+              enum: [1]
+            data:
+              type: object
+              required:
+                - payment_intent_id
+                - payer_actor_id
+                - organisation_id
+                - amount_minor
+                - currency_code
+                - provider_code
+                - fee_minor
+              properties:
+                payment_intent_id:
+                  type: string
+                  format: uuid
+                payment_attempt_id:
+                  type: string
+                  format: uuid
+                payer_actor_id:
+                  type: string
+                  format: uuid
+                organisation_id:
+                  type: string
+                  format: uuid
+                purpose_type:
+                  type: string
+                purpose_reference:
+                  type: string
+                  format: uuid
+                amount_minor:
+                  type: integer
+                  minimum: 1
+                currency_code:
+                  type: string
+                  example: BWP
+                provider_code:
+                  type: string
+                fee_minor:
+                  type: integer
+                  minimum: 0
+
+    # ── payment.failed ───────────────────────────────────────────────────────
+    PaymentFailedEvent:
+      allOf:
+        - $ref: '#/components/schemas/PaymentEventEnvelope'
+        - type: object
+          properties:
+            event_type:
+              type: string
+              enum: [payment.failed]
+            schema_version:
+              type: integer
+              enum: [1]
+            data:
+              type: object
+              required:
+                - payment_intent_id
+                - payer_actor_id
+                - failure_reason
+              properties:
+                payment_intent_id:
+                  type: string
+                  format: uuid
+                payment_attempt_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+                payer_actor_id:
+                  type: string
+                  format: uuid
+                organisation_id:
+                  type: string
+                  format: uuid
+                failure_reason:
+                  type: string
+                provider_code:
+                  type: string
+                  nullable: true
+
+    # ── payment.refund.confirmed ─────────────────────────────────────────────
+    RefundConfirmedEvent:
+      allOf:
+        - $ref: '#/components/schemas/PaymentEventEnvelope'
+        - type: object
+          properties:
+            event_type:
+              type: string
+              enum: [payment.refund.confirmed]
+            schema_version:
+              type: integer
+              enum: [1]
+            data:
+              type: object
+              required:
+                - payment_refund_id
+                - payment_intent_id
+                - refund_amount_minor
+                - currency_code
+              properties:
+                payment_refund_id:
+                  type: string
+                  format: uuid
+                payment_intent_id:
+                  type: string
+                  format: uuid
+                payment_attempt_id:
+                  type: string
+                  format: uuid
+                payer_actor_id:
+                  type: string
+                  format: uuid
+                organisation_id:
+                  type: string
+                  format: uuid
+                refund_amount_minor:
+                  type: integer
+                  minimum: 1
+                currency_code:
+                  type: string
+                  example: BWP
+                is_full_refund:
+                  type: boolean
+
+    # ── payment.reversed ─────────────────────────────────────────────────────
+    PaymentReversedEvent:
+      allOf:
+        - $ref: '#/components/schemas/PaymentEventEnvelope'
+        - type: object
+          properties:
+            event_type:
+              type: string
+              enum: [payment.reversed]
+            schema_version:
+              type: integer
+              enum: [1]
+            data:
+              type: object
+              required:
+                - payment_intent_id
+                - reversal_reason
+              properties:
+                payment_intent_id:
+                  type: string
+                  format: uuid
+                payment_attempt_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+                provider_reversal_reference:
+                  type: string
+                  nullable: true
+                reversal_reason:
+                  type: string
+                reversed_amount_minor:
+                  type: integer
+                  nullable: true
