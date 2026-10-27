@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Payment\Tests;
 
 use App\Modules\Payment\Domain\Contracts\BusinessPurposeResolverInterface;
-use App\Modules\Payment\Domain\ValueObjects\PayableObligation;
+use App\Modules\Payment\Domain\ValueObjects\EnrichedPayableObligation;
 
 /**
  * T147: Stub BusinessPurposeResolver for integration tests.
@@ -39,13 +39,16 @@ final class StubPurposeResolver implements BusinessPurposeResolverInterface
         string $purposeReference,
         string $actorId,
         string $correlationId,
-    ): PayableObligation {
-        return new PayableObligation(
-            amountMinor:    10000,
-            currencyCode:   'BWP',
-            organisationId: self::TEST_ORG_ID,
-            payerActorId:   $actorId !== '' ? $actorId : self::TEST_ACTOR_ID,
-            metadata:       ['stub' => true, 'purpose_reference' => $purposeReference],
+    ): EnrichedPayableObligation {
+        return new EnrichedPayableObligation(
+            amountMinor:             10000,
+            currencyCode:            'BWP',
+            organisationId:          self::TEST_ORG_ID,
+            payerActorId:            $actorId !== '' ? $actorId : self::TEST_ACTOR_ID,
+            expiresAt:               null,
+            holdReference:           null,
+            beneficiaryAllocations:  [],
+            metadata:                ['stub' => true, 'purpose_reference' => $purposeReference],
         );
     }
 }

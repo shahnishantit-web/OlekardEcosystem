@@ -4,67 +4,37 @@ declare(strict_types=1);
 
 namespace App\Modules\Payment\Http\Controllers;
 
-use App\Modules\Payment\Application\Jobs\PaymentCallbackProcessingJob;
-use App\Modules\Payment\Infrastructure\Models\PaymentCallbackModel;
+use App\Modules\Integration\Application\Services\WebhookApplicationService;
+use App\Modules\Integration\Infrastructure\Models\IntegrationModel;
+use App\Modules\Platform\Domain\Exceptions\WebhookSignatureException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\DB;
-use Ramsey\Uuid\Uuid;
 
-/**
- * T128: Receives raw provider webhook callbacks.
- *
- * Obligations:
- * 1. Capture raw body bytes BEFORE any JSON parsing.
- * 2. Persist raw body + headers + provider_code in a single DB transaction.
- * 3. Dispatch PaymentCallbackProcessingJob after persist.
- * 4. Return HTTP 202 regardless of queue availability.
- * 5. Return HTTP 400 ONLY if body is empty.
- */
-final class PaymentCallbackController extends Controller
+/** Backward-compatible URL; all new receipt ownership belongs to E25. */
+final class PaymentCallbackController
 {
-    public function store(Request $request, string $providerCode): JsonResponse|Response
+    public function __construct(private readonly WebhookApplicationService $ingress) {}
+
+    public function store(Request $request, string $providerCode): JsonResponse
     {
-        // Capture raw body before any framework JSON parsing
-        $rawBody = $request->getContent();
-
-        if ($rawBody === '') {
-            return response()->json(['message' => 'Empty callback body.'], 400);
+        $raw = $request->getContent();
+        abort_if($raw === '', 400, 'Empty callback body.');
+        $mappings = IntegrationModel::whereIn('provider_type', ['payment', 'bank'])
+            ->where('configuration->payment_provider_code', $providerCode)->limit(2)->get();
+        abort_unless($mappings->count() === 1, 404, 'Use the configured account webhook endpoint.');
+        $mapping = $mappings->first();
+        if ($mapping === null) {
+            abort(404, 'Payment integration is not configured.');
         }
-
-        $signature  = $request->header('X-Signature')
-            ?? $request->header('X-Hub-Signature-256')
-            ?? $request->header('X-Mock-Bank-Signature')
-            ?? '';
-
-        /** @var array<string, string> $headers */
-        $headers = collect($request->headers->all())
-            ->map(fn(array $v): string => implode(',', $v))
-            ->toArray();
-
-        $callbackId = (string) Uuid::uuid7();
-
-        // Persist raw callback before async processing
-        DB::connection('payment')->transaction(static function () use (
-            $callbackId, $providerCode, $rawBody, $headers, $signature
-        ): void {
-            $callback = new PaymentCallbackModel();
-            $callback->id              = $callbackId;
-            $callback->provider_code   = $providerCode;
-            $callback->raw_body        = $rawBody;
-            $callback->headers         = $headers;
-            $callback->signature_header = $signature;
-            $callback->status          = 'received';
-            $callback->received_at     = now();
-            $callback->created_at      = now();
-            $callback->save();
-        });
-
-        // Dispatch async processing job
-        PaymentCallbackProcessingJob::dispatch($callbackId);
-
-        return response()->json(['message' => 'Accepted.'], 202);
+        try {
+            $receipt = $this->ingress->receive(
+                $mapping->provider_slug, $raw,
+                $request->header('X-Signature') ?? $request->header('X-Mock-Bank-Signature') ?? $request->header('X-Hub-Signature-256') ?? '',
+                $request->headers->all(), (string) $request->ip(),
+            );
+        } catch (WebhookSignatureException) {
+            abort(401, 'Invalid webhook signature.');
+        }
+        return response()->json(['message' => 'Accepted.', 'receipt_id' => $receipt->id], 202);
     }
 }

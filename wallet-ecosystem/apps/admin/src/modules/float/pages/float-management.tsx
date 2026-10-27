@@ -113,7 +113,7 @@ function FloatManagementInner() {
     const qs = new URLSearchParams();
     if (q) qs.set('q', q);
     if (lf) qs.set('low_float', '1');
-    router.replace(`/admin-portal/float?${qs.toString()}`);
+    router.replace(`/float?${qs.toString()}`);
   };
 
   // --- Top-Up ---
@@ -296,7 +296,7 @@ function FloatManagementInner() {
                       >
                         <td className="py-2 px-4 text-sm font-medium text-text-primary">
                           <Link
-                            href={`/admin-portal/agents/${rec.agent_id}`}
+                            href={`/agents/${rec.agent_id}`}
                             className="text-ok-primary underline hover:text-ok-primary-hover"
                           >
                             {rec.full_name}

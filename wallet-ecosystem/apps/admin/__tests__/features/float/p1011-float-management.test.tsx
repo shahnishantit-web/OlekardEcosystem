@@ -114,7 +114,7 @@ describe('US-P1-011-001: Float balance list', () => {
     render(<FloatManagementAdminPortalPage />);
     await waitFor(() => expect(screen.getByText('Thabo Sithole')).toBeInTheDocument());
     const link = screen.getByRole('link', { name: 'Thabo Sithole' });
-    expect(link).toHaveAttribute('href', '/admin-portal/agents/agt-001');
+    expect(link).toHaveAttribute('href', '/agents/agt-001');
   });
 
   it('displays float balance formatted correctly', async () => {

@@ -20,9 +20,8 @@ use Ramsey\Uuid\Uuid;
  * Extends Laravel TestCase so that app()->environment() is available
  * in MockBankPaymentAdapter's constructor.
  */
-final class MockBankPaymentAdapterTest extends \Illuminate\Foundation\Testing\TestCase
+final class MockBankPaymentAdapterTest extends \Tests\TestCase
 {
-    use \Illuminate\Foundation\Testing\CreatesApplication;
     /** @var MockObject&ConfigurationServiceInterface */
     private MockObject $config;
 
@@ -36,11 +35,8 @@ final class MockBankPaymentAdapterTest extends \Illuminate\Foundation\Testing\Te
     {
         $this->expectException(ProductionBlockedException::class);
 
-        // Mock app() to return production environment
-        // This test should be run with APP_ENV=production injected, but since
-        // we can't easily do that in a pure unit test without Laravel boot,
-        // we verify via reflection that the env check exists
-        self::markTestSkipped('Production guard test requires APP_ENV=production; verified by integration test.');
+        $this->app->instance('env', 'production');
+        $this->makeAdapter();
     }
 
     public function test_get_provider_identifier(): void
@@ -80,6 +76,8 @@ final class MockBankPaymentAdapterTest extends \Illuminate\Foundation\Testing\Te
         self::assertNotNull($result->nextActionData);
         self::assertStringContainsString('localhost', $result->nextActionData['redirect_url']);
         self::assertStringContainsString($attemptId, $result->nextActionData['redirect_url']);
+        self::assertTrue($result->nextActionData['test_only']);
+        self::assertStringContainsString('Development mock', $result->nextActionData['label']);
     }
 
     public function test_bank_callback_verifier_valid_signature(): void
@@ -140,6 +138,7 @@ final class MockBankPaymentAdapterTest extends \Illuminate\Foundation\Testing\Te
         return new MockBankPaymentAdapter(
             audit:  $this->createMock(AuditServiceInterface::class),
             config: $this->config,
+            attemptRepository: $this->createMock(\App\Modules\Payment\Domain\Contracts\PaymentAttemptRepositoryInterface::class),
         );
     }
 }

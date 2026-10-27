@@ -21,7 +21,15 @@ class _ServicesHomeScreenState extends ConsumerState<ServicesHomeScreen> {
     final categoriesAsync = ref.watch(serviceCategoriesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Services')),
+      appBar: AppBar(
+        title: const Text('Services'),
+        actions: [
+          TextButton(
+            onPressed: () => context.push('/services/funeral'),
+            child: const Text('Funeral Assistance'),
+          ),
+        ],
+      ),
       body: categoriesAsync.when(
         loading: () => const Padding(
           padding: EdgeInsets.all(AppSpacing.lg),

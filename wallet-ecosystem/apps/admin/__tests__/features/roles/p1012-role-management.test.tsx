@@ -190,7 +190,7 @@ describe('US-P1-012-001 — Role list', () => {
     render(<RoleManagementPage />);
     await waitFor(() => screen.getByRole('link', { name: /manage role admin/i }));
     expect(screen.getByRole('link', { name: /manage role admin/i }))
-      .toHaveAttribute('href', `/admin-portal/roles/${ROLE_ADMIN.role_id}`);
+      .toHaveAttribute('href', `/roles/${ROLE_ADMIN.role_id}`);
   });
 
   test('renders a safe zero permission count when the API omits permission slugs', async () => {

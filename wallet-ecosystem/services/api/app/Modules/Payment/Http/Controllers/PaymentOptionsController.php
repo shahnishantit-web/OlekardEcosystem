@@ -40,28 +40,44 @@ final class PaymentOptionsController extends Controller
             return response()->json(['error' => 'purpose_type and purpose_reference are required'], 422);
         }
 
+        $requiredCapability = (string) ($request->query('required_capability') ?? '');
+
         $query = new OptionsQuery(
-            purposeType:      (string) $purposeType,
-            purposeReference: (string) $purposeReference,
-            currencyCode:     (string) $currencyCode,
-            amountMinor:      $amountMinor,
-            organisationId:   $organisationId,
-            actorId:          $user->id,
-            countryCode:      $countryCode,
-            moduleKey:        $moduleKey,
+            purposeType:        (string) $purposeType,
+            purposeReference:   (string) $purposeReference,
+            currencyCode:       (string) $currencyCode,
+            amountMinor:        $amountMinor,
+            organisationId:     $organisationId,
+            actorId:            $user->id,
+            countryCode:        $countryCode,
+            moduleKey:          $moduleKey,
+            requiredCapability: $requiredCapability !== '' ? $requiredCapability : null,
         );
 
         $options = $this->registry->discoverOptions($query);
 
-        $serialized = array_map(fn ($option) => [
-            'provider_code'         => $option->providerCode,
-            'display_name'          => $option->displayName,
-            'is_wallet'             => $option->isWallet,
-            'is_default'            => $option->isDefault,
-            'sort_order'            => $option->sortOrder,
-            'wallet_balance_minor'  => $option->walletBalanceMinor,
-            'has_sufficient_balance' => $option->hasSufficientBalance,
-            'checkout_flow'         => $option->checkoutFlow,
+        $serialized = array_map(static fn ($option) => [
+            'provider_code'             => $option->providerCode,
+            'display_name'              => $option->displayName,
+            'display_label'             => $option->displayLabel ?? $option->displayName,
+            'display_description'       => $option->displayDescription,
+            'display_icon_key'          => $option->displayIconKey,
+            'display_badge'             => $option->displayBadge,
+            'is_wallet'                 => $option->isWallet,
+            'is_default'                => $option->isDefault,
+            'sort_order'                => $option->sortOrder,
+            'display_order'             => $option->displayOrder,
+            'wallet_balance_minor'      => $option->walletBalanceMinor,
+            'has_sufficient_balance'    => $option->hasSufficientBalance,
+            'checkout_flow'             => $option->checkoutFlow,
+            'payment_method'            => $option->paymentMethod,
+            'eligible_instrument_types' => $option->eligibleInstrumentTypes,
+            'capability_flags'          => $option->capabilityFlags,
+            'fee_disclosure'            => $option->feeDisclosure,
+            'availability'              => [
+                'restrictions' => $option->restrictions ?? [],
+            ],
+            'supported_next_action'     => $option->supportedNextAction,
         ], $options);
 
         return response()->json(['data' => $serialized]);

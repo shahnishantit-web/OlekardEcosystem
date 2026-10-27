@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Platform\Infrastructure\Http\Controllers\DeadLetterAdminController;
 use App\Modules\Platform\Infrastructure\Http\Controllers\LedgerIntegrityAdminController;
+use App\Modules\Platform\Infrastructure\Http\Controllers\OutboxAdminController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,4 +32,10 @@ Route::prefix('v1/operations')->middleware(['identity.auth', 'identity.require-p
     // Route added by T025
 
     Route::get('ledger-integrity/snapshots', [LedgerIntegrityAdminController::class, 'index']);
+
+    // ── Outbox Admin (P11) ────────────────────────────────────────────────────
+
+    Route::get('outbox/health',                           [OutboxAdminController::class, 'health']);
+    Route::get('outbox/dead-letters',                     [OutboxAdminController::class, 'deadLetters']);
+    Route::post('outbox/dead-letters/{id}/replay',        [OutboxAdminController::class, 'replay']);
 });

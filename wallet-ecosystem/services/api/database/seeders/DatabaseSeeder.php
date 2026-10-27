@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             E26SecurityPermissionsSeeder::class,
             OpsPermissionSeeder::class,
             AdminAppPermissionsSeeder::class,
+            CommunityFuneralPermissionSeeder::class,
         ]);
     }
 }

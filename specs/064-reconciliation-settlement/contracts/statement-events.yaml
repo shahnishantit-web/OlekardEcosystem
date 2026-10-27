@@ -1,0 +1,323 @@
+# Event Contracts: P17 — Reconciliation Clearing and Provider Settlement
+#
+# All events are published via OutboxEventPublisher AFTER the producing DB transaction commits.
+# Events are keyed with idempotency keys to prevent duplicate delivery.
+# Consumers must handle at-least-once delivery (idempotent processors).
+
+events:
+
+  # ── payment.statement.ingestion_completed ─────────────────────────────────
+  payment.statement.ingestion_completed:
+    description: >
+      Published when a provider statement has been persisted and the StatementMatchingJob
+      has been dispatched. Does NOT mean matching is complete.
+    publisher: ProviderStatementService::ingest()
+    idempotency_key: "statement:ingested:{statement_id}"
+    trigger: Statement successfully saved (status = pending_match)
+    consumers:
+      - StatementMatchingJob (via dispatch, not event bus)
+      - Audit log
+    payload:
+      schema:
+        type: object
+        required: [statement_id, provider_code, account_id, environment, currency_code, period_start, period_end, total_lines, source_hash, ingested_at]
+        properties:
+          statement_id:
+            type: string
+            format: uuid
+            description: UUID v7 primary key of the provider statement
+          provider_code:
+            type: string
+          account_id:
+            type: string
+          environment:
+            type: string
+            enum: [production, sandbox]
+          currency_code:
+            type: string
+          period_start:
+            type: string
+            format: date-time
+          period_end:
+            type: string
+            format: date-time
+          total_lines:
+            type: integer
+          source_hash:
+            type: string
+            description: SHA-256 dedup hash
+          ingested_at:
+            type: string
+            format: date-time
+      example:
+        statement_id: "01927bc4-0000-7000-8000-000000000001"
+        provider_code: "airtel_momo"
+        account_id: "AIRTEL-BWP-001"
+        environment: "production"
+        currency_code: "BWP"
+        period_start: "2026-10-01T00:00:00Z"
+        period_end: "2026-10-07T23:59:59Z"
+        total_lines: 4200
+        source_hash: "a3f9c1d2e4b5..."
+        ingested_at: "2026-10-08T06:30:00Z"
+
+  # ── payment.statement.matching_completed ──────────────────────────────────
+  payment.statement.matching_completed:
+    description: >
+      Published when StatementMatchingJob has processed all lines for a statement.
+      Includes final match/exception counts and overall statement status.
+    publisher: StatementMatchingJob (via OutboxEventPublisher on completion)
+    idempotency_key: "statement:matched:{statement_id}"
+    trigger: All lines processed; statement status updated
+    consumers:
+      - PayoutQualificationJob (chained automatically)
+      - Admin notification service
+    payload:
+      schema:
+        type: object
+        required: [statement_id, final_status, matched_lines, exception_lines, total_lines, completed_at]
+        properties:
+          statement_id:
+            type: string
+            format: uuid
+          final_status:
+            type: string
+            enum: [matched, partially_matched, exception_raised]
+          matched_lines:
+            type: integer
+          exception_lines:
+            type: integer
+          total_lines:
+            type: integer
+          completed_at:
+            type: string
+            format: date-time
+      example:
+        statement_id: "01927bc4-0000-7000-8000-000000000001"
+        final_status: "partially_matched"
+        matched_lines: 4150
+        exception_lines: 50
+        total_lines: 4200
+        completed_at: "2026-10-08T07:15:00Z"
+
+  # ── payment.reconciliation.payout_qualified ───────────────────────────────
+  payment.reconciliation.payout_qualified:
+    description: >
+      Published when PayoutQualificationService has computed the net qualified amount
+      for a statement period. Consumed by the payout scheduler to initiate provider payouts.
+
+      IMPORTANT: net_qualified_minor EXCLUDES:
+      - Clearing records with accounting_status = pending_ledger_config (AD-08/AD-09 unresolved)
+      - Open DisputeHold amounts for the period
+
+      Idempotency key includes version_hash to allow re-computation without duplicating
+      a prior event with the same amounts.
+    publisher: PayoutQualificationService::computeAndPublish()
+    idempotency_key: "payout.qualified:{statement_id}:{version_hash}"
+    trigger: PayoutQualificationJob successfully computes net amounts
+    consumers:
+      - Payout scheduler (external — via E25 outbox delivery)
+      - Audit log
+    payload:
+      schema:
+        type: object
+        required:
+          - statement_id
+          - provider_code
+          - currency_code
+          - period_start
+          - period_end
+          - gross_cleared_minor
+          - fee_deductions_minor
+          - dispute_hold_deductions_minor
+          - net_qualified_minor
+          - excluded_amount_minor
+          - open_exception_count
+          - computed_at
+          - version_hash
+        properties:
+          statement_id:
+            type: string
+            format: uuid
+          provider_code:
+            type: string
+          currency_code:
+            type: string
+          period_start:
+            type: string
+            format: date-time
+          period_end:
+            type: string
+            format: date-time
+          gross_cleared_minor:
+            type: integer
+            minimum: 0
+            description: Sum of all qualified ClearingRecord cleared_amount_minor
+          fee_deductions_minor:
+            type: integer
+            minimum: 0
+            description: Matched fee lines against qualified captures
+          dispute_hold_deductions_minor:
+            type: integer
+            minimum: 0
+            description: Open DisputeHold amounts for qualified captures
+          net_qualified_minor:
+            type: integer
+            minimum: 0
+            description: gross_cleared - fees - dispute_holds (never negative)
+          excluded_amount_minor:
+            type: integer
+            minimum: 0
+            description: Sum of pending_ledger_config clearing records (AD-08/AD-09)
+          open_exception_count:
+            type: integer
+            minimum: 0
+            description: Unresolved reconciliation exceptions at time of computation
+          computed_at:
+            type: string
+            format: date-time
+          version_hash:
+            type: string
+            description: Hash of match state at computation time; included in idempotency key
+      example:
+        statement_id: "01927bc4-0000-7000-8000-000000000001"
+        provider_code: "airtel_momo"
+        currency_code: "BWP"
+        period_start: "2026-10-01T00:00:00Z"
+        period_end: "2026-10-07T23:59:59Z"
+        gross_cleared_minor: 50000000
+        fee_deductions_minor: 250000
+        dispute_hold_deductions_minor: 120000
+        net_qualified_minor: 49630000
+        excluded_amount_minor: 0
+        open_exception_count: 50
+        computed_at: "2026-10-08T07:16:00Z"
+        version_hash: "b4e1d8a9..."
+
+  # ── payment.reconciliation.correction_posted ──────────────────────────────
+  payment.reconciliation.correction_posted:
+    description: >
+      Published when a ReconciliationCorrectionRequest has been approved and the
+      correcting journal entry posted via LedgerModuleContract::postEntry().
+    publisher: ReconciliationCorrectionService::approve()
+    idempotency_key: "recon:correction:posted:{correction_id}"
+    trigger: LedgerModuleContract::postEntry() succeeds; correction status = posted
+    consumers:
+      - Audit log
+      - Exception resolution service (to mark exception resolved)
+    payload:
+      schema:
+        type: object
+        required: [correction_id, exception_id, correction_type, amount_minor, currency_code, ledger_entry_id, requested_by, reviewed_by, posted_at]
+        properties:
+          correction_id:
+            type: string
+            format: uuid
+          exception_id:
+            type: string
+            format: uuid
+          correction_type:
+            type: string
+          amount_minor:
+            type: integer
+            minimum: 1
+          currency_code:
+            type: string
+          ledger_entry_id:
+            type: string
+            description: Entry ID returned by LedgerModuleContract
+          requested_by:
+            type: string
+            format: uuid
+          reviewed_by:
+            type: string
+            format: uuid
+          posted_at:
+            type: string
+            format: date-time
+      example:
+        correction_id: "01927bc4-0000-7000-8000-000000000002"
+        exception_id: "01927bc4-0000-7000-8000-000000000003"
+        correction_type: "amount_mismatch_correction"
+        amount_minor: 5000
+        currency_code: "BWP"
+        ledger_entry_id: "LEDGER-ENTRY-001"
+        requested_by: "01927bc4-0000-7000-8000-000000000010"
+        reviewed_by: "01927bc4-0000-7000-8000-000000000011"
+        posted_at: "2026-10-09T10:00:00Z"
+
+  # ── payment.reconciliation.ageing_exception_raised ────────────────────────
+  payment.reconciliation.ageing_exception_raised:
+    description: >
+      Published when SettlementAgeingCheckJob creates a partial_settlement exception
+      for a clearing record that has not received bank settlement within the configured
+      ageing window.
+    publisher: SettlementAgeingCheckJob
+    idempotency_key: "recon:ageing:{clearing_record_id}"
+    trigger: clearing_record.aged_at IS NULL AND cleared_at < NOW() - ageing_window
+    consumers:
+      - Admin notification service
+      - Exception queue
+    payload:
+      schema:
+        type: object
+        required: [clearing_record_id, payment_attempt_id, provider_code, currency_code, cleared_amount_minor, cleared_at, ageing_threshold_days, exception_id, raised_at]
+        properties:
+          clearing_record_id:
+            type: string
+            format: uuid
+          payment_attempt_id:
+            type: string
+            format: uuid
+          provider_code:
+            type: string
+          currency_code:
+            type: string
+          cleared_amount_minor:
+            type: integer
+          cleared_at:
+            type: string
+            format: date-time
+          ageing_threshold_days:
+            type: integer
+            description: Configured ageing window at time of exception
+          exception_id:
+            type: string
+            format: uuid
+          raised_at:
+            type: string
+            format: date-time
+
+  # ── Inbox Event Consumed ──────────────────────────────────────────────────
+
+  bank.settlement.batch:
+    description: >
+      CONSUMED (not published) by BankSettlementBatchHandler via E25 inbox.
+      Updates ClearingRecord with bank_settlement_batch_ref and bank_settled_at.
+    direction: INBOUND
+    published_by: E25 bank connector
+    handler: BankSettlementBatchHandler
+    payload:
+      schema:
+        type: object
+        required: [provider_code, batch_ref, settled_at, lines]
+        properties:
+          provider_code:
+            type: string
+          batch_ref:
+            type: string
+          settled_at:
+            type: string
+            format: date-time
+          lines:
+            type: array
+            items:
+              type: object
+              required: [provider_reference_id, amount_minor, currency_code]
+              properties:
+                provider_reference_id:
+                  type: string
+                amount_minor:
+                  type: integer
+                currency_code:
+                  type: string

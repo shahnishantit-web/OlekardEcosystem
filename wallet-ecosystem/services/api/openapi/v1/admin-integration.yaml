@@ -128,7 +128,7 @@ paths:
         - {name: event_type, in: query, schema: {type: string, maxLength: 100}}
         - {name: page, in: query, schema: {type: integer, minimum: 1, maximum: 100000}}
       responses:
-        '200': {description: data rows id/event/provider_slug/endpoint/status/processing_status/attempts/last_attempt_at/received_at and pagination meta}
+        '200': {description: Safe delivery rows with quarantined/test_only flags and pagination meta. Raw evidence and signatures are excluded. Delivered is transport processing, not payment/accounting/fulfilment completion.}
         '422': {description: Invalid filters}
   /webhooks/deliveries/{id}/retry:
     post:
@@ -141,6 +141,19 @@ paths:
         '404': {description: Unknown callback}
         '409': {description: Already queued/processing/completed}
         '429': {description: Retry request rate limit}
+  /webhooks/deliveries/{id}/quarantine:
+    post:
+      operationId: quarantineAdminWebhookDelivery
+      description: Requires integrations.manage; 20/min throttle. Audited quarantine under the shared worker lock; increments generation to fence stale work. Does not alter financial state or evidence. Retry still requires semantic validation.
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200': {description: data id and quarantined status}
+        '401': {description: Authentication required}
+        '403': {description: integrations.manage missing}
+        '404': {description: Unknown callback}
+        '409': {description: Processed callback cannot be retrospectively quarantined}
+        '429': {description: Quarantine request rate limit}
 components:
   securitySchemes:
     bearerAuth: {type: http, scheme: bearer}

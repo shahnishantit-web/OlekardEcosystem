@@ -18,7 +18,7 @@ use App\Modules\Payment\Domain\ValueObjects\PaymentStatusResult;
 use App\Modules\Platform\Domain\Contracts\Providers\ProviderAdapterInterface;
 use App\Modules\Platform\Domain\Exceptions\ProviderException;
 
-interface PaymentAdapterInterface extends ProviderAdapterInterface
+interface PaymentAdapterInterface extends ProviderAdapterInterface, InitiatesPayment, QueriesPayment, RefundsPayment
 {
     /**
      * Initiate a payment for a specific attempt.

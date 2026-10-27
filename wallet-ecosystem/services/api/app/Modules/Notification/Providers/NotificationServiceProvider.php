@@ -20,8 +20,10 @@ use App\Modules\Notification\Application\Listeners\SecurityAlertListener;
 use App\Modules\Notification\Application\Listeners\SupportCaseNotificationListener;
 use App\Modules\Notification\Application\Listeners\TransferCompletedListener;
 use App\Modules\Notification\Application\Listeners\WithdrawalProcessedListener;
+use App\Modules\Notification\Application\Services\NotificationService;
 use App\Modules\Notification\Domain\Contracts\DeviceRegistryInterface;
 use App\Modules\Notification\Domain\Contracts\EmailChannelInterface;
+use App\Modules\Notification\Domain\Contracts\PaymentNotificationServiceInterface;
 use App\Modules\Notification\Domain\Contracts\PushChannelInterface;
 use App\Modules\Notification\Domain\Contracts\SmsChannelInterface;
 use App\Modules\Notification\Domain\Contracts\UserContactServiceInterface;
@@ -35,6 +37,10 @@ use App\Modules\Platform\Domain\Contracts\MetricsCollectorInterface;
 use App\Modules\Qr\Domain\Events\QrPaymentCompletedEvent;
 use App\Modules\Service\Domain\Events\ServicePaymentCompletedEvent;
 use App\Modules\Transfer\Domain\Events\TransferCompleted;
+use App\Modules\Notification\Application\Listeners\PaymentConfirmedReceiptListener;
+use App\Modules\Notification\Application\Listeners\RefundConfirmedReceiptListener;
+use App\Modules\Payment\Domain\Events\PaymentConfirmedEvent;
+use App\Modules\Payment\Domain\Events\RefundConfirmedEvent;
 use App\Modules\Withdrawal\Domain\Events\WithdrawalCompleted;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
@@ -47,6 +53,7 @@ final class NotificationServiceProvider extends ServiceProvider
         $this->app->bind(PushChannelInterface::class, LogPushChannel::class);
         $this->app->bind(SmsChannelInterface::class, LogSmsChannel::class);
         $this->app->bind(EmailChannelInterface::class, LogEmailChannel::class);
+        $this->app->bind(PaymentNotificationServiceInterface::class, NotificationService::class);
 
         $this->app->bind(DeviceRegistryInterface::class, function ($app) {
             return new E03DeviceRegistryAdapter(
@@ -86,6 +93,10 @@ final class NotificationServiceProvider extends ServiceProvider
         Event::listen(WithdrawalCompleted::class, WithdrawalProcessedListener::class);
         Event::listen(CommissionPaidEvent::class, CommissionCreditedListener::class);
         Event::listen(ServicePaymentCompletedEvent::class, BillPaymentCompletedListener::class);
+
+        // P19: Receipt notifications for payment confirmation and refund
+        Event::listen(PaymentConfirmedEvent::class, PaymentConfirmedReceiptListener::class);
+        Event::listen(RefundConfirmedEvent::class, RefundConfirmedReceiptListener::class);
 
         // Security events — all handled by SecurityAlertListener
         Event::listen(NewDeviceDetectedEvent::class, SecurityAlertListener::class);

@@ -202,7 +202,7 @@ function RoleManagementInner() {
                       </td>
                       <td className="py-3 px-4">
                         <Link
-                          href={`/admin-portal/roles/${role.role_id}`}
+                          href={`/roles/${role.role_id}`}
                           aria-label={`Manage role ${role.role_name}`}
                           className="inline-flex min-h-[44px] sm:min-h-[35px] items-center justify-center rounded-lg border border-ok-border-strong bg-ok-surface px-3 text-sm font-medium text-text-primary transition-colors hover:bg-ok-hover-bg focus-visible:outline-2"
                         >

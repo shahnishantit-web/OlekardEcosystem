@@ -23,7 +23,11 @@ final class DeliverAdminRetryIntentsJob implements ShouldQueue
                 if (! $row || $row->dispatched_at) {
                     return;
                 }
-                $event = WebhookEventModel::findOrFail($row->webhook_event_id);
+                $event = WebhookEventModel::whereKey((string) $row->webhook_event_id)->firstOrFail();
+                if ($event->status->value === 'failed' && $event->last_error === 'dispatch_unavailable') {
+                    $event->status = \App\Modules\Integration\Domain\Enums\WebhookEventStatus::Received;
+                    $event->save();
+                }
                 ProcessWebhookEventJob::dispatch($row->webhook_event_id, $event->processing_generation, $event->retry_count)->onQueue('webhooks');
                 $db->table('integration.admin_retry_intents')->where('id', $id)->update(['dispatched_at' => now()]);
             });

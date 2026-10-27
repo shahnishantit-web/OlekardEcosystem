@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\Modules\Payment\P10ConcurrentReceiptTest" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10ConcurrentReceiptTest.php" tests="1" assertions="9" errors="0" failures="0" skipped="0" time="1.750869">
+    <testcase name="test_two_real_processes_commit_one_receipt_and_delivery_intent" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10ConcurrentReceiptTest.php" line="16" class="Tests\Feature\Modules\Payment\P10ConcurrentReceiptTest" classname="Tests.Feature.Modules.Payment.P10ConcurrentReceiptTest" assertions="9" time="1.750869"/>
+  </testsuite>
+</testsuites>

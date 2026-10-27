@@ -56,4 +56,29 @@ final class EloquentPaymentIntentRepository implements PaymentIntentRepositoryIn
             ->get()
             ->all();
     }
+
+    public function findPendingAccounting(int $limit = 500): \Illuminate\Support\Collection
+    {
+        return PaymentIntentModel::query()
+            ->where('accounting_status', 'pending_ledger')
+            ->where('status', 'succeeded')
+            ->orderBy('succeeded_at')
+            ->limit($limit)
+            ->get();
+    }
+
+    public function findAllUnresolvedAccounting(?string $statusFilter = null, int $limit = 100): \Illuminate\Support\Collection
+    {
+        $query = PaymentIntentModel::query()
+            ->where('status', 'succeeded')
+            ->orderBy('succeeded_at');
+
+        if ($statusFilter !== null) {
+            $query->where('accounting_status', $statusFilter);
+        } else {
+            $query->whereIn('accounting_status', ['pending_ledger', 'ledger_failed']);
+        }
+
+        return $query->limit($limit)->get();
+    }
 }

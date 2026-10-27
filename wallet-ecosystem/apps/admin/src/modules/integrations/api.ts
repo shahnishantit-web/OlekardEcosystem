@@ -25,6 +25,8 @@ export interface Provider {
     last_checked_at: string | null;
 }
 export interface Delivery {
+    quarantined?: boolean;
+    test_only?: boolean;
     id: string;
     event: string;
     provider_slug: string;
@@ -74,6 +76,7 @@ export class IntegrationApi {
     async setStatus(id: string, status: string) { return this.client.patch('/v1/integrations/clients/' + encodeURIComponent(id) + '/status', { status }); }
     async deliveries(query: URLSearchParams) { return await this.client.get<Delivery[]>('/v1/admin/webhooks/deliveries?' + query) as unknown as Page<Delivery>; }
     async retry(id: string) { return this.client.post('/v1/admin/webhooks/deliveries/' + encodeURIComponent(id) + '/retry', {}); }
+    async quarantine(id: string) { return this.client.post('/v1/admin/webhooks/deliveries/' + encodeURIComponent(id) + '/quarantine', {}); }
     async health(id: string) { return (await this.client.get<Health>('/v1/admin/integrations/providers/' + encodeURIComponent(id) + '/health')).data; }
     async providerStatus(id: string, status: string) { return this.client.patch('/v1/integrations/providers/' + encodeURIComponent(id) + '/status', { status }); }
     async setDefault(id: string) { return this.client.post('/v1/integrations/providers/' + encodeURIComponent(id) + '/set-default', {}); }

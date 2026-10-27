@@ -9,6 +9,7 @@ import '../../../core/security/secure_storage_service.dart';
 import '../../../core/security/pin_service.dart';
 import '../../../core/security/biometric_service.dart';
 import '../../../core/notifications/push_notification_service.dart';
+import '../../../core/session/session_event_bus.dart';
 
 enum AuthStateEnum {
   unauthenticated,
@@ -231,6 +232,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     await _repo.logout();
+    SessionEventBus.instance.fireLogout();
     state = const AuthState(status: AuthStateEnum.unauthenticated);
     _ref.invalidateSelf();
   }

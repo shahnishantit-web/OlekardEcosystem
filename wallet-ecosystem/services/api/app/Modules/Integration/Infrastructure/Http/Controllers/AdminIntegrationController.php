@@ -80,6 +80,11 @@ final class AdminIntegrationController
         return response()->json(['data' => $this->admin->retry($id, $this->actor($r), $this->correlation($r))], 202);
     }
 
+    public function quarantine(Request $r, string $id): JsonResponse
+    {
+        return response()->json(['data' => $this->admin->quarantine($id, $this->actor($r), $this->correlation($r))]);
+    }
+
     private function secret(array $result, int $status = 200): JsonResponse
     {
         return response()->json(['data' => $this->admin->safeClient($result['client']) + ['api_key' => $result['client']->api_key, 'raw_secret' => $result['raw_secret']]], $status)->header('Cache-Control', 'no-store, private')->header('Pragma', 'no-cache');

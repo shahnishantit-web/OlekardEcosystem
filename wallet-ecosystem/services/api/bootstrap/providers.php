@@ -79,4 +79,10 @@ return [
     // E48 — Shared Payment Integration & Orchestration
     App\Modules\Payment\Providers\PaymentServiceProvider::class,
 
+    // P24 Funeral Assistance reuses shared Payments and community storage.
+    App\Modules\CommunityFuneral\Providers\CommunityFuneralServiceProvider::class,
+
+    // P25 draft foundation; organiser authority is denied until approved.
+    App\Modules\Events\Providers\EventsServiceProvider::class,
+
 ];

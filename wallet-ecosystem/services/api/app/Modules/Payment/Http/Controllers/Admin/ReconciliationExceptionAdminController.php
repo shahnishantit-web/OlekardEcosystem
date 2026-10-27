@@ -25,18 +25,22 @@ final class ReconciliationExceptionAdminController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('payment.reconciliation.view');
-
         $page     = max(1, (int) $request->query('page', 1));
         $perPage  = min(100, max(10, (int) $request->query('per_page', 20)));
         $status   = $request->query('status');
         $type     = $request->query('type');
 
+        // Org-scope: system-level admins (no organisation_id) see all; scoped admins see their org only
+        /** @var \App\Modules\Platform\Domain\ValueObjects\Actor|null $actor */
+        $actor = $request->attributes->get('actor');
+        $orgId = $actor?->organisationId;
+
         $paginator = $this->service->listExceptions(
-            status: is_string($status) ? $status : null,
-            type:   is_string($type) ? $type : null,
-            page:   $page,
-            perPage: $perPage,
+            status:         is_string($status) ? $status : null,
+            type:           is_string($type) ? $type : null,
+            page:           $page,
+            perPage:        $perPage,
+            organisationId: $orgId,
         );
 
         return response()->json($paginator);
@@ -44,8 +48,6 @@ final class ReconciliationExceptionAdminController extends Controller
 
     public function update(Request $request, string $id): JsonResponse
     {
-        $this->authorize('payment.reconciliation.manage');
-
         $validated = $request->validate([
             'status' => ['nullable', 'in:open,investigating,escalated,resolved'],
             'notes'  => ['nullable', 'string', 'max:4000'],

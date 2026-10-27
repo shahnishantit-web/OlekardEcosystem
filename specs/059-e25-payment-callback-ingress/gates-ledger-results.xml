@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\Modules\Payment\P10LedgerGateTest" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10LedgerGateTest.php" tests="2" assertions="6" errors="1" failures="0" skipped="0" time="1.150512">
+    <testcase name="test_lost_ledger_ack_recovers_one_balanced_journal_and_one_confirmation" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10LedgerGateTest.php" line="28" class="Tests\Feature\Modules\Payment\P10LedgerGateTest" classname="Tests.Feature.Modules.Payment.P10LedgerGateTest" assertions="3" time="0.927799">
+      <error type="Error">Tests\Feature\Modules\Payment\P10LedgerGateTest::test_lost_ledger_ack_recovers_one_balanced_journal_and_one_confirmation&#13;
+Error: Cannot modify readonly property App\Modules\Payment\Domain\Events\PaymentConfirmedEvent::$allocationReference
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Domain\Events\PaymentConfirmedEvent.php:27
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Application\PaymentOrchestrationService.php:961
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Concerns\ManagesTransactions.php:32
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Application\PaymentOrchestrationService.php:933
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Application\PaymentOrchestrationService.php:861
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10LedgerGateTest.php:62</error>
+    </testcase>
+    <testcase name="test_payment_and_common_outbox_rollback_together" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10LedgerGateTest.php" line="80" class="Tests\Feature\Modules\Payment\P10LedgerGateTest" classname="Tests.Feature.Modules.Payment.P10LedgerGateTest" assertions="3" time="0.222712"/>
+  </testsuite>
+</testsuites>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\Modules\Payment\P10WebhookIngressTest" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10WebhookIngressTest.php" tests="1" assertions="4" errors="1" failures="0" skipped="0" time="1.661790">
+    <testcase name="test_quarantine_and_retry_require_authorization_and_preserve_evidence" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10WebhookIngressTest.php" line="216" class="Tests\Feature\Modules\Payment\P10WebhookIngressTest" classname="Tests.Feature.Modules.Payment.P10WebhookIngressTest" assertions="4" time="1.661790">
+      <error type="Illuminate\Database\UniqueConstraintViolationException">Tests\Feature\Modules\Payment\P10WebhookIngressTest::test_quarantine_and_retry_require_authorization_and_preserve_evidence&#13;
+Illuminate\Database\UniqueConstraintViolationException: SQLSTATE[23505]: Unique violation: 7 ERROR:  duplicate key value violates unique constraint "identity_roles_slug_unique"
+DETAIL:  Key (slug)=(test-role-01a15ff9) already exists. (Connection: identity, SQL: insert into "identity"."roles" ("id", "slug", "display_name", "is_system_role", "created_at", "updated_at") values (01a15ff9-cd1b-70c5-9507-12257025f7fa, test-role-01a15ff9, Test Role, 0, 2026-10-21 19:39:28, 2026-10-21 19:39:28))
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Connection.php:820
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Connection.php:779
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Connection.php:560
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Connection.php:524
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3717
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Support\LedgerTestCase.php:68
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Support\LedgerTestCase.php:35
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10WebhookIngressTest.php:223</error>
+    </testcase>
+  </testsuite>
+</testsuites>

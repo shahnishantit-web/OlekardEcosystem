@@ -1,0 +1,275 @@
+openapi: "3.1.0"
+info:
+  title: P16 Dispute Outbox Integration Events
+  version: "1.0"
+  description: |
+    Outbox events emitted by the Payment module for the P16 Reversals, Disputes and Chargebacks lifecycle.
+    All events implement IntegrationEventInterface.
+    All events are published via OutboxEventPublisher (idempotent, transactional outbox).
+    Event names follow the convention: {domain}.{entity}.{past_tense_verb}
+
+# ---------------------------------------------------------------------------
+# Events
+# ---------------------------------------------------------------------------
+components:
+  schemas:
+
+    DisputeCaseReceivedEvent:
+      description: |
+        Emitted when a new PaymentDisputeCase is created from an authenticated provider event.
+        Idempotency key: dispute.received:{caseId}
+      type: object
+      required: [event_name, occurred_at, payload]
+      properties:
+        event_name:
+          type: string
+          const: payment.dispute_case.received
+        occurred_at:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          required: [dispute_case_id, payment_attempt_id, payment_intent_id,
+                     provider_code, case_type, disputed_amount_minor, currency_code]
+          properties:
+            dispute_case_id:
+              type: string
+              format: uuid
+            payment_attempt_id:
+              type: string
+              format: uuid
+            payment_intent_id:
+              type: string
+              format: uuid
+            organisation_id:
+              type: string
+              format: uuid
+            provider_code:
+              type: string
+            provider_dispute_reference:
+              type: string
+            case_type:
+              type: string
+              enum: [reversal, dispute, chargeback]
+            disputed_amount_minor:
+              type: integer
+            currency_code:
+              type: string
+            reason_code:
+              type: string
+              nullable: true
+            response_deadline:
+              type: string
+              format: date-time
+              nullable: true
+            correlation_id:
+              type: string
+
+    DisputeHoldAuthorisedEvent:
+      description: |
+        Emitted when a financial hold is authorised against a dispute case.
+        Consumers: Reconciliation/Settlement module reduces eligible settlement funds.
+        Idempotency key: dispute.hold:{caseId}
+      type: object
+      required: [event_name, occurred_at, payload]
+      properties:
+        event_name:
+          type: string
+          const: payment.dispute_case.hold_authorised
+        occurred_at:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          required: [dispute_case_id, payment_attempt_id, hold_amount_minor,
+                     currency_code, exposure_type, authorised_by]
+          properties:
+            dispute_case_id:
+              type: string
+              format: uuid
+            payment_attempt_id:
+              type: string
+              format: uuid
+            organisation_id:
+              type: string
+              format: uuid
+            hold_amount_minor:
+              type: integer
+            currency_code:
+              type: string
+            exposure_type:
+              type: string
+              enum: [hold, settled_funds_receivable]
+            authorised_by:
+              type: string
+              format: uuid
+            correlation_id:
+              type: string
+
+    DisputeWonEvent:
+      description: |
+        Emitted when a dispute case outcome is recorded as won.
+        Hold is released; no correcting journal.
+        Idempotency key: dispute.won:{caseId}
+      type: object
+      required: [event_name, occurred_at, payload]
+      properties:
+        event_name:
+          type: string
+          const: payment.dispute_case.won
+        occurred_at:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          required: [dispute_case_id, payment_attempt_id, disputed_amount_minor,
+                     currency_code, provider_decision_reference]
+          properties:
+            dispute_case_id:
+              type: string
+              format: uuid
+            payment_attempt_id:
+              type: string
+              format: uuid
+            payment_intent_id:
+              type: string
+              format: uuid
+            organisation_id:
+              type: string
+              format: uuid
+            disputed_amount_minor:
+              type: integer
+            currency_code:
+              type: string
+            provider_decision_reference:
+              type: string
+            correlation_id:
+              type: string
+
+    DisputeLostEvent:
+      description: |
+        Emitted when a dispute case outcome is recorded as lost.
+        Correcting chargeback journal has been (or is being) posted.
+        Idempotency key: dispute.lost:{caseId}
+      type: object
+      required: [event_name, occurred_at, payload]
+      properties:
+        event_name:
+          type: string
+          const: payment.dispute_case.lost
+        occurred_at:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          required: [dispute_case_id, payment_attempt_id, disputed_amount_minor,
+                     net_chargeback_minor, currency_code, provider_decision_reference]
+          properties:
+            dispute_case_id:
+              type: string
+              format: uuid
+            payment_attempt_id:
+              type: string
+              format: uuid
+            payment_intent_id:
+              type: string
+              format: uuid
+            organisation_id:
+              type: string
+              format: uuid
+            disputed_amount_minor:
+              type: integer
+            prior_refunds_minor:
+              type: integer
+              description: Confirmed refunds deducted from chargeback exposure
+            net_chargeback_minor:
+              type: integer
+              description: disputed_amount_minor - prior_refunds_minor (>= 0)
+            chargeback_fee_minor:
+              type: integer
+              default: 0
+            currency_code:
+              type: string
+            chargeback_ledger_journal_id:
+              type: string
+              nullable: true
+            provider_decision_reference:
+              type: string
+            correlation_id:
+              type: string
+
+    DisputeReversedEvent:
+      description: |
+        Emitted when a provider-initiated reversal case is closed.
+        Compensating reversal journal posted.
+        Idempotency key: dispute.reversed:{caseId}
+      type: object
+      required: [event_name, occurred_at, payload]
+      properties:
+        event_name:
+          type: string
+          const: payment.dispute_case.reversed
+        occurred_at:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          required: [dispute_case_id, payment_attempt_id, disputed_amount_minor,
+                     currency_code, provider_decision_reference]
+          properties:
+            dispute_case_id:
+              type: string
+              format: uuid
+            payment_attempt_id:
+              type: string
+              format: uuid
+            payment_intent_id:
+              type: string
+              format: uuid
+            organisation_id:
+              type: string
+              format: uuid
+            disputed_amount_minor:
+              type: integer
+            currency_code:
+              type: string
+            reversal_ledger_journal_id:
+              type: string
+              nullable: true
+            provider_decision_reference:
+              type: string
+            correlation_id:
+              type: string
+
+    DisputeLateContradictoryOutcomeEvent:
+      description: |
+        Emitted when a contradictory provider outcome arrives after a terminal or investigation state.
+        No automatic financial adjustment. Case flagged for manual investigation.
+        Idempotency key: dispute.contradictory:{caseId}:{received_at_epoch}
+      type: object
+      required: [event_name, occurred_at, payload]
+      properties:
+        event_name:
+          type: string
+          const: payment.dispute_case.late_contradictory_outcome
+        occurred_at:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          required: [dispute_case_id, current_status, contradictory_outcome]
+          properties:
+            dispute_case_id:
+              type: string
+              format: uuid
+            payment_attempt_id:
+              type: string
+              format: uuid
+            current_status:
+              type: string
+            contradictory_outcome:
+              type: string
+            provider_decision_reference:
+              type: string
+            correlation_id:
+              type: string

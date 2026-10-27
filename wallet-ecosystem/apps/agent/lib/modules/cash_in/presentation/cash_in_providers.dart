@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:wallet_agent/core/api/api_client.dart';
 import 'package:wallet_agent/modules/cash_in/data/repositories/cash_in_repository_impl.dart';

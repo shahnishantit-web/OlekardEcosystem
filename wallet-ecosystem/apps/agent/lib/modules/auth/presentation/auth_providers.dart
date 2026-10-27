@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:wallet_agent/core/api/api_client.dart';
 import 'package:wallet_agent/core/notifications/push_notification_service.dart';
@@ -6,6 +7,7 @@ import 'package:wallet_agent/core/security/secure_storage_service.dart';
 import 'package:wallet_agent/modules/auth/data/repositories/auth_repository_impl.dart';
 import 'package:wallet_agent/modules/auth/domain/entities/agent.dart';
 import 'package:wallet_agent/modules/auth/domain/repositories/auth_repository.dart';
+import 'package:wallet_agent/core/session/session_event_bus.dart';
 
 enum AuthStateEnum { unknown, unauthenticated, authenticated, requiresReauth }
 
@@ -88,6 +90,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     await _repository.logout();
+    SessionEventBus.instance.fireLogout();
     state = const AuthState(status: AuthStateEnum.unauthenticated);
   }
 

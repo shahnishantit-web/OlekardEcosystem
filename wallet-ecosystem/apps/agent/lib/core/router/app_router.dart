@@ -37,6 +37,7 @@ import 'package:wallet_agent/modules/profile/presentation/screens/profile_screen
 import 'package:wallet_agent/modules/profile/presentation/screens/security_settings_screen.dart';
 import 'package:wallet_agent/modules/transactions/presentation/screens/transaction_detail_screen.dart';
 import 'package:wallet_agent/modules/transactions/presentation/screens/transaction_list_screen.dart';
+import 'package:wallet_agent/modules/transactions/presentation/screens/receipt_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 final _shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
@@ -256,6 +257,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (_, state) => TransactionDetailScreen(
                   transactionId: state.pathParameters['id']!,
                 ),
+                routes: [
+                  GoRoute(
+                    path: 'receipt',
+                    builder: (_, state) => ReceiptScreen(
+                      intentId: state.pathParameters['id']!,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

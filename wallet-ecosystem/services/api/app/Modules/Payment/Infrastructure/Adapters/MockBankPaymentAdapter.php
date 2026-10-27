@@ -37,10 +37,7 @@ final class MockBankPaymentAdapter extends AbstractBankPaymentAdapter
         parent::__construct($audit, $config);
 
         // T101: Permanent production guard — throws immediately if not local/testing
-        $env = app()->environment();
-        if ($env === 'production' || $env === 'staging') {
-            throw new ProductionBlockedException('mock_bank');
-        }
+        DevelopmentPaymentGuard::check();
     }
 
     public function getProviderIdentifier(): string
@@ -87,6 +84,7 @@ final class MockBankPaymentAdapter extends AbstractBankPaymentAdapter
      */
     public function initiatePayment(PaymentInitiateRequest $request): PaymentAttemptResult
     {
+        DevelopmentPaymentGuard::check();
         Log::info('[MOCK] MockBankPaymentAdapter::initiatePayment', [
             'attempt_id'   => $request->paymentAttemptId,
             'amount_minor' => $request->amountMinor,
@@ -100,7 +98,7 @@ final class MockBankPaymentAdapter extends AbstractBankPaymentAdapter
             feeMinor:        0,
             providerReferenceId: $request->paymentAttemptId,
             nextActionType:  'redirect',
-            nextActionData:  ['redirect_url' => $redirectUrl],
+            nextActionData:  ['redirect_url' => $redirectUrl, 'test_only' => true, 'label' => 'Development mock bank — no real money'],
         );
     }
 
@@ -112,6 +110,7 @@ final class MockBankPaymentAdapter extends AbstractBankPaymentAdapter
      */
     public function queryPaymentStatus(string $providerReferenceId): PaymentStatusResult
     {
+        DevelopmentPaymentGuard::check();
         Log::info('[MOCK] MockBankPaymentAdapter::queryPaymentStatus', [
             'provider_reference_id' => $providerReferenceId,
         ]);
@@ -144,7 +143,9 @@ final class MockBankPaymentAdapter extends AbstractBankPaymentAdapter
         $status = match ($defaultOutcome) {
             'success'  => PaymentAttemptStatus::Succeeded,
             'failed'   => PaymentAttemptStatus::Failed,
-            default    => PaymentAttemptStatus::AwaitingAction,
+            'unknown', 'timeout' => PaymentAttemptStatus::Unknown,
+            'pending' => PaymentAttemptStatus::AwaitingAction,
+            default => throw new \InvalidArgumentException('Unknown development mock bank scenario.'),
         };
 
         return new PaymentStatusResult(
@@ -158,6 +159,7 @@ final class MockBankPaymentAdapter extends AbstractBankPaymentAdapter
      */
     public function initiateRefund(PaymentRefundRequest $request): PaymentRefundResult
     {
+        DevelopmentPaymentGuard::check();
         $mockRefundRef = 'MOCK-REFUND-'.(string) Uuid::uuid7();
 
         Log::info('[MOCK] MockBankPaymentAdapter::initiateRefund', [
@@ -177,6 +179,7 @@ final class MockBankPaymentAdapter extends AbstractBankPaymentAdapter
      */
     public function cancelPayment(string $providerReferenceId): PaymentCancelResult
     {
+        DevelopmentPaymentGuard::check();
         Log::info('[MOCK] MockBankPaymentAdapter::cancelPayment', [
             'provider_reference_id' => $providerReferenceId,
         ]);

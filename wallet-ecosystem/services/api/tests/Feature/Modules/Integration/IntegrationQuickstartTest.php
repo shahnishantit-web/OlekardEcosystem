@@ -29,7 +29,6 @@ final class IntegrationQuickstartTest extends IntegrationTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Redis::connection()->flushdb();
         Queue::fake();
     }
 
@@ -105,10 +104,10 @@ final class IntegrationQuickstartTest extends IntegrationTestCase
         $this->ensureIntegration(['provider_slug' => $slug]);
 
         // First request is within the IP limit (count=1 ≤ limit=1).
-        $this->postJson("/v1/webhooks/{$slug}", ['event' => 'test'])->assertStatus(200);
+        $this->postSignedWebhook("/v1/webhooks/{$slug}", ['event' => 'test'])->assertStatus(200);
 
         // Second request exceeds the IP window (count=2 > limit=1).
-        $blocked = $this->postJson("/v1/webhooks/{$slug}", ['event' => 'test']);
+        $blocked = $this->postSignedWebhook("/v1/webhooks/{$slug}", ['event' => 'test']);
         $blocked->assertStatus(429);
         $blocked->assertHeader('Retry-After');
     }
@@ -151,7 +150,7 @@ final class IntegrationQuickstartTest extends IntegrationTestCase
         $slug = 'sc5-pay-' . substr((string) Uuid::uuid7(), 0, 8);
         $this->ensureIntegration(['provider_slug' => $slug]);
 
-        $response = $this->postJson("/v1/webhooks/{$slug}", [
+        $response = $this->postSignedWebhook("/v1/webhooks/{$slug}", [
             'event'     => 'payment.success',
             'reference' => 'TXN-SC5-001',
             'amount'    => 5000,
@@ -172,6 +171,7 @@ final class IntegrationQuickstartTest extends IntegrationTestCase
         $this->ensureIntegration(['provider_slug' => $slug]);
 
         // Bind a strict webhook contract that validates HMAC-SHA256 against $secret.
+        $this->app->forgetInstance("integration.webhook.{$slug}");
         $this->app->bind("integration.webhook.{$slug}", function () use ($secret): ProviderWebhookContract {
             return new class ($secret) implements ProviderWebhookContract {
                 public function __construct(private readonly string $secret) {}
@@ -207,12 +207,12 @@ final class IntegrationQuickstartTest extends IntegrationTestCase
         $payload = ['event' => 'sms.delivered', 'ref' => 'SC7-REF-001'];
         $this->ensureIntegration(['provider_slug' => $slug]);
 
-        $first = $this->postJson("/v1/webhooks/{$slug}", $payload);
+        $first = $this->postSignedWebhook("/v1/webhooks/{$slug}", $payload);
         $first->assertStatus(200);
         $firstId = $first->json('data.webhook_event_id');
 
         // Duplicate delivery with the same payload.
-        $second = $this->postJson("/v1/webhooks/{$slug}", $payload);
+        $second = $this->postSignedWebhook("/v1/webhooks/{$slug}", $payload);
         $second->assertStatus(200);
         $secondId = $second->json('data.webhook_event_id');
 
@@ -298,6 +298,9 @@ final class IntegrationQuickstartTest extends IntegrationTestCase
         $response->assertJsonPath('data.status', 'received');
         $response->assertJsonPath('data.retry_count', 0);
 
+        $this->assertTrue(DB::connection('platform')->table('integration.admin_retry_intents')
+            ->where('webhook_event_id', $event->id)->whereNull('dispatched_at')->exists());
+        (new \App\Modules\Integration\Infrastructure\Jobs\DeliverAdminRetryIntentsJob())->handle();
         Queue::assertPushed(ProcessWebhookEventJob::class, function ($job) use ($event) {
             return $job->webhookEventId === $event->id;
         });

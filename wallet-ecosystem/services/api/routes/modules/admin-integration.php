@@ -14,4 +14,5 @@ Route::prefix('v1/admin')->middleware(['identity.auth', 'identity.require-permis
     Route::get('integrations/providers/{id}/health', [C::class, 'health'])->whereUuid('id');
     Route::get('webhooks/deliveries', [C::class, 'deliveries']);
     Route::post('webhooks/deliveries/{id}/retry', [C::class, 'retry'])->whereUuid('id')->middleware('throttle:20,1');
+    Route::post('webhooks/deliveries/{id}/quarantine', [C::class, 'quarantine'])->whereUuid('id')->middleware('throttle:20,1');
 });

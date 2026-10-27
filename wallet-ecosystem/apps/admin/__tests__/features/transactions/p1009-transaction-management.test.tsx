@@ -197,7 +197,7 @@ describe('US-P1-009-001: Transaction list', () => {
       expect(screen.getByText('Kgomotso Modise')).toBeInTheDocument();
     });
     const link = screen.getByRole('link', { name: 'Kgomotso Modise' });
-    expect(link).toHaveAttribute('href', '/admin-portal/users/usr-001');
+    expect(link).toHaveAttribute('href', '/users/usr-001');
   });
 
   it('shows View button per row navigating to detail', async () => {
@@ -206,7 +206,7 @@ describe('US-P1-009-001: Transaction list', () => {
       expect(screen.getAllByRole('button', { name: /view transaction/i }).length).toBeGreaterThanOrEqual(1);
     });
     const [viewBtn] = screen.getAllByRole('button', { name: /view transaction TXN-20261005-001234/i });
-    expect(viewBtn!.closest('a')).toHaveAttribute('href', '/admin-portal/transactions/txn-001');
+    expect(viewBtn!.closest('a')).toHaveAttribute('href', '/transactions/txn-001');
   });
 
   it('sends search query on form submit', async () => {
@@ -320,7 +320,7 @@ describe('US-P1-009-002: Transaction detail', () => {
   it('links initiator name to user detail', async () => {
     renderDetail();
     await waitFor(() => {
-      expect(screen.getByRole('link', { name: 'Kgomotso Modise' })).toHaveAttribute('href', '/admin-portal/users/usr-001');
+      expect(screen.getByRole('link', { name: 'Kgomotso Modise' })).toHaveAttribute('href', '/users/usr-001');
     });
   });
 
@@ -328,7 +328,7 @@ describe('US-P1-009-002: Transaction detail', () => {
     renderDetail();
     await waitFor(() => {
       const walletLinks = screen.getAllByRole('link').filter(l =>
-        l.getAttribute('href')?.includes('/admin-portal/wallets/wlt-001'),
+        l.getAttribute('href')?.includes('/wallets/wlt-001'),
       );
       expect(walletLinks.length).toBeGreaterThanOrEqual(1);
     });
@@ -338,7 +338,7 @@ describe('US-P1-009-002: Transaction detail', () => {
     renderDetail();
     await waitFor(() => {
       const txLink = screen.getByRole('link', { name: /transactions/i });
-      expect(txLink).toHaveAttribute('href', '/admin-portal/transactions');
+      expect(txLink).toHaveAttribute('href', '/transactions');
     });
   });
 

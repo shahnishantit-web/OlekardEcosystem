@@ -14,9 +14,11 @@ import '../../modules/home/presentation/screens/home_screen.dart';
 import '../../modules/home/presentation/screens/notifications_screen.dart';
 import '../../modules/transactions/presentation/screens/transaction_list_screen.dart';
 import '../../modules/transactions/presentation/screens/transaction_detail_screen.dart';
+import '../../modules/transactions/presentation/screens/receipt_screen.dart';
 import '../../modules/wallet/presentation/screens/wallet_detail_screen.dart';
 import '../../modules/wallet/presentation/screens/receive_money_screen.dart';
 import '../../modules/services/presentation/screens/services_home_screen.dart';
+import '../../modules/services/presentation/screens/funeral_assistance_screen.dart';
 import '../../modules/services/presentation/screens/service_providers_screen.dart';
 import '../../modules/services/presentation/screens/service_history_screen.dart';
 import '../../modules/profile/presentation/screens/profile_screen.dart';
@@ -111,6 +113,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/activity/:id',
             builder: (context, state) =>
                 TransactionDetailScreen(id: state.pathParameters['id']!),
+            routes: [
+              GoRoute(
+                path: 'receipt',
+                builder: (context, state) =>
+                    ReceiptScreen(intentId: state.pathParameters['id']!),
+              ),
+            ],
           ),
           GoRoute(
             path: '/home/transactions',
@@ -131,6 +140,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/services/history',
             builder: (_, __) => const ServiceHistoryScreen(),
+          ),
+          GoRoute(
+            path: '/services/funeral',
+            builder: (_, __) => const FuneralAssistanceScreen(),
           ),
           GoRoute(
             path: '/services/:categoryId',

@@ -87,6 +87,7 @@ final class IdentityServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(\App\Modules\Identity\Domain\Contracts\OrganisationMembershipAuthority::class, \App\Modules\Identity\Application\Services\ReviewedOrganisationMembershipService::class);
         // Cross-module contract: concrete IdentityModule wired in Phase 14 (T140)
         $this->app->singleton(IdentityModuleContract::class, IdentityModule::class);
         $this->app->singleton(ActorStepUpVerifierContract::class, IdentityModule::class);

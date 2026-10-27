@@ -26,10 +26,7 @@ final class MockBankCallbackParser implements ProviderWebhookContract
     public function __construct(
         private readonly BankCallbackVerifier $verifier,
     ) {
-        $env = app()->environment();
-        if ($env === 'production' || $env === 'staging') {
-            throw new ProductionBlockedException('mock_bank_callback_parser');
-        }
+        DevelopmentPaymentGuard::check();
     }
 
     /**
@@ -42,6 +39,7 @@ final class MockBankCallbackParser implements ProviderWebhookContract
         string $signature,
         array  $headers,
     ): NormalizedWebhookEvent {
+        DevelopmentPaymentGuard::check();
         // Step 1: verify HMAC-SHA256 before any parsing
         $isValid = $this->verifier->verify(
             rawPayload:   $rawPayload,

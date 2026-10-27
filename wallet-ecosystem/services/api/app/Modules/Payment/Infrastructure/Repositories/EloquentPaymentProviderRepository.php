@@ -45,6 +45,19 @@ final class EloquentPaymentProviderRepository implements PaymentProviderReposito
             })
             ->join('payment.payment_providers as p', 'p.id', '=', 'payment.payment_provider_accounts.provider_id')
             ->orderBy('p.sort_order')
+            ->select('payment.payment_provider_accounts.*')
+            ->get()
+            ->all();
+    }
+
+    /** @return PaymentProviderAccountModel[] */
+    public function findAllWithProviders(): array
+    {
+        return PaymentProviderAccountModel::query()
+            ->with('provider')
+            ->join('payment.payment_providers as p', 'p.id', '=', 'payment.payment_provider_accounts.provider_id')
+            ->orderBy('p.sort_order')
+            ->select('payment.payment_provider_accounts.*')
             ->get()
             ->all();
     }

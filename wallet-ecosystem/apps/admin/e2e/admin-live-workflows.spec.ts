@@ -12,7 +12,7 @@ const seededRoutes:Record<string,string>={
   '/configuration/[domain]/[key]':'/configuration/operational_policy/browser_qa_detail_fixture',
   '/integrations/[id]':'/integrations/d026a4eb-0e40-4fa7-a67b-d815f021ad24',
   '/fees/rules/[id]':'/fees/rules/d026a4eb-0e40-4fa7-a67b-d815f021ad13',
-  '/admin-portal/wallets/[id]':'/admin-portal/wallets/d026a4eb-0e40-4fa7-a67b-d815f021ad27',
+  '/wallets/[id]':'/wallets/d026a4eb-0e40-4fa7-a67b-d815f021ad27',
   '/integrations/providers/[id]/health':'/integrations/providers/d026a4eb-0e40-4fa7-a67b-d815f021ad14/health',
   '/kyc/[id]':'/kyc/d026a4eb-0e40-4fa7-a67b-d815f021ad16',
   '/qa/runs/[id]':'/qa/runs/d026a4eb-0e40-4fa7-a67b-d815f021ad01',
@@ -78,11 +78,6 @@ for (const pattern of inventory.dynamic) test('live detail '+pattern, async ({pa
   await expect(page.locator('h1').first()).toBeVisible({timeout:10000});
   let route = (await page.locator('a[href]').evaluateAll(elements=>elements.map(el=>el.getAttribute('href')).filter((href):href is string=>Boolean(href))))
     .find(href=>matcher.test(href)&&!inventory.static.includes(href));
-  if (!route && pattern === '/agents/[id]') {
-    const portalRoute = (await page.locator('a[href]').evaluateAll(elements=>elements.map(el=>el.getAttribute('href')).filter((href):href is string=>Boolean(href))))
-      .find(href=>/^\/admin-portal\/agents\/[^/?]+$/.test(href));
-    if (portalRoute) route = portalRoute.replace('/admin-portal/agents/', '/agents/');
-  }
   if (!route && sourceRoute === '/kyc') {
     const allCases = page.waitForResponse(response=>response.url().includes('/v1/admin-app/kyc')&&response.request().method()==='GET',{timeout:20000}).catch(()=>null);
     await page.getByLabel('Status').selectOption('all');
@@ -124,12 +119,12 @@ for (const pattern of inventory.dynamic) test('live detail '+pattern, async ({pa
   await page.screenshot({path:path.join(out,'details',pattern.replace(/[^a-z0-9]/gi,'_')+'.png'),fullPage:true});
   const report={pattern,route,landed:new URL(page.url()).pathname,errors,failures,detailResponses,text:(await page.locator('body').innerText()).slice(0,5000)};
   fs.writeFileSync(path.join(out,'details',pattern.replace(/[^a-z0-9]/gi,'_')+'.json'),JSON.stringify(report,null,2));
-  const validLanding=route==='/agents/'+route.split('/').pop()?[route,`/admin-portal/agents/${route.split('/').pop()}`]:[route];
+  const validLanding=[route];
   expect(validLanding).toContain(report.landed);expect(errors).toEqual([]);expect(failures).toEqual([]);
   await expect(page.locator('h1').first(),`Detail page must render content for ${pattern}`).toBeVisible({timeout:15000});
 });
 test('live role creation persists after reload and detail navigation',async({page})=>{
-  const name='browser_qa_'+Date.now();await page.goto('/admin-portal/roles');await page.waitForLoadState('networkidle');
+  const name='browser_qa_'+Date.now();await page.goto('/roles');await page.waitForLoadState('networkidle');
   await expect(page.getByRole('button',{name:'Create new role'})).toBeVisible({timeout:5000});
   await page.getByRole('button',{name:'Create new role'}).click();await expect(page.getByRole('heading',{name:'Create Custom Role'})).toBeVisible();await page.getByLabel('Role Name').fill(name);
   const response=page.waitForResponse(r=>r.url().includes('/v1/admin-app/roles')&&r.request().method()==='POST');
@@ -144,9 +139,9 @@ test('live role creation persists after reload and detail navigation',async({pag
   expect(listBody.data.some((role:{role_name?:string})=>role.role_name===name)).toBe(true);
   await expect(page.getByText(name,{exact:true})).toBeVisible();
   const detailRead=page.waitForResponse(r=>r.url().endsWith(`/v1/admin-app/roles/${data.data.role_id}`)&&r.request().method()==='GET');
-  await page.locator(`a[href="/admin-portal/roles/${data.data.role_id}"]`).click();
+  await page.locator(`a[href="/roles/${data.data.role_id}"]`).click();
   expect((await detailRead).status()).toBe(200);
-  await expect(page).toHaveURL(new RegExp(`/admin-portal/roles/${data.data.role_id}$`));
+  await expect(page).toHaveURL(new RegExp(`/roles/${data.data.role_id}$`));
   await expect(page.getByRole('heading',{name:`Role: ${name}`,exact:true})).toBeVisible();
 });
 test('live FX unavailable provider stays actionable without replay',async({page})=>{

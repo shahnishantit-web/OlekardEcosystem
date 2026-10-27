@@ -1,0 +1,270 @@
+openapi: 3.1.0
+info:
+  title: P24 Funeral Assistance API
+  version: 1.0.0
+  description: >-
+    Funeral domain contracts. Shared Payments owns intents and financial states;
+    P24 owns household eligibility and obligation fulfilment. Family payout
+    execution is blocked pending approved P18 financial contracts. All P24
+    HTTP routes currently return 503 through FuneralReadinessGate while tenant
+    membership and payout prerequisites remain unresolved.
+servers:
+  - url: /api/v1/community/funeral
+security:
+  - bearerAuth: []
+paths:
+  /communities:
+    post:
+      operationId: createFuneralCommunity
+      x-permission: community.funeral.manage
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CommunityCreate' }
+      responses:
+        '201': { description: Community registered }
+        '403': { description: Permission denied }
+        '503': { description: P24 readiness gate is closed }
+  /communities/{communityId}/staff:
+    post:
+      operationId: addStaff
+      x-permission: community.funeral.manage
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StaffAdd' }
+      responses:
+        '200': { description: Staff role assigned }
+  /communities/{communityId}/households:
+    post:
+      operationId: createHousehold
+      x-permission: community.funeral.manage
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/HouseholdCreate' }
+      responses:
+        '201': { description: Household registered pending review }
+  /households/{householdId}/review:
+    post:
+      operationId: reviewHousehold
+      x-permission: community.funeral.review
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/HouseholdReview' }
+      responses:
+        '200': { description: Household eligibility reviewed }
+  /households/{householdId}/representatives:
+    post:
+      operationId: addRepresentative
+      x-permission: community.funeral.manage
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RepresentativeAdd' }
+      responses:
+        '201': { description: Representative registered unverified }
+  /households/{householdId}/representatives/{representativeId}/verify:
+    post:
+      operationId: verifyRepresentative
+      x-permission: community.funeral.review
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '200': { description: Representative verification recorded }
+  /households/{householdId}/representatives/{representativeId}/revoke:
+    post:
+      operationId: revokeRepresentative
+      x-permission: community.funeral.review
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '200': { description: Representative verification revoked }
+  /communities/{communityId}/collections:
+    post:
+      operationId: createFuneralRequest
+      x-permission: community.funeral.manage
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CollectionCreate' }
+      responses:
+        '201': { description: Request created for independent review }
+  /collections/{collectionId}/beneficiary:
+    patch:
+      operationId: changeBeneficiary
+      x-permission: community.funeral.manage
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BeneficiaryChange' }
+      responses:
+        '200': { description: Beneficiary changed; approval invalidated }
+  /collections/{collectionId}/review:
+    post:
+      operationId: reviewFuneralCollection
+      x-permission: community.funeral.review
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '200': { description: Reviewed; beneficiary scope and P18 verification validated }
+  /collections/{collectionId}/activate:
+    post:
+      operationId: activateFuneralCollection
+      x-permission: community.funeral.review
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '200': { description: Immutable snapshot and household obligations created }
+        '409': { description: Collection is not approved or activation already occurred }
+  /my/obligations:
+    get:
+      operationId: listMyFuneralObligations
+      x-permission: community.funeral.household.read
+      responses:
+        '200':
+          description: Only obligations for verified representative's households
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ObligationsList' }
+  /collections/{collectionId}/close:
+    post:
+      operationId: closeFuneralCollection
+      x-permission: community.funeral.manage
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '200': { description: New intents disabled; in-flight and late liabilities preserved }
+  /collections/{collectionId}/aggregate-report:
+    get:
+      operationId: getFuneralAggregateReport
+      x-permission: community.funeral.report
+      responses:
+        '200':
+          description: Aggregate-only report with separate gross, fee, refund, net, settlement and payout states
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AggregateReport' }
+  /collections/{collectionId}/archive:
+    post:
+      operationId: archiveFuneralCollection
+      x-permission: community.funeral.manage
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '200': { description: Archived after liability resolution or approved carry-forward }
+        '409': { description: Unresolved liabilities prevent archival }
+  /collections/{collectionId}/carry-forward:
+    post:
+      operationId: requestFuneralCarryForward
+      x-permission: community.funeral.manage
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CarryForwardRequest' }
+      responses:
+        '200': { description: Liability carry-forward requested with evidence reference }
+  /collections/{collectionId}/carry-forward/approve:
+    post:
+      operationId: approveFuneralCarryForward
+      x-permission: community.funeral.review
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '200': { description: Independent reviewer approved liability carry-forward }
+  /collections/{collectionId}/payout-request:
+    post:
+      operationId: requestFamilyPayout
+      x-permission: community.funeral.payout.request
+      x-blocked: "P18 AD-14, AD-10 and LC14 are unresolved; execution/settlement services are stubs."
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '503': { description: Payout unavailable until shared P18 contract and finance gates are released }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    IdempotencyKey:
+      in: header
+      name: Idempotency-Key
+      required: true
+      schema: { type: string, minLength: 16, maxLength: 128 }
+  schemas:
+    CommunityCreate:
+      type: object
+      required: [organisation_id, display_name]
+      properties:
+        organisation_id: { type: string, format: uuid }
+        display_name: { type: string, minLength: 1, maxLength: 200 }
+    StaffAdd:
+      type: object
+      required: [actor_id, role]
+      properties:
+        actor_id: { type: string, format: uuid }
+        role: { type: string, enum: [manager, reviewer] }
+    HouseholdCreate:
+      type: object
+      required: [private_reference]
+      properties:
+        private_reference: { type: string, minLength: 1, maxLength: 200 }
+    HouseholdReview:
+      type: object
+      required: [decision]
+      properties:
+        decision: { type: string, enum: [eligible, exempt] }
+        exemption_reference: { type: string, maxLength: 200, nullable: true }
+    RepresentativeAdd:
+      type: object
+      required: [actor_id]
+      properties:
+        actor_id: { type: string, format: uuid }
+        evidence_reference: { type: string, maxLength: 500, nullable: true }
+    CollectionCreate:
+      type: object
+      required: [beneficiary_id]
+      properties:
+        beneficiary_id: { type: string, format: uuid }
+        evidence_reference: { type: string, maxLength: 500, nullable: true }
+    BeneficiaryChange:
+      type: object
+      required: [beneficiary_id]
+      properties:
+        beneficiary_id: { type: string, format: uuid }
+    CarryForwardRequest:
+      type: object
+      required: [carry_forward_reference]
+      properties:
+        carry_forward_reference: { type: string, minLength: 1, maxLength: 200 }
+    ObligationsList:
+      type: array
+      items:
+        type: object
+        properties:
+          id: { type: string, format: uuid }
+          collection_id: { type: string, format: uuid }
+          amount_minor: { type: integer, example: 2000 }
+          currency_code: { type: string, example: BWP }
+          status: { type: string, enum: [unpaid, pending, confirmed, late_review, refunded, failed] }
+          fulfilment_status: { type: string, enum: [pending, fulfilled, held_for_review] }
+    AggregateReport:
+      type: object
+      properties:
+        collection_id: { type: string, format: uuid }
+        confirmed_gross_minor: { type: integer }
+        fee_total_minor: { type: integer }
+        confirmed_refunds_minor: { type: integer }
+        net_support_minor: { type: integer }
+        late_review_gross_minor: { type: integer }
+        unresolved_liability_count: { type: integer }
+        settlement_status: { type: string }
+        payout_status: { type: string }

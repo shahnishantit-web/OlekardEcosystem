@@ -1,0 +1,548 @@
+openapi: "3.1.0"
+info:
+  title: P16 — Reversals, Disputes and Chargebacks API Contracts
+  version: "1.0"
+  description: |
+    P16 API surface for dispute case management.
+    All paths are relative to /api/v1/.
+    Authentication: Bearer token (identity.auth middleware).
+    All state-changing endpoints require Idempotency-Key header.
+
+# ---------------------------------------------------------------------------
+# Shared components
+# ---------------------------------------------------------------------------
+components:
+  parameters:
+    CaseId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: PaymentDisputeCase UUID v7
+
+  schemas:
+    DisputeCaseStatus:
+      type: string
+      enum:
+        - received
+        - under_review
+        - won
+        - lost
+        - closed_reversed
+        - investigation_required
+
+    DisputeCaseType:
+      type: string
+      enum:
+        - reversal
+        - dispute
+        - chargeback
+
+    DisputeEntitlementAction:
+      type: string
+      enum:
+        - pending
+        - blocked
+        - consumed
+        - post_draw_liability
+        - no_handler
+        - coordination_failed
+
+    DisputeHoldSummary:
+      type: object
+      properties:
+        hold_amount_minor:
+          type: integer
+        currency_code:
+          type: string
+          example: BWP
+        settled_funds_receivable:
+          type: boolean
+        authorised_by:
+          type: string
+          format: uuid
+        authorised_at:
+          type: string
+          format: date-time
+        released_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    DisputeCaseEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        event_type:
+          type: string
+        actor_id:
+          type: string
+          format: uuid
+          nullable: true
+        payload:
+          type: object
+          additionalProperties: true
+        occurred_at:
+          type: string
+          format: date-time
+        correlation_id:
+          type: string
+
+    DisputeCaseListItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        payment_attempt_id:
+          type: string
+          format: uuid
+        provider_code:
+          type: string
+        provider_dispute_reference:
+          type: string
+        case_type:
+          $ref: '#/components/schemas/DisputeCaseType'
+        status:
+          $ref: '#/components/schemas/DisputeCaseStatus'
+        disputed_amount_minor:
+          type: integer
+        currency_code:
+          type: string
+        net_exposure_minor:
+          type: integer
+        entitlement_action:
+          $ref: '#/components/schemas/DisputeEntitlementAction'
+        response_deadline:
+          type: string
+          format: date-time
+          nullable: true
+        requires_finance_review:
+          type: boolean
+        liability_exception_type:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    DisputeCaseDetail:
+      allOf:
+        - $ref: '#/components/schemas/DisputeCaseListItem'
+        - type: object
+          properties:
+            reason_code:
+              type: string
+              nullable: true
+            exposure_type:
+              type: string
+              nullable: true
+              enum: [hold, settled_funds_receivable]
+            hold:
+              $ref: '#/components/schemas/DisputeHoldSummary'
+              nullable: true
+            prior_refunds_minor:
+              type: integer
+            accounting_status:
+              type: string
+            chargeback_ledger_journal_id:
+              type: string
+              nullable: true
+            fee_ledger_journal_id:
+              type: string
+              nullable: true
+            provider_decision_reference:
+              type: string
+              nullable: true
+            finance_reviewed:
+              type: boolean
+            finance_reviewed_by:
+              type: string
+              format: uuid
+              nullable: true
+            finance_reviewed_at:
+              type: string
+              format: date-time
+              nullable: true
+            evidence_submitted:
+              type: boolean
+            closed_at:
+              type: string
+              format: date-time
+              nullable: true
+            timeline:
+              type: array
+              items:
+                $ref: '#/components/schemas/DisputeCaseEvent'
+
+    CustomerDisputeSummary:
+      type: object
+      description: Read-only dispute summary for customer mobile view. No provider-internal data.
+      properties:
+        id:
+          type: string
+          format: uuid
+        case_type:
+          $ref: '#/components/schemas/DisputeCaseType'
+        status:
+          $ref: '#/components/schemas/DisputeCaseStatus'
+        status_label:
+          type: string
+          description: Human-readable status for display
+          example: Under investigation
+        disputed_amount_minor:
+          type: integer
+        currency_code:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+# ---------------------------------------------------------------------------
+# Bank callback ingress (E25 inbox — internal)
+# ---------------------------------------------------------------------------
+paths:
+  /payment/bank/dispute-callback:
+    post:
+      tags: [Bank Callbacks — Internal]
+      summary: Receive authenticated provider dispute/reversal/chargeback event (E25 inbox)
+      description: |
+        Internal endpoint called by the E25 ingress adapter after verifying the provider
+        event signature. Creates or updates a PaymentDisputeCase.
+        Duplicate events for the same provider_dispute_reference are silently acknowledged.
+        Unauthenticated events (invalid provider signature) return 401.
+        Events referencing unknown payment attempts return 422 + ReconciliationException.
+      x-internal: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [provider_code, provider_dispute_reference, payment_attempt_id,
+                         case_type, disputed_amount_minor, currency_code]
+              properties:
+                provider_code:
+                  type: string
+                provider_dispute_reference:
+                  type: string
+                payment_attempt_id:
+                  type: string
+                  format: uuid
+                case_type:
+                  $ref: '#/components/schemas/DisputeCaseType'
+                disputed_amount_minor:
+                  type: integer
+                  minimum: 1
+                currency_code:
+                  type: string
+                reason_code:
+                  type: string
+                  nullable: true
+                response_deadline:
+                  type: string
+                  format: date-time
+                  nullable: true
+                correlation_id:
+                  type: string
+      responses:
+        "201":
+          description: Case created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dispute_case_id:
+                    type: string
+                    format: uuid
+                  action:
+                    type: string
+                    enum: [created, duplicate_acknowledged, updated]
+        "401":
+          description: Provider signature invalid
+        "422":
+          description: Unknown payment_attempt_id — ReconciliationException created
+
+  # ── Admin dispute management ─────────────────────────────────────────────
+  /admin/payment/dispute-cases:
+    get:
+      tags: [Admin — Dispute Cases]
+      summary: List dispute cases with filters
+      description: |
+        Paginated list of PaymentDisputeCase records.
+        Filter by status, case_type, deadline proximity (deadline_before), requires_finance_review.
+        Results ordered by response_deadline ASC (null last) then created_at DESC.
+        Requires payment.disputes.view permission.
+      x-required-permission: payment.disputes.view
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/DisputeCaseStatus'
+        - name: case_type
+          in: query
+          schema:
+            $ref: '#/components/schemas/DisputeCaseType'
+        - name: requires_finance_review
+          in: query
+          schema:
+            type: boolean
+        - name: deadline_before
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Return cases whose response_deadline is before this timestamp
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 25
+            maximum: 100
+      responses:
+        "200":
+          description: Paginated list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DisputeCaseListItem'
+                  meta:
+                    type: object
+                    properties:
+                      current_page: { type: integer }
+                      per_page: { type: integer }
+                      total: { type: integer }
+                      last_page: { type: integer }
+
+  /admin/payment/dispute-cases/{id}:
+    get:
+      tags: [Admin — Dispute Cases]
+      summary: Get dispute case detail with full timeline
+      x-required-permission: payment.disputes.view
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        "200":
+          description: Case detail with timeline
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DisputeCaseDetail'
+        "404":
+          description: Case not found
+
+  /admin/payment/dispute-cases/{id}/hold:
+    post:
+      tags: [Admin — Dispute Cases]
+      summary: Authorise financial hold for a dispute case
+      description: |
+        Authorises a hold on available settlement funds or records a settled-funds receivable.
+        Case must be in received state. Requires payment.disputes.manage permission.
+        Idempotency-Key required.
+      x-required-permission: payment.disputes.manage
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [hold_amount_minor, exposure_type]
+              properties:
+                hold_amount_minor:
+                  type: integer
+                  minimum: 1
+                exposure_type:
+                  type: string
+                  enum: [hold, settled_funds_receivable]
+      responses:
+        "200":
+          description: Hold authorised, case moved to under_review
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DisputeCaseDetail'
+        "409":
+          description: Case not in received state
+        "422":
+          description: Hold amount exceeds net exposure or operator permission limit
+
+  /admin/payment/dispute-cases/{id}/evidence:
+    post:
+      tags: [Admin — Dispute Cases]
+      summary: Submit evidence reference for a dispute case
+      description: |
+        Appends an evidence reference to the case timeline.
+        Case must be in under_review state.
+        Requires payment.disputes.manage permission.
+      x-required-permission: payment.disputes.manage
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [evidence_reference]
+              properties:
+                evidence_reference:
+                  type: string
+                  maxLength: 512
+                  description: Document ID, provider portal URL reference, or note
+      responses:
+        "200":
+          description: Evidence recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Evidence recorded.
+        "409":
+          description: Case is already closed
+
+  /admin/payment/dispute-cases/{id}/outcome:
+    post:
+      tags: [Admin — Dispute Cases]
+      summary: Record provider outcome (won/lost/reversed)
+      description: |
+        Records the provider's decision. Posts correcting ledger journals and fees where applicable.
+        Releases or converts holds. Calculates double-compensation guard.
+        Case must be in under_review state.
+        Idempotency-Key required.
+        Requires payment.disputes.manage permission.
+      x-required-permission: payment.disputes.manage
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [outcome, provider_decision_reference]
+              properties:
+                outcome:
+                  type: string
+                  enum: [won, lost, closed_reversed]
+                provider_decision_reference:
+                  type: string
+                  maxLength: 255
+                chargeback_fee_minor:
+                  type: integer
+                  minimum: 0
+                  default: 0
+                  description: Provider-charged fee (lost/reversed only)
+      responses:
+        "200":
+          description: Outcome recorded; case moved to terminal state
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DisputeCaseDetail'
+        "409":
+          description: Case not in under_review state (or already closed)
+        "422":
+          description: Invalid outcome value
+
+  /admin/payment/dispute-cases/{id}/finance-review:
+    post:
+      tags: [Admin — Dispute Cases]
+      summary: Acknowledge finance review for liability-exception cases
+      description: |
+        Sets finance_reviewed = true for cases flagged with requires_finance_review.
+        Required before these cases can be closed.
+        Requires payment.disputes.finance_review permission.
+      x-required-permission: payment.disputes.finance_review
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        "200":
+          description: Finance review acknowledged
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Finance review acknowledged.
+        "409":
+          description: Case does not require finance review or is already acknowledged
+
+  # ── Customer dispute summary ──────────────────────────────────────────────
+  /payment/intents/{intentId}/disputes:
+    get:
+      tags: [Customer — Disputes]
+      summary: List dispute summaries for a payment intent (customer read-only)
+      description: |
+        Returns dispute case summaries for the authenticated customer's payment intent.
+        Ownership enforced: only the payer of the intent may access.
+        No provider-internal data (references, fees, case-owner notes) is included.
+        Requires payment.disputes.view permission.
+      x-required-permission: payment.disputes.view
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: intentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Dispute summary list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CustomerDisputeSummary'
+        "403":
+          description: Not the owner of the intent
+        "404":
+          description: Intent not found

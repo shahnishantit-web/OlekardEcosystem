@@ -27,6 +27,16 @@ tags:
     description: Manage payment provider configuration (admin only)
   - name: Admin — Reconciliation
     description: View and resolve reconciliation exceptions (admin only)
+  - name: Admin — Config Drafts
+    description: Maker-checker workflow for high-risk provider configuration changes (admin only)
+  - name: Admin — Refund Approvals
+    description: Approve or reject refunds above the approval threshold (admin only)
+  - name: Admin — Pending Accounting
+    description: View payment intents with unresolved ledger acknowledgement (P08 admin visibility)
+  - name: Admin — Provider Accounts
+    description: Manage provider account configuration and lifecycle (P20)
+  - name: Admin — Module Config
+    description: Configure payment module availability and display order (P20)
 
 # ---------------------------------------------------------------------------
 # Security
@@ -82,8 +92,7 @@ components:
           required: [code, message, correlation_id]
           properties:
             code:
-              type: string
-              example: INSUFFICIENT_FUNDS
+              $ref: '#/components/schemas/ErrorCode'
             message:
               type: string
             correlation_id:
@@ -131,6 +140,21 @@ components:
         display_name:
           type: string
           example: OleKard Wallet
+        display_description:
+          type: string
+          nullable: true
+          description: Short description for display on the options screen
+          example: Pay directly from your OleKard wallet
+        display_icon_key:
+          type: string
+          nullable: true
+          description: Design-system token key for the provider icon; NOT a URL
+          example: icon.payment.wallet
+        display_badge:
+          type: string
+          nullable: true
+          description: Short badge label (e.g. "Recommended", "New")
+          example: Recommended
         is_default:
           type: boolean
         is_wallet:
@@ -148,6 +172,53 @@ components:
           enum: [redirect, hosted_checkout, sdk, app_switch]
         sort_order:
           type: integer
+        eligible_instrument_types:
+          type: array
+          items:
+            type: string
+            enum: [wallet_transfer, bank_transfer, card_payment, qr_payment, mobile_money]
+          description: Payment instrument types supported by this provider for the current context
+        capability_flags:
+          type: object
+          additionalProperties:
+            type: boolean
+          description: Capability flags for this account (e.g. supports_refund, supports_qr)
+
+    # ── P05 Eligibility Preview ─────────────────────────────────────────────
+    EligibilityPreviewItem:
+      type: object
+      properties:
+        provider_code:
+          type: string
+          example: mock_bank
+        display_name:
+          type: string
+          example: Mock Bank
+        config_version:
+          type: integer
+          description: Current config_version of the provider account
+          example: 3
+        is_eligible:
+          type: boolean
+          description: Whether this provider account passes all eligibility pipeline stages
+        ineligibility_reason:
+          type: string
+          nullable: true
+          description: |
+            EligibilityReason enum value explaining why this account is ineligible.
+            Null when is_eligible is true.
+          enum:
+            - PROVIDER_DISABLED
+            - PROVIDER_SUSPENDED
+            - ACCOUNT_INACTIVE
+            - ORGANISATION_NOT_ENABLED
+            - MODULE_NOT_ENABLED
+            - PURPOSE_TYPE_NOT_ENABLED
+            - COUNTRY_RESTRICTED
+            - CURRENCY_NOT_SUPPORTED
+            - AMOUNT_BELOW_MINIMUM
+            - AMOUNT_ABOVE_MAXIMUM
+            - CAPABILITY_NOT_SUPPORTED
 
     # ── Payment Intent ──────────────────────────────────────────────────────
     PaymentIntentResponse:
@@ -176,43 +247,280 @@ components:
         correlation_id:
           type: string
           format: uuid
-
-    # ── Payment Attempt ─────────────────────────────────────────────────────
-    NextAction:
-      type: object
-      nullable: true
-      properties:
-        type:
+        accounting_status:
           type: string
-          enum: [redirect, app_switch, sdk_init]
-        redirect_url:
+          enum: [pending_ledger, ledger_posted, ledger_failed]
+        fulfilment_status:
+          type: string
+          enum: [pending, fulfilled, fulfilment_failed]
+        fee_quote_minor:
+          type: integer
+          minimum: 0
+          example: 0
+          description: Fee quoted at intent creation time (minor units). Immutable after creation.
+        quote:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/PaymentQuoteResponse'
+          description: Active quote at intent creation time; null if QuoteService is not wired.
+
+    # ── Payment Quote (P04) ─────────────────────────────────────────────────
+    FeeSnapshotObject:
+      type: object
+      description: Immutable fee rule snapshot captured at quote creation time.
+      properties:
+        rule_id:
           type: string
           nullable: true
+          format: uuid
+        rule_name:
+          type: string
+          nullable: true
+        fee_type:
+          type: string
+          example: percentage
+        rate_basis_points:
+          type: integer
+          nullable: true
+          description: Percentage rate expressed as basis points (e.g., 200 = 2.00%)
+        flat_amount_minor:
+          type: integer
+          nullable: true
+        minimum_fee_minor:
+          type: integer
+          minimum: 0
+        maximum_fee_minor:
+          type: integer
+          nullable: true
+        rounding_mode:
+          type: string
+          enum: [floor, round_half_up, ceil]
+        effective_date:
+          type: string
+          format: date
+          nullable: true
+        computed_fee_minor:
+          type: integer
+          minimum: 0
+        min_fee_applied:
+          type: boolean
+        max_fee_applied:
+          type: boolean
+        computation_inputs:
+          type: object
+          properties:
+            amount_minor:
+              type: integer
+            currency_code:
+              type: string
+            transaction_type:
+              type: string
+            subject_type:
+              type: string
+
+    PaymentQuoteResponse:
+      type: object
+      required: [id, payment_intent_id, version, quote_status, base_amount_minor,
+                 fee_amount_minor, total_amount_minor, currency_code, provider_code,
+                 fee_snapshot, expires_at, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        payment_intent_id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 1
+          description: Quote version; increments on each silent refresh
+        quote_status:
+          type: string
+          enum: [active, expired, superseded, consumed, cancelled]
+        base_amount_minor:
+          type: integer
+          minimum: 0
+        fee_amount_minor:
+          type: integer
+          minimum: 0
+        total_amount_minor:
+          type: integer
+          minimum: 0
+        currency_code:
+          type: string
+          example: BWP
+        provider_code:
+          type: string
+          example: olekard_wallet
+        rounding_mode:
+          type: string
+        fee_snapshot:
+          $ref: '#/components/schemas/FeeSnapshotObject'
+        obligation_snapshot:
+          type: object
+          additionalProperties: true
+          description: Obligation details captured at quote creation for dispute purposes
         expires_at:
           type: string
           format: date-time
-          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    QuoteStaleContext:
+      type: object
+      description: Returned when a quote has changed total and consumer confirmation is required.
+      required: [previous_total_minor, new_total_minor, new_quote]
+      properties:
+        previous_total_minor:
+          type: integer
+          description: Total that the consumer previously saw
+        new_total_minor:
+          type: integer
+          description: Updated total requiring re-confirmation
+        new_quote:
+          $ref: '#/components/schemas/PaymentQuoteResponse'
+
+    # ── Payment Attempt ─────────────────────────────────────────────────────
+    NextAction:
+      nullable: true
+      x-extensible: true
+      oneOf:
+        - $ref: '#/components/schemas/NextActionRedirect'
+        - $ref: '#/components/schemas/NextActionOtpVerification'
+        - $ref: '#/components/schemas/NextActionPollingRequired'
+        - $ref: '#/components/schemas/NextActionWalletStepUp'
+      discriminator:
+        propertyName: type
+        mapping:
+          redirect: '#/components/schemas/NextActionRedirect'
+          otp_verification: '#/components/schemas/NextActionOtpVerification'
+          polling_required: '#/components/schemas/NextActionPollingRequired'
+          wallet_step_up: '#/components/schemas/NextActionWalletStepUp'
+
+    NextActionRedirect:
+      type: object
+      required: [type, redirect_url, expires_at]
+      properties:
+        type:
+          type: string
+          enum: [redirect]
+        redirect_url:
+          type: string
+          format: uri
+        expires_at:
+          type: string
+          format: date-time
+
+    NextActionOtpVerification:
+      type: object
+      required: [type, masked_destination, expires_at]
+      properties:
+        type:
+          type: string
+          enum: [otp_verification]
+        masked_destination:
+          type: string
+          example: "+267 7*** ***56"
+        expires_at:
+          type: string
+          format: date-time
+
+    NextActionPollingRequired:
+      type: object
+      required: [type, poll_interval_seconds, max_attempts]
+      properties:
+        type:
+          type: string
+          enum: [polling_required]
+        poll_interval_seconds:
+          type: integer
+          minimum: 1
+          maximum: 60
+        max_attempts:
+          type: integer
+          minimum: 1
+          maximum: 30
+
+    NextActionWalletStepUp:
+      type: object
+      required: [type, required_method]
+      properties:
+        type:
+          type: string
+          enum: [wallet_step_up]
+        required_method:
+          type: string
+          enum: [pin, biometric, otp]
+        step_up_threshold_minor:
+          type: integer
+          description: Amount threshold that triggered step-up
 
     PaymentAttemptResponse:
       type: object
       properties:
-        payment_attempt_id:
+        attempt_id:
           type: string
           format: uuid
+        payment_intent_id:
+          type: string
+          format: uuid
+        provider_code:
+          type: string
         status:
           type: string
-          enum: [initiated, processing, awaiting_action, succeeded, failed,
-                 cancelled, expired, timed_out]
-        next_action:
-          $ref: '#/components/schemas/NextAction'
-        payment_intent_status:
+          enum: [submitting, initiated, processing, awaiting_action, succeeded, failed,
+                 cancelled, expired, timed_out, unknown]
+        operation_id:
           type: string
+          format: uuid
+          description: Server-generated deduplication ID sent to provider for idempotency
+        quote_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: ID of the fee quote snapshot captured at attempt initiation time
+        quote_version:
+          type: integer
+          nullable: true
+          description: Version of the fee quote captured at attempt initiation time
+        provider_reference_id:
+          type: string
+          nullable: true
+          description: Provider-side transaction reference (set after provider confirms)
+        next_action_type:
+          type: string
+          nullable: true
+        next_action_data:
+          type: object
+          nullable: true
         fee_minor:
           type: integer
           example: 0
-        correlation_id:
+        wallet_hold_id:
           type: string
           format: uuid
+          nullable: true
+        reconciliation_exception_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Most recent reconciliation exception linked to this attempt (e.g. unknown_outcome)
+        initiated_at:
+          type: string
+          format: date-time
+          nullable: true
+        confirmed_at:
+          type: string
+          format: date-time
+          nullable: true
+        failed_at:
+          type: string
+          format: date-time
+          nullable: true
+        failure_reason:
+          type: string
+          nullable: true
 
     # ── Payment Status ──────────────────────────────────────────────────────
     ActiveAttemptSummary:
@@ -230,23 +538,55 @@ components:
     PaymentStatusResponse:
       type: object
       properties:
-        payment_intent_id:
+        id:
           type: string
           format: uuid
-        reference:
-          type: string
+          description: Payment intent ID
         status:
           type: string
+          description: Intent lifecycle status (pending, processing, succeeded, failed, cancelled, expired)
+        accounting_status:
+          type: string
+          enum: [pending_ledger, ledger_posted, ledger_failed]
+          description: Independent accounting/ledger dimension
+        fulfilment_status:
+          type: string
+          enum: [pending, fulfilled, fulfilment_failed]
+          description: Independent service fulfilment dimension
         amount_minor:
           type: integer
         currency_code:
           type: string
-        succeeded_at:
+        purpose_type:
+          type: string
+        expires_at:
           type: string
           format: date-time
           nullable: true
-        active_attempt:
-          $ref: '#/components/schemas/ActiveAttemptSummary'
+        latest_attempt:
+          type: object
+          nullable: true
+          description: Summary of the most recent active or unknown attempt
+          properties:
+            attempt_id:
+              type: string
+              format: uuid
+            status:
+              type: string
+              enum: [submitting, initiated, processing, awaiting_action, succeeded, failed,
+                     cancelled, expired, timed_out, unknown]
+            provider_code:
+              type: string
+            operation_id:
+              type: string
+              format: uuid
+              description: Server-generated deduplication ID for provider-side idempotency
+            next_action_type:
+              type: string
+              nullable: true
+            next_action_data:
+              type: object
+              nullable: true
 
     # ── Refund ──────────────────────────────────────────────────────────────
     RefundResponse:
@@ -257,7 +597,7 @@ components:
           format: uuid
         status:
           type: string
-          enum: [requested, pending_approval, processing, succeeded, failed, cancelled]
+          enum: [requested, pending_approval, processing, succeeded, failed, cancelled, rejected]
         amount_minor:
           type: integer
           example: 5000
@@ -266,6 +606,77 @@ components:
         correlation_id:
           type: string
           format: uuid
+
+    # ── Refund status update (P03) ─────────────────────────────────────────
+    RefundApprovalResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        payment_intent_id:
+          type: string
+          format: uuid
+        amount_minor:
+          type: integer
+        status:
+          type: string
+          enum: [requested, pending_approval, processing, succeeded, failed, cancelled, rejected]
+        approval_required:
+          type: boolean
+        requested_by:
+          type: string
+          format: uuid
+        approved_by_actor_id:
+          type: string
+          format: uuid
+          nullable: true
+        approved_at:
+          type: string
+          format: date-time
+          nullable: true
+        rejected_by_actor_id:
+          type: string
+          format: uuid
+          nullable: true
+        rejected_at:
+          type: string
+          format: date-time
+          nullable: true
+        rejection_reason:
+          type: string
+          nullable: true
+
+    # ── Config Change Draft (P03) ───────────────────────────────────────────
+    ConfigChangeDraftResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider_id:
+          type: string
+          format: uuid
+        change_type:
+          type: string
+          enum: [high_risk_update, credential_rotation]
+        status:
+          type: string
+          enum: [pending_approval, approved, rejected, withdrawn]
+        drafted_by_actor_id:
+          type: string
+          format: uuid
+        reviewed_by_actor_id:
+          type: string
+          format: uuid
+          nullable: true
+        reviewed_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
 
     # ── Provider (Admin) ────────────────────────────────────────────────────
     PaymentProviderAdmin:
@@ -321,6 +732,659 @@ components:
         created_at:
           type: string
           format: date-time
+
+    # ── Pagination ──────────────────────────────────────────────────────────
+    PendingAccountingIntent:
+      type: object
+      description: |
+        P08 US4: A payment intent whose ledger journal has not yet been durably posted.
+        Operators can use this to monitor accounting repair progress and identify stuck intents.
+      required: [id, status, accounting_status, organisation_id, currency_code, amount_minor]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [succeeded]
+        accounting_status:
+          type: string
+          enum: [pending_ledger, ledger_failed]
+        organisation_id:
+          type: string
+          format: uuid
+        currency_code:
+          type: string
+          minLength: 3
+          maxLength: 3
+        amount_minor:
+          type: integer
+          minimum: 1
+        succeeded_at:
+          type: string
+          format: date-time
+          nullable: true
+        ledger_repair_at:
+          type: string
+          format: date-time
+          nullable: true
+        accounting_repair_attempts:
+          type: integer
+          minimum: 0
+        seconds_since_capture:
+          type: integer
+          nullable: true
+          description: Seconds elapsed since the payment was captured (succeeded_at)
+
+    PaginatedMeta:
+      type: object
+      required: [current_page, per_page, total, last_page]
+      properties:
+        current_page:
+          type: integer
+          minimum: 1
+        per_page:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+        last_page:
+          type: integer
+          minimum: 1
+
+    PaginatedLinks:
+      type: object
+      properties:
+        first:
+          type: string
+          format: uri
+          nullable: true
+        last:
+          type: string
+          format: uri
+          nullable: true
+        prev:
+          type: string
+          format: uri
+          nullable: true
+        next:
+          type: string
+          format: uri
+          nullable: true
+
+    # ── Error Codes ─────────────────────────────────────────────────────────
+    ErrorCode:
+      type: string
+      description: Machine-readable error code. Clients MUST switch on this value, not on message strings.
+      enum:
+        - INSUFFICIENT_FUNDS
+        - STEP_UP_REQUIRED
+        - PAYMENT_INTENT_NOT_FOUND
+        - DUPLICATE_ATTEMPT
+        - INVALID_STATE_TRANSITION
+        - CAPABILITY_UNSUPPORTED
+        - PROVIDER_CIRCUIT_OPEN
+        - REFUND_LIMIT_EXCEEDED
+        - IDEMPOTENCY_KEY_REQUIRED
+        - UNAUTHENTICATED
+        - ACCESS_DENIED
+        - VALIDATION_ERROR
+        - PRODUCTION_BLOCKED
+        - PURPOSE_NOT_PAYABLE
+        - PURPOSE_NO_LONGER_PAYABLE
+        - QUOTE_STALE_CONFIRM_REQUIRED
+        - NO_ACTIVE_QUOTE
+        - OBLIGATION_RESOLUTION_FAILED
+        - UNKNOWN_PURPOSE_TYPE
+        - SELF_APPROVAL_NOT_ALLOWED
+        - DRAFT_NOT_PENDING
+        - REFUND_NOT_PENDING_APPROVAL
+        - PROVIDER_NOT_FOUND
+        # P05 — Provider Registry and Option Eligibility
+        - ADAPTER_NOT_IN_ALLOWLIST
+        - DRAFT_VALIDATION_FAILED
+        - INVALID_SECRET_REFERENCE_FORMAT
+        - CALLBACK_URL_NOT_PERMITTED
+        - INVALID_CURRENCY_CODE
+        - UNKNOWN_CAPABILITY_FLAG
+        - UNKNOWN_INSTRUMENT_TYPE
+        - CONFIGURATION_VERSION_CONFLICT
+        # P06 — Intent, Attempt and Payment State Engine
+        - UNSAFE_PROVIDER_SWITCH
+        - CONTRADICTORY_EVIDENCE
+        - EXCESS_CAPTURE
+        - ATTEMPT_NOT_FOUND
+
+    # ── P15 schemas ───────────────────────────────────────────────────────────
+    PaymentRefundStatus:
+      type: string
+      description: Lifecycle state of a refund.
+      enum:
+        - requested
+        - pending_approval
+        - processing
+        - submitted
+        - pending
+        - unknown
+        - confirmed
+        - definitive_failure
+        - succeeded
+        - failed
+        - cancelled
+        - rejected
+
+    CustomerRefundListItem:
+      type: object
+      description: Refund summary visible to the customer.
+      properties:
+        id:
+          type: string
+          format: uuid
+        amount_minor:
+          type: integer
+          description: Refund amount in minor currency units.
+        currency_code:
+          type: string
+          example: BWP
+        status:
+          $ref: '#/components/schemas/PaymentRefundStatus'
+        status_label:
+          type: string
+          description: Human-readable status label for display.
+          example: Funds returned
+        funds_returned:
+          type: boolean
+          description: True when the refund is in a confirmed/succeeded state.
+        requested_at:
+          type: string
+          format: date-time
+        confirmed_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    RefundSummaryMeta:
+      type: object
+      description: Aggregate summary for a customer's refunds on a payment intent.
+      properties:
+        total_confirmed_minor:
+          type: integer
+          description: Sum of confirmed refund amounts in minor units.
+        remaining_refundable_minor:
+          type: integer
+          description: Remaining refundable balance (intent amount minus confirmed refunds).
+        has_pending_refunds:
+          type: boolean
+          description: True if any refund is in a non-terminal state.
+
+    AdminRefundListItem:
+      type: object
+      description: Refund summary for admin monitoring list.
+      properties:
+        id:
+          type: string
+          format: uuid
+        payment_intent_id:
+          type: string
+          format: uuid
+        payment_attempt_id:
+          type: string
+          format: uuid
+        amount_minor:
+          type: integer
+        currency_code:
+          type: string
+        status:
+          $ref: '#/components/schemas/PaymentRefundStatus'
+        refund_type:
+          type: string
+          enum: [full, partial]
+        provider_code:
+          type: string
+          nullable: true
+        provider_submitted_ref:
+          type: string
+          nullable: true
+        reserved_since:
+          type: string
+          format: date-time
+          nullable: true
+          description: Earliest of submitted_at, pending_at, unknown_at.
+        requested_at:
+          type: string
+          format: date-time
+        query_attempts:
+          type: integer
+
+    AdminRefundDetail:
+      type: object
+      description: Full refund detail for admin view.
+      allOf:
+        - $ref: '#/components/schemas/AdminRefundListItem'
+        - type: object
+          properties:
+            refund_ledger_journal_id:
+              type: string
+              nullable: true
+            refund_accounting_status:
+              type: string
+              nullable: true
+            provider_response_code:
+              type: string
+              nullable: true
+            provider_error_message:
+              type: string
+              nullable: true
+            reconciliation_exception_id:
+              type: string
+              format: uuid
+              nullable: true
+            approved_by:
+              type: string
+              format: uuid
+              nullable: true
+            approved_at:
+              type: string
+              format: date-time
+              nullable: true
+            rejected_by:
+              type: string
+              format: uuid
+              nullable: true
+            rejected_at:
+              type: string
+              format: date-time
+              nullable: true
+            rejection_reason:
+              type: string
+              nullable: true
+            submitted_at:
+              type: string
+              format: date-time
+              nullable: true
+            pending_at:
+              type: string
+              format: date-time
+              nullable: true
+            unknown_at:
+              type: string
+              format: date-time
+              nullable: true
+            confirmed_at:
+              type: string
+              format: date-time
+              nullable: true
+            failed_at:
+              type: string
+              format: date-time
+              nullable: true
+
+    PaginationMeta:
+      type: object
+      description: Standard pagination metadata.
+      properties:
+        current_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+        last_page:
+          type: integer
+        from:
+          type: integer
+          nullable: true
+        to:
+          type: integer
+          nullable: true
+
+    # ── P18: Beneficiary Verification and Payout Lifecycle ───────────────────
+
+    RegisterPayoutBeneficiaryRequest:
+      type: object
+      required: [organisation_id, account_type, account_number, account_holder_name, currency_code]
+      properties:
+        organisation_id:     { type: string }
+        account_type:        { type: string, enum: [bank, mobile_money, ewallet] }
+        account_number:      { type: string, minLength: 4 }
+        bank_code:           { type: string, nullable: true }
+        bank_name:           { type: string, nullable: true }
+        account_holder_name: { type: string, minLength: 2 }
+        currency_code:       { type: string, pattern: '^[A-Z]{3}$' }
+
+    PayoutBeneficiaryResponse:
+      type: object
+      properties:
+        id:                     { type: string, format: uuid }
+        organisation_id:        { type: string }
+        account_type:           { type: string }
+        account_holder_name:    { type: string }
+        bank_code:              { type: string, nullable: true }
+        bank_name:              { type: string, nullable: true }
+        currency_code:          { type: string }
+        status:                 { type: string, enum: [pending_verification, verified, suspended, rejected] }
+        verified_at:            { type: string, format: date-time, nullable: true }
+        verification_reference: { type: string, nullable: true }
+        created_by:             { type: string }
+        created_at:             { type: string, format: date-time }
+        updated_at:             { type: string, format: date-time }
+
+    PayoutBeneficiaryListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PayoutBeneficiaryResponse'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    InitiatePayoutRequestBody:
+      type: object
+      required: [beneficiary_id, fund_reference_id, purpose_type, currency_code, requested_amount_minor, custody_wallet_id]
+      properties:
+        beneficiary_id:          { type: string, format: uuid }
+        fund_reference_id:       { type: string }
+        purpose_type:            { type: string }
+        currency_code:           { type: string, pattern: '^[A-Z]{3}$' }
+        requested_amount_minor:  { type: integer, minimum: 1 }
+        custody_wallet_id:       { type: string, format: uuid }
+        notes:                   { type: string, nullable: true }
+
+    PayoutRequestResponse:
+      type: object
+      properties:
+        id:                      { type: string, format: uuid }
+        beneficiary_id:          { type: string, format: uuid }
+        fund_reference_id:       { type: string }
+        purpose_type:            { type: string }
+        currency_code:           { type: string }
+        requested_amount_minor:  { type: integer }
+        custody_wallet_id:       { type: string, format: uuid }
+        status:                  { type: string, enum: [pending_verification, awaiting_approval, reserved, approved, executing, pending_settlement, settled, failed, manual_review, cancelled] }
+        operation_id:            { type: string, nullable: true }
+        idempotency_key:         { type: string, format: uuid }
+        initiated_by:            { type: string }
+        reservation:
+          nullable: true
+          $ref: '#/components/schemas/PayoutReservationResponse'
+        created_at:              { type: string, format: date-time }
+        updated_at:              { type: string, format: date-time }
+
+    PayoutReservationResponse:
+      type: object
+      properties:
+        id:                      { type: string, format: uuid }
+        payout_request_id:       { type: string, format: uuid }
+        reserved_amount_minor:   { type: integer }
+        currency_code:           { type: string }
+        status:                  { type: string, enum: [awaiting_approval, approved, invalidated, rejected, expired, released] }
+        maker_id:                { type: string }
+        approver_id:             { type: string, nullable: true }
+        rejection_reason:        { type: string, nullable: true }
+        expires_at:              { type: string, format: date-time }
+        approved_at:             { type: string, format: date-time, nullable: true }
+        created_at:              { type: string, format: date-time }
+        updated_at:              { type: string, format: date-time }
+
+    PayableBalanceResponse:
+      type: object
+      properties:
+        fund_reference_id:            { type: string }
+        currency_code:                { type: string }
+        custody_balance_minor:        { type: integer }
+        confirmed_refunds_minor:      { type: integer }
+        open_dispute_holds_minor:     { type: integer }
+        existing_reservations_minor:  { type: integer }
+        payable_minor:                { type: integer }
+        computed_at:                  { type: string, format: date-time }
+
+    # ── P19: Payment History & Receipts ─────────────────────────────────────
+
+    PaymentHistoryItem:
+      type: object
+      properties:
+        paymentReference:     { type: string, format: uuid }
+        purposeType:          { type: string }
+        purposeReference:     { type: string }
+        domainDeepLink:
+          oneOf:
+            - type: string
+            - type: object
+              properties:
+                status: { type: string, enum: [unavailable] }
+                reason: { type: string, enum: [domain_retired] }
+        providerLabel:        { type: string, nullable: true }
+        originalAmountMinor:  { type: integer }
+        currencyCode:         { type: string }
+        feeAmountMinor:       { type: integer }
+        totalChargedMinor:    { type: integer, description: "Total charged to payer: original_amount_minor + fee_amount_minor" }
+        paymentStatus:        { type: string, enum: [processing, confirmed, refund_pending, refunded, failed, cancelled] }
+        refundStatus:         { type: string, enum: [none, pending, confirmed, failed] }
+        refundAmountMinor:    { type: integer, nullable: true }
+        refundEligible:       { type: boolean }
+        paymentDate:          { type: string, format: date-time }
+        organisationId:       { type: string }
+
+    PaymentHistoryResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentHistoryItem'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    ReceiptRefundSummaryItem:
+      type: object
+      properties:
+        amount_minor:  { type: integer }
+        status:        { type: string }
+        confirmed_at:  { type: string, format: date-time, nullable: true }
+
+    ReceiptResponse:
+      type: object
+      properties:
+        paymentReference:    { type: string, format: uuid }
+        providerLabel:       { type: string, nullable: true }
+        originalAmountMinor: { type: integer }
+        currencyCode:        { type: string }
+        feeAmountMinor:      { type: integer, description: "Sourced from confirmed payment_attempt.fee_minor — immutable after ledger post" }
+        totalChargedMinor:   { type: integer, description: "Total charged: original_amount_minor + fee_amount_minor" }
+        paymentDate:         { type: string, format: date-time }
+        purposeSummary:      { type: string }
+        receiptStatus:       { type: string, enum: [confirmed] }
+        refundSummary:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReceiptRefundSummaryItem'
+
+    ReceiptDownloadTokenResponse:
+      type: object
+      properties:
+        token:        { type: string, minLength: 64, maxLength: 64 }
+        expires_at:   { type: string, format: date-time }
+        download_url: { type: string, format: uri }
+
+    PaymentExportRequest:
+      type: object
+      required: [scope_type]
+      properties:
+        scope_type:
+          type: string
+          enum: [organisation, platform]
+        organisation_id:
+          type: string
+          nullable: true
+        filters:
+          type: object
+          properties:
+            purpose_type:  { type: string }
+            currency_code: { type: string, pattern: '^[A-Z]{3}$' }
+            date_from:     { type: string, format: date }
+            date_to:       { type: string, format: date }
+            status:        { type: string }
+
+    PaymentExportStatusResponse:
+      type: object
+      properties:
+        export_id:    { type: string, format: uuid }
+        status:       { type: string, enum: [queued, generating, ready, failed, expired] }
+        row_count:    { type: integer, nullable: true }
+        generated_at: { type: string, format: date-time, nullable: true }
+        download_url: { type: string, format: uri, nullable: true }
+        expires_at:   { type: string, format: date-time, nullable: true }
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page: { type: integer }
+        per_page:     { type: integer }
+        total:        { type: integer }
+        last_page:    { type: integer }
+
+    # ── P20 Admin Provider Config Schemas ─────────────────────────────────────
+
+    ProviderAccount:
+      type: object
+      properties:
+        id:                         { type: string, format: uuid }
+        provider_id:                { type: string, format: uuid }
+        merchant_account_reference: { type: string, nullable: true }
+        supported_currencies:       { type: array, items: { type: string } }
+        supported_payment_methods:  { type: array, items: { type: string } }
+        min_amount_minor:           { type: integer }
+        max_amount_minor:           { type: integer }
+        daily_limit_minor:          { type: integer, nullable: true }
+        enabled_organisations:      { type: array, items: { type: string } }
+        enabled_modules:            { type: array, items: { type: string } }
+        enabled_purpose_types:      { type: array, items: { type: string } }
+        country_restrictions:       { type: array, items: { type: string } }
+        callback_url:               { type: string, nullable: true, description: "Always null — E25 owns ingress" }
+        callback_secret_reference:
+          type: object
+          nullable: true
+          description: "Masked secret reference — raw value never returned"
+          properties:
+            key:    { type: string }
+            masked: { type: string, example: "****" }
+        capability_flags:           { type: object, additionalProperties: { type: boolean } }
+        fee_rule_ids:               { type: array, items: { type: string } }
+        is_active:                  { type: boolean }
+        config_version:             { type: integer }
+        display_label:              { type: string, nullable: true }
+        display_description:        { type: string, nullable: true }
+        display_icon_key:           { type: string, nullable: true }
+        display_badge:              { type: string, nullable: true }
+        display_sort_order:         { type: integer }
+        account_lifecycle_status:
+          type: string
+          enum: [draft, pending_approval, active, suspended, retired, rejected]
+        submitted_by_actor_id:      { type: string, nullable: true }
+        approved_by_actor_id:       { type: string, nullable: true }
+        approved_at:                { type: string, format: date-time, nullable: true }
+        activated_at:               { type: string, format: date-time, nullable: true }
+        suspended_at:               { type: string, format: date-time, nullable: true }
+        retired_at:                 { type: string, format: date-time, nullable: true }
+        rejection_reason:           { type: string, nullable: true }
+        created_at:                 { type: string, format: date-time }
+        updated_at:                 { type: string, format: date-time, nullable: true }
+
+    UpdateAccountPayload:
+      type: object
+      properties:
+        supported_currencies:       { type: array, items: { type: string } }
+        supported_payment_methods:  { type: array, items: { type: string } }
+        min_amount_minor:           { type: integer, minimum: 0 }
+        max_amount_minor:           { type: integer, minimum: 0 }
+        daily_limit_minor:          { type: integer, minimum: 0, nullable: true }
+        enabled_organisations:      { type: array, items: { type: string } }
+        enabled_modules:            { type: array, items: { type: string } }
+        enabled_purpose_types:      { type: array, items: { type: string } }
+        country_restrictions:       { type: array, items: { type: string } }
+        capability_flags:           { type: object, additionalProperties: { type: boolean } }
+        display_label:              { type: string, nullable: true }
+        display_description:        { type: string, nullable: true }
+        display_icon_key:           { type: string, nullable: true }
+        display_badge:              { type: string, nullable: true }
+        display_sort_order:         { type: integer, minimum: 0 }
+        merchant_account_reference: { type: string, description: "HIGH RISK — triggers draft workflow" }
+        callback_secret_reference:  { type: string, description: "HIGH RISK — secret key path only, not raw value" }
+        config_version:             { type: integer, description: "Optimistic lock version — must match current" }
+
+    LifecycleTransitionPayload:
+      type: object
+      required: [action, reason]
+      properties:
+        action:
+          type: string
+          enum: [activate, suspend, restore, retire, reject]
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+
+    HighRiskApprovalRequired:
+      type: object
+      required: [requires_approval, draft_id]
+      properties:
+        message:           { type: string }
+        requires_approval: { type: boolean, enum: [true] }
+        draft_id:          { type: string, format: uuid }
+        high_risk_fields:
+          type: array
+          items: { type: string }
+
+    ConfigDraft:
+      type: object
+      properties:
+        id:          { type: string, format: uuid }
+        provider_id: { type: string, format: uuid, nullable: true }
+        change_type:
+          type: string
+          enum: [high_risk_update, credential_rotation, module_config]
+        change_payload:
+          type: object
+          description: "Proposed values. Secret fields shown masked as '****'."
+          additionalProperties: true
+        status:
+          type: string
+          enum: [draft, pending_approval, approved, rejected, superseded]
+        drafted_by_actor_id:  { type: string }
+        reviewed_by_actor_id: { type: string, nullable: true }
+        reviewed_at:          { type: string, format: date-time, nullable: true }
+        review_notes:         { type: string, nullable: true }
+        account_config_version_at_draft_time: { type: integer, nullable: true }
+        created_at:           { type: string, format: date-time }
+
+    ModuleConfig:
+      type: object
+      properties:
+        id:           { type: string, format: uuid }
+        module_key:   { type: string }
+        display_name: { type: string }
+        is_enabled:   { type: boolean }
+        display_order: { type: integer }
+        description:  { type: string, nullable: true }
+        updated_by_actor_id: { type: string, nullable: true }
+
+    UpdateModuleConfigPayload:
+      type: object
+      required: [modules]
+      properties:
+        modules:
+          type: array
+          items:
+            type: object
+            required: [module_key]
+            properties:
+              module_key:    { type: string }
+              is_enabled:    { type: boolean }
+              display_order: { type: integer, minimum: 0 }
+              description:   { type: string, nullable: true }
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -441,7 +1505,12 @@ paths:
                   data:
                     $ref: '#/components/schemas/PaymentIntentResponse'
         "409":
-          description: Duplicate active intent for same purpose
+          description: |
+            Conflict. Possible `error_code` values:
+            - `RESOURCE_CONFLICT` — duplicate active intent for same purpose
+            - `IDEMPOTENCY_KEY_MISMATCH` — same Idempotency-Key reused with different request body
+            - `IDEMPOTENCY_IN_PROGRESS` — duplicate concurrent request with same key
+            - `CONCURRENT_MODIFICATION` — deadlock retries exhausted; retry the request
           content:
             application/json:
               schema:
@@ -509,7 +1578,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
         "409":
-          description: Active attempt already exists for this intent
+          description: |
+            Conflict. Possible `error_code` values:
+            - `DUPLICATE_ATTEMPT` — active attempt already exists for this intent
+            - `IDEMPOTENCY_KEY_MISMATCH` — same Idempotency-Key reused with different request body
+            - `IDEMPOTENCY_IN_PROGRESS` — duplicate concurrent request with same key
+            - `CONCURRENT_MODIFICATION` — deadlock retries exhausted; retry the request
           content:
             application/json:
               schema:
@@ -522,6 +1596,128 @@ paths:
                 $ref: '#/components/schemas/ErrorEnvelope'
         "503":
           description: Provider circuit open or provider suspended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  # ── Attempt Outcome (P07 T027) ──────────────────────────────────────────────
+  /payment/intents/{intentId}/attempts/{attemptId}/outcome:
+    post:
+      tags: [Payment Attempts]
+      summary: Report payment outcome from provider
+      description: |
+        Called by provider adapters or async webhook handlers to report a terminal outcome
+        for a payment attempt. Idempotent on `Idempotency-Key` scoped to `payment.outcome`.
+        Guard A handles idempotent replays; Guard D records duplicate captures as reconciliation
+        exceptions without overwriting the original outcome.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IntentId'
+        - name: attemptId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [outcome]
+              properties:
+                outcome:
+                  type: string
+                  enum: [succeeded, failed, cancelled]
+                provider_reference_id:
+                  type: string
+                  nullable: true
+                  description: Provider's authoritative reference for this transaction
+                failure_reason:
+                  type: string
+                  nullable: true
+                  description: Required when outcome = failed
+                fee_minor:
+                  type: integer
+                  nullable: true
+                  description: Fee charged by provider in minor currency units
+                captured_amount_minor:
+                  type: integer
+                  nullable: true
+                  description: Actual amount captured (triggers excess-capture check if > intent amount)
+      responses:
+        "204":
+          description: Outcome recorded
+        "409":
+          description: |
+            Conflict. Possible `error_code` values:
+            - `IDEMPOTENCY_KEY_MISMATCH` — same Idempotency-Key reused with different request body
+            - `IDEMPOTENCY_IN_PROGRESS` — duplicate concurrent request with same key
+            - `CONCURRENT_MODIFICATION` — deadlock retries exhausted; retry the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "404":
+          description: Intent or attempt not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "422":
+          description: Invalid outcome value or missing required field
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  # ── Attempt Detail (P06 T027) ────────────────────────────────────────────────
+  /payment/intents/{intentId}/attempts/{attemptId}:
+    get:
+      tags: [Payment Attempts]
+      summary: Get attempt detail with status dimensions
+      description: |
+        Returns detailed status for a specific payment attempt. Includes `operation_id`,
+        `quote_id`, `quote_version`, and `reconciliation_exception_id` when applicable.
+        Actor must own the intent, or must hold `payment.intents.admin` permission.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IntentId'
+        - name: attemptId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Attempt detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PaymentAttemptResponse'
+        "401":
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "403":
+          description: Actor does not own this intent and lacks admin access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "404":
+          description: Intent or attempt not found
           content:
             application/json:
               schema:
@@ -568,15 +1764,74 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
 
+  /payment/intents/{intentId}/quote:
+    get:
+      tags: [Payment Intents]
+      summary: Get active quote for a payment intent
+      description: |
+        Returns the active fee quote for the given payment intent.
+        The payer who owns the intent, or an admin with `payment.admin` permission, may call this.
+        Clients MUST present this quote to the consumer before initiating an attempt.
+        If the quote has expired and the total changes, the caller will receive a 409 with
+        `QUOTE_STALE_CONFIRM_REQUIRED` on the next `POST /attempts` — clients should re-fetch
+        the quote and ask the user to confirm the new total.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IntentId'
+      responses:
+        "200":
+          description: Active quote
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PaymentQuoteResponse'
+        "401":
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "403":
+          description: Actor does not own this intent and lacks admin access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "404":
+          description: Intent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "422":
+          description: No active quote (intent may be in a terminal state or pre-quote)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorEnvelope'
+                  - type: object
+                    properties:
+                      code:
+                        type: string
+                        enum: [NO_ACTIVE_QUOTE]
+
   /payment/callbacks/{providerCode}:
     post:
       tags: [Payment Callbacks]
       summary: Receive provider webhook callback
+      security: []
       description: |
-        Called by external providers to report payment outcomes.
-        Unauthenticated but HMAC-signature verified.
-        Raw body is preserved before any JSON parsing.
-        Always returns 202 if the raw body was persisted. Processing is asynchronous.
+        Compatibility facade for E25 POST /v1/webhooks/{providerSlug}.
+        Requires one unambiguous server-managed integration/account/environment mapping.
+        Verifies exact raw bytes before durable receipt. Payment evidence is encrypted;
+        acknowledgement establishes receipt only, never financial completion.
+        Production bank verification requires an installed reviewed provider contract;
+        the available mock protocol is development-only. Unmapped legacy requests fail closed.
       parameters:
         - $ref: '#/components/parameters/ProviderCode'
         - name: X-Signature
@@ -595,7 +1850,7 @@ paths:
               description: Raw provider-specific payload; preserved verbatim
       responses:
         "202":
-          description: Callback received and queued for processing
+          description: Verified callback durably received by E25 with a recovery delivery intent
           content:
             application/json:
               schema:
@@ -604,6 +1859,17 @@ paths:
                   message:
                     type: string
                     example: Accepted.
+                  receipt_id:
+                    type: string
+                    format: uuid
+        "401":
+          description: Invalid or missing provider signature
+        "404":
+          description: No unique trusted integration mapping for this provider code
+        "409":
+          description: Provider event identity conflicts with previously retained evidence
+        "500":
+          description: Receipt could not be durably stored or required configuration is unavailable; no acknowledgement
         "400":
           description: Empty or structurally invalid request body
           content:
@@ -669,11 +1935,298 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
 
+  # ── P15: Consumer refund status ───────────────────────────────────────────
+  /payment/intents/{intentId}/refunds:
+    get:
+      tags: [Refunds]
+      summary: List refund statuses for a payment intent
+      description: |
+        Returns all refunds for the authenticated consumer's payment intent.
+        Ownership is enforced: only the payer of the intent can access this endpoint.
+        Requires payment.refunds.view permission.
+      x-required-permission: payment.refunds.view
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IntentId'
+      responses:
+        "200":
+          description: Refund list with summary meta
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CustomerRefundListItem'
+                  meta:
+                    $ref: '#/components/schemas/RefundSummaryMeta'
+        "403":
+          description: Not the owner of the intent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "404":
+          description: Intent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  # ── P15: Admin refund monitoring ───────────────────────────────────────────
+  /admin/payment/refund-management:
+    get:
+      tags: [Admin, Refunds]
+      summary: List refunds with filters (admin view)
+      description: |
+        Filtered list of refunds for operator monitoring.
+        Supports filtering by status, date range, provider_submitted_ref, and intent/attempt IDs.
+        Requires payment.refunds.view permission.
+      x-required-permission: payment.refunds.view
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [requested, pending_approval, processing, submitted, pending, unknown, confirmed, definitive_failure, succeeded, failed, cancelled, rejected]
+        - name: requested_from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: requested_to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: provider_submitted_ref
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+      responses:
+        "200":
+          description: Paginated refund list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminRefundListItem'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /admin/payment/refund-management/{id}:
+    get:
+      tags: [Admin, Refunds]
+      summary: Get refund detail (admin view)
+      description: |
+        Full refund detail including provider references, ledger journal ID, query attempts,
+        and reconciliation exception reference.
+        Requires payment.refunds.view permission.
+      x-required-permission: payment.refunds.view
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Refund detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AdminRefundDetail'
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "404":
+          description: Refund not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /admin/payment/refund-management/{id}/query-status:
+    post:
+      tags: [Admin, Refunds]
+      summary: Trigger provider status query for a non-terminal refund
+      description: |
+        Dispatches QueryRefundStatusJob immediately for an operator-triggered re-check.
+        Use to unblock a refund stuck in submitted/pending/unknown state.
+        Returns 422 if the refund is already in a terminal state.
+        Requires payment.refunds.manage permission.
+      x-required-permission: payment.refunds.manage
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "202":
+          description: Status query dispatched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Status query dispatched.
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "404":
+          description: Refund not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "422":
+          description: Refund is already in a terminal state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  # ── Admin — Provider Adapter Allowlist ────────────────────────────────────
+  /admin/payment/providers/adapters:
+    get:
+      tags: [Admin — Providers]
+      summary: List installed adapter identifiers
+      description: |
+        Returns the platform-level adapter allowlist. Only adapters on this list
+        may be registered as providers. Requires the `payment.admin` permission.
+        This endpoint is separate from provider listing — it reflects the
+        install-time allowlist, not registered provider instances.
+      x-required-permission: payment.admin
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Installed adapter allowlist
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [adapters]
+                    properties:
+                      adapters:
+                        type: array
+                        items:
+                          type: string
+                        example: ["olekard_wallet", "mock_bank"]
+        "403":
+          description: Insufficient permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  # ── Admin — Provider Eligibility Preview ──────────────────────────────────
+  /admin/payment/providers/eligibility-preview:
+    get:
+      tags: [Admin — Providers]
+      summary: Preview eligibility for all provider accounts
+      description: |
+        Returns all provider accounts annotated with their eligibility pipeline result
+        for the given context parameters. Unlike the customer-facing /payment/options
+        endpoint, this returns ALL accounts including suspended, inactive, and ineligible
+        ones — each annotated with the ineligibility reason. Useful for operators
+        diagnosing routing issues without triggering actual payment flows.
+        Requires the `payment.admin` permission.
+      x-required-permission: payment.admin
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: currency
+          in: query
+          schema:
+            type: string
+          example: BWP
+        - name: amount
+          in: query
+          description: Amount in minor units; 0 or absent skips amount-range stages
+          schema:
+            type: integer
+          example: 5000
+        - name: organisation_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: purpose_type
+          in: query
+          schema:
+            type: string
+          example: bill_payment
+        - name: required_capability
+          in: query
+          schema:
+            type: string
+          example: supports_qr
+      responses:
+        "200":
+          description: All provider accounts with eligibility annotation
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EligibilityPreviewItem'
+        "403":
+          description: Insufficient permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
   # ── Admin — Providers ──────────────────────────────────────────────────────
   /admin/payment/providers:
     get:
       tags: [Admin — Providers]
       summary: List payment providers
+      x-required-permission: payment.providers.read
       security:
         - BearerAuth: []
       responses:
@@ -688,10 +2241,15 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/PaymentProviderAdmin'
+                  meta:
+                    $ref: '#/components/schemas/PaginatedMeta'
+                  links:
+                    $ref: '#/components/schemas/PaginatedLinks'
     post:
       tags: [Admin — Providers]
       summary: Register a new payment provider
       description: Requires payment.providers.manage permission.
+      x-required-permission: payment.providers.manage
       security:
         - BearerAuth: []
       parameters:
@@ -716,6 +2274,7 @@ paths:
         High-risk fields (merchant_account_reference, settlement_destination) trigger
         an approval workflow. Requires payment.providers.manage.
         Credentials are NEVER returned in responses — only references are stored.
+      x-required-permission: payment.providers.manage
       security:
         - BearerAuth: []
       parameters:
@@ -741,6 +2300,7 @@ paths:
         Stops new payment attempts for this provider.
         In-flight payments continue to their terminal state.
         Requires payment.providers.manage.
+      x-required-permission: payment.providers.manage
       security:
         - BearerAuth: []
       parameters:
@@ -757,6 +2317,7 @@ paths:
       tags: [Admin — Reconciliation]
       summary: List reconciliation exceptions
       description: Requires payment.reconciliation.view.
+      x-required-permission: payment.reconciliation.view
       security:
         - BearerAuth: []
       parameters:
@@ -786,6 +2347,10 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/ReconciliationException'
+                  meta:
+                    $ref: '#/components/schemas/PaginatedMeta'
+                  links:
+                    $ref: '#/components/schemas/PaginatedLinks'
 
   /admin/payment/reconciliation/exceptions/{id}:
     patch:
@@ -795,6 +2360,7 @@ paths:
         Add investigation notes or resolve an exception.
         Resolution is audited. No financial state changes.
         Requires payment.reconciliation.manage.
+      x-required-permission: payment.reconciliation.manage
       security:
         - BearerAuth: []
       parameters:
@@ -818,3 +2384,1776 @@ paths:
           description: Exception updated
         "403":
           description: Insufficient permission
+
+  # ── Admin — Config Drafts (P03 US3) ───────────────────────────────────────
+  /admin/payment/providers/{id}/config-changes:
+    post:
+      tags: [Admin — Config Drafts]
+      summary: Submit high-risk config change for approval
+      description: |
+        Opens a maker-checker draft for high-risk provider configuration changes.
+        The submitter cannot approve their own draft (FR-04).
+        Requires payment.config.draft permission.
+      x-required-permission: payment.config.draft
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProviderId'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [change_type, proposed_changes]
+              properties:
+                change_type:
+                  type: string
+                  enum: [high_risk_update, credential_rotation]
+                proposed_changes:
+                  type: object
+                  additionalProperties: true
+                notes:
+                  type: string
+                  maxLength: 2000
+      responses:
+        "201":
+          description: Draft created and awaiting approval
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ConfigChangeDraftResponse'
+        "403":
+          description: Insufficient permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /admin/payment/providers/{id}/config-changes/{draftId}/approve:
+    post:
+      tags: [Admin — Config Drafts]
+      summary: Approve a pending config change draft
+      description: |
+        Approves a pending configuration change draft.
+        The approver MUST NOT be the drafter (FR-04 self-approval prevention).
+        Requires payment.config.approve_high_risk permission.
+      x-required-permission: payment.config.approve_high_risk
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProviderId'
+        - name: draftId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notes:
+                  type: string
+                  maxLength: 2000
+      responses:
+        "200":
+          description: Draft approved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ConfigChangeDraftResponse'
+        "403":
+          description: Self-approval not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "409":
+          description: Draft is not in pending_approval state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /admin/payment/providers/{id}/config-changes/{draftId}/reject:
+    post:
+      tags: [Admin — Config Drafts]
+      summary: Reject a pending config change draft
+      description: |
+        Rejects a pending configuration change draft.
+        The reviewer MUST NOT be the drafter (FR-04 self-approval prevention).
+        Requires payment.config.approve_high_risk permission.
+      x-required-permission: payment.config.approve_high_risk
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProviderId'
+        - name: draftId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                  maxLength: 2000
+      responses:
+        "200":
+          description: Draft rejected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ConfigChangeDraftResponse'
+        "403":
+          description: Self-rejection not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "409":
+          description: Draft is not in pending_approval state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  # ── Admin — Refund Approvals (P03 US4) ────────────────────────────────────
+  /admin/payment/refunds:
+    get:
+      tags: [Admin — Refund Approvals]
+      summary: List refunds pending approval
+      description: |
+        Returns refunds in pending_approval state awaiting second-actor approval.
+        Requires payment.refunds.approve permission.
+      x-required-permission: payment.refunds.approve
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        "200":
+          description: List of pending-approval refunds
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RefundResponse'
+                  meta:
+                    $ref: '#/components/schemas/PaginatedMeta'
+
+  /admin/payment/refunds/{id}/approve:
+    post:
+      tags: [Admin — Refund Approvals]
+      summary: Approve a pending-approval refund
+      description: |
+        Approves a refund awaiting second-actor sign-off.
+        The approver MUST NOT be the original requester (FR-04 self-approval prevention).
+        High-value refunds also require a valid step-up token (auth.step_up_threshold).
+        Requires payment.refunds.approve permission and Idempotency-Key header.
+      x-required-permission: payment.refunds.approve
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notes:
+                  type: string
+                  maxLength: 2000
+                step_up_token:
+                  type: string
+                  description: Required when refund amount exceeds auth.step_up_threshold
+      responses:
+        "200":
+          description: Refund approved and transitioned to processing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RefundResponse'
+        "403":
+          description: Self-approval not allowed or step-up required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "409":
+          description: Refund is not in pending_approval state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /admin/payment/refunds/{id}/reject:
+    post:
+      tags: [Admin — Refund Approvals]
+      summary: Reject a pending-approval refund
+      description: |
+        Rejects a refund awaiting approval. The reviewer MUST NOT be the requester.
+        Requires payment.refunds.approve permission.
+      x-required-permission: payment.refunds.approve
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                  maxLength: 2000
+      responses:
+        "200":
+          description: Refund rejected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RefundResponse'
+        "403":
+          description: Self-rejection not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "409":
+          description: Refund is not in pending_approval state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  # ── P08 Admin — Pending Accounting ────────────────────────────────────────
+  /admin/payment/intents/pending-accounting:
+    get:
+      tags: [Admin — Pending Accounting]
+      summary: List payment intents with unresolved ledger acknowledgement
+      description: |
+        Returns payment intents in pending_ledger or ledger_failed accounting status.
+        Use accounting_status filter to narrow to a single status.
+        Results ordered by succeeded_at ascending (oldest unresolved first).
+        Requires payment.intents.admin permission.
+      x-required-permission: payment.intents.admin
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: accounting_status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pending_ledger, ledger_failed]
+          description: Filter by specific accounting status; omit to return both
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 100
+      responses:
+        "200":
+          description: List of intents with unresolved accounting
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PendingAccountingIntent'
+                  meta:
+                    type: object
+                    properties:
+                      count:
+                        type: integer
+                      limit:
+                        type: integer
+                      status_filter:
+                        type: string
+        "401":
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "403":
+          description: Insufficient permissions (requires payment.intents.admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+# ---------------------------------------------------------------------------
+# P16 — Dispute Management
+# ---------------------------------------------------------------------------
+
+  /payment/bank/dispute-callback:
+    post:
+      tags: [Disputes — Ingress]
+      summary: Receive bank dispute/reversal/chargeback event
+      description: |
+        Provider-authenticated webhook. Deduplicates on (provider_code, provider_dispute_reference).
+        Returns 201 for new cases, 200 for duplicate acknowledgements, 422 for unmatched attempts.
+      security:
+        - BearerAuth: []
+      x-permissions: [payment.callbacks.receive]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DisputeCallbackPayload'
+      responses:
+        "201":
+          description: Dispute case created
+        "200":
+          description: Duplicate — case already exists (idempotent acknowledgement)
+        "422":
+          description: Unknown payment attempt — ReconciliationException recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /payment/intents/{intentId}/disputes:
+    get:
+      tags: [Disputes — Customer]
+      summary: List dispute summaries for a payment intent (customer view)
+      description: Returns consumer-safe dispute summaries for the authenticated user's intent.
+      security:
+        - BearerAuth: []
+      x-permissions: [payment.disputes.view]
+      parameters:
+        - $ref: '#/components/parameters/IntentId'
+      responses:
+        "200":
+          description: List of dispute summaries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CustomerDisputeSummary'
+        "403":
+          description: Not the intent owner
+
+  /admin/payment/dispute-cases:
+    get:
+      tags: [Admin — Disputes]
+      summary: List dispute cases (admin)
+      description: Filterable list of all dispute cases. Ordered by response_deadline ASC NULLS LAST.
+      security:
+        - BearerAuth: []
+      x-permissions: [payment.disputes.view]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [received, under_review, won, lost, closed_reversed, investigation_required]
+        - name: case_type
+          in: query
+          schema:
+            type: string
+            enum: [reversal, dispute, chargeback]
+        - name: requires_finance_review
+          in: query
+          schema:
+            type: boolean
+        - name: deadline_before
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        "200":
+          description: Paginated list of dispute cases
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DisputeCaseListItem'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+  /admin/payment/dispute-cases/{id}:
+    get:
+      tags: [Admin — Disputes]
+      summary: Get dispute case detail (admin)
+      security:
+        - BearerAuth: []
+      x-permissions: [payment.disputes.view]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Dispute case with event timeline and hold info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DisputeCaseDetail'
+        "404":
+          description: Case not found
+
+  /admin/payment/dispute-cases/{id}/hold:
+    post:
+      tags: [Admin — Disputes]
+      summary: Authorise a financial hold for a dispute case
+      description: |
+        Transitions case from `received` to `under_review`. Idempotency key required.
+        For exposure_type=hold, hold_amount_minor must be >= 1.
+        For exposure_type=settled_funds_receivable, hold_amount_minor may be 0.
+      security:
+        - BearerAuth: []
+      x-permissions: [payment.disputes.manage]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [hold_amount_minor, exposure_type, authorised_by]
+              properties:
+                hold_amount_minor:
+                  type: integer
+                  minimum: 0
+                  description: Amount to hold. Must be >= 1 when exposure_type=hold.
+                exposure_type:
+                  type: string
+                  enum: [hold, settled_funds_receivable]
+                authorised_by:
+                  type: string
+                correlation_id:
+                  type: string
+      responses:
+        "200":
+          description: Hold authorised; case now under_review
+        "409":
+          description: Case already past received status (invalid transition)
+        "422":
+          description: Validation error (e.g. zero hold for standard hold type)
+
+  /admin/payment/dispute-cases/{id}/outcome:
+    post:
+      tags: [Admin — Disputes]
+      summary: Record provider outcome for a dispute case
+      description: |
+        Records won/lost/closed_reversed. Idempotency key required.
+        Same-outcome replay is an idempotent no-op.
+        Different outcome on a terminal case triggers investigation_required.
+      security:
+        - BearerAuth: []
+      x-permissions: [payment.disputes.manage]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [outcome]
+              properties:
+                outcome:
+                  type: string
+                  enum: [won, lost, closed_reversed]
+                provider_decision_reference:
+                  type: string
+                chargeback_fee_minor:
+                  type: integer
+                  minimum: 0
+                actor_id:
+                  type: string
+      responses:
+        "200":
+          description: Outcome recorded or idempotent replay
+        "409":
+          description: Contradictory outcome or invalid transition
+
+  /admin/payment/dispute-cases/{id}/evidence:
+    post:
+      tags: [Admin — Disputes]
+      summary: Submit evidence for an open dispute case
+      security:
+        - BearerAuth: []
+      x-permissions: [payment.disputes.manage]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [evidence_type, reference]
+              properties:
+                evidence_type:
+                  type: string
+                reference:
+                  type: string
+                notes:
+                  type: string
+                actor_id:
+                  type: string
+      responses:
+        "201":
+          description: Evidence recorded
+        "409":
+          description: Case is already in a terminal state
+
+  /admin/payment/dispute-cases/{id}/finance-review:
+    post:
+      tags: [Admin — Disputes]
+      summary: Acknowledge PostDrawLiability finance review gate
+      security:
+        - BearerAuth: []
+      x-permissions: [payment.disputes.finance_review]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [actor_id]
+              properties:
+                actor_id:
+                  type: string
+                notes:
+                  type: string
+      responses:
+        "200":
+          description: Finance review acknowledged; requires_finance_review cleared
+        "409":
+          description: Case is already in a terminal state
+
+  # ── P16 component schemas ──────────────────────────────────────────────────
+
+  components:
+    schemas:
+      DisputeCallbackPayload:
+        type: object
+        required: [provider_code, provider_dispute_reference, payment_attempt_id, case_type, disputed_amount_minor, currency_code]
+        properties:
+          provider_code:
+            type: string
+            maxLength: 64
+          provider_dispute_reference:
+            type: string
+            maxLength: 255
+          payment_attempt_id:
+            type: string
+            format: uuid
+          case_type:
+            type: string
+            enum: [reversal, dispute, chargeback]
+          disputed_amount_minor:
+            type: integer
+            minimum: 1
+          currency_code:
+            type: string
+            minLength: 3
+            maxLength: 3
+          reason_code:
+            type: string
+            maxLength: 64
+          response_deadline:
+            type: string
+            format: date-time
+          correlation_id:
+            type: string
+            maxLength: 128
+
+      DisputeCaseListItem:
+        type: object
+        properties:
+          id:
+            type: string
+          payment_attempt_id:
+            type: string
+          case_type:
+            type: string
+            enum: [reversal, dispute, chargeback]
+          status:
+            type: string
+            enum: [received, under_review, won, lost, closed_reversed, investigation_required]
+          provider_code:
+            type: string
+          disputed_amount_minor:
+            type: integer
+          currency_code:
+            type: string
+          response_deadline:
+            type: string
+            format: date-time
+          requires_finance_review:
+            type: boolean
+          opened_at:
+            type: string
+            format: date-time
+
+      DisputeCaseDetail:
+        allOf:
+          - $ref: '#/components/schemas/DisputeCaseListItem'
+          - type: object
+            properties:
+              payment_intent_id:
+                type: string
+              provider_dispute_reference:
+                type: string
+              provider_decision_reference:
+                type: string
+              net_chargeback_minor:
+                type: integer
+              chargeback_fee_minor:
+                type: integer
+              accounting_status:
+                type: string
+                enum: [pending, hold_released, correcting_journal_posted, no_journal_required, fee_posted]
+              hold:
+                type: object
+                nullable: true
+                properties:
+                  id:
+                    type: string
+                  hold_amount_minor:
+                    type: integer
+                  settled_funds_receivable:
+                    type: boolean
+                  authorised_at:
+                    type: string
+                    format: date-time
+                  released_at:
+                    type: string
+                    format: date-time
+                    nullable: true
+              events:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    event_type:
+                      type: string
+                    actor_id:
+                      type: string
+                    occurred_at:
+                      type: string
+                      format: date-time
+                    payload:
+                      type: object
+
+      CustomerDisputeSummary:
+        type: object
+        properties:
+          id:
+            type: string
+          case_type:
+            type: string
+            enum: [reversal, dispute, chargeback]
+          status_label:
+            type: string
+            description: Consumer-friendly label (no internal status codes)
+          disputed_amount_minor:
+            type: integer
+          currency_code:
+            type: string
+          response_deadline:
+            type: string
+            format: date-time
+            nullable: true
+          opened_at:
+            type: string
+            format: date-time
+
+# ─── P17: Reconciliation Clearing and Provider Settlement paths ───────────────
+# (See components/schemas below for P17 schemas)
+
+  /api/v1/payment/provider/statement-callback:
+    post:
+      summary: Ingest a provider settlement statement
+      operationId: ingestProviderStatement
+      tags: [P17 Reconciliation]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [provider_code, account_id, environment, currency_code, period_start, period_end, lines]
+              properties:
+                provider_code: { type: string }
+                account_id: { type: string }
+                environment: { type: string, enum: [production, sandbox] }
+                currency_code: { type: string, minLength: 3, maxLength: 3 }
+                period_start: { type: string, format: date-time }
+                period_end: { type: string, format: date-time }
+                lines:
+                  type: array
+                  items:
+                    type: object
+                    required: [provider_reference_id, line_type, direction, amount_minor, currency_code, value_date]
+                    properties:
+                      provider_reference_id: { type: string }
+                      line_type: { type: string, enum: [capture, fee, refund, reversal, chargeback, internal_transfer, adjustment] }
+                      direction: { type: string, enum: [credit, debit] }
+                      amount_minor: { type: integer, minimum: 0 }
+                      currency_code: { type: string }
+                      value_date: { type: string, format: date }
+                      matched_entity_id: { type: string, nullable: true }
+                      description: { type: string, nullable: true }
+      responses:
+        '202':
+          description: Statement accepted and queued for matching
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statement_id: { type: string, format: uuid }
+                  status: { type: string, example: pending_match }
+        '409':
+          description: Duplicate statement (same source hash already exists)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  existing_statement_id: { type: string, format: uuid }
+
+  /api/v1/admin/payment/provider-statements:
+    get:
+      summary: List provider statements
+      operationId: listProviderStatements
+      tags: [P17 Reconciliation]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: provider_code, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string, enum: [pending_match, matching, matched, partially_matched, exception_raised, closed] } }
+        - { name: currency_code, in: query, schema: { type: string } }
+        - { name: period_from, in: query, schema: { type: string, format: date-time } }
+        - { name: period_to, in: query, schema: { type: string, format: date-time } }
+        - { name: per_page, in: query, schema: { type: integer, default: 20 } }
+      responses:
+        '200':
+          description: Paginated list of provider statements
+
+  /api/v1/admin/payment/provider-statements/{statementId}:
+    get:
+      summary: Get provider statement detail with lines
+      operationId: getProviderStatement
+      tags: [P17 Reconciliation]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: statementId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Provider statement with all lines
+        '404':
+          description: Statement not found
+
+  /api/v1/admin/payment/provider-statements/{statementId}/qualify:
+    post:
+      summary: Trigger payout qualification for a matched statement
+      operationId: qualifyProviderStatement
+      tags: [P17 Reconciliation]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: statementId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '202':
+          description: Qualification job dispatched
+        '409':
+          description: Statement status does not allow qualification
+
+  /api/v1/admin/payment/clearing-records:
+    get:
+      summary: List clearing records
+      operationId: listClearingRecords
+      tags: [P17 Reconciliation]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: provider_code, in: query, schema: { type: string } }
+        - { name: accounting_status, in: query, schema: { type: string, enum: [pending_ledger_config, qualified, excluded] } }
+        - { name: aged, in: query, schema: { type: boolean } }
+        - { name: bank_settled, in: query, schema: { type: boolean } }
+        - { name: per_page, in: query, schema: { type: integer, default: 20 } }
+      responses:
+        '200':
+          description: Paginated list of clearing records
+
+  /api/v1/admin/payment/reconciliation-corrections:
+    get:
+      summary: List reconciliation correction requests
+      operationId: listReconciliationCorrections
+      tags: [P17 Reconciliation]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [pending_approval, approved, rejected, posted, posting_failed] } }
+        - { name: exception_id, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Paginated list of correction requests
+    post:
+      summary: Submit a reconciliation correction request
+      operationId: submitReconciliationCorrection
+      tags: [P17 Reconciliation]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [exception_id, correction_type, description, evidence_note, amount_minor, currency_code]
+              properties:
+                exception_id: { type: string, format: uuid }
+                correction_type: { type: string, maxLength: 50 }
+                description: { type: string, minLength: 10 }
+                evidence_note: { type: string, minLength: 10, description: Required free-text rationale }
+                evidence_reference: { type: string, format: uri, maxLength: 500, nullable: true }
+                amount_minor: { type: integer, minimum: 1 }
+                currency_code: { type: string, minLength: 3, maxLength: 3 }
+                debit_account: { type: string, maxLength: 100, nullable: true }
+                credit_account: { type: string, maxLength: 100, nullable: true }
+      responses:
+        '201':
+          description: Correction request created
+        '409':
+          description: Idempotency conflict
+        '422':
+          description: Validation error
+
+  /api/v1/admin/payment/reconciliation-corrections/{correctionId}/approve:
+    post:
+      summary: Approve a correction request (dual-approval gate; reviewer != submitter)
+      operationId: approveReconciliationCorrection
+      tags: [P17 Reconciliation]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: correctionId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Correction approved and ledger entry posted
+        '403':
+          description: Self-approval not permitted
+        '409':
+          description: Correction not in pending_approval state
+
+  /api/v1/admin/payment/reconciliation-corrections/{correctionId}/reject:
+    post:
+      summary: Reject a correction request
+      operationId: rejectReconciliationCorrection
+      tags: [P17 Reconciliation]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: correctionId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rejection_reason]
+              properties:
+                rejection_reason: { type: string, minLength: 10 }
+      responses:
+        '200':
+          description: Correction rejected
+        '409':
+          description: Correction not in pending_approval state
+
+  /api/v1/admin/payment/reconciliation-exceptions/{exceptionId}/acknowledge-external:
+    post:
+      summary: Acknowledge an orphan_provider exception as a valid external charge
+      operationId: acknowledgeExternalException
+      tags: [P17 Reconciliation]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: exceptionId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [evidence_note]
+              properties:
+                evidence_note: { type: string, minLength: 10 }
+      responses:
+        '200':
+          description: Exception acknowledged as external charge (no ledger entry created)
+        '422':
+          description: Wrong exception type or not in open status
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # P18: Beneficiary Verification and Payout Lifecycle
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  /api/v1/admin/payment/payout/beneficiaries:
+    get:
+      summary: List payout beneficiaries
+      operationId: listPayoutBeneficiaries
+      tags: [P18 Payout]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: organisation_id, in: query, required: false, schema: { type: string } }
+        - { name: status, in: query, required: false, schema: { type: string } }
+        - { name: per_page, in: query, required: false, schema: { type: integer, default: 20 } }
+      responses:
+        '200':
+          description: Paginated list of payout beneficiaries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutBeneficiaryListResponse'
+    post:
+      summary: Register a new payout beneficiary
+      operationId: registerPayoutBeneficiary
+      tags: [P18 Payout]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterPayoutBeneficiaryRequest'
+      responses:
+        '201':
+          description: Beneficiary registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutBeneficiaryResponse'
+        '409':
+          description: Idempotent replay — same Idempotency-Key used previously
+        '422':
+          description: Validation error or missing Idempotency-Key
+
+  /api/v1/admin/payment/payout/beneficiaries/{beneficiaryId}:
+    get:
+      summary: Get a payout beneficiary by ID
+      operationId: getPayoutBeneficiary
+      tags: [P18 Payout]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: beneficiaryId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Payout beneficiary details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutBeneficiaryResponse'
+        '404':
+          description: Not found
+
+  /api/v1/admin/payment/payout/beneficiaries/{beneficiaryId}/verify:
+    post:
+      summary: Record external verification of a beneficiary
+      operationId: verifyPayoutBeneficiary
+      tags: [P18 Payout]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: beneficiaryId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [verification_reference]
+              properties:
+                verification_reference: { type: string, minLength: 3 }
+      responses:
+        '200':
+          description: Beneficiary verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutBeneficiaryResponse'
+        '404':
+          description: Beneficiary not found
+        '422':
+          description: Validation error or missing Idempotency-Key
+
+  /api/v1/admin/payment/payout/requests:
+    get:
+      summary: List payout requests
+      operationId: listPayoutRequests
+      tags: [P18 Payout]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: fund_reference_id, in: query, required: false, schema: { type: string } }
+        - { name: status, in: query, required: false, schema: { type: string } }
+        - { name: per_page, in: query, required: false, schema: { type: integer, default: 20 } }
+      responses:
+        '200':
+          description: Paginated list of payout requests
+    post:
+      summary: Initiate a payout request
+      operationId: initiatePayoutRequest
+      tags: [P18 Payout]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InitiatePayoutRequestBody'
+      responses:
+        '201':
+          description: Payout request initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutRequestResponse'
+        '400':
+          description: Domain entitlement denied or beneficiary not verified
+        '422':
+          description: Validation error or missing Idempotency-Key
+
+  /api/v1/admin/payment/payout/requests/{payoutId}:
+    get:
+      summary: Get a payout request by ID (includes reservation if loaded)
+      operationId: getPayoutRequest
+      tags: [P18 Payout]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: payoutId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Payout request detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutRequestResponse'
+        '404':
+          description: Not found
+
+  /api/v1/admin/payment/payout/requests/{payoutId}/balance:
+    get:
+      summary: Compute server-side payable balance for a fund
+      operationId: getPayoutBalance
+      tags: [P18 Payout]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: payoutId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Payable balance breakdown
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayableBalanceResponse'
+        '404':
+          description: Payout request not found
+
+  /api/v1/admin/payment/payout/requests/{payoutId}/reservation:
+    post:
+      summary: Create a funds reservation for a payout request (maker step)
+      operationId: createPayoutReservation
+      tags: [P18 Payout]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: payoutId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reserved_amount_minor]
+              properties:
+                reserved_amount_minor: { type: integer, minimum: 1 }
+      responses:
+        '201':
+          description: Reservation created (awaiting_approval)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutReservationResponse'
+        '400':
+          description: Insufficient payable balance
+        '409':
+          description: Duplicate reservation or idempotent replay
+        '422':
+          description: Validation error or missing Idempotency-Key
+
+  /api/v1/admin/payment/payout/requests/{payoutId}/reservation/approve:
+    post:
+      summary: Approve a payout reservation (approver step; maker ≠ approver)
+      operationId: approvePayoutReservation
+      tags: [P18 Payout]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: payoutId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Reservation approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutReservationResponse'
+        '403':
+          description: Self-approval not permitted
+        '409':
+          description: Reservation expired
+        '422':
+          description: Missing Idempotency-Key
+
+  /api/v1/admin/payment/payout/requests/{payoutId}/reservation/reject:
+    post:
+      summary: Reject a payout reservation
+      operationId: rejectPayoutReservation
+      tags: [P18 Payout]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: payoutId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rejection_reason]
+              properties:
+                rejection_reason: { type: string, minLength: 10 }
+      responses:
+        '200':
+          description: Reservation rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutReservationResponse'
+        '422':
+          description: Validation error
+
+  /api/v1/admin/payment/payout/requests/{payoutId}/execute:
+    post:
+      summary: Execute a payout via provider adapter (STUB — blocked AD-14)
+      operationId: executePayoutRequest
+      tags: [P18 Payout]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: payoutId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '501':
+          description: Not implemented — pending AD-14 resolution
+
+  /api/v1/admin/payment/payout/requests/{payoutId}/confirm-settlement:
+    post:
+      summary: Confirm ledger disbursement and reconcile provider evidence (STUB — blocked AD-10/LC14)
+      operationId: confirmPayoutSettlement
+      tags: [P18 Payout]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: payoutId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '501':
+          description: Not implemented — pending AD-10 and LC14 resolution
+
+# ─────────────────────────────────────────────────────────────────────────────
+# P19: Receipts, Communication and Payment History APIs
+# ─────────────────────────────────────────────────────────────────────────────
+
+  /v1/payment/history:
+    get:
+      summary: Retrieve scoped payment history for the authenticated consumer
+      operationId: getPaymentHistory
+      tags: [P19 History]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: purpose_type, in: query, required: false, schema: { type: string } }
+        - { name: status, in: query, required: false, schema: { type: string, enum: [processing, confirmed, refund_pending, refunded, failed, cancelled] } }
+        - { name: date_from, in: query, required: false, schema: { type: string, format: date } }
+        - { name: date_to, in: query, required: false, schema: { type: string, format: date } }
+        - { name: currency_code, in: query, required: false, schema: { type: string, pattern: '^[A-Z]{3}$' } }
+        - { name: page, in: query, required: false, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: per_page, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+      responses:
+        '200':
+          description: Paginated list of payment history records
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PaymentHistoryItem'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /v1/payment/receipts/{intentId}:
+    get:
+      summary: Retrieve an immutable receipt for a confirmed payment
+      operationId: getReceipt
+      tags: [P19 Receipts]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: intentId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Receipt for the confirmed payment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceiptResponse'
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/payment/receipts/{intentId}/download-token:
+    post:
+      summary: Issue a single-use expiring download token for a receipt
+      operationId: issueReceiptDownloadToken
+      tags: [P19 Receipts]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: intentId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '201':
+          description: Download token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceiptDownloadTokenResponse'
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/payment/receipts/download/{token}:
+    get:
+      summary: Download a receipt using a single-use token (no auth required)
+      operationId: downloadReceiptByToken
+      tags: [P19 Receipts]
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string, minLength: 64, maxLength: 64 } }
+      responses:
+        '200':
+          description: Receipt data (JSON)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceiptResponse'
+        '404': { $ref: '#/components/responses/NotFound' }
+        '410':
+          description: Token expired or already used
+
+  /v1/admin/payment/history:
+    get:
+      summary: Admin view of payment history (organisation or platform scoped)
+      operationId: getAdminPaymentHistory
+      tags: [P19 History]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: organisation_id, in: query, required: false, schema: { type: string } }
+        - { name: purpose_type, in: query, required: false, schema: { type: string } }
+        - { name: status, in: query, required: false, schema: { type: string } }
+        - { name: date_from, in: query, required: false, schema: { type: string, format: date } }
+        - { name: date_to, in: query, required: false, schema: { type: string, format: date } }
+        - { name: per_page, in: query, required: false, schema: { type: integer, default: 20 } }
+      responses:
+        '200':
+          description: Paginated payment history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PaymentHistoryItem'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /v1/admin/payment/exports:
+    post:
+      summary: Request a scoped payment export (async)
+      operationId: requestPaymentExport
+      tags: [P19 Exports]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentExportRequest'
+      responses:
+        '202':
+          description: Export request accepted and queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentExportStatusResponse'
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /v1/admin/payment/exports/{exportId}:
+    get:
+      summary: Check export status and retrieve download URL when ready
+      operationId: getPaymentExportStatus
+      tags: [P19 Exports]
+      security:
+        - BearerAuth: []
+      parameters:
+        - { name: exportId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Export status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentExportStatusResponse'
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/payment/exports/download/{token}:
+    get:
+      summary: Download an export CSV using a single-use token (no auth required)
+      operationId: downloadExportByToken
+      tags: [P19 Exports]
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string, minLength: 64, maxLength: 64 } }
+      responses:
+        '200':
+          description: CSV export file
+          content:
+            text/csv:
+              schema:
+                type: string
+        '404': { $ref: '#/components/responses/NotFound' }
+        '410':
+          description: Token expired or already downloaded
+
+# P19 schemas (appended after existing components/schemas section)
+# NOTE: These are additive — existing schemas are preserved above.
+# Add to the components/schemas section in the final OpenAPI merge.
+# Schemas:
+#   PaymentHistoryItem, PaymentHistoryResponse, ReceiptResponse,
+#   ReceiptDownloadTokenResponse, PaymentExportRequest, PaymentExportStatusResponse,
+#   PaginationMeta
+
+  # ── P20 Admin Provider Config Paths ──────────────────────────────────────────
+
+  /v1/admin/payment/providers/{providerId}/accounts:
+    get:
+      operationId: listProviderAccounts
+      summary: List all accounts for a provider
+      tags: [Admin — Provider Accounts]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: providerId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: status
+          in: query
+          schema: { type: string, enum: [draft, pending_approval, active, suspended, retired, rejected] }
+      responses:
+        "200":
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ProviderAccount' }
+        "403": { description: Forbidden }
+        "404": { description: Not found }
+
+  /v1/admin/payment/providers/{providerId}/accounts/{accountId}:
+    get:
+      operationId: getProviderAccount
+      summary: Get provider account detail
+      tags: [Admin — Provider Accounts]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: providerId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Account detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ProviderAccount' }
+        "403": { description: Forbidden }
+        "404": { description: Not found }
+    patch:
+      operationId: updateProviderAccount
+      summary: Update provider account configuration
+      description: |
+        Non-high-risk fields apply immediately (200).
+        High-risk fields (merchant_account_reference, callback_secret_reference)
+        return 202 with draft_id for maker-checker approval.
+      tags: [Admin — Provider Accounts]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: providerId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateAccountPayload' }
+      responses:
+        "200":
+          description: Account updated (non-high-risk fields applied)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ProviderAccount' }
+        "202":
+          description: High-risk fields require approval; draft created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HighRiskApprovalRequired' }
+        "409":
+          description: Configuration version conflict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:    { type: string, enum: [CONFIGURATION_VERSION_CONFLICT] }
+                      message: { type: string }
+        "403": { description: Forbidden }
+        "422": { description: Validation error }
+
+  /v1/admin/payment/providers/{providerId}/accounts/{accountId}/lifecycle:
+    post:
+      operationId: transitionAccountLifecycle
+      summary: Transition provider account lifecycle status
+      tags: [Admin — Provider Accounts]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: providerId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LifecycleTransitionPayload' }
+      responses:
+        "200":
+          description: Lifecycle transition applied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ProviderAccount' }
+        "409":
+          description: Invalid lifecycle transition
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:    { type: string, enum: [INVALID_LIFECYCLE_TRANSITION] }
+                      message: { type: string }
+        "403": { description: Forbidden }
+        "404": { description: Not found }
+
+  /v1/admin/payment/providers/{providerId}/config-changes:
+    get:
+      operationId: listConfigDrafts
+      summary: List config change drafts for a provider
+      tags: [Admin — Config Drafts]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: providerId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, pending_approval, approved, rejected, superseded]
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        "200":
+          description: Paginated list of drafts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ConfigDraft' }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+        "403": { description: Forbidden }
+
+  /v1/admin/payment/providers/{providerId}/config-changes/{draftId}:
+    get:
+      operationId: getConfigDraft
+      summary: Get a single config change draft
+      tags: [Admin — Config Drafts]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: providerId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: draftId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Draft detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ConfigDraft' }
+        "403": { description: Forbidden }
+        "404": { description: Not found }
+
+  /v1/admin/payment/config/modules:
+    get:
+      operationId: getModuleConfigs
+      summary: Get all payment module availability configs
+      tags: [Admin — Module Config]
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Module config list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ModuleConfig' }
+        "403": { description: Forbidden }
+    patch:
+      operationId: updateModuleConfigs
+      summary: Submit module availability/order changes for approval
+      description: Always returns 202 — changes go through maker-checker draft workflow.
+      tags: [Admin — Module Config]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateModuleConfigPayload' }
+      responses:
+        "202":
+          description: Module config changes submitted for approval
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HighRiskApprovalRequired' }
+        "403": { description: Forbidden }
+        "422": { description: Validation error }
+

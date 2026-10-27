@@ -1,0 +1,55 @@
+# Refund Event Contracts — P15
+# Published via OutboxEventPublisher to the platform event bus.
+# All events use idempotency keys to prevent duplicate downstream processing.
+
+events:
+
+  refund.confirmed:
+    description: |
+      Published when a refund transitions to the `confirmed` terminal state.
+      Consuming modules use this to: update domain entitlement (domain module),
+      send refund receipt notification (Notifications), close reconciliation items (Finance).
+    source: Payment module — RefundService::confirm()
+    idempotency_key: "refund.confirmed:{payment_refund_id}"
+    payload:
+      payment_intent_id: { type: uuid, required: true }
+      payment_refund_id: { type: uuid, required: true }
+      purpose_type: { type: string, required: true }
+      purpose_reference: { type: string, required: true }
+      organisation_id: { type: uuid, required: true }
+      refund_amount_minor: { type: integer, required: true, minimum: 1 }
+      currency_code: { type: string, required: true }
+      is_full_refund: { type: boolean, required: true }
+      remaining_refundable_minor: { type: integer, required: true, minimum: 0 }
+      correlation_id: { type: uuid, required: true }
+      occurred_at: { type: datetime_iso8601, required: true, description: "Original confirmation time (not repair time)" }
+    consumers:
+      - Notifications module (refund receipt)
+      - Business domain module (entitlement reversal — opt-in via refund.confirmed handler)
+      - Reconciliation module (mark refund settled)
+
+  refund.failed:
+    description: |
+      Published when a refund reaches `definitive_failure` (provider permanently declined)
+      or `failed` (adapter error). Reservation is released by the service before this event.
+    source: Payment module — RefundService::fail() / BankRefundCallbackHandler
+    idempotency_key: "refund.failed:{payment_refund_id}"
+    payload:
+      payment_intent_id: { type: uuid, required: true }
+      payment_refund_id: { type: uuid, required: true }
+      purpose_type: { type: string, required: true }
+      organisation_id: { type: uuid, required: true }
+      failed_amount_minor: { type: integer, required: true }
+      currency_code: { type: string, required: true }
+      reason: { type: string, required: true, maxLength: 500 }
+      is_definitive: { type: boolean, required: true, description: "true = definitive_failure; false = transient failed" }
+      correlation_id: { type: uuid, required: true }
+      occurred_at: { type: datetime_iso8601, required: true }
+    consumers:
+      - Notifications module (refund failed alert to consumer/admin)
+      - Reconciliation module (open reconciliation exception)
+
+  # Note: payment.confirmed and payment.reversed are existing P08/P11 events.
+  # P15 does NOT replace or modify those event definitions.
+  # The refund.confirmed event is distinct from payment.reversed (which covers
+  # provider-initiated reversals, not customer-requested refunds).

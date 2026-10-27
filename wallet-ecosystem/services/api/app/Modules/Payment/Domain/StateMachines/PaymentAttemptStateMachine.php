@@ -11,9 +11,13 @@ final class PaymentAttemptStateMachine
 {
     /** @var array<string, string[]> */
     private const ALLOWED_TRANSITIONS = [
-        'initiated'       => ['processing', 'awaiting_action', 'succeeded', 'failed', 'cancelled', 'expired'],
-        'processing'      => ['succeeded', 'failed', 'timed_out'],
-        'awaiting_action' => ['processing', 'succeeded', 'failed', 'cancelled', 'expired', 'timed_out'],
+        // P06 new states
+        'submitting'      => ['processing', 'awaiting_action', 'succeeded', 'failed', 'unknown'],
+        'unknown'         => ['succeeded', 'failed', 'expired'],
+        // Legacy states (kept for backward compat with existing DB rows)
+        'initiated'       => ['processing', 'awaiting_action', 'succeeded', 'failed', 'cancelled', 'expired', 'unknown'],
+        'processing'      => ['succeeded', 'failed', 'timed_out', 'unknown'],
+        'awaiting_action' => ['processing', 'succeeded', 'failed', 'cancelled', 'expired', 'timed_out', 'unknown'],
         'timed_out'       => ['succeeded', 'failed', 'expired'],
         'succeeded'       => [],
         'failed'          => [],

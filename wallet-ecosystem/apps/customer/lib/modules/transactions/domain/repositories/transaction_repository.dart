@@ -1,13 +1,20 @@
 import '../../../../core/api/paginated_result.dart';
 import '../entities/transaction.dart';
+import '../entities/payment_history_filter.dart';
+import '../entities/payment_receipt.dart';
+import '../entities/refund_request.dart';
 
 abstract interface class TransactionRepository {
-  Future<PaginatedResult<Transaction>> listTransactions({
-    int page = 1,
-    int perPage = 20,
-    String? type,
-    String? status,
-  });
+  Future<PaginatedResult<PaymentHistoryItem>> fetchHistory(
+      PaymentHistoryFilter filter);
 
-  Future<Transaction> getTransaction(String id);
+  Future<PaymentHistoryItem> fetchDetail(String intentId);
+
+  Future<PaymentReceipt> fetchReceipt(String intentId);
+
+  Future<ReceiptDownloadToken> requestDownloadToken(String intentId);
+
+  Future<void> submitRefund(RefundRequest request);
+
+  Future<void> createSupportTicket(SupportTicketDraft draft);
 }

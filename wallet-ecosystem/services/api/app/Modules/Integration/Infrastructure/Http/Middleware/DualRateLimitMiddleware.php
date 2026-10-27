@@ -55,7 +55,10 @@ final class DualRateLimitMiddleware
             return $this->tooManyResponse($ipResult['retry_after'], $ipLimit, $ipResult['remaining']);
         }
 
-        return $next($request);
+        $response = $next($request);
+        $response->headers->set('X-RateLimit-Limit', (string) ($clientId !== '' ? $clientLimit : $ipLimit));
+        $response->headers->set('X-RateLimit-Remaining', (string) ($clientId !== '' ? $clientResult['remaining'] : $ipResult['remaining']));
+        return $response;
     }
 
     /** @return array{exceeded: bool, remaining: int, retry_after: int} */

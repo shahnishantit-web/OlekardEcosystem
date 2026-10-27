@@ -380,6 +380,6 @@ class _MoneyFlowScreenState extends ConsumerState<MoneyFlowScreen> {
   void _invalidateBalances() {
     ref.invalidate(walletProvider);
     ref.invalidate(homeSummaryProvider);
-    ref.invalidate(transactionListProvider);
+    ref.invalidate(paymentHistoryProvider('me'));
   }
 }

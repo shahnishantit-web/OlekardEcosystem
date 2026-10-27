@@ -122,6 +122,7 @@ export function CampaignDetailPage({ campaignId }: { campaignId: string }) {
   if (!campaign || !dashboard) return null;
 
   const isFuneral = campaign.service_type === 'funeral';
+  const funeralActionsEnabled = false; // P24 HTTP and payout prerequisites remain closed.
   const isEvents  = campaign.service_type === 'events';
   const totalBwp  = (dashboard.total_collected_minor / 100).toFixed(2);
 
@@ -130,7 +131,7 @@ export function CampaignDetailPage({ campaignId }: { campaignId: string }) {
       <PageHeader
         title={campaign.title}
         description={`${campaign.service_type.toUpperCase()} · ${campaign.reference}`}
-        actions={canManage ? (
+        actions={canManage && !isFuneral ? (
           <div className="flex gap-2 flex-wrap">
             {campaign.status === 'draft'  && <Button variant="primary"    onClick={() => void transition('open')}  disabled={actioning}>Open</Button>}
             {campaign.status === 'active' && <Button variant="secondary"  onClick={() => void transition('close')} disabled={actioning}>Close</Button>}
@@ -140,6 +141,8 @@ export function CampaignDetailPage({ campaignId }: { campaignId: string }) {
       />
 
       {error && <p role="alert" className="mb-3 text-sm text-red-700">{error}</p>}
+
+      {isFuneral && <p role="status" className="mb-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">Funeral Assistance actions and disbursement are unavailable while P24 verification is in progress.</p>}
 
       {/* Status bar */}
       <div className="mb-4 flex gap-4 items-center flex-wrap">
@@ -283,7 +286,7 @@ export function CampaignDetailPage({ campaignId }: { campaignId: string }) {
       )}
 
       {/* Settlement form (funeral, closed) */}
-      {showSettle && isFuneral && (
+      {showSettle && isFuneral && funeralActionsEnabled && (
         <Card className="mb-4 border border-amber-300">
           <h2 className="text-sm font-semibold text-text-primary mb-3">Record Settlement / Disbursement</h2>
           <form onSubmit={(e) => void submitSettle(e)} className="space-y-3">

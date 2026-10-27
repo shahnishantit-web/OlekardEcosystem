@@ -193,7 +193,7 @@ export function AgentDetailPage({ agentId }: { agentId: string }) {
       <PageHeader
         title={name}
         breadcrumbs={[
-          { label: 'Agents', href: '/admin-portal/agents' },
+          { label: 'Agents', href: '/agents' },
           { label: name },
         ]}
       />
@@ -229,7 +229,7 @@ export function AgentDetailPage({ agentId }: { agentId: string }) {
               <DetailField
                 label="User"
                 value={
-                  <Link href={`/admin-portal/users/${agent.user_id}`} className="text-ok-primary underline hover:text-ok-primary-hover font-mono">
+                  <Link href={`/users/${agent.user_id}`} className="text-ok-primary underline hover:text-ok-primary-hover font-mono">
                     {agent.user_id.substring(0, 8)}…
                   </Link>
                 }

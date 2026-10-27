@@ -18,7 +18,7 @@ final class ConfigurationService implements ConfigurationServiceInterface
     {
         $cacheKey = self::CACHE_PREFIX.$key;
 
-        $record = Cache::store('redis')->remember(
+        $record = Cache::remember(
             $cacheKey,
             self::CACHE_TTL_SECONDS,
             fn () => DB::connection('platform')
@@ -65,6 +65,6 @@ final class ConfigurationService implements ConfigurationServiceInterface
 
     public function invalidate(string $key): void
     {
-        Cache::store('redis')->forget(self::CACHE_PREFIX.$key);
+        Cache::forget(self::CACHE_PREFIX.$key);
     }
 }

@@ -36,11 +36,21 @@ export function WebhookMonitorPage() {
     finally {
         setBusy(false);
     } }
+    async function quarantine(id: string) {
+        if (!api) return;
+        setBusy(true); setError('');
+        try {
+            await api.quarantine(id);
+            setNotice('Callback quarantined for operator review.');
+            setReload(n => n + 1);
+        } catch (e) { setError(errorMessage(e)); }
+        finally { setBusy(false); }
+    }
     if (!allowed)
         return <PageContainer><p role="alert">Access denied</p></PageContainer>;
-    return <PageContainer><PageHeader title="Webhook deliveries" description="Incoming provider callback processing. Delivered means processed by the platform."/><IntegrationNav />
+    return <PageContainer><PageHeader title="Webhook deliveries" description="Callback acknowledgement confirms receipt only. Payment, accounting and fulfilment completion are tracked separately."/><IntegrationNav />
  <div className="grid sm:grid-cols-2 gap-4 mb-5"><label>Status<select aria-label="Webhook status" className={field} value={status} onChange={e => { setStatus(e.target.value); setPage(1); }}><option value="">All statuses</option><option value="delivered">Delivered</option><option value="failed">Failed</option><option value="retrying">Retrying</option></select></label><label>Event type<input aria-label="Event type" className={field} value={event} maxLength={100} onChange={e => { setEvent(e.target.value); setPage(1); }}/></label></div>
  {error && <ErrorState message={error} onRetry={() => { setError(''); setReload(n => n + 1); }}/>}<p role="status" aria-label="Webhook action status">{notice}</p>
- {!data ? <Loading label="Loading webhook deliveries"/> : <>{data.data.length === 0 ? <p>No callbacks match these filters.</p> : <Table data={data.data} getRowKey={d => d.id} columns={[{ key: 'event', header: 'Event' }, { key: 'endpoint', header: 'Endpoint' }, { key: 'status', header: 'Status', render: d => <Badge>{d.status}</Badge> }, { key: 'attempts', header: 'Attempts' }, { key: 'last_attempt_at', header: 'Last Attempt', render: d => d.last_attempt_at !== null ? dateText(d.last_attempt_at) : 'Not attempted' }, { key: 'retry', header: 'Action', render: d => d.status === 'failed' && <Button variant="secondary" disabled={busy} onClick={() => retry(d.id)}>Retry</Button> }]}/>}<Pagination page={page} lastPage={data.meta.last_page} onChange={setPage}/></>}
+ {!data ? <Loading label="Loading webhook deliveries"/> : <>{data.data.length === 0 ? <p>No callbacks match these filters.</p> : <Table data={data.data} getRowKey={d => d.id} columns={[{ key: 'event', header: 'Event' }, { key: 'endpoint', header: 'Endpoint' }, { key: 'status', header: 'Status', render: d => <><Badge>{d.quarantined ? 'Quarantined' : d.status}</Badge>{d.test_only && <Badge>Development mock — test only</Badge>}</> }, { key: 'attempts', header: 'Attempts' }, { key: 'last_attempt_at', header: 'Last Attempt', render: d => d.last_attempt_at !== null ? dateText(d.last_attempt_at) : 'Not attempted' }, { key: 'retry', header: 'Action', render: d => <>{d.status === 'failed' && <Button variant="secondary" disabled={busy} onClick={() => retry(d.id)}>Retry</Button>}{d.status !== 'delivered' && !d.quarantined && <Button variant="secondary" disabled={busy} onClick={() => quarantine(d.id)}>Quarantine</Button>}</> }]}/>}<Pagination page={page} lastPage={data.meta.last_page} onChange={setPage}/></>}
  </PageContainer>;
 }

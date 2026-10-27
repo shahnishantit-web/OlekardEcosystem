@@ -16,6 +16,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $secret_hash
  * @property ApiClientStatus $status
  * @property array $permissions
+ * @property string|null $integration_id
+ * @property array<int, string>|null $ip_whitelist
+ * @property Carbon|null $revoked_at
  * @property int $rate_limit_per_minute
  * @property string|null $last_used_at
  * @property string|null $created_by_user_id

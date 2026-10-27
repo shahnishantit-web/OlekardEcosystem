@@ -14,6 +14,7 @@ final readonly class PaymentInitiateRequest
         public string  $payerActorId,
         public string  $correlationId,
         public string  $idempotencyKey,
+        public ?string $operationId = null,
         public ?string $walletId = null,
         public ?string $stepUpToken = null,
         public ?string $sessionId = null,

@@ -19,8 +19,7 @@ final class IdempotencyMiddleware
     public function __construct(private readonly IdempotencyService $idempotencyService) {}
 
     /**
-     * @param string $mode  Pass 'require' (via route alias `idempotency:require`) to enforce
-     *                      the Idempotency-Key header on financial mutation endpoints (FR-001).
+     * @param string $mode  'require' requires a key; 'require-identity' additionally scopes it to authenticated Identity.
      */
     public function handle(Request $request, Closure $next, string $mode = ''): SymfonyResponse
     {
@@ -31,7 +30,7 @@ final class IdempotencyMiddleware
         $idempotencyKey = $request->header('Idempotency-Key');
 
         if ($idempotencyKey === null) {
-            if ($mode === 'require') {
+            if (in_array($mode, ['require', 'require-identity'], true)) {
                 return response()->json([
                     'success'        => false,
                     'data'           => null,
@@ -55,7 +54,15 @@ final class IdempotencyMiddleware
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        $actorId      = $request->header('X-Actor-ID', '00000000-0000-0000-0000-000000000000');
+        // Opt-in identity scoping avoids changing existing financial key namespaces.
+        if ($mode === 'require-identity') {
+            $actorId = (string) $request->attributes->get('identity.user_id', '');
+            if ($actorId === '') {
+                return response()->json(['success' => false, 'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authenticated identity is required.']], Response::HTTP_UNAUTHORIZED);
+            }
+        } else {
+            $actorId = (string) $request->header('X-Actor-ID', '00000000-0000-0000-0000-000000000000');
+        }
         $requestHash  = hash('sha256', $request->method().':'.$request->path().':'.$request->getContent());
         $correlationId = $request->header('X-Correlation-ID', '');
 

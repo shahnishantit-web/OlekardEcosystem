@@ -46,6 +46,11 @@ final class IntegrationRegistry implements IntegrationRegistryInterface
         $abstract = 'integration.webhook.' . $providerSlug;
 
         if (!$this->container->bound($abstract)) {
+            $integration = $this->resolveIntegrationBySlug($providerSlug);
+            if ($integration !== null && in_array($integration->provider_type, [IntegrationProviderType::Payment, IntegrationProviderType::Bank], true)
+                && $this->container->bound('integration.webhook.factory.payment')) {
+                return $this->container->make('integration.webhook.factory.payment')->forIntegration($integration);
+            }
             return null;
         }
 
@@ -63,11 +68,23 @@ final class IntegrationRegistry implements IntegrationRegistryInterface
 
     public function resolveIntegrationBySlug(string $providerSlug): ?IntegrationModel
     {
+        // Account/secret mappings are security-sensitive; do not serve cached
+        // payment configuration after suspension, rotation or ownership edits.
+        $payment = IntegrationModel::where('provider_slug', $providerSlug)->whereIn('provider_type', ['payment', 'bank'])->first();
+        if ($payment !== null) {
+            return $payment->status->value === 'active' || ($payment->configuration['allow_resolution_when_inactive'] ?? false) === true
+                ? $payment : null;
+        }
         $key = self::CACHE_KEY_PREFIX . 'slug:' . $providerSlug;
 
         return $this->cache->remember($key, self::CACHE_TTL, function () use ($providerSlug): ?IntegrationModel {
             return \App\Modules\Integration\Infrastructure\Models\IntegrationModel::where('provider_slug', $providerSlug)
-                ->where('status', \App\Modules\Integration\Domain\Enums\IntegrationStatus::Active->value)
+                ->where(function ($query): void {
+                    $query->where('status', 'active')->orWhere(function ($resolution): void {
+                        $resolution->whereIn('provider_type', ['payment', 'bank'])
+                            ->where('configuration->allow_resolution_when_inactive', true);
+                    });
+                })
                 ->first();
         });
     }

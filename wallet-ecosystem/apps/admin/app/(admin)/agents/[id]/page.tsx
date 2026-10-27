@@ -1,8 +1,10 @@
-﻿import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
+import type { Metadata } from 'next';
+import { AgentDetailPage } from '@/src/modules/agents/pages/agent-detail';
 
-export const metadata: Metadata = { title: 'Agent Detail — OleKard Admin' };
+export const metadata: Metadata = {
+  title: 'Agent Detail — OleKard Admin',
+};
 
-export default function AgentDetailAliasRoute({ params }: { params: { id: string } }) {
-  redirect(`/admin-portal/agents/${encodeURIComponent(params.id)}`);
+export default function AgentDetailRoute({ params }: { params: { id: string } }) {
+  return <AgentDetailPage agentId={params.id} />;
 }

@@ -1,0 +1,760 @@
+openapi: "3.1.0"
+info:
+  title: "P17 — Reconciliation Clearing and Provider Settlement API"
+  version: "1.0.0"
+  description: |
+    Admin and callback endpoints for provider statement ingestion, statement line matching,
+    clearing records, correction requests, and payout qualification.
+
+    All state-changing endpoints require `Idempotency-Key` header.
+    All admin endpoints require JWT bearer token with appropriate permission.
+
+    AD-08/AD-09 unresolved: clearing records for bank-payment providers carry
+    `accounting_status: pending_ledger_config` and are excluded from `net_qualified_minor`.
+
+servers:
+  - url: "/api/v1"
+
+security:
+  - bearerAuth: []
+
+paths:
+
+  # ─── Provider Statement Ingestion (Callback / Admin Upload) ───────────────
+
+  /payment/provider/statement-callback:
+    post:
+      operationId: ingestProviderStatementCallback
+      summary: Ingest a provider settlement statement via callback
+      description: |
+        Authenticated endpoint called by E25 bank connector when a provider posts a settlement statement.
+        Computes content hash for deduplication before persisting. Returns 409 if hash already exists.
+        Dispatches StatementMatchingJob asynchronously.
+      tags: [Provider Statement]
+      security:
+        - providerWebhookSecret: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StatementIngestionPayload"
+      responses:
+        "202":
+          description: Accepted — statement queued for matching
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatementIngestionAccepted"
+        "409":
+          description: Duplicate — statement with this content hash already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DuplicateStatementError"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+
+  # ─── Admin: Provider Statements ───────────────────────────────────────────
+
+  /admin/payment/provider-statements:
+    get:
+      operationId: adminListProviderStatements
+      summary: List provider statements
+      tags: [Admin — Provider Statements]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: provider_code
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/ProviderStatementStatus"
+        - name: currency_code
+          in: query
+          schema:
+            type: string
+        - name: period_from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: period_to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Paginated list of provider statements
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderStatementListResponse"
+
+  /admin/payment/provider-statements/{statementId}:
+    get:
+      operationId: adminGetProviderStatement
+      summary: Get provider statement detail including lines
+      tags: [Admin — Provider Statements]
+      parameters:
+        - $ref: "#/components/parameters/StatementId"
+        - name: match_status
+          in: query
+          schema:
+            $ref: "#/components/schemas/StatementLineMatchStatus"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Statement detail with paginated lines
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderStatementDetailResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /admin/payment/provider-statements/{statementId}/qualify:
+    post:
+      operationId: adminTriggerPayoutQualification
+      summary: Trigger payout qualification for a matched statement
+      description: |
+        Manually trigger PayoutQualificationJob for a statement.
+        Job computes net_qualified_minor and publishes PayoutQualifiedEvent via outbox.
+        Only permitted when statement status is `matched` or `partially_matched`.
+      tags: [Admin — Provider Statements]
+      parameters:
+        - $ref: "#/components/parameters/StatementId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "202":
+          description: Qualification job dispatched
+        "409":
+          description: Statement not in a qualifiable state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConflictError"
+
+  # ─── Admin: Clearing Records ───────────────────────────────────────────────
+
+  /admin/payment/clearing-records:
+    get:
+      operationId: adminListClearingRecords
+      summary: List clearing records
+      tags: [Admin — Clearing Records]
+      parameters:
+        - name: provider_code
+          in: query
+          schema:
+            type: string
+        - name: accounting_status
+          in: query
+          schema:
+            $ref: "#/components/schemas/ClearingAccountingStatus"
+        - name: aged
+          in: query
+          description: Filter to records that have been aged (aged_at IS NOT NULL)
+          schema:
+            type: boolean
+        - name: bank_settled
+          in: query
+          description: Filter to records with or without bank settlement
+          schema:
+            type: boolean
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Paginated list of clearing records
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClearingRecordListResponse"
+
+  # ─── Admin: Reconciliation Correction Requests ────────────────────────────
+
+  /admin/payment/reconciliation-corrections:
+    get:
+      operationId: adminListCorrectionRequests
+      summary: List correction requests
+      tags: [Admin — Corrections]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/CorrectionRequestStatus"
+        - name: exception_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Paginated list of correction requests
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CorrectionRequestListResponse"
+
+    post:
+      operationId: adminSubmitCorrectionRequest
+      summary: Submit a reconciliation correction request
+      description: |
+        Submit a correction request for dual approval. The submitter (`requested_by`) MUST NOT
+        be the same actor who later approves. Evidence reference required for correction type
+        other than `system_generated`.
+      tags: [Admin — Corrections]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitCorrectionRequest"
+      responses:
+        "201":
+          description: Correction request submitted, pending approval
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CorrectionRequestResource"
+        "409":
+          description: Correction request already exists for this exception (idempotency key conflict)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConflictError"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+
+  /admin/payment/reconciliation-corrections/{correctionId}/approve:
+    post:
+      operationId: adminApproveCorrectionRequest
+      summary: Approve a correction request (dual-approval — must be different actor from submitter)
+      description: |
+        Requires `payment.reconciliation.approve_correction` permission.
+        The approving actor MUST NOT be the same as `requested_by`.
+        On approval, posts the correcting journal via `LedgerModuleContract::postEntry()`.
+      tags: [Admin — Corrections]
+      parameters:
+        - $ref: "#/components/parameters/CorrectionId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Correction approved and ledger entry posted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CorrectionRequestResource"
+        "403":
+          description: Actor is the same as the submitter (self-approval not permitted)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForbiddenError"
+        "409":
+          description: Correction not in `pending_approval` state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConflictError"
+
+  /admin/payment/reconciliation-corrections/{correctionId}/reject:
+    post:
+      operationId: adminRejectCorrectionRequest
+      summary: Reject a correction request
+      tags: [Admin — Corrections]
+      parameters:
+        - $ref: "#/components/parameters/CorrectionId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rejection_reason]
+              properties:
+                rejection_reason:
+                  type: string
+                  minLength: 10
+                  maxLength: 1000
+      responses:
+        "200":
+          description: Correction request rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CorrectionRequestResource"
+        "409":
+          description: Correction not in `pending_approval` state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConflictError"
+
+# ─── Components ──────────────────────────────────────────────────────────────
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    providerWebhookSecret:
+      type: apiKey
+      in: header
+      name: X-Provider-Webhook-Secret
+
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 200
+    StatementId:
+      name: statementId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CorrectionId:
+      name: correctionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PerPage:
+      name: per_page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/NotFoundError"
+    UnprocessableEntity:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ValidationError"
+
+  schemas:
+
+    # ── Enums ─────────────────────────────────────────────────────────────────
+
+    ProviderStatementStatus:
+      type: string
+      enum: [pending_match, matching, matched, partially_matched, exception_raised, closed]
+
+    StatementLineType:
+      type: string
+      enum: [capture, fee, refund, reversal, chargeback, internal_transfer, adjustment]
+
+    StatementLineMatchStatus:
+      type: string
+      enum: [pending, matched, amount_mismatch, no_platform_record, internal_transfer, exception_raised]
+
+    ClearingAccountingStatus:
+      type: string
+      enum: [pending_ledger_config, qualified, excluded]
+
+    CorrectionRequestStatus:
+      type: string
+      enum: [pending_approval, approved, rejected, posted, posting_failed]
+
+    # ── Request Bodies ────────────────────────────────────────────────────────
+
+    StatementIngestionPayload:
+      type: object
+      required: [provider_code, account_id, environment, currency_code, period_start, period_end, lines]
+      properties:
+        provider_code:
+          type: string
+          maxLength: 50
+        account_id:
+          type: string
+          maxLength: 100
+        environment:
+          type: string
+          enum: [production, sandbox]
+        currency_code:
+          type: string
+          minLength: 3
+          maxLength: 3
+        period_start:
+          type: string
+          format: date-time
+        period_end:
+          type: string
+          format: date-time
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/StatementLinePayload"
+
+    StatementLinePayload:
+      type: object
+      required: [line_type, provider_reference_id, amount_minor, currency_code, direction, settled_at]
+      properties:
+        line_type:
+          $ref: "#/components/schemas/StatementLineType"
+        provider_reference_id:
+          type: string
+          maxLength: 200
+        amount_minor:
+          type: integer
+          minimum: 0
+        currency_code:
+          type: string
+        direction:
+          type: string
+          enum: [credit, debit]
+        settled_at:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          additionalProperties: true
+
+    SubmitCorrectionRequest:
+      type: object
+      required: [exception_id, correction_type, description, amount_minor, currency_code]
+      properties:
+        exception_id:
+          type: string
+          format: uuid
+        correction_type:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+          minLength: 10
+          maxLength: 2000
+        evidence_reference:
+          type: string
+          maxLength: 500
+        debit_account:
+          type: string
+          maxLength: 100
+        credit_account:
+          type: string
+          maxLength: 100
+        amount_minor:
+          type: integer
+          minimum: 1
+        currency_code:
+          type: string
+          minLength: 3
+          maxLength: 3
+
+    # ── Response Bodies ───────────────────────────────────────────────────────
+
+    StatementIngestionAccepted:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              type: string
+              enum: [pending_match]
+            source_hash:
+              type: string
+            total_lines:
+              type: integer
+
+    DuplicateStatementError:
+      type: object
+      properties:
+        message:
+          type: string
+        existing_statement_id:
+          type: string
+          format: uuid
+
+    ProviderStatementListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProviderStatementListItem"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    ProviderStatementListItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider_code:
+          type: string
+        account_id:
+          type: string
+        currency_code:
+          type: string
+        period_start:
+          type: string
+          format: date-time
+        period_end:
+          type: string
+          format: date-time
+        status:
+          $ref: "#/components/schemas/ProviderStatementStatus"
+        total_lines:
+          type: integer
+        matched_lines:
+          type: integer
+        exception_lines:
+          type: integer
+        ingested_at:
+          type: string
+          format: date-time
+
+    ProviderStatementDetailResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ProviderStatementListItem"
+            - type: object
+              properties:
+                source_hash:
+                  type: string
+                matching_completed_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+                lines:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/StatementLineItem"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    StatementLineItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        line_type:
+          $ref: "#/components/schemas/StatementLineType"
+        provider_reference_id:
+          type: string
+        amount_minor:
+          type: integer
+        currency_code:
+          type: string
+        direction:
+          type: string
+        settled_at:
+          type: string
+          format: date-time
+        match_status:
+          $ref: "#/components/schemas/StatementLineMatchStatus"
+        matched_entity_type:
+          type: string
+          nullable: true
+        matched_entity_id:
+          type: string
+          format: uuid
+          nullable: true
+        clearing_record_id:
+          type: string
+          format: uuid
+          nullable: true
+        exception_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    ClearingRecordListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClearingRecordItem"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    ClearingRecordItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        payment_attempt_id:
+          type: string
+          format: uuid
+        statement_id:
+          type: string
+          format: uuid
+        provider_code:
+          type: string
+        currency_code:
+          type: string
+        cleared_amount_minor:
+          type: integer
+        attempt_amount_minor:
+          type: integer
+        accounting_status:
+          $ref: "#/components/schemas/ClearingAccountingStatus"
+        bank_settlement_batch_ref:
+          type: string
+          nullable: true
+        bank_settled_at:
+          type: string
+          format: date-time
+          nullable: true
+        aged_at:
+          type: string
+          format: date-time
+          nullable: true
+        cleared_at:
+          type: string
+          format: date-time
+
+    CorrectionRequestListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/CorrectionRequestResource"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    CorrectionRequestResource:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        exception_id:
+          type: string
+          format: uuid
+        idempotency_key:
+          type: string
+        correction_type:
+          type: string
+        description:
+          type: string
+        evidence_reference:
+          type: string
+          nullable: true
+        amount_minor:
+          type: integer
+        currency_code:
+          type: string
+        status:
+          $ref: "#/components/schemas/CorrectionRequestStatus"
+        requested_by:
+          type: string
+          format: uuid
+        reviewed_by:
+          type: string
+          format: uuid
+          nullable: true
+        reviewed_at:
+          type: string
+          format: date-time
+          nullable: true
+        rejection_reason:
+          type: string
+          nullable: true
+        ledger_entry_id:
+          type: string
+          nullable: true
+        posted_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    # ── Shared ────────────────────────────────────────────────────────────────
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+        last_page:
+          type: integer
+
+    ConflictError:
+      type: object
+      properties:
+        message:
+          type: string
+
+    ForbiddenError:
+      type: object
+      properties:
+        message:
+          type: string
+
+    NotFoundError:
+      type: object
+      properties:
+        message:
+          type: string
+
+    ValidationError:
+      type: object
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string

@@ -48,7 +48,7 @@ final class AdminIntegrationService
             $client = ApiClientModel::whereKey($id)->lockForUpdate()->firstOrFail();
             if (! $client->revoked_at) {
                 app(ApiClientApplicationService::class)->updateStatus($id, ApiClientStatus::Inactive, $actor, $correlation);
-                $client->status = 'inactive';
+                $client->status = \App\Modules\Integration\Domain\Enums\ApiClientStatus::Inactive;
                 $client->revoked_at = now();
                 $client->save();
                 $this->record('integration.api_client.revoked', $id, $actor, $correlation, []);
@@ -80,7 +80,8 @@ final class AdminIntegrationService
         $query = WebhookEventModel::query()->withCount('processingAttempts')->withMax('processingAttempts', 'attempted_at')->orderByDesc('received_at')->orderBy('id');
         if (! empty($filters['status'])) {
             $query->whereIn('status', match ($filters['status']) {
-                'delivered' => ['processed'],'failed' => ['failed', 'dead_letter'],'retrying' => ['received', 'processing']
+                'delivered' => ['processed'],'failed' => ['failed', 'dead_letter'],'retrying' => ['received', 'processing'],
+                default => throw new \InvalidArgumentException('Invalid webhook delivery status filter.'),
             });
         }
         if (! empty($filters['event_type'])) {
@@ -90,7 +91,7 @@ final class AdminIntegrationService
 
         return ['data' => array_map(fn ($e) => ['id' => $e->id, 'event' => $e->event_type, 'provider_slug' => $e->provider_slug, 'endpoint' => '/v1/webhooks/'.rawurlencode($e->provider_slug), 'status' => match ($e->status->value) {
             'processed' => 'delivered','failed','dead_letter' => 'failed',default => 'retrying'
-        }, 'processing_status' => $e->status->value, 'attempts' => $e->processing_attempts_count, 'last_attempt_at' => $e->processing_attempts_max_attempted_at, 'received_at' => $e->received_at->toIso8601String()], $page->items()), 'meta' => $this->meta($page)];
+        }, 'quarantined' => str_starts_with($e->last_error ?? '', 'quarantine:'), 'test_only' => ($e->verified_notification['context']['test_only'] ?? false) === true, 'processing_status' => $e->status->value, 'attempts' => $e->processing_attempts_count, 'last_attempt_at' => $e->processing_attempts_max_attempted_at, 'received_at' => $e->received_at->toIso8601String()], $page->items()), 'meta' => $this->meta($page)];
     }
 
     public function retry(string $id, string $actor, string $correlation): array
@@ -99,7 +100,7 @@ final class AdminIntegrationService
             DB::connection('platform')->select('SELECT pg_advisory_xact_lock(hashtextextended(?,0))', ['integration-webhook:'.$id]);
             $event = WebhookEventModel::whereKey($id)->lockForUpdate()->firstOrFail();
             abort_unless(in_array($event->status->value, ['failed', 'dead_letter'], true), 409, 'Only failed callbacks can be retried.');
-            $event->status = 'received';
+            $event->status = \App\Modules\Integration\Domain\Enums\WebhookEventStatus::Received;
             $event->retry_count = 0;
             $event->last_error = null;
             $event->processing_generation++;
@@ -111,13 +112,28 @@ final class AdminIntegrationService
         });
     }
 
+    public function quarantine(string $id, string $actor, string $correlation): array
+    {
+        return DB::connection('platform')->transaction(function () use ($id, $actor, $correlation): array {
+            DB::connection('platform')->select('SELECT pg_advisory_xact_lock(hashtextextended(?,0))', ['integration-webhook:'.$id]);
+            $event = WebhookEventModel::whereKey($id)->lockForUpdate()->firstOrFail();
+            abort_if($event->status->value === 'processed', 409, 'Processed evidence cannot be quarantined retrospectively.');
+            $event->status = \App\Modules\Integration\Domain\Enums\WebhookEventStatus::DeadLetter;
+            $event->last_error = 'quarantine:operator_review';
+            $event->processing_generation++;
+            $event->save();
+            $this->record('integration.webhook.quarantined', $id, $actor, $correlation, ['generation' => $event->processing_generation]);
+            return ['id' => $id, 'status' => 'quarantined'];
+        });
+    }
+
     private function record(string $action, string $resource, string $actor, string $correlation, array $metadata): void
     {
         DB::connection('platform')->table('integration.admin_actions')->insert(['id' => (string) Uuid::uuid7(), 'actor_id' => $actor, 'action' => $action, 'resource_id' => $resource, 'correlation_id' => $correlation, 'metadata' => json_encode($metadata, JSON_THROW_ON_ERROR), 'created_at' => now()]);
         $this->audit->record(new AuditEventData(action: $action, actorType: 'admin', resourceType: 'integration', correlationId: $correlation, outcome: 'success', actorId: $actor, resourceId: $resource, metadata: $metadata));
     }
 
-    private function meta($p): array
+    private function meta(\Illuminate\Contracts\Pagination\LengthAwarePaginator $p): array
     {
         return ['current_page' => $p->currentPage(), 'last_page' => $p->lastPage(), 'total' => $p->total()];
     }

@@ -201,7 +201,7 @@ describe('US-P1-008-001: Wallet list', () => {
     });
     // next/link mock renders as plain <a>, accessible name = text content
     const ownerLink = screen.getByRole('link', { name: 'Kgomotso Modise' });
-    expect(ownerLink).toHaveAttribute('href', '/admin-portal/users/usr-001');
+    expect(ownerLink).toHaveAttribute('href', '/users/usr-001');
   });
 
   it('shows View button per row navigating to wallet detail', async () => {
@@ -211,7 +211,7 @@ describe('US-P1-008-001: Wallet list', () => {
     });
     // The Link wrapping the button — find the enclosing <a> by traversing from the button
     const [viewBtn] = screen.getAllByRole('button', { name: /view wallet OLK-000001/i });
-    expect(viewBtn!.closest('a')).toHaveAttribute('href', '/admin-portal/wallets/wlt-001');
+    expect(viewBtn!.closest('a')).toHaveAttribute('href', '/wallets/wlt-001');
   });
 
   it('renders currency filter dropdown', async () => {
@@ -318,7 +318,7 @@ describe('US-P1-008-002: Wallet detail', () => {
     await waitFor(() => {
       expect(screen.getByRole('link', { name: 'Kgomotso Modise' })).toBeInTheDocument();
     });
-    expect(screen.getByRole('link', { name: 'Kgomotso Modise' })).toHaveAttribute('href', '/admin-portal/users/usr-001');
+    expect(screen.getByRole('link', { name: 'Kgomotso Modise' })).toHaveAttribute('href', '/users/usr-001');
   });
 
   it('shows breadcrumb back to wallets list', async () => {
@@ -327,7 +327,7 @@ describe('US-P1-008-002: Wallet detail', () => {
       expect(screen.getByRole('link', { name: /wallets/i })).toBeInTheDocument();
     });
     const breadcrumbLink = screen.getByRole('link', { name: /wallets/i });
-    expect(breadcrumbLink).toHaveAttribute('href', '/admin-portal/wallets');
+    expect(breadcrumbLink).toHaveAttribute('href', '/wallets');
   });
 
   it('renders ledger entries table', async () => {

@@ -17,6 +17,8 @@ use App\Modules\Platform\Application\Services\ConfigurationService;
 use App\Modules\Risk\Application\Jobs\EscalateOverdueAlertsJob;
 use App\Modules\Risk\Application\Services\WatchlistScreenerService;
 use App\Modules\Transfer\Application\Jobs\TransferTransactionTimeoutJob;
+use App\Modules\Payment\Application\Jobs\PaymentAttemptCrashRecoveryJob;
+use App\Modules\Payment\Application\Jobs\RepairPendingAccountingJob;
 use App\Modules\Withdrawal\Application\Jobs\WithdrawalTransactionTimeoutJob;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -72,6 +74,15 @@ final class Kernel extends ConsoleKernel
 
         // E28: Configuration escalation check — hourly (FR-015, US5/AC3)
         $schedule->command('configuration:escalation-check')->hourly();
+
+        // P07: Crash recovery — every minute; withoutOverlapping() prevents scan pile-up
+        $schedule->job(new PaymentAttemptCrashRecoveryJob(), 'default')->everyMinute()->withoutOverlapping();
+
+        // P08: Accounting repair scan — every 5 minutes; withoutOverlapping() prevents pile-up
+        $schedule->job(new RepairPendingAccountingJob(), 'default')->everyFiveMinutes()->withoutOverlapping();
+
+        // P07: Prune expired idempotency records — weekly at 02:30 UTC
+        $schedule->command('payment:prune-idempotency-records')->weeklyOn(0, '02:30');
 
         // E27 US3: Orphan/timeout detection — every 5 minutes on reliability queue (FR-004, FR-006)
         $schedule->job(new FundingTransactionTimeoutJob(correlationId: (string) \Ramsey\Uuid\Uuid::uuid7()), 'reliability')->everyFiveMinutes();

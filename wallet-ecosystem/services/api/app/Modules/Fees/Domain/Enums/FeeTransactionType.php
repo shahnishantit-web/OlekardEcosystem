@@ -14,4 +14,5 @@ enum FeeTransactionType: string
     case CashIn      = 'cash_in';
     case CashOut     = 'cash_out';
     case Settlement  = 'settlement';
+    case Payment     = 'payment';
 }

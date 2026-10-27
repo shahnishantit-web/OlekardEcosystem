@@ -68,7 +68,7 @@ function UserRow({
       </td>
       <td className="py-3 px-4">
         <Link
-          href={`/admin-portal/users/${user.id}`}
+          href={`/users/${user.id}`}
           aria-label={`View profile for ${user.email}`}
           className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-ok-border-strong bg-ok-surface px-3 text-sm font-medium text-text-primary transition-colors hover:bg-ok-hover-bg focus-visible:outline-2 sm:min-h-[35px]"
         >

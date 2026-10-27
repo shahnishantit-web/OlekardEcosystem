@@ -15,9 +15,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string             $idempotency_key
  * @property string             $event_type
  * @property string             $raw_payload
+ * @property array<string, mixed>|null $verified_notification
+ * @property string|null        $payload_hash
+ * @property string|null        $encrypted_evidence
  * @property string|null        $source_ip_hash
  * @property WebhookEventStatus $status
  * @property int                $retry_count
+ * @property int                $processing_generation
+ * @property int                $processing_attempts_count
+ * @property string|null        $processing_attempts_max_attempted_at
  * @property int                $max_retry_count
  * @property string|null        $last_error
  * @property string|null        $platform_entity_id
@@ -39,7 +45,12 @@ final class WebhookEventModel extends Model
 
     protected $guarded = [];
 
+    protected $hidden = ['raw_payload', 'encrypted_evidence', 'verified_notification'];
+
     protected $casts = [
+        'verified_notification' => 'array',
+        'processing_generation' => 'integer',
+        'encrypted_evidence' => 'encrypted',
         'status'       => WebhookEventStatus::class,
         'received_at'  => 'datetime',
         'processed_at' => 'datetime',

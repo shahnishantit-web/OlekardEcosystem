@@ -3,11 +3,14 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_payment/shared_payment.dart';
+import 'core/di/providers.dart';
 import 'core/notifications/deep_link_handler.dart';
 import 'core/notifications/push_notification_service.dart';
 import 'core/router/app_router.dart';
 import 'core/security/app_lifecycle_observer.dart';
 import 'core/theme/app_theme.dart';
+import 'modules/payment/customer_step_up_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,7 +18,13 @@ void main() async {
     await Firebase.initializeApp();
     await PushNotificationService.initialize();
   }
-  runApp(const ProviderScope(child: CustomerApp()));
+  runApp(ProviderScope(
+    overrides: [
+      httpClientProvider.overrideWith((ref) => ref.watch(apiClientProvider).dio),
+      stepUpServiceProvider.overrideWith((ref) => CustomerStepUpService(ref)),
+    ],
+    child: const CustomerApp(),
+  ));
 }
 
 class CustomerApp extends ConsumerStatefulWidget {

@@ -32,8 +32,6 @@ final class ReceiveWebhookController
                 $headers,
                 $sourceIp,
             );
-        } catch (WebhookSignatureException) {
-            abort(401, 'Invalid webhook signature.');
         } catch (WebhookProviderNotFoundException) {
             throw new NotFoundHttpException("Unknown provider: {$providerSlug}");
         }

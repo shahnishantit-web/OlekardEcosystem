@@ -22,6 +22,20 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(static function (): void {
 
+    // Reviewed organisation authority for P24. Registration evidence is opaque;
+    // a distinct privileged reviewer must approve before membership resolves.
+    Route::prefix('identity/organisations')
+        ->middleware(['identity.auth', 'identity.require-actor-type:admin', 'idempotency:require-identity'])
+        ->group(static function (): void {
+            $controller = \App\Modules\Identity\Infrastructure\Http\Controllers\OrganisationRegistryController::class;
+            Route::post('/', [$controller, 'requestOrganisation'])->middleware('identity.require-permission:organisation.registry.request');
+            Route::post('{id}/review', [$controller, 'reviewOrganisation'])->middleware('identity.require-permission:organisation.registry.review');
+            Route::post('{id}/suspend', [$controller, 'suspendOrganisation'])->middleware('identity.require-permission:organisation.registry.revoke');
+            Route::post('{id}/memberships', [$controller, 'requestMembership'])->middleware('identity.require-permission:organisation.registry.request');
+            Route::post('memberships/{id}/review', [$controller, 'reviewMembership'])->middleware('identity.require-permission:organisation.registry.review');
+            Route::post('memberships/{id}/revoke', [$controller, 'revokeMembership'])->middleware('identity.require-permission:organisation.registry.revoke');
+        });
+
     // -------------------------------------------------------------------------
     // Customer app — phone-first auth (registration + two-step PIN login)
     // -------------------------------------------------------------------------

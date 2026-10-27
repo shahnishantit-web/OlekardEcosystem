@@ -1,0 +1,651 @@
+openapi: "3.1.0"
+info:
+  title: "P19 — Payment History, Receipts and Exports API"
+  version: "1.0.0"
+  description: |
+    Scoped payment history, receipt retrieval, authorised download tokens, and scoped CSV exports.
+    Notification listeners (P19) subscribe to internal events — they are not HTTP endpoints.
+    All monetary amounts are in minor units (e.g., thebe for BWP).
+
+servers:
+  - url: "/v1"
+
+tags:
+  - name: Payment History
+    description: Paginated payment history scoped to authenticated payer or admin scope
+  - name: Receipts
+    description: Receipt retrieval and single-use expiring download tokens
+  - name: Exports
+    description: Admin-initiated scoped payment history CSV exports
+
+# ─── SCHEMAS ─────────────────────────────────────────────────────────────────
+
+components:
+  schemas:
+
+    PaymentHistoryItem:
+      type: object
+      required:
+        - payment_reference
+        - purpose_type
+        - purpose_reference
+        - domain_deep_link
+        - provider_label
+        - original_amount_minor
+        - currency_code
+        - fee_amount_minor
+        - total_charged_minor
+        - payment_status
+        - refund_status
+        - payment_date
+      properties:
+        payment_reference:
+          type: string
+          format: uuid
+          description: UUID v7 of the payment intent
+        purpose_type:
+          type: string
+          description: Domain that originated the payment (e.g., funeral_assistance, event_tickets)
+        purpose_reference:
+          type: string
+          description: Opaque domain record reference stored at intent creation
+        domain_deep_link:
+          oneOf:
+            - type: string
+              description: "Server-side derived deep link: {purpose_type}://{purpose_reference}"
+            - type: object
+              required: [status, reason]
+              properties:
+                status:
+                  type: string
+                  enum: [unavailable]
+                reason:
+                  type: string
+                  enum: [domain_retired]
+        provider_label:
+          type: string
+          description: Display-formatted provider name
+        original_amount_minor:
+          type: integer
+          minimum: 0
+          description: Original payment amount in minor units
+        currency_code:
+          type: string
+          pattern: "^[A-Z]{3}$"
+        fee_amount_minor:
+          type: integer
+          minimum: 0
+          description: Confirmed fee (from ledger attempt) or quoted fee if not yet confirmed
+        total_charged_minor:
+          type: integer
+          minimum: 0
+          description: "Total charged to payer: original_amount_minor + fee_amount_minor"
+        payment_status:
+          type: string
+          enum: [processing, confirmed, failed, cancelled, refund_pending, refunded]
+        refund_status:
+          type: string
+          enum: [none, pending, confirmed, failed]
+        refund_amount_minor:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: Non-null when refund_status is pending or confirmed
+        refund_eligible:
+          type: boolean
+          description: Whether a refund can be initiated (domain-dependent, for mobile US5)
+        payment_date:
+          type: string
+          format: date-time
+          description: UTC timestamp of payment confirmation (or intent creation if not yet confirmed)
+        organisation_id:
+          type: string
+          description: Organisation that originated the payment
+
+    PaymentHistoryResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentHistoryItem"
+        meta:
+          type: object
+          required: [current_page, per_page, total, last_page]
+          properties:
+            current_page:
+              type: integer
+            per_page:
+              type: integer
+            total:
+              type: integer
+            last_page:
+              type: integer
+
+    ReceiptResponse:
+      type: object
+      required:
+        - payment_reference
+        - provider_label
+        - original_amount_minor
+        - currency_code
+        - fee_amount_minor
+        - total_charged_minor
+        - payment_date
+        - purpose_summary
+        - receipt_status
+      properties:
+        payment_reference:
+          type: string
+          format: uuid
+        provider_label:
+          type: string
+        original_amount_minor:
+          type: integer
+          minimum: 0
+        currency_code:
+          type: string
+          pattern: "^[A-Z]{3}$"
+        fee_amount_minor:
+          type: integer
+          minimum: 0
+          description: Confirmed fee from ledger attempt (immutable)
+        total_charged_minor:
+          type: integer
+          minimum: 0
+          description: original_amount_minor + fee_amount_minor
+        payment_date:
+          type: string
+          format: date-time
+        purpose_summary:
+          type: string
+          description: Short description of payment purpose (not full domain data)
+        receipt_status:
+          type: string
+          enum: [confirmed]
+        refund_summary:
+          type: array
+          items:
+            type: object
+            required: [amount_minor, status]
+            properties:
+              amount_minor:
+                type: integer
+                minimum: 0
+              status:
+                type: string
+                enum: [pending, confirmed, failed]
+              label:
+                type: string
+                description: "pending → 'Amount reserved, not yet credited'; confirmed → 'Refund processed'"
+              confirmed_at:
+                type: string
+                format: date-time
+                nullable: true
+
+    ReceiptDownloadTokenResponse:
+      type: object
+      required: [token, expires_at, download_url]
+      properties:
+        token:
+          type: string
+          minLength: 64
+          maxLength: 64
+        expires_at:
+          type: string
+          format: date-time
+        download_url:
+          type: string
+          description: "Full URL: GET /v1/payment/receipts/download/{token}"
+
+    PaymentExportRequest:
+      type: object
+      required: [scope_type]
+      properties:
+        scope_type:
+          type: string
+          enum: [organisation, platform]
+        organisation_id:
+          type: string
+          description: Required when scope_type = organisation; inferred from token for non-admin callers
+        filters:
+          type: object
+          properties:
+            purpose_type:
+              type: string
+            currency_code:
+              type: string
+              pattern: "^[A-Z]{3}$"
+            date_from:
+              type: string
+              format: date
+            date_to:
+              type: string
+              format: date
+            status:
+              type: string
+              enum: [processing, confirmed, failed, cancelled, refund_pending, refunded]
+
+    PaymentExportStatusResponse:
+      type: object
+      required: [export_id, status, created_at]
+      properties:
+        export_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued, generating, ready, failed, expired]
+        row_count:
+          type: integer
+          nullable: true
+        generated_at:
+          type: string
+          format: date-time
+          nullable: true
+        download_url:
+          type: string
+          nullable: true
+          description: "Only present when status = ready. Single-use expiring URL."
+        token_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        failure_reason:
+          type: string
+          nullable: true
+
+    ProblemDetail:
+      type: object
+      required: [status, code, message]
+      properties:
+        status:
+          type: integer
+        code:
+          type: string
+        message:
+          type: string
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid bearer token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetail"
+    Forbidden:
+      description: Authenticated but insufficient permission or wrong ownership
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetail"
+    NotFound:
+      description: Resource not found or ownership check failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetail"
+    Gone:
+      description: Resource has expired (token expired or already used)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetail"
+
+security:
+  - BearerAuth: []
+
+# ─── PATHS ────────────────────────────────────────────────────────────────────
+
+paths:
+
+  # ── History ──────────────────────────────────────────────────────────────────
+
+  /payment/history:
+    get:
+      summary: Get paginated payment history for the authenticated payer
+      operationId: getPaymentHistory
+      tags: [Payment History]
+      description: |
+        Returns paginated payment history scoped to the authenticated user's payer identity.
+        Requires permission: `payment.history.read`.
+        Returns only records belonging to the authenticated payer — never another user's records.
+      parameters:
+        - name: purpose_type
+          in: query
+          schema:
+            type: string
+          description: Filter by domain purpose type (FR-007, US5)
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [processing, confirmed, failed, cancelled, refund_pending, refunded]
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: currency_code
+          in: query
+          schema:
+            type: string
+            pattern: "^[A-Z]{3}$"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Paginated payment history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentHistoryResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /admin/payment/history:
+    get:
+      summary: Admin-scoped payment history (organisation or platform)
+      operationId: adminGetPaymentHistory
+      tags: [Payment History]
+      description: |
+        Returns payment history filtered by organisation or across organisations.
+        Requires `payment.history.read.organisation` for organisation scope.
+        Requires `payment.history.read.platform` for cross-organisation queries (FR-005).
+      parameters:
+        - name: organisation_id
+          in: query
+          schema:
+            type: string
+          description: Required for organisation scope; omit for platform scope (requires platform permission)
+        - name: payer_actor_id
+          in: query
+          schema:
+            type: string
+          description: Filter by specific payer (platform permission required)
+        - name: purpose_type
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [processing, confirmed, failed, cancelled, refund_pending, refunded]
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: currency_code
+          in: query
+          schema:
+            type: string
+            pattern: "^[A-Z]{3}$"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Paginated payment history (admin scope)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentHistoryResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ── Receipts ─────────────────────────────────────────────────────────────────
+
+  /payment/receipts/{intentId}:
+    get:
+      summary: Get receipt for a confirmed payment
+      operationId: getReceipt
+      tags: [Receipts]
+      description: |
+        Returns the payment receipt for a confirmed payment intent.
+        Accessible only by the authenticated payer or an admin reviewer with `payment.history.read.platform`.
+        Returns 404 for: (a) non-existent intent, (b) intent not confirmed, (c) intent belonging to another payer.
+        Receipt data is derived exclusively from immutable ledger entries (FR-009).
+      parameters:
+        - name: intentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Receipt details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReceiptResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /payment/receipts/{intentId}/download-token:
+    post:
+      summary: Issue a single-use expiring download token for a receipt
+      operationId: issueReceiptDownloadToken
+      tags: [Receipts]
+      description: |
+        Issues a single-use, time-limited token (default TTL: 15 minutes) for downloading the receipt.
+        Only the authenticated payer can request a download token for their own payment (FR-010).
+        Tokens are stored in `payment.receipt_download_tokens` — not cache-only — for audit.
+      parameters:
+        - name: intentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "201":
+          description: Download token issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReceiptDownloadTokenResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /payment/receipts/download/{token}:
+    get:
+      summary: Redeem a download token and receive the receipt file
+      operationId: downloadReceipt
+      tags: [Receipts]
+      description: |
+        Redeems a single-use download token and returns the receipt as a structured file (JSON or CSV).
+        On first redemption: `used_at` is set; subsequent requests with the same token return 410 Gone.
+        Expired tokens return 410 Gone.
+        No authentication header required — the token is the credential (FR-010, FR-011).
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 64
+            maxLength: 64
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [json, csv]
+            default: json
+      responses:
+        "200":
+          description: Receipt file
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReceiptResponse"
+            text/csv:
+              schema:
+                type: string
+                description: RFC 4180 CSV; formula-injection-safe
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "410":
+          $ref: "#/components/responses/Gone"
+
+  # ── Exports ──────────────────────────────────────────────────────────────────
+
+  /admin/payment/exports:
+    post:
+      summary: Request a scoped payment history export
+      operationId: requestPaymentExport
+      tags: [Exports]
+      description: |
+        Creates a `PaymentExportRequest` with status `queued` and dispatches `GeneratePaymentExportJob`.
+        Requires `payment.export.read.organisation` for org scope or `payment.export.read.platform` for cross-org (FR-023).
+        The export is generated asynchronously; poll `GET /v1/admin/payment/exports/{exportId}` for status.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentExportRequest"
+      responses:
+        "202":
+          description: Export request accepted; processing asynchronously
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentExportStatusResponse"
+        "400":
+          description: Invalid filters or missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /admin/payment/exports/{exportId}:
+    get:
+      summary: Check export generation status
+      operationId: getPaymentExportStatus
+      tags: [Exports]
+      description: |
+        Returns the current status of an export request.
+        When `status = ready`, includes `download_url` with a single-use expiring token.
+        Only the requester or a platform admin can access a given export request.
+      parameters:
+        - name: exportId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Export status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentExportStatusResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /admin/payment/exports/download/{token}:
+    get:
+      summary: Download the export file using a single-use token
+      operationId: downloadPaymentExport
+      tags: [Exports]
+      description: |
+        Redeems the export download token and streams the CSV file.
+        Single-use: `downloaded_at` is set on redemption; second attempt returns 410 Gone.
+        Expired tokens return 410 Gone.
+        Access event recorded in audit log (FR-020).
+        Formula-injection safety applied at generation time (FR-021).
+        Rows with unresolved reconciliation exceptions are labelled `provisional` (FR-022).
+        No authentication header required — the token is the credential.
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 64
+            maxLength: 64
+      responses:
+        "200":
+          description: CSV export file
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: 'attachment; filename="payment-export-2026-10-25.csv"'
+          content:
+            text/csv:
+              schema:
+                type: string
+                description: |
+                  RFC 4180 CSV. Formula-injection-safe: values beginning with =, +, -, @ are prefixed with '.
+                  Rows with unresolved reconciliation exceptions include `provisional` in the status column.
+                  File header row includes notice when provisional rows are present.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "410":
+          $ref: "#/components/responses/Gone"

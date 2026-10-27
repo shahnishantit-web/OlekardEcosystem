@@ -45,7 +45,7 @@ function TxRow({ transaction }: { transaction: AdminTransaction }) {
       </td>
       <td className="py-3 px-4 text-sm text-text-secondary">
         {initiatorId ? (
-          <Link href={`/admin-portal/users/${initiatorId}`} className="text-ok-primary underline hover:text-ok-primary-hover">
+          <Link href={`/users/${initiatorId}`} className="text-ok-primary underline hover:text-ok-primary-hover">
             {initiatorName}
           </Link>
         ) : (
@@ -56,7 +56,7 @@ function TxRow({ transaction }: { transaction: AdminTransaction }) {
         {new Date(transaction.created_at).toLocaleString()}
       </td>
       <td className="py-3 px-4">
-        <Link href={`/admin-portal/transactions/${txId}`}>
+        <Link href={`/transactions/${txId}`}>
           <Button variant="secondary" aria-label={`View transaction ${ref}`}>
             View
           </Button>

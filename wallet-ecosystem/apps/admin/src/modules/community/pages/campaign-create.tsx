@@ -18,7 +18,7 @@ export function CampaignCreatePage() {
   const { authenticatedClient } = useAuth();
   const router = useRouter();
 
-  const [serviceType, setServiceType] = useState<'funeral' | 'events' | 'raffle'>('funeral');
+  const [serviceType, setServiceType] = useState<'funeral' | 'events' | 'raffle'>('events');
   const [form, setForm] = useState({
     organisation_id: '',
     title: '',
@@ -58,6 +58,10 @@ export function CampaignCreatePage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (serviceType === 'funeral') {
+      setError('Funeral Assistance creation is unavailable while P24 verification is in progress.');
+      return;
+    }
     if (!authenticatedClient) return;
     setSaving(true);
     setError(null);
@@ -66,7 +70,7 @@ export function CampaignCreatePage() {
       const payload: Record<string, unknown> = {
         ...form,
         service_type: serviceType,
-        contribution_amount_minor: serviceType === 'funeral' ? form.contribution_amount_minor : undefined,
+        contribution_amount_minor: undefined,
         capacity: serviceType === 'events' ? form.capacity || undefined : undefined,
         starts_at: form.starts_at || undefined,
         ends_at: form.ends_at || undefined,
@@ -101,10 +105,11 @@ export function CampaignCreatePage() {
                   type="radio"
                   name="service_type"
                   value={t}
+                  disabled={t === 'funeral'}
                   checked={serviceType === t}
                   onChange={() => setServiceType(t)}
                 />
-                <span className="capitalize">{t === 'funeral' ? '🕊 Funeral Assistance' : t === 'events' ? '🎟 Events & Ticketing' : '🎰 Raffle'}</span>
+                <span className="capitalize">{t === 'funeral' ? '🕊 Funeral Assistance (unavailable)' : t === 'events' ? '🎟 Events & Ticketing' : '🎰 Raffle'}</span>
               </label>
             ))}
           </div>

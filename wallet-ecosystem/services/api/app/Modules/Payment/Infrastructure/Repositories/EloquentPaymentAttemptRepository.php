@@ -14,17 +14,30 @@ final class EloquentPaymentAttemptRepository implements PaymentAttemptRepository
         $model->save();
     }
 
-    public function findById(string $id): ?PaymentAttemptModel
+    public function findById(string $id, bool $lock = false): ?PaymentAttemptModel
     {
-        return PaymentAttemptModel::query()->find($id);
+        $query = PaymentAttemptModel::query();
+        if ($lock) $query->lockForUpdate();
+        return $query->find($id);
     }
 
     public function findActiveForIntent(string $paymentIntentId): ?PaymentAttemptModel
     {
         return PaymentAttemptModel::query()
             ->where('payment_intent_id', $paymentIntentId)
-            ->whereNotIn('status', ['succeeded', 'failed', 'cancelled', 'expired'])
+            // 'unknown' and 'timed_out' excluded — those are ambiguous-outcome states
+            // handled by findUnknownForIntent(); excluding them allows same-provider retry
+            ->whereNotIn('status', ['succeeded', 'failed', 'cancelled', 'expired', 'unknown', 'timed_out'])
             ->latest('initiated_at')
+            ->first();
+    }
+
+    public function findUnknownForIntent(string $paymentIntentId): ?PaymentAttemptModel
+    {
+        return PaymentAttemptModel::query()
+            ->where('payment_intent_id', $paymentIntentId)
+            ->whereIn('status', ['unknown', 'timed_out'])
+            ->latest('created_at')
             ->first();
     }
 
@@ -40,10 +53,32 @@ final class EloquentPaymentAttemptRepository implements PaymentAttemptRepository
     {
         return PaymentAttemptModel::query()
             ->where('timeout_at', '<=', $before->format('Y-m-d H:i:s'))
-            ->whereNotIn('status', ['succeeded', 'failed', 'cancelled', 'expired'])
+            // include 'submitting' — persisted before adapter call, may be stuck
+            ->whereNotIn('status', ['succeeded', 'failed', 'cancelled', 'expired', 'unknown', 'timed_out'])
             ->orderBy('timeout_at')
             ->limit(200)
             ->get()
             ->all();
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, PaymentAttemptModel>
+     */
+    public function findStuckInSubmitting(int $secondsOld): \Illuminate\Support\Collection
+    {
+        return PaymentAttemptModel::query()
+            ->where('status', 'submitting')
+            ->where('initiated_at', '<', now()->subSeconds($secondsOld))
+            ->orderBy('initiated_at')
+            ->get();
+    }
+
+    public function findSucceededForIntent(string $paymentIntentId): ?PaymentAttemptModel
+    {
+        return PaymentAttemptModel::query()
+            ->where('payment_intent_id', $paymentIntentId)
+            ->where('status', 'succeeded')
+            ->latest('confirmed_at')
+            ->first();
     }
 }

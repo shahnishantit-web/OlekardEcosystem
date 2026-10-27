@@ -88,11 +88,17 @@ export function CampaignListPage({ serviceType }: { serviceType?: string }) {
       <PageHeader
         title={title}
         actions={
-          <Button variant="primary" onClick={() => router.push('/community/campaigns/new')}>
+          <Button variant="primary" onClick={() => router.push('/community/campaigns/new')} disabled={serviceType === 'funeral'}>
             {serviceType === 'funeral' ? 'New Collection' : serviceType === 'events' ? 'Create Event' : 'New Campaign'}
           </Button>
         }
       />
+
+      {serviceType === 'funeral' && (
+        <p role="status" className="mb-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+          Funeral Assistance creation, collection and disbursement are unavailable while P24 verification is in progress.
+        </p>
+      )}
 
       <div className="mb-4 flex gap-3 flex-wrap">
         {!serviceType && (

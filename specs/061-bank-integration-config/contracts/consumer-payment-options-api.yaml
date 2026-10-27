@@ -1,0 +1,166 @@
+openapi: "3.1.0"
+info:
+  title: "P12 — Consumer Payment Options API (Enhanced)"
+  version: "1.0.0"
+  description: |
+    Enhanced payment options discovery endpoint for the customer mobile app.
+    Returns dynamically-configured bank options with display metadata and fee disclosure.
+    No credentials are included in any response.
+    This extends the existing /v1/payments/options endpoint from P05.
+
+servers:
+  - url: /v1/payments
+
+security:
+  - bearerAuth: []
+
+paths:
+  /options:
+    get:
+      summary: Retrieve eligible payment options for a given context
+      operationId: getPaymentOptions
+      tags: [Consumer Payment Options]
+      description: |
+        Server-side resolves eligible bank options using organisation, currency, amount, purpose,
+        and country eligibility rules. Returns only Active accounts with approved display labels.
+        Newly activated bank options appear without a mobile app release.
+        Raw credentials are NEVER included in the response.
+      parameters:
+        - name: currency_code
+          in: query
+          required: true
+          schema: { type: string, example: BWP }
+        - name: amount_minor
+          in: query
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - name: purpose_type
+          in: query
+          required: true
+          schema: { type: string, example: merchant_payment }
+        - name: organisation_id
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+        - name: country_code
+          in: query
+          schema: { type: string, example: BW }
+      responses:
+        "200":
+          description: Eligible payment options
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/PaymentOptionItem" }
+                  meta:
+                    type: object
+                    properties:
+                      currency_code: { type: string }
+                      amount_minor: { type: integer }
+                      quoted_at: { type: string, format: date-time }
+        "400":
+          description: Bad request (missing required parameters)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+        "401":
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorEnvelope:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+
+    PaymentOptionItem:
+      type: object
+      description: |
+        A single eligible payment option. Contains display metadata and fee disclosure.
+        NEVER contains credentials, secret references, or internal configuration.
+      properties:
+        provider_account_id:
+          type: string
+          format: uuid
+          description: Stable identifier for this payment option
+        display_label:
+          type: string
+          description: Approved display name for the bank/payment method
+          example: "First National Bank (Online Banking)"
+        payment_method:
+          type: string
+          enum: [bank_redirect, bank_checkout, direct_debit, card, wallet]
+          example: bank_redirect
+        display_order:
+          type: integer
+          description: Sort order for display
+        supported_next_action:
+          type: string
+          enum: [redirect, sdk_launch, display_checkout, wallet_debit]
+          description: How the mobile app should proceed with this option
+        fee_disclosure:
+          $ref: "#/components/schemas/FeeDisclosure"
+        availability:
+          $ref: "#/components/schemas/AvailabilityInfo"
+        restrictions:
+          type: array
+          items: { type: string }
+          description: Human-readable restriction notes (e.g. "Only available for BWP transactions")
+
+    FeeDisclosure:
+      type: object
+      description: Applicable fee breakdown for transparent disclosure to payer
+      properties:
+        service_fee_minor:
+          type: integer
+          nullable: true
+          description: Platform service fee in minor currency units
+        provider_fee_minor:
+          type: integer
+          nullable: true
+          description: Bank/provider fee if known
+        total_fee_minor:
+          type: integer
+          nullable: true
+          description: Total fee charged to payer
+        total_payable_minor:
+          type: integer
+          description: Amount + total fees — what payer will pay
+        currency_code:
+          type: string
+          example: BWP
+        fee_description:
+          type: string
+          nullable: true
+          description: Human-readable fee summary
+
+    AvailabilityInfo:
+      type: object
+      properties:
+        is_available:
+          type: boolean
+          description: Whether this option can be selected right now
+        unavailable_reason:
+          type: string
+          nullable: true
+          description: Present only when is_available = false
+        min_amount_minor:
+          type: integer
+          nullable: true
+        max_amount_minor:
+          type: integer
+          nullable: true

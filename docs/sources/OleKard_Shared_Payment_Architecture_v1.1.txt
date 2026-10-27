@@ -1,0 +1,703 @@
+OleKard Shared Payment Architecture
+Feature ownership and implementation design for admin mobile and foundation layers
+Version 1.1  |  19 October 2026  |  Expanded with end to end lifecycles
+Recommended decision
+Build one common Shared Payment Orchestration module for the ecosystem. Implement Bank 1, Bank 2, Bank 3 and OleKard Wallet as separate payment adapters behind a stable contract. Keep Funeral Assistance, Events and Ticketing, and Raffles and Fundraising as separate business modules that use the shared payment service.
+Use the existing modular Laravel backend, PostgreSQL, Redis, Next.js admin and Flutter consumer application as the initial deployment architecture, subject to repository verification. A common capability does not require a separately deployed microservice. Start with clear module boundaries in the existing application, separate workers where needed, and documented contracts that permit later extraction.
+Keep wallet account and balance ownership inside the current Wallet domain. Use the existing financial ledger as the authoritative posting service, including external-payment clearing and merchant liabilities where its approved accounting model supports them. E25 Integration Platform owns common external connector infrastructure and webhook ingress; Payments owns payment meaning and state transitions.
+Version 1.1 adds sixteen operational lifecycles with entry conditions, state transitions, numbered actor actions, exception recovery and completion evidence. It covers provider onboarding, common checkout, banks, Wallet, messaging, all service domains, refunds, disputes, reconciliation, settlement, payout, support and incidents.
+This document expands the payment prompt from this conversation and aligns with OleKard Horizontal Module Detailed Features dated 17 October 2026. Bank names are placeholders. No repository, live provider contract or bank API has been inspected for this document. All proposed paths, schemas, interfaces, role names and performance targets require validation against the implementation. This document is a design baseline, not a claim of production readiness.
+Document guide
+1 Architecture decisions and module boundaries
+2 Common and individual feature ownership
+3 Foundation and backend requirements
+4 Admin panel requirements
+5 Consumer mobile requirements
+6 Data contracts and state machines
+7 End to end lifecycles and operational flows
+8 Configuration and provider onboarding
+9 Security operations and acceptance
+10 Spec Kit delivery and migration
+11 Decisions and technical references
+1 Architecture decisions and module boundaries
+Decision
+Recommendation and reason
+Common or individual
+Share payment orchestration, checkout, status, refunds, reconciliation and payment reporting. Retain separate domain workflows and provider adapters to prevent duplicated payment code and mixed business rules.
+Deployment shape
+Use a modular monolith initially: one governed backend release with isolated modules and independently scalable queue workers. Extract a service only when scaling, team ownership or isolation requirements justify the added operational cost.
+Integration boundary
+Reuse E25 transport, secret resolution, callback ingress and connector lifecycle. Put payment-specific adapters in a payment adapter namespace within that infrastructure; keep their domain contract owned by Payments.
+Wallet boundary
+Expose a Wallet adapter through the same checkout contract. Wallet services continue to own wallet limits, reservations and balance operations. Payments does not update wallet tables directly.
+Accounting authority
+One authoritative financial ledger service owns journals and balances. External bank payments need appropriate clearing and liability postings; they must not automatically top up the payer wallet.
+Business fulfilment
+The relevant business module issues tickets, fulfils household obligations or creates raffle entries after verified payment confirmation. Payment success and fulfilment success remain separate statuses.
+Distributed reliability
+Use durable intent/attempt records, idempotent operations, outbox/inbox processing and reconciliation. External providers cannot participate in the local database transaction; use controlled compensation for cross-system failures.
+Logical architecture
+
+Figure 1. Ownership and primary call paths. The dashed path represents Payments requesting external-payment accounting through the financial ledger contract; a bank purchase does not pass through a consumer wallet. Arrows represent logical dependencies, not a requirement for separate network services. Both channels can invoke every permitted business module and the relevant shared payment operations; channel arrows are illustrative.
+Foundation is a set of shared capabilities
+Separate platform primitives from shared business services. Identity, RBAC, audit, secret resolution and reliable messaging are platform primitives. Payments is a shared business service with its own state and contracts. Wallet, ledger and E25 are peer foundation domains with explicit ownership. Avoid placing all reusable code inside a generic utilities directory.
+Dependency direction is Channel → Business Module → Payments contract → Provider/Wallet ports. Payments may depend on foundation contracts. A business module registers a purpose handler so Payments can validate an obligation and notify its owner without importing that module’s internals. Events are integrated through explicit handlers, not database triggers that issue tickets as a side effect of inserting payment rows.
+When a common feature should stay individual
+Share a capability when its meaning, lifecycle and security model are stable across consumers. Keep a capability individual when its business rules differ. Reuse a validation library or UI component where useful, but do not force event admission, raffle eligibility and household participation into one universal entitlement workflow.
+An adapter can absorb provider protocol differences. A genuinely new financial product or business capability may require a versioned core contract extension. The goal is to add another supported bank without editing the consuming modules, not to guarantee that every future financial product can be added through configuration alone.
+2 Common and individual feature ownership
+Feature
+Common owner
+Individual owner or rule
+Authentication and permissions
+Identity and RBAC
+Each module declares actions and resource scope
+Organisation membership
+Shared organisation service
+Community controls household membership; Events controls event staffing
+Checkout options and payment execution
+Payments
+Business module defines payable purpose and validates amount
+Provider credentials and callbacks
+E25 and secret infrastructure
+Each adapter supplies authentication and payload verification
+Wallet balance and debit
+Wallet service
+Payments supplies immutable payment reference and receives result
+Financial journals
+Authoritative ledger service
+Accounting mapping varies by payment purpose and settlement arrangement
+Household contribution obligation
+No shared payment ownership
+Funeral Assistance owns eligibility, P20 rule, exemptions and fulfilment
+Event order and capacity
+Payments handles money only
+Events owns inventory reservations, ticket categories and admission
+Raffle eligibility and draw
+Payments handles money only
+Raffles owns permission gate, entry limits, freeze, draw and prizes
+Refund execution and tracking
+Payments
+Domain owns cancellation entitlement and ticket/entry consequences
+Notifications and receipts
+Shared delivery and payment receipt
+Domain selects business notice and owns tax invoice where applicable
+Disbursements and settlements
+Separate shared payout/settlement capability
+Domain identifies beneficiary entitlement; finance approves release
+Reports
+Shared financial facts and controlled exports
+Each module owns household, attendance or campaign metrics
+Sponsor and partner integration
+E25 connector infrastructure
+Events owns sponsorship terms; sponsor integration is not a payment provider by default
+What not to merge
+Do not merge the three service domains into a single generic campaign table with dozens of nullable fields. Use explicit collections, events and raffle campaigns linked by stable purpose references. Do not create separate Bank1Payment code inside every module. Do not combine provider settlement, wallet debit and beneficiary payout into one ambiguous transaction status.
+Scope exclusions
+The first shared checkout supports one currency and one payment option per intent. Split tender, automatic foreign exchange, recurring mandates, wallet top-up, cash agent collection, marketplace split settlement and cryptocurrency payments require separately specified workflows. Existing wallet pockets do not make every currency or asset eligible for every provider. Bank transfer without a realtime confirmation API is a distinct asynchronous method, not an instant-success bank adapter.
+3 Foundation and backend requirements
+FD01 Identity tenant context and permissions
+Scope. Existing identity, device/session and RBAC services.
+Behaviour. Derive payer identity from authentication and organisation scope from authorised context. Provide permissions for viewing payments, configuring providers, requesting refunds, approving refunds, reconciling and managing payout destinations.
+Controls. Validate scope on API, queues, exports and callback account mappings. Gate operators and sponsors have no financial administration rights. Staff MFA and sensitive-action reauthentication follow approved foundation policy.
+Acceptance. Changing a payment, organisation or export ID cannot expose another tenant; revocation applies to subsequent authorised operations.
+FD02 Purpose validation and quotation
+Scope. Business domain owns payable obligation; Payments owns an immutable financial snapshot.
+Behaviour. A purpose handler validates purpose type/ID, ownership, eligibility, amount, currency, fee rules, destination allocation, expiry and reservation reference. Generate a quote and bind a version to the intent.
+Controls. Client amounts are informational and never authoritative. Fee configuration is effective-dated and server-evaluated. Validate quote freshness before first external execution. Edits require a new quote or a controlled replacement.
+Acceptance. Changing an event price in a mobile payload cannot alter the payable total. A stale quote returns a clear refresh action before any charge.
+FD03 Provider registry accounts and availability
+Scope. Payments registry with E25 connector and secret references.
+Behaviour. Model providers, configured accounts, instruments, display options and capability sets separately. Evaluate availability by organisation, module, purpose category, currency, country, amount, account status and risk restrictions.
+Controls. Apply platform constraints first; organisation configuration may narrow them. A health flag cannot override compliance or capability restrictions. Bank accounts with the same display label remain distinct scoped records.
+Acceptance. Eligible users see Bank 1, Bank 2, Bank 3 and Wallet only when configured; direct requests for hidden or prohibited options are denied server-side.
+FD04 Intent and attempt orchestration
+Scope. One shared Payments module.
+Behaviour. An intent identifies the obligation to pay. An attempt identifies one execution through a selected provider account. Track next actions, provider references, timeouts, verification and financial outcomes.
+Controls. Use a stable obligation key and database uniqueness/locking to prevent duplicate payable intents for the same obligation version. Unknown attempts retain a charge-risk flag and block unsafe replacement.
+Acceptance. Double taps, multiple devices and retries cannot initiate two uncontrolled payable attempts for one obligation.
+FD05 Wallet adapter and authoritative ledger
+Scope. Wallet owns customer accounts; ledger owns posting rules.
+Behaviour. Call approved wallet reserve/debit/release/refund operations using a stable financial operation ID. Record references to wallet transactions and journals. Check wallet ownership, spendable balance, currency and limits.
+Controls. Never write balances directly. Local atomic execution is permitted only when supported by the existing transaction boundary; otherwise use durable commands, idempotent wallet operations and status recovery.
+Acceptance. Concurrent spending cannot overspend; a process crash after debit but before Payments acknowledgement is repaired by the same operation reference without a second debit.
+FD06 External adapters and callback processing
+Scope. Payment contract owned by Payments; infrastructure owned by E25.
+Behaviour. Adapters implement supported initiate/query/refund operations and convert provider responses to normalised outcomes. E25 captures verified callbacks and dispatches payment notifications to the Payments inbox.
+Controls. Preserve raw bytes for signature validation. Bind callbacks to trusted provider account configuration, not a payload tenant ID. Acknowledge only after durable receipt; retain restricted evidence under the approved policy.
+Acceptance. Duplicate or out-of-order callbacks cause no duplicate posting. Invalid signatures cannot change payment state. A disabled provider can still resolve existing attempts.
+FD07 Financial recording and fulfilment handoff
+Scope. Payments coordinates ledger recording; business module fulfils.
+Behaviour. After verified provider success, record the financial transaction through the ledger contract and publish a confirmed payment event using a durable outbox. Domain consumers fulfil their obligations through idempotent handlers.
+Controls. If ledger recording fails, preserve verified capture evidence and mark accounting pending. Do not lose the capture or charge again. Expose paid/processing fulfilment separately and route exceptions to repair.
+Acceptance. A captured payment with delayed ledger or ticket processing remains visible and repairable; event replay creates one journal and one entitlement allocation.
+FD08 Refunds reversals and disputes
+Scope. Shared execution and tracking; domain eligibility and finance approval.
+Behaviour. Validate refundable amount, fee policy and entitlement impact, reserve refund value, obtain required approval, execute against the original provider and reconcile completion. Handle provider-originated reversals and dispute holds.
+Controls. Concurrent refunds include completed and in-flight reserved amounts in the limit. Preserve original capture, refund and reversal records. Unsupported original-method refunds require an approved exception, not silent wallet credit.
+Acceptance. Two refund requests cannot exceed the original refundable balance. Pending refund is never displayed as returned money. Refunded event tickets are invalidated under domain rules.
+FD09 Reconciliation and financial exceptions
+Scope. Shared Payments and Finance operations.
+Behaviour. Match attempts, provider evidence, journals, fees, refunds and settlement files by merchant account and currency. Provide discrepancy categories, owners, ageing, resolution evidence and approval.
+Controls. Use exact amounts and stable references. No manual mark-as-paid workaround. External clearing account balance is distinct from provider settlement into a bank account.
+Acceptance. A missing callback is resolved through authenticated status query or reconciled evidence. Orphan or mismatched funds remain explicit liabilities or exceptions until resolved.
+FD10 Shared payout and settlement boundary
+Scope. Separate foundation financial capability reused by domains.
+Behaviour. Keep beneficiary verification, payable balances, holds, payout request, approval, execution and settlement tracking separate from incoming payments. Reuse E25 adapters only when payout capability is supported.
+Controls. Collection closure does not authorise payout. Payout destination changes require verification and renewed approval. Reserve cleared funds before release and enforce maker-checker approval.
+Acceptance. A family or organiser cannot be paid twice through retry; pending refunds and disputes reduce eligible available settlement funds.
+FD11 Notifications audit files and reporting
+Scope. Existing shared foundation services.
+Behaviour. Reuse templates, inbox, push/SMS/email delivery, audit trails, private evidence storage and report jobs. Reports show gross, refunds, fees, holds, net and settlement separately.
+Controls. Delivery failure does not reverse payment. Redact secrets and full account data. Exports are scoped, audited, expiring and spreadsheet-formula-safe. Keep marketing consent separate.
+Acceptance. Receipt and totals reconcile to authoritative financial records; users cannot obtain another payer receipt through a guessed reference.
+4 Admin panel requirements
+Use one Payments area in the existing Next.js admin shell. Provide scoped platform, organisation and finance views rather than separate payment admin applications per service. Preserve the established design system, route guards, table patterns, audit links and form validation.
+AD01 Payments dashboard
+Platform finance sees all authorised accounts; organisation finance sees its scope. Filter by module, provider, account, currency, date and state. Show confirmed gross, refunds, fees, exceptions, accounting/fulfilment backlog and settlement separately. Never aggregate currencies without an explicit conversion basis.
+AD02 Providers and capabilities
+List Bank 1, Bank 2, Bank 3 and Wallet with adapter version, environment, lifecycle, capabilities and health. Create configuration only for an installed allowlisted adapter. Installing arbitrary executable code from the UI is prohibited.
+AD03 Provider account configuration
+Manage merchant/account reference, approved countries and currencies, limits, secret references, callback binding, test status and effective dates. Mask private values. Preview changes and require independent approval for sensitive production changes.
+AD04 Module availability and display rules
+Enable options per organisation and service, set display order and default recommendation, and preview eligibility for a sample amount/currency. Show why an option is unavailable. Apply platform-deny rules above organisation preferences.
+AD05 Fees limits and versioned policy
+Configure approved payer fees, merchant fees where known, rounding and limits. Show calculation examples, policy versions and effective dates. Do not silently rewrite totals on existing intents.
+AD06 Payment search and detail
+Search stable references with scope enforcement. Show intent, obligation snapshot, attempts, selected account, provider evidence, journal links, refund status, fulfilment state and audit timeline. Provide a safe query-status action with rate limits.
+AD07 Refund request and approval
+Present domain eligibility, original amount, previous refunds, pending reservations, fees and reason. Separate request and approval rights; editing the amount invalidates approval. Provide provider outcome and escalation if unsupported or ambiguous.
+AD08 Reconciliation workbench
+Import approved statements through restricted ingestion or retrieve provider reports. Match automatically, investigate exceptions, assign owners, retain evidence and approve correcting journals through ledger contracts. Never edit posted journals.
+AD09 Callbacks integration and worker health
+Display sanitised receipt metadata, signature result, processing state, retry count and correlation ID. Allow authorised replay of processing after validation; do not bypass authentication or manufacture a new success event.
+AD10 Settlement and payout workspace
+Show eligible liabilities, reserves, pending refunds, verified destinations, approval queue and provider outcomes. Keep payout permissions separate from payment-support permissions. Link to the shared payout domain rather than implementing another payout engine.
+AD11 Support reporting and audit
+Provide masked case-linked transaction views, downloadable scoped reports and audit search. Support staff may query status and open cases, but cannot alter financial finality or expose credentials.
+AD12 Operational controls
+Allow controlled pause of new attempts by provider/account/module, while resolution traffic continues. Record reason, actor, duration and incident reference. A configuration rollback restores eligibility rules but never erases transaction history.
+Admin permission matrix
+Role
+View
+Configure
+Request refund
+Approve or release
+Platform payment operator
+Authorised platform scope
+Draft configuration
+If assigned
+No own requests
+Organisation finance
+Own organisation
+Allowed scoped policy only
+Yes within scope
+Only with separate permission
+Finance approver
+Assigned accounts
+Approve sensitive changes
+Optional separate role
+Yes with maker-checker rules
+Support officer
+Masked assigned cases
+No
+Escalate/request only if assigned
+No
+Organiser or representative
+Own service summary
+Business settings only
+Domain request if permitted
+No platform finance authority
+Gate operator or sponsor
+Only permitted service views
+No payment configuration
+No
+No
+Admin interaction standards
+Every page needs loading, empty, permission-denied, stale-data and failure states. Configuration screens need validation, changed-field previews, approval status and rollback history. Financial actions use explicit amount/currency confirmation, reason capture and concurrency checks. Every export and deep link must recheck access; hiding a menu is not access control.
+5 Consumer mobile requirements
+Build one Flutter shared payment feature with reusable Riverpod state, API models, checkout screens, payment-result screens and receipt components. Each business module launches this feature with a server-issued quote or intent reference. The module supplies purpose context and its post-payment destination; it does not supply trusted prices or provider secrets.
+MB01 Module entry and summary
+Funeral Assistance displays the household collection and expected contribution; Events displays category, quantity and attendees; Raffles displays campaign and eligible entry quantity. Each domain creates a validated payable reference before opening shared checkout.
+MB02 Payment option selection
+Retrieve available options from the backend. Show Bank 1, Bank 2, Bank 3 and OleKard Wallet only when eligible. Display approved fees, currency, final total and restrictions. Refresh eligibility if checkout expires or configuration changes.
+MB03 Wallet confirmation
+Show authorised wallet pocket, spendable balance and insufficient-funds message. Require existing payment PIN or step-up authentication policy. Keep available balance distinct from total balance and reserved funds. Never imply automatic currency conversion.
+MB04 External bank handoff
+Use the certified provider redirect, hosted checkout or SDK flow. Allowlist destinations and verify return-link association. Preserve intent/attempt references securely. Show pending status after return until backend confirmation; app return is not payment evidence.
+MB05 Processing and network recovery
+Prevent double submission in UI while relying on server idempotency. Recover a pending attempt after app restart or device reconnect. Display last checked time, safe refresh and support action. Do not offer another provider while the current attempt has unresolved charge risk.
+MB06 Payment and service result
+Distinguish paid from service ready. Examples: Payment confirmed and ticket preparing; Contribution confirmed and household record updating. Resolve through authoritative APIs, bounded polling or secure push-driven refresh. Never issue a local ticket based on a success animation.
+MB07 Activity receipts and refunds
+Use shared payment history with purpose filters and domain deep links. Show receipt, provider label, amount, fees, date, reference, refund and support status. Domain screens determine whether a refund can be requested.
+MB08 Secure mobile behaviour
+Keep secrets server-side, use approved secure storage, clear private cache on logout/account switch and avoid sensitive notification previews. Offline access may show an existing receipt or ticket but cannot execute an offline bank/wallet payment through this architecture.
+Mobile navigation and reusable interfaces
+Place the shared payment flow under the existing app shell rather than a separate application. Suggested conceptual screens are Payment Summary, Choose Payment Option, Confirm Wallet Payment, External Provider Handoff, Payment Processing, Payment Result, Receipt and Refund Status. The wallet home, top-up and transfer screens remain owned by Wallet. My Tickets, My Entries and community membership remain owned by their business modules.
+A conceptual launch contract is openCheckout(payableReference, returnRoute). The backend returns intentId, quoteVersion, options and nextAction. Completion returns only identifiers and latest state; the destination module refreshes its own backend resource. Validate return routes and do not accept arbitrary executable routes or URLs from untrusted metadata.
+6 Data contracts and state machines
+Recommended record ownership
+Schema or owner
+Records and invariants
+payments
+payment_intents; payment_attempts; payment_options; provider_account_refs; fee_snapshots; refund_requests; refund_attempts; payment_allocations; reconciliation_runs and exceptions. Each money-changing operation has a stable operation ID.
+integration E25
+Connector installation/version; environment; secret references; callback receipts; verification metadata; external-ID mapping and transport delivery attempts. Payments stores a link to the receipt and its own domain inbox outcome.
+wallet
+Wallet accounts, pockets, reservations, wallet transactions and limits, through the existing domain contract.
+ledger
+Journals, balanced postings, account mappings, clearing, liabilities and reversals. Reuse the existing authoritative ledger; extend its account model through review instead of creating another journal engine.
+business modules
+Funeral obligations and eligibility snapshots; event orders, holds, ticket inventory and admissions; raffle eligibility, entries, draw snapshots and prize obligations.
+shared platform
+Organisation memberships, permissions, audit events, consent, notifications, private files and messaging infrastructure. Each module owns the outbox/inbox entries associated with its own transactions.
+Use PostgreSQL schemas per module where consistent with the repository. Module code accesses another domain through contracts, even when schemas share one database. A single database does not by itself enforce module ownership. Add architecture checks and database permissions where practical. IDs are opaque, and records carry organisation scope, currency, timestamps and version fields appropriate to their purpose.
+Key integrity constraints
+Unique active financial operation per organisation, purpose type, purpose ID and obligation version, enforced through an approved constraint/locking model rather than only an application pre-check.
+Unique attempt request per scoped idempotency key and operation. Reusing a key with a changed request hash is rejected. Provider operation identifiers are retained for recovery after cache expiry.
+Unique external transaction reference within provider account and environment where the provider contract guarantees uniqueness. Do not assume provider references are globally unique.
+Unique callback receipt within provider account, environment and provider event identity; also deduplicate domain effects by financial operation ID because providers may emit multiple events for one transaction.
+Unique ledger posting source per financial operation; unique business fulfilment source per confirmed payment allocation. Refund reservation and completion totals cannot exceed approved refundable value.
+Optimistic version checks or consistent row-lock ordering protect concurrent changes. Do not keep database locks open while waiting on external APIs. Bound deadlock retries and make operations safe to repeat.
+Payment attempt transition model
+State
+Meaning and permitted continuation
+CREATED
+Durable request recorded; may move to SUBMITTING or cancel before external execution.
+SUBMITTING
+Provider request may be in flight. Persist the operation reference before the external call. A crash can leave uncertain execution.
+REQUIRES_ACTION
+Provider requires customer authentication or handoff; may become PROCESSING, SUCCEEDED or definitively fail/cancel.
+PROCESSING
+Provider accepted but finality is pending. Query/callback/reconciliation resolves the outcome; no new unsafe payable attempt.
+UNKNOWN
+The platform cannot determine whether the provider accepted or charged. Query using the stable reference. Timeout is not failure and local expiry is not proof of provider cancellation.
+SUCCEEDED
+Verified external capture or successful wallet financial operation. Preserve as historical success; accounting/fulfilment may still be pending.
+FAILED CANCELLED EXPIRED
+Use only when provider evidence or pre-submission state proves safe finality. A provider-success anomaly after a purported final state enters reconciliation and compensation, never silent dismissal.
+An intent exposes an aggregate state such as OPEN, PROCESSING, PAID or CLOSED_UNPAID. Refund totals, dispute state, accounting status and domain fulfilment status are separate fields. A captured payment remains historically captured after a refund; refund records represent returned money. CLOSED_UNPAID is allowed only when all attempts are safely resolved. One-success-per-intent is an application invariant, not a guarantee the provider can never duplicate a charge; detected excess capture enters a refund/compensation queue.
+Conceptual API surface
+Operation
+Contract and security
+Get payable quote
+Domain endpoint validates obligation and creates signed/opaque server-side quote reference with version, amount, currency, allocation and expiry.
+List eligible payment options
+Input quote reference; return available display options and disclosed total. Derive authenticated payer and authorised organisation context server-side.
+Create or resume intent
+Input payable reference, quote version and idempotency key. Return stable intent reference and status; detect existing unresolved obligations.
+Start attempt
+Input intent reference, payment option reference and operation key. Return state and nextAction such as redirect, approved SDK payload or wallet authentication requirement.
+Query payment
+Return normalised financial, accounting and fulfilment state with safe actions. Only owning consumer or authorised scoped staff may read.
+Request refund
+Domain validates business entitlement; shared service validates financial amount and capability. Approval and execution are separate authorised operations.
+Receive callback
+Provider-specific authenticated E25 endpoint, mapped to configured account. No consumer token requirement, but strict provider verification and durable receipt.
+Admin configuration and reconciliation
+Permissioned APIs with version checks, audit, approval and masking. Read, draft, validate, approve, activate and suspend are separate lifecycle actions.
+API examples are conceptual and must follow existing route/version conventions. Avoid a generic client-controlled purpose_type plus amount endpoint that charges arbitrary obligations. Error responses include safe code, message, correlation ID and permitted recovery action, never raw provider errors or secrets. Next actions must be typed and allowlisted.
+Internal event contract
+Use the existing dot-notation PascalCase event naming convention, with final names validated against the repository. Suggested events are Payment.Confirmed, Payment.AccountingPending, Payment.Failed, Payment.Reversed, Refund.Confirmed and Payment.FulfilmentException. Event envelopes include event ID, schema version, organisation ID, purpose reference, payment/attempt reference, money, occurrence time and correlation/causation IDs. Limit personal data and version event schemas compatibly.
+Payment.Confirmed should mean the approved financial confirmation threshold has been met. Recommended initial policy is verified financial success plus accepted ledger posting. If business approval permits earlier fulfilment after provider capture, define a distinct event and risk policy rather than silently changing this meaning. Every consuming handler deduplicates within the same transaction that changes its domain record.
+7 End to end lifecycles and operational flows
+This section expands the architecture into implementable lifecycles. Each flow identifies its trigger, entry conditions, admin and mobile actions, foundation processing, state transitions, exception handling and completion evidence. These are proposed operating flows; provider-specific finality, community rules, raffle permissions and finance approvals must be confirmed before production enablement.
+Bank 1, Bank 2 and Bank 3 use the same external-payment lifecycle with separate certified adapters. Wallet uses its existing financial operations through a common adapter. Business outcomes remain owned by their individual modules. Successful payment, completed fulfilment, provider settlement and beneficiary payout are distinct milestones and may occur at different times.
+Lifecycle
+Primary owner
+Main downstream result
+LC01 Provider onboarding and configuration
+Payments administration with E25
+Approved payment option available
+LC02 Common checkout and intent
+Payments with business purpose handler
+Safe executable payment attempt
+LC03 Bank payment
+Payments and selected bank adapter
+Verified capture and accounting
+LC04 Wallet payment
+Payments and Wallet
+Verified debit and accounting
+LC05 Callback and event delivery
+E25 and module inbox/outbox owners
+Idempotent financial and domain effects
+LC06 Funeral Assistance
+Community Funeral module
+Household support and family payout
+LC07 Paid event and ticket
+Events module
+Ticket admission and organiser settlement
+LC08 Free and invitation event
+Events module
+Capacity-controlled admission without payment
+LC09 Raffle campaign
+Raffles module
+Verified entries draw prizes and proceeds
+LC10 Donation campaign
+Fundraising module or campaign subtype
+Donation receipt and beneficiary support
+LC11 Refund
+Domain eligibility plus Payments
+Confirmed return of eligible funds
+LC12 Reversal and dispute
+Payments and Finance
+Financial and entitlement adjustment
+LC13 Reconciliation and provider settlement
+Finance and shared ledger
+Matched transactions and cleared funds
+LC14 Beneficiary and organiser payout
+Shared payout service and Finance
+Verified disbursement
+LC15 Reporting support and closure
+Finance support and domain owners
+Reconciled reports and resolved liabilities
+LC16 Outage recovery and credential change
+Operations E25 and Payments
+Recovered service with no duplicate execution
+State names below are conceptual and must map to the approved state machines in section 6. Arrows indicate normal progression; exceptions can pause a flow without erasing its financial history. A deadline passing locally does not prove that an external money-moving request failed.
+LC01 Provider onboarding and configuration
+Trigger and prerequisites. An authorised operator requests a new bank option or a change to an existing option. The provider contract, merchant ownership, supported currencies, methods and operating restrictions must be available. Wallet enablement requires verified internal contracts rather than invented external credentials.
+Lifecycle. Draft → documentation review → adapter implemented → sandbox verified → approval pending → production validated → active → suspended or retired.
+1. Admin operator. Create the provider/account draft with adapter identity, environment, secret references, currencies, module permissions, fees, limits and callback account mapping. Identify a finance and technical owner.
+2. E25 and adapter owner. Install the reviewed adapter through the normal release process; register capabilities, allowlisted endpoints, signature verification and query semantics. The UI cannot upload arbitrary executable adapters.
+3. Technical and finance testers. Run initiation, query, timeout, duplicate callback, refund if supported, mismatch and reconciliation scenarios. Link the evidence to the adapter and configuration versions.
+4. Independent approver. Review account ownership, settlement destinations, fees, security and evidence. Reject or request corrections where incomplete; any sensitive edit invalidates prior approval.
+5. Operations and Payments. Provision production secrets separately, perform authorised verification, activate at the effective time and publish availability through the backend rules.
+6. Consumer mobile and operations. The eligible option appears automatically in common checkout. Monitor outcomes and health. Suspension hides new checkout attempts while existing resolution traffic remains enabled.
+Exceptions and recovery. Missing bank documentation blocks live activation but not framework or Wallet work. Rotate compromised credentials using controlled versions; preserve required ability to verify callbacks for existing attempts according to provider security policy. Retire an account only after unresolved attempts, refunds and settlement obligations have an approved resolution route.
+Completion evidence. Approved configuration version, adapter test evidence, account mapping, activation audit and operational owner. A second provider can be added without changing service-domain payment code.
+LC02 Common checkout quote and intent
+Trigger and prerequisites. A consumer chooses Contribute, Buy Ticket, Buy Entries or Donate. Identity, purpose eligibility and any jurisdiction restrictions are validated before payment. No offline payment execution is supported.
+Lifecycle. Business obligation → validated quote → open intent → option selected → attempt created → processing → paid or safely closed unpaid; fulfilment continues independently.
+1. Consumer mobile. Open the domain summary and review purpose, recipient, quantities and terms. Request a payable reference from the relevant domain backend.
+2. Business module. Validate ownership, eligibility, price and currency; reserve event inventory or other resources where necessary. Return an immutable quote reference, version, allocation and expiry.
+3. Payments. Create or resume the intent using the stable obligation identity and scoped idempotency key. Snapshot amount, fees and destination allocation. Detect unresolved prior attempts.
+4. Consumer mobile. Fetch available Bank 1, Bank 2, Bank 3 and Wallet options. Display the final total for the selected method, disclosed fee and permitted next action.
+5. Payments and adapter. Revalidate quote/option availability and authentication requirements; persist the attempt and financial operation reference before initiating any possible financial effect.
+6. Mobile and domain. Show authoritative pending or confirmed financial status, then refresh the business resource. Retain references for restart recovery and provide a support action when resolution takes longer than policy permits.
+Exceptions and recovery. An expired quote refreshes before execution. A price-changing edit requires renewed consumer confirmation. A previous UNKNOWN or PROCESSING attempt blocks unsafe repayment through another option. Closing the app or abandoning a redirect does not establish financial cancellation.
+Completion evidence. Intent, quote/policy version, attempt and domain reference are linked; one trace connects mobile, domain, payment, adapter, ledger and fulfilment. No client-provided amount becomes authoritative.
+LC03 Bank 1 Bank 2 and Bank 3 payment
+Trigger and prerequisites. LC02 has produced an eligible bank selection and durable attempt. The selected bank adapter/account is active for new payments and supports the required method. Each bank may have different authentication and finality semantics.
+Lifecycle. CREATED → SUBMITTING → REQUIRES_ACTION or PROCESSING → verified SUCCEEDED; uncertainty moves to UNKNOWN until authenticated resolution.
+1. Payments. Record account, amount, currency, adapter/configuration version and provider operation ID. Release database locks before the external request and use the provider idempotency mechanism where supported.
+2. Bank adapter and E25. Authenticate server-side, map the request and send it to the configured bank. Return a typed next action, definitive rejection or unresolved result. Keep protocol details outside the business module.
+3. Consumer mobile and bank. Complete hosted authentication or approved app-switch. On app return, display processing and query the backend; never trust a query-string success flag or screenshot as proof of payment.
+4. E25 and Payments. Receive a verified callback or authenticated status query. Match merchant account, attempt, amount and currency. Record capture evidence once and flag mismatches for review.
+5. Payments and ledger. Post the capture through the authoritative ledger contract with a stable posting source. If recording is pending, preserve capture and retry accounting without initiating another charge.
+6. Business module and mobile. Consume the confirmation event idempotently, fulfil the obligation and update the mobile result. A receipt may show payment confirmed while a ticket or contribution update is still processing.
+7. Finance. Match provider statement, fees and settlement later through LC13. External capture does not automatically credit the consumer wallet.
+Exceptions and recovery. Provider timeout means UNKNOWN, not FAILED. Use the original operation reference for safe status recovery; do not create another charge blindly. If a bank lacks provider-side idempotency or reliable query-by-reference, prohibit unsafe execution retries and require an agreed reconciliation/manual escalation procedure. Retain and compensate excess captures rather than deleting them.
+Completion evidence. Verified provider transaction, matched amount/currency/account, ledger acknowledgement, receipt and domain fulfilment reference; any unresolved accounting or fulfilment is visible in a repair queue.
+LC04 OleKard Wallet payment
+Trigger and prerequisites. LC02 has selected Wallet. Payer owns the eligible wallet pocket, the currency is supported, spendable funds and limits permit payment, and the existing authentication policy is satisfied.
+Lifecycle. Attempt created → wallet authorisation → funds reserved or atomic debit → wallet success → accounting acknowledged → payment confirmed → domain fulfilled.
+1. Consumer mobile. Display selected pocket, spendable balance, amount and fee. Obtain approved PIN or step-up authentication through the foundation flow without logging or persisting the secret in Payments.
+2. Payments. Persist a financial operation ID linked to the intent and invoke the Wallet adapter using that stable ID. Do not implement its own balance calculation or direct wallet table update.
+3. Wallet service. Check ownership, limits and available balance under concurrency controls. Reserve/capture if the existing contract supports that model, or perform an approved atomic debit. Write authoritative wallet/ledger records once.
+4. Wallet adapter and Payments. Return or query the operation result and journal references. Confirm the ledger acknowledgement without posting the same wallet operation a second time through a separate path.
+5. Business module. Consume the normalised confirmation and fulfil the household obligation, ticket order or campaign entry allocation once.
+6. Consumer mobile and Finance. Show confirmed payment and service status, updated wallet balance and receipt. Reconcile wallet transactions with the same payment operation references; no external bank settlement is created for a purely internal liability transfer.
+Exceptions and recovery. Insufficient funds rejects before debit. If a crash occurs after debit but before acknowledgement, query Wallet by the original operation ID and recover the same result. Expired reservations are released only after safe resolution. If money moved but fulfilment fails, use a controlled same-wallet refund or reversal under the approved policy, preserving the original journal.
+Completion evidence. Exactly one intended wallet financial effect, wallet transaction/journal reference, linked payment and one domain fulfilment. Concurrency and crash-recovery tests prove this invariant.
+LC05 Callbacks internal events and fulfilment delivery
+Trigger and prerequisites. A provider sends a callback, or a module commits a state change needing another module to react. E25 owns external ingress; each domain owns its semantic processing and durable messaging records.
+Lifecycle. Received → authenticated → durably stored → dispatched → domain verified → applied → outbox published → consumer inbox committed → acknowledged.
+1. E25 ingress. Identify the configured provider/account, validate signature using the raw request body and apply the provider replay rules. Record trusted receipt identity and minimal restricted evidence.
+2. E25 delivery. Acknowledge only after durable receipt. Deliver the sanitised notification to Payments asynchronously with correlation and receipt references. Deduplicate provider event identities within account and environment.
+3. Payments consumer. Validate mapping, money and allowed transitions. Deduplicate both receipt delivery and the underlying financial operation, since different provider events can refer to the same capture.
+4. Payments and ledger. Complete required accounting. Commit the payment state and its outbox entry atomically within the owned local transaction; a durable ledger command/acknowledgement handles a separate ledger transaction boundary.
+5. Outbox relay and business inbox. Publish with bounded retries. The domain consumes using an inbox uniqueness check and commits that check with ticket/entry/obligation fulfilment in one local transaction.
+6. Operations. Monitor receipt age, accounting lag, event lag and poison messages. Replay verified processing using the same identities after a fix; keep original evidence and audit.
+Exceptions and recovery. Invalid signatures are denied without changing financial state. Out-of-order events do not regress verified success. Failure before durable receipt should produce a retryable response consistent with provider rules; failure after receipt enters the processing queue. Transport acknowledgement never establishes business completion.
+Completion evidence. One trace connects provider receipt, payment transition, accounting reference, emitted event and domain effect. At-least-once transport is tolerated without duplicate financial or entitlement effects.
+LC06 Community Funeral Assistance
+Trigger and prerequisites. An authorised representative initiates support for a verified bereaved household. Community rules, contribution amount, eligible membership, privacy, beneficiary destination and financial authority are configured. The source default is BWP20 per participating family.
+Lifecycle. Draft → review → approved → active collection → contributions and reconciliation → closed to new payments → payout pending → disbursed → financially complete → archived.
+1. Community admin. Create the community and household register, verify representatives and approve joining/exemption rules. Create a funeral request with minimal necessary evidence and beneficiary details.
+2. Independent reviewer. Verify request legitimacy and beneficiary destination; approve collection terms. Freeze the eligible-household snapshot and create one obligation per household for the collection.
+3. Notifications and mobile. Notify eligible households without exposing another household payment status. The consumer reviews the collection, own obligation, deadline and approved aggregate totals.
+4. Consumer and Payments. Open shared checkout for BWP20, choose an eligible bank or Wallet and complete LC03 or LC04. Pending payments remain outstanding/pending until confirmed; reminders exclude confirmed or exempt obligations.
+5. Funeral module. Consume confirmation once, fulfil the household obligation and show the receipt. Update confirmed gross, fees, refunds and net held separately. Additional donations require an explicit separate policy.
+6. Admin and Finance. Close new contribution initiation at the approved time; resolve in-flight payments, refunds and discrepancies. Verify available cleared funds and prepare the beneficiary payout through LC14.
+7. Finance and community. Independently approve and execute disbursement. Publish the permitted aggregate support report, retain private household records and archive only after liabilities are resolved or explicitly carried forward.
+Exceptions and recovery. Duplicate household/delegate payments are reconciled without duplicate obligation fulfilment. Beneficiary edits invalidate approval. Late bank success after closure follows the approved acceptance/refund rule. Closure does not imply payout success; a failed or unknown payout remains open. No public named non-contributor list is generated.
+Completion evidence. Approved collection and eligibility snapshot, traceable contributions, reconciled net support, verified disbursement, controlled report and a list of any outstanding exceptions.
+LC07 Paid event ticket admission and organiser settlement
+Trigger and prerequisites. An approved organiser publishes an event with capacity, categories, prices, time zone, sales period, refund/transfer/re-entry policy, staff and sponsorship information. Sponsor identity such as BTC does not itself select the payment provider.
+Lifecycle. Draft → published → inventory held → order awaiting payment → paid → tickets issued → admission recorded → event complete → refunds and reconciliation → organiser settled → archived.
+1. Organiser admin. Configure event, inventory allocations, price, terms, sponsor visibility and gate operators. Validate total category capacity and publish after required review.
+2. Consumer mobile and Events. Select category/quantity and attendee data. Events atomically reserves stock with an expiry and creates the server-priced payable quote.
+3. Payments and consumer. Run common checkout using the selected bank or Wallet. Events does not issue paid tickets from a redirect or an unverified callback.
+4. Events fulfilment. After the agreed payment/accounting threshold, deduplicate the confirmation, confirm inventory and issue unique ticket credentials. Expose My Tickets and handle notification failure independently.
+5. Gate operator and Events. Verify operator/event/gate scope and scan the QR. Atomically accept an unused online ticket once, log attempts and deny revoked, refunded, wrong-event or already-used tickets.
+6. Event operations. Monitor unique admissions separately from scan attempts. Use an approved offline mode only with device/manifest limits and acknowledged cross-device duplicate risk; reconcile offline logs after reconnect.
+7. Finance and organiser. After completion, resolve cancellations, refunds, disputes and financial exceptions. Calculate eligible organiser payable, maintain reserves, execute LC14 and archive business/financial records under retention policy.
+Exceptions and recovery. Last-ticket races must not oversell. A paid order with expired inventory enters controlled reacquire-or-refund handling. Lost/rotated tickets revoke old credentials; offline devices need refreshed revocation data. Rescheduling/cancellation notifies attendees and triggers the explicit refund policy. Event completion and organiser settlement remain separate states.
+Completion evidence. Order and paid allocation, one issued ticket set, auditable admission log, reconciled revenue/refunds/fees/reserves and traceable organiser settlement.
+LC08 Free and invitation only event
+Trigger and prerequisites. An organiser publishes a free event or approved complimentary allocation with explicit capacity and invitation rules. A zero-price registration is not a captured payment.
+Lifecycle. Published → invitation validated where required → registration → capacity allocated → free ticket issued → admitted or no show → completed → archived.
+1. Organiser admin. Set free categories or complimentary quotas, registration fields, optional allowlist, invitation expiry and per-person/guest limits. Invitations are not public authorisation tokens.
+2. Consumer mobile. Open the event or invitation and authenticate as required. Review event terms and submit minimal attendee information.
+3. Events backend. Validate audience eligibility and invitation recipient/usage count. Allocate capacity atomically using the same stock protections as paid registration.
+4. Events fulfilment. Issue the zero-price entitlement and record its source as free or complimentary. Skip bank/Wallet execution and show it in My Tickets.
+5. Gate operator. Use the same scoped online validation and approved offline policy as paid tickets. Free and paid ticket counts remain distinguishable in reports.
+6. Organiser and reporting. Close registrations, report registrations/admissions/no-shows and archive. No provider settlement or payment refund is created for a free entitlement.
+Exceptions and recovery. Expired/used invitations fail without leaking attendee lists. Sold-out capacity prevents issue. Revoked invitations do not automatically imply revocation of a previously valid ticket unless explicit policy says so. Event cancellation revokes entitlements and notifies registrants without manufacturing a zero-value financial refund.
+Completion evidence. Capacity allocation, invitation evidence if applicable, free entitlement record and attendance history; financial reports distinguish zero-price registrations from revenue.
+LC09 Permitted raffle campaign
+Trigger and prerequisites. A verified organiser proposes a raffle in an approved jurisdiction. Required operating permission, audience/age checks, terms, prizes, draw method, supervision and claims rules are confirmed. Payment providers must allow that campaign category.
+Lifecycle. Draft → compliance review → approved → active → entries sold → closed → financially reconciled → eligibility frozen → drawn → winners verified → prizes fulfilled → proceeds paid → complete.
+1. Campaign admin and independent reviewer. Record jurisdiction approval, permit expiry where applicable, beneficiary, prizes, entry price/limits, sale cutoff, draw time/method and cancellation/claims terms. Activate only after the gate passes.
+2. Consumer mobile and Raffles. Check eligibility and explain prizes, rules and entry price before purchase. Create a server-priced payable reference with campaign/rule version and intended entry quantity.
+3. Shared Payments. Offer only permitted methods for this campaign category. Confirm bank or Wallet money through the common pipeline; do not treat a donation receipt as a raffle entry.
+4. Raffles fulfilment. Allocate immutable entry numbers once per paid allocation. Refund/reversal processing invalidates entries under the approved rules before draw eligibility freezes.
+5. Admin and Finance. Close entry sales, resolve pending/late captures according to the published cutoff policy and reconcile the eligible population. Freeze the entry dataset with count and digest.
+6. Authorised draw operators. Execute the approved supervised draw with independent control and recorded randomness/execution evidence. Bind each prize to a winning entry; validate before publishing permitted results.
+7. Winners and fulfilment staff. Verify claims, identity and eligibility, then deliver prizes with evidence. Handle unclaimed or disputed prizes only under approved rules; never silently rerun or overwrite a draw.
+8. Finance and campaign owner. Account for prizes, refunds, fees, liabilities and cleared net proceeds; pay the beneficiary through LC14 and close after obligations are resolved.
+Exceptions and recovery. Expired approval or prohibited provider category stops new sales. Unknown payments are resolved before freezing; a later anomaly enters a controlled incident rather than silently altering a completed draw. Post-draw reversals/chargebacks require a documented prize and liability policy. Reruns preserve the original execution and independent authorisation.
+Completion evidence. Current approval, published rule version, paid entry allocation, reconciled frozen population, immutable draw record, prize-to-entry evidence, claims/fulfilment records and final proceeds report.
+LC10 Donation and fundraising campaign
+Trigger and prerequisites. A verified organisation publishes a donation campaign with beneficiary, target if any, allowed amounts, fees, dates, refund rules and whether funding is unconditional or all-or-nothing. Raffle entry is not implied.
+Lifecycle. Draft → reviewed → active → donations received → closed → reconciled → beneficiary payout → reported → complete.
+1. Campaign admin. Create purpose, beneficiary and approved public content. Define unrestricted/restricted use, target handling, minimum/maximum donation and any cancellation conditions. Independently verify destination.
+2. Consumer mobile. Review organiser, purpose, target basis, final total and fees. Enter an allowed amount and agree to the disclosed terms; sponsor marketing consent is separate.
+3. Fundraising domain and Payments. Validate donation limits and campaign eligibility, issue a payable quote and execute common bank or Wallet checkout.
+4. Fundraising fulfilment. Record one confirmed donation allocation and receipt. Update gross, refunds, fees and approved net support separately; do not issue raffle numbers or promise prize eligibility.
+5. Finance and campaign owner. Close new donations, resolve pending outcomes, enforce the published incomplete-target/cancellation policy and reconcile available funds.
+6. Payout and reporting. Release eligible net support to the verified beneficiary through LC14, publish permitted aggregate outcomes and retain restricted donor records.
+Exceptions and recovery. A failed target does not automatically mean refund unless the published policy requires it. If all-or-nothing terms require a return, the funding/payout model must preserve sufficient funds. Late captures, beneficiary changes or suspected fraud pause release and enter documented resolution rather than transfer to another campaign.
+Completion evidence. Approved campaign terms, donation receipts, reconciled totals, beneficiary payout evidence and any restricted-use or outstanding-refund obligations.
+LC11 Full or partial refund
+Trigger and prerequisites. A consumer, authorised domain operator or cancellation policy requests return of an eligible captured amount. The original method, domain entitlement policy, provider capability and remaining refundable balance are known.
+Lifecycle. Requested → eligibility checked → value reserved → approval pending → submitted → processing or unknown → confirmed or definitively failed → domain adjusted.
+1. Consumer mobile or domain admin. Request a refund against a specific ticket/entry/contribution allocation with reason. Show the applicable policy, expected amount and current status without promising instant receipt.
+2. Business module. Determine eligibility, consumed-entitlement restrictions and any suspension of admission while review occurs. Submit approved financial allocation to Payments.
+3. Payments. Validate original capture, currency, method capability, fee treatment and completed plus in-flight refunds. Reserve refundable value atomically to prevent concurrent over-refunding.
+4. Independent finance approver. Approve according to amount/risk threshold and scope. Reject or return for changes; edited requests require renewed approval.
+5. Provider or Wallet adapter. Execute with a stable refund operation ID against the original financial operation. An accepted request remains pending until authoritative completion; status-query recovery handles ambiguous responses.
+6. Ledger domain and mobile. On confirmation, append refund postings, commit the outbox and apply ticket/entry/obligation consequences idempotently. Show amount returned, reference and any remaining refundable value.
+7. Finance. Match refund settlement/evidence during reconciliation and close the request only when the financial result is known.
+Exceptions and recovery. UNKNOWN refund execution keeps its amount reserved; do not release it for another refund. Definitive failure may release the reservation under policy. Unsupported original-method refunds enter approved finance exceptions, not an automatic wallet credit. Provider refusal and disputes remain visible, and financial history is never overwritten.
+Completion evidence. Eligibility/approval record, original allocation, reserved amount history, provider/Wallet confirmation, correcting journal and domain-adjustment evidence. LC11 differs from cancellation of an unsubmitted payment, which moves no money.
+LC12 Provider reversal dispute and chargeback
+Trigger and prerequisites. A provider reverses a completed transaction, reports a dispute or confirms a chargeback. This is a new financial event against the original capture, not permission to change history to never paid.
+Lifecycle. Notice received → verified → exposure assessed → funds held → evidence submitted → won lost or reversed → accounting and entitlements resolved → closed.
+1. E25 and Payments. Authenticate the provider event and link it to original capture/account/currency. Deduplicate and record dispute reference, amount, reason and response deadline.
+2. Finance and risk operator. Evaluate current settlement, beneficiary payout and domain entitlement. Reserve or hold eligible available funds without unlawfully creating a negative wallet debit or clawback.
+3. Business module. Apply approved protective action: block unused ticket/entry where permitted, flag a contribution adjustment or preserve consumed-service evidence. Do not automatically revoke all unrelated entitlements.
+4. Authorised case owner. Gather minimal necessary transaction and service evidence, submit through the supported provider process and track deadlines. Support staff cannot fabricate confirmation.
+5. Payments and ledger. Record provider outcome with reversal/chargeback journals and fees, or release holds after a won case. Check prior refunds to avoid double financial compensation.
+6. Finance mobile and domain. Explain permitted consumer status, resolve organiser/beneficiary liabilities under the agreed contract and close the case with traceable financial adjustments.
+Exceptions and recovery. Already settled/payout funds may create a receivable or platform exposure requiring approved finance treatment; the system must not silently debit a consumer wallet. Post-draw raffle disputes and admitted event tickets require domain-specific liability handling. A late contradictory provider outcome remains an explicit investigated event.
+Completion evidence. Case timeline, deadline/evidence records, verified provider decision, hold/release history, financial adjustments and entitlement consequences.
+LC13 Reconciliation and external provider settlement
+Trigger and prerequisites. A scheduled run or operator request compares payment evidence with provider reports and ledger balances. Provider settlement is the movement from provider clearing into a settlement account; it is not organiser payout.
+Lifecycle. Source acquired → validated → matched → exceptions investigated → adjustments approved → settlement confirmed → clearing reconciled → period closed.
+1. E25 and Finance ingestion. Retrieve or upload authorised statements with provider account, currency, reporting period, timezone/cutoff and checksum. Validate format, duplicates and source authenticity.
+2. Reconciliation engine. Match captures, refunds, reversals, fees and settlements using account-scoped external references and exact amounts. Cross-link the corresponding payment attempts and ledger sources.
+3. Exception owner. Investigate orphan captures, missing callbacks, mismatched amounts, duplicated entries and stale refunds. Query authenticated provider state and retain evidence; never invent a success to clear the queue.
+4. Finance approver and ledger. Approve traceable adjustments or allocations through ledger contracts. Correct with linked entries, not edits to posted amounts.
+5. Provider and Finance. Verify settlement to the expected destination and amount, allowing documented fee/reserve deductions. Clear the provider receivable against the real settlement-bank record.
+6. Reporting. Publish reconciled gross, refunds, fees, reserves and net settlement per currency/account with cutoff and exceptions. Feed only eligible cleared availability to organiser/beneficiary payout calculations.
+Exceptions and recovery. Missing statements or partial settlement keep the run open or explicitly qualified. A statement replay cannot duplicate settlement journals. A reserve release is a separately matched event. Pure internal Wallet transfers do not invent a bank settlement, but remain reconciled to Wallet and ledger references.
+Completion evidence. Matched source and ledger references, approved exception resolutions, confirmed settlement-bank evidence and an account/currency clearing balance explanation.
+LC14 Beneficiary disbursement and organiser payout
+Trigger and prerequisites. A community collection, completed event or approved campaign requests release of eligible cleared funds. The beneficiary entitlement, verified destination, available liability balance, refund/dispute reserves and approval authorities must be established.
+Lifecycle. Draft request → beneficiary verified → funds reserved → independently approved → submitted → pending or unknown → settled or safely failed → reconciled.
+1. Domain admin. Prepare the payout request with collection/event/campaign reference, beneficiary identity and approved net amount. The domain requests eligibility; it does not directly execute a bank transfer.
+2. Shared payout service. Validate cleared available payable balance, holds, fees, prior releases and destination verification. Reserve the requested funds atomically across concurrent requests.
+3. Independent finance approver. Review amount, purpose, destination and evidence under maker-checker controls. A destination or amount edit invalidates approval and returns the request to review.
+4. Payout adapter. Persist a stable operation ID, submit through a supported approved provider and record its reference. A provider payment capability does not imply a payout capability.
+5. Operations and provider. Resolve callback/query status. Keep an ambiguous request pending and its funds reserved; do not create a second payout to test whether the first worked.
+6. Ledger and Finance. On verified settlement append or finalise the approved disbursement journals, reconcile provider evidence and notify the beneficiary and permitted domain viewers.
+7. Domain owner. Mark disbursed/settled only from verified financial confirmation. Publish aggregate report as authorised and close the related liability or retain explicit remaining balance.
+Exceptions and recovery. Definitive pre-execution rejection may release a reservation under policy. A failed submitted payout requires authoritative resolution before retry. Beneficiary correction triggers re-verification. Multiple destination/currency payouts need separately validated allocations; automatic currency conversion is out of scope.
+Completion evidence. Verified beneficiary, independent approval, reservation history, one intended provider release, disbursement journal and settled evidence. Consumer contribution or event closure alone never completes this flow.
+LC15 Reports support and business closure
+Trigger and prerequisites. A consumer raises a case, an authorised operator requests a report, or a domain reaches its closing milestone. Financial and business status must remain distinguishable.
+Lifecycle. Request scoped → records correlated → exception assigned → outcome verified → report published or case resolved → obligations reviewed → archive.
+1. Consumer mobile or scoped admin. Open support from a receipt, collection or ticket, or request a scoped export. Retain intent and purpose references rather than asking users for secrets or full bank credentials.
+2. Support and reporting backend. Recheck access, retrieve masked payment/provider/ledger/domain links and display last update/cutoff. Separate confirmed money, pending amounts, admissions, refunds and settlements.
+3. Responsible owner. Route financial ambiguity to Finance/Payments, ticket issues to Events and beneficiary changes to authorised reviewers. Assign case owner, urgency and escalation deadline.
+4. Operations and domain. Apply verified repair or approved compensation using original operation IDs. Support cannot mark paid, alter journals or manufacture ticket entitlement.
+5. Finance and report owner. Publish a reconciled, scoped report with exceptions disclosed. Consumer reports expose own records or approved aggregates; exports require authenticated expiring access.
+6. Domain and retention owner. Close only after business obligations, pending financial operations, prize claims, refunds and liabilities are resolved or explicitly carried forward with ownership. Archive according to approved retention and legal holds.
+Exceptions and recovery. An archived event still permits authorised receipt/support/refund access under policy. A report with unresolved transactions is labelled provisional; downloading it does not close the exception. Privacy/deletion requests preserve only approved retained records and restrict them rather than deleting financial evidence blindly.
+Completion evidence. Case decision/evidence, report filters/cutoff and reconciliation status, exception ownership, closure approval and retention action history.
+LC16 Outage recovery credential rotation and safe retirement
+Trigger and prerequisites. Provider failure, queue backlog, compromised credentials, deployment rollback or disaster recovery requires intervention. An operational owner and runbook are assigned.
+Lifecycle. Detected → contained → new execution paused → in-flight operations assessed → recovered → replayed and reconciled → verified → resumed → reviewed.
+1. Monitoring and Operations. Alert on provider errors, callback signatures, pending-age, accounting/fulfilment lag or settlement discrepancies. Record incident scope and affected provider/account/module.
+2. Authorised operator. Pause new attempts for the affected option and show safe unavailable/pending mobile messages. Preserve status queries, callback processing, refunds and reconciliation where safe.
+3. E25 and security owner. Rotate or revoke credentials with approved secret versions, account mapping and callback verification policy. Distinguish stopping money execution from accepting verified resolution evidence.
+4. Payments and Finance. Inventory all in-flight operation IDs and determine which requests may have reached the provider. Query or reconcile them before allowing replacement attempts or money-moving replay.
+5. Platform and domain owners. Restore durable state or compatible application version, replay validated inbox/outbox work idempotently and repair accounting/fulfilment using existing financial references.
+6. Operations and Finance. Verify provider records against restored application state, resolve excess captures or payouts through compensation, check balances and gradually resume eligible options.
+7. Architecture and support owners. Record incident outcome, consumer communications, root cause and prevention actions. Retire old adapter/account versions only after unresolved operations and retained verification obligations have a safe supported route.
+Exceptions and recovery. Database restore does not roll back a real bank charge. Never rerun every charge command after a restore. A lost Redis cache cannot release PostgreSQL idempotency protections. If provider verification keys must be revoked for security, use an approved authenticated query or reconciliation path for old transactions rather than bypassing signature verification.
+Completion evidence. Incident and change audit, resolved operation inventory, reconciliation evidence, safe replay results, service health and independently reviewed resumption/retirement decision.
+Lifecycle acceptance checkpoints
+Checkpoint
+Expected result
+Cross channel traceability
+Every flow links admin/mobile activity to authenticated organisation, domain purpose, payment intent/attempt, accounting and downstream effects.
+State integrity
+Capture, accounting, fulfilment, refund, provider settlement and beneficiary payout each retain independent authoritative states.
+End to end replay
+Replaying callback, journal request or domain event yields the original effect or an explicit duplicate result, never another uncontrolled execution.
+Service specific completion
+Funeral closes with support accounting; event closes with admissions and organiser liability; raffle closes with draw/prize obligations; donation closes with approved beneficiary support.
+Financial recovery
+Timeout, crash, provider suspension and restore leave an investigable record; unknown financial finality blocks unsafe replacement.
+Release evidence
+Demonstrate one full wallet journey and each enabled real-bank journey, plus refund, reconciliation, payout and adverse cases before production sign-off.
+8 Configuration and provider onboarding
+Configuration model
+Configuration
+Required values and rules
+Provider definition
+Stable code, adapter class/registry key, version, capability manifest and approved environment support. Code installation follows controlled deployment.
+Provider account
+Provider ID, merchant/account identifier, organisation ownership or platform custody model, environment, currency, secret reference and verification state.
+Display option
+Label, approved logo, method type, linked provider account, sort order, locale text, supported next-action type and accessibility label.
+Eligibility policy
+Allowed purpose categories/modules, organisations, jurisdictions, currencies, minimum/maximum amounts, payer eligibility and policy effective period.
+Fee and limit policy
+Fee bearer, fixed/percentage fee if applicable, precision and rounding, maximum fee, applicable taxes only when approved, transaction/velocity limits and version.
+Operational settings
+Timeouts, safe retry policy, query interval, circuit breaker, callback binding, reconciliation schedule, escalation thresholds and support ownership.
+Governance
+Draft/review/approved state, independent approver, activation date, validation evidence, previous version and change reason.
+Illustrative option configuration
+Option
+Adapter and account
+Initial status
+Availability
+Bank 1
+Bank1 adapter; approved merchant account
+Disabled until certification
+Approved modules/currencies only
+Bank 2
+Bank2 adapter; approved merchant account
+Disabled until certification
+Independent of Bank 1
+Bank 3
+Bank3 adapter; approved merchant account
+Disabled until certification
+Independent capability set
+OleKard Wallet
+Wallet adapter; internal account mapping
+Enable after wallet contract tests
+Verified owner, supported pocket and limits
+These labels are placeholders, not evidence of bank support. Defaulting to Wallet is a product choice, not an architecture requirement. Recommend explicit consumer choice; any automatic routing must stay inside approved policy and must never silently switch an unresolved charge to another provider. Do not request unrestricted URLs or arbitrary script mappings through the admin UI; use allowlisted endpoints and schemas to reduce misconfiguration and SSRF risk.
+Onboarding checklist
+Collect actual provider documentation, commercial and custody model, merchant ownership, supported currencies/methods, restrictions, authentication, callback security, query finality, refund and settlement contracts.
+Implement an adapter against a versioned capability contract. Define provider-specific operation IDs, error classification, timeout handling, duplicate protection and final-state semantics.
+Provision sandbox account and secret references, then validate initiation, query, callback replay, delayed success, refund, amount mismatch and reconciliation with provider evidence.
+Approve account mappings, fees, availability restrictions, incident contacts and test evidence. Keep production secret scope separate from sandbox.
+Enable only after authorised production verification and rollback preparation. Mock adapters are development-only and cannot activate in production.
+Add a second provider in contract tests without modifying Funeral Assistance, Events, Raffles or the shared core state machine for capabilities already supported.
+9 Security operations and acceptance
+Security boundary
+Threat-model tenant leakage, account takeover, fake callbacks, payment replay, stolen QR credentials, unsafe redirect links, malicious report uploads, internal refund abuse and compromised provider credentials. Apply existing security standards, least privilege, appropriate staff MFA, signed provider evidence, safe parsing, rate limits, encryption and managed secret rotation. Store only approved tokenised instrument references; never collect bank passwords, wallet PINs or card security data through generic configuration screens.
+Maintain an approved retention schedule for intent/attempt records, callback evidence, journals, consent and audit. Minimise callback payload storage and restrict access. Financial record deletion follows authorised policy and legal holds; no universal statutory duration is assumed. Scope KYC, sanctions/risk screening and jurisdiction checks according to the approved operating model rather than assuming that identity login alone establishes payment eligibility.
+Reliability and deployment
+PostgreSQL remains authoritative for idempotency and financial workflow records; Redis provides acceleration, rate limiting and transient coordination. Redis loss must not permit duplicate execution. Use outbox relay and idempotent inbox handlers with retries, backoff, poison-message quarantine and operator-visible age. Transport is at-least-once; the target is idempotent financial and domain effects, not an unsupported exactly-once delivery promise.
+Keep HTTP/API workers, callback ingress, payment execution workers, reconciliation workers and reporting workloads separately observable and scalable even when they share one application. Avoid provider calls inside long database transactions. Roll out through environment isolation, additive migrations, compatibility windows, feature flags and tested rollback. Rollback must preserve durable operations initiated by the previous version.
+Proposed initial acceptance targets: online internal read/query APIs p95 below one second under agreed load; non-provider state-changing requests p95 below two seconds. Provider handoff and finality are measured separately. Set explicit pending-age alerts per provider rather than one universal timeout. Confirm workload, availability target, recovery objectives and operating hours before committing an SLA.
+Operational dashboards and runbooks
+Monitor verified payment success and unresolved age by provider/account, ledger acknowledgement lag, fulfilment lag, refund queue, duplicate-capture incidents, reconciliation exceptions, callback signature failures, worker retries and clearing/settlement balances. Alerts need a named owner, urgency, runbook and escalation route. Avoid personal data in metrics labels.
+Runbooks must cover provider outage, wallet debit ambiguity, callback backlog, compromised credentials, stuck captured order, failed refund, wrong merchant mapping, lost event fulfilment message and disaster restore. Recovery must compare restored records against provider reality before replaying money-moving commands. Maintain a safe operational pause that preserves resolution traffic.
+Acceptance evidence
+Test group
+Required evidence
+Architecture
+Dependency checks show modules use Payments contracts; no bank SDK or secret access in mobile/domain code; no duplicate ledger.
+Tenant security
+Read/write/export/file/queue tests deny cross-organisation access; support, sponsors and gate roles cannot administer finance.
+Financial concurrency
+Parallel requests, wallet spends, partial refunds and duplicate provider events produce correct balances and traceable exceptions without uncontrolled duplicate effects.
+Crash recovery
+Terminate after external request, debit, capture, ledger request and event publication; resume using stable IDs without charging or fulfilling again.
+Provider behaviour
+Verify real documented initiation, queries, callback authenticity, unsupported capabilities, late finality, refunds and statement reconciliation in sandbox.
+Business fulfilment
+Late event hold, closed collection and raffle cutoff each apply their domain policy; payment success does not fabricate entitlement success.
+Configuration
+Version changes require scope and approval; disabled providers resolve old transactions; sandbox/mock options cannot appear in production.
+Mobile journeys
+Wallet, redirects/app-switch, app restart, interrupted network, pending result, receipt and refund status work on approved Android/iOS devices.
+Operations
+Restore drill, callback replay, reconciliation backlog, credential rotation and pause/rollback have tested runbooks and audit evidence.
+10 Spec Kit delivery and migration
+Recommended epic structure
+Treat Payments as one shared product capability delivered through several dependent epics or feature specifications. Keep bank connectors and consuming-module integrations independently traceable. Do not place the entire ecosystem inside one enormous feature specification. Do not create a separate payment engine for each service. Use repository epic IDs after inspection; the following IDs are document-local labels.
+Epic
+Stories and dependencies
+PAY01 Architecture and contracts
+Inspect existing Wallet/E25/ledger; decide ownership, purpose contract, money model, state machine and accounting mapping. This precedes executable payment changes.
+PAY02 Shared payment core
+Intent/attempt model, quotation references, registry, capability discovery, PostgreSQL idempotency, outbox/inbox and status APIs. Depends on PAY01 and existing foundation services.
+PAY03 Wallet adapter
+Stable operation references, debit/reserve/query/refund, concurrent spending and crash recovery. Depends on PAY02 and verified wallet contracts.
+PAY04 External connector framework
+E25 integration, callback verification, transport contracts and development-only mocks. One separate feature specification per documented bank adapter.
+PAY05 Admin operations
+Registry/configuration, approval, search/detail, safe status query, monitoring and audit. Depends on shared APIs; sensitive enablement waits for validation.
+PAY06 Consumer checkout
+Reusable Flutter feature and bank/wallet next actions, pending recovery, receipts and refund status. Depends on shared contracts and adapter capabilities.
+PAY07 Finance controls
+Refund execution, reconciliation, ledger integration, dispute/settlement links and exception runbooks. Required before general live payment rollout.
+PAY08 Business integrations
+Separate stories/specifications for Funeral Assistance, Events and Raffles using the same contract, with their own acceptance and late-payment policy.
+PAY09 Migration and release
+Compatibility facade, staged routing, regression, provider certification, recovery drill and release evidence. Payout extension is separately scoped if absent today.
+Repository organisation
+Use existing conventions rather than creating competing admin-app or admin-portal roots. Suggested logical backend modules are Payments, Wallet, Ledger, IntegrationPlatform, CommunityFuneral, Events and Raffles. Within Payments use Domain, Application, Contracts and Infrastructure boundaries where consistent with the codebase. External payment adapters belong under the existing Integration Platform infrastructure with dependency inversion; the Wallet adapter depends on the Wallet contract.
+Within the existing admin application, group payment pages/components/API clients under its payments module directory. Domain admin directories contain their own screens and link to shared payment detail. In Flutter, a shared payments feature holds checkout/results/state/repositories; domain features create payable references and own their fulfilment screens. These are logical placements, not instructions to rename working directories without migration analysis.
+Safe migration from existing wallet calls
+1. Inventory all direct wallet/payment callers, current routes, historical references, tests, jobs and database ownership. Preserve existing financial IDs and reconciliation evidence.
+2. Introduce Payments behind interfaces and a compatibility facade. Build the Wallet adapter using current contracts and prove old and new paths produce equivalent financial outcomes.
+3. Shadow only read-only quotation, eligibility and reporting calculations. Never run two live charge paths as a shadow comparison.
+4. Route one selected domain and a controlled test population through the new flow using feature flags. Ensure retries of an old attempt continue through its original recorded route.
+5. Complete finance controls and authorised low-value production verification, then migrate additional modules incrementally. Track unresolved attempts until completion before retiring any path.
+6. Remove duplicate provider logic only after regression and reconciliation pass. Keep rollback limited to future routing; continue resolving existing operations using the adapter/version that owns them.
+Execution instructions for Claude Code or Codex with Spec Kit
+Start with the repository constitution and installed Spec Kit workflow. Create the architecture specification, clarify only blocking decisions, document alternatives, create implementation plan and dependency-ordered tasks, and implement one approved slice at a time. Discover installed commands rather than assuming command names. Keep specifications, API contracts, migrations, UI changes and tests traceable to the epic/story IDs.
+The first implementation slice should prove a validated payable reference → common checkout → Wallet adapter → authoritative ledger acknowledgement → one domain fulfilment. Add the external adapter framework and one documented bank next. Continue unblocked work when a bank API is missing, while keeping live bank integration blocked and mocks visibly development-only. Completion reports must state actual tests, migrations, compatibility, remaining blockers and release readiness; passing a mock demo is not provider certification.
+11 Decisions and technical references
+Decisions required before production baseline
+Decision
+Responsible owner and consequence
+Custody and merchant model
+Business/finance: platform versus organisation merchant accounts; determines clearing accounts, beneficiary liabilities, settlement and contractual obligations.
+Existing ledger scope
+Architecture/finance: confirm whether current ledger supports external clearing and non-wallet liabilities; extend accounting model before capture rollout if necessary.
+Wallet and E25 contracts
+Technical owner: inspect real APIs, operation IDs, transactions, webhook lifecycle and current secret storage. Resolve gaps without duplicating ownership.
+Provider documentation
+Partner owner: actual Bank 1/2/3 identities, capabilities, credentials, restrictions, callback/query finality, refunds and statement access.
+Fees and supported currencies
+Product/finance: approved fee bearer, rounding, currency precision and module availability. Wallet pockets alone do not establish provider support.
+Domain late-payment rules
+Domain owners: expired ticket holds, closed funeral collections and raffle cutoffs; determine fulfilment, rejection and refund compensation.
+Refund and payout authority
+Finance/security: approval thresholds, destination verification, dispute reserves, unsupported refund procedures and separation of duties.
+Operations and rollout
+Delivery/operations: supported devices, expected traffic, availability/recovery objectives, incident cover, retention and production verification authority.
+Technical references and use of evidence
+The architecture choices in this document are recommendations for OleKard. The references below support selected reliability mechanisms; they do not prescribe OleKard module boundaries or confirm any bank capability. Stripe is cited as provider documentation illustrating integration risks, not as a selected provider. Microsoft examples use other platforms; only the outbox principle is applied to the proposed PostgreSQL design.
+Stripe idempotent requests. Supports safe request retries with stable keys and request consistency; individual provider semantics must still be verified.
+https://docs.stripe.com/api/idempotent_requests
+Stripe webhook documentation. Documents signature validation with raw request bodies, duplicate delivery and event ordering considerations.
+https://docs.stripe.com/webhooks
+PostgreSQL explicit locking. Describes row locks and concurrency interactions; locking must be combined with domain constraints and safe retry handling.
+https://www.postgresql.org/docs/current/explicit-locking.html
+Microsoft transactional outbox reference. Explains recording a message and business-state change in one local transaction; implementation here uses OleKard infrastructure rather than Dataverse.
+https://learn.microsoft.com/en-us/power-platform/architecture/reference-architectures/transactional-outbox-pattern
+References checked on 19 October 2026. Related project baseline: OleKard Horizontal Module Detailed Features, 17 October 2026, and the shared payment implementation prompt in this conversation. This architecture document complements that feature catalogue and does not change an approved commercial scope by itself.

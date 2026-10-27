@@ -65,7 +65,19 @@ final class ProcessWebhookEventJob implements ShouldQueue
             $correlationId = (string) Uuid::uuid7();
 
             try {
-                $this->dispatchToDomainHandler($event, $registry);
+                $quarantineReason = $this->dispatchToDomainHandler($event, $registry);
+
+                $event->refresh();
+                if ($quarantineReason !== null) {
+                    DB::connection('platform')->transaction(function () use ($event, $outbox, $correlationId, $quarantineReason): void {
+                        $event->status = WebhookEventStatus::DeadLetter;
+                        $event->last_error = 'quarantine:'.$quarantineReason;
+                        $event->save();
+                        $this->appendAttempt($event->id, $event->retry_count, 'failure', $event->last_error);
+                        $outbox->publish(new WebhookEventDeadLetteredEvent($event->id, $event->provider_slug, $event->event_type, $event->retry_count, $correlationId));
+                    });
+                    return; // Domain validation quarantined evidence without changing money.
+                }
 
                 DB::connection('platform')->transaction(function () use ($event, $outbox, $correlationId): void {
                     $event->status = WebhookEventStatus::Processed;
@@ -91,18 +103,19 @@ final class ProcessWebhookEventJob implements ShouldQueue
                 DB::connection('platform')->transaction(function () use ($event, $e, $outbox, $correlationId, $metrics): void {
                     $event->refresh();
                     $event->retry_count++;
-                    $event->last_error = substr($e->getMessage(), 0, 500);
+                    $safeError = $event->verified_notification !== null ? 'payment_delivery_failed' : substr($e->getMessage(), 0, 500);
+                    $event->last_error = $safeError;
 
                     if ($event->retry_count < $event->max_retry_count) {
                         $event->status = WebhookEventStatus::Failed;
                         $event->save();
 
-                        $this->appendAttempt($event->id, $event->retry_count, 'failure', $e->getMessage());
+                        $this->appendAttempt($event->id, $event->retry_count, 'failure', $safeError);
                     } else {
                         $event->status = WebhookEventStatus::DeadLetter;
                         $event->save();
 
-                        $this->appendAttempt($event->id, $event->retry_count, 'failure', $e->getMessage());
+                        $this->appendAttempt($event->id, $event->retry_count, 'failure', $safeError);
 
                         $outbox->publish(new WebhookEventDeadLetteredEvent(
                             $event->id,
@@ -131,18 +144,26 @@ final class ProcessWebhookEventJob implements ShouldQueue
         }
     }
 
-    private function dispatchToDomainHandler(WebhookEventModel $event, IntegrationRegistryInterface $registry): void
+    private function dispatchToDomainHandler(WebhookEventModel $event, IntegrationRegistryInterface $registry): ?string
     {
         // Domain handler lookup: bound as "integration.webhook.handler.{provider_slug}.{event_type}".
         // If no handler is registered, processing silently succeeds (event is stored, no action taken).
         $abstract = "integration.webhook.handler.{$event->provider_slug}.{$event->event_type}";
 
+        if ($event->verified_notification !== null && $event->platform_entity_type === 'payment_attempt') {
+            $abstract = 'integration.webhook.handler.payment_attempt';
+        }
+
         if (! app()->bound($abstract)) {
-            return;
+            if ($event->verified_notification !== null) {
+                throw new \RuntimeException('Verified webhook handler is unavailable.');
+            }
+            return null;
         }
 
         $handler = app()->make($abstract);
-        $handler->handle($event);
+        $result = $handler->handle($event);
+        return $event->verified_notification !== null && is_string($result) && preg_match('/^[a-z_]+$/D', $result) ? $result : null;
     }
 
     private function appendAttempt(string $webhookEventId, int $attemptNumber, string $outcome, ?string $errorMessage): void

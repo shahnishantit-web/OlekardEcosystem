@@ -1,0 +1,807 @@
+OleKard Payment Implementation Prompt Pack
+Separate work packages for Claude Code and Spec Kit
+Version 1.0  |  20 October 2026  |  Architecture baseline version 1.1
+Purpose and execution approach
+This pack converts the Shared Payment Architecture into 34 separately manageable prompts. Each prompt is a bounded feature specification or review package with a role owner, prerequisites, source references, tasks, verification and a completion report. It supports the existing Laravel, PostgreSQL, Redis, Next.js and Flutter implementation without requiring a new payment engine per business module.
+Use one selected prompt at a time. P00 assesses the repository, P01 establishes contracts and the remaining packages implement or verify defined scope. Create stories and tasks inside each work package using the repository’s existing numbering. P IDs are management references, not replacements for approved epic IDs.
+Source: OleKard_Shared_Payment_Architecture.docx, document version 1.1 dated 19 October 2026, including 16 lifecycle flows. This is a companion prompt pack; the architecture document remains the governing requirement baseline. Bank names remain placeholders until actual providers and documentation are supplied.
+How to run a prompt
+Place the architecture document in an accessible repository documentation folder and give Claude Code its actual path. Retain the Word file or extract its complete content to a checked-in text format according to project conventions.
+Run P00 first and P01 next. Use the dependency register below to choose subsequent ready packages. Dependencies mean verified required contracts or evidence, not merely that another session was opened.
+Copy the complete selected prompt from its START PROMPT to END PROMPT markers. Its safety, workflow and reporting instructions are included so it can be used in a fresh session.
+For each implementation package, use installed Spec Kit stages to specify, clarify blocking decisions, plan, create tasks, analyse consistency and implement. Do not assume command names, a custom converge command or a particular Spec Kit version.
+After completion, review evidence and update the register before selecting another prompt. A BLOCKED/PARTIAL package does not imply all downstream work must stop; proceed only where the actual prerequisite is satisfied.
+For an existing implemented feature, assess and complete gaps rather than rebuild. Treat external-provider certification, real operating permission and production release as separate acceptance gates.
+Managerial control model
+Use a lifecycle of NOT STARTED → READY → IN PROGRESS → REVIEW → COMPLETED, with PARTIAL, BLOCKED and DEFERRED recorded explicitly. COMPLETED means the selected deliverables and checks passed; it does not mean the whole platform is production-ready. Record specification status, implementation status, certification status and release status separately.
+At every handover retain: work-package ID, repository epic/story/task links, branch/commit, source version, implemented scope, test evidence, unresolved decisions, blockers, next permitted action and restart notes. Assign real people and dates in your project tracker; role names below are suggested responsibilities only. Do not invent completion dates, effort estimates or test results.
+Dependency and execution register
+ID
+Work package
+Required predecessors
+Role owner
+P00
+Repository assessment and delivery register
+None
+Technical lead
+P01
+Architecture contracts and accounting decisions
+P00
+Architect and finance reviewer
+P02
+Payment schema and API contracts
+P01
+Backend engineer
+P03
+Tenant isolation and payment permissions
+P02
+Security and backend engineers
+P04
+Purpose validation quotes and fee snapshots
+P02 P03
+Backend and domain engineers
+P05
+Provider registry and option eligibility
+P02 P03 P04
+Backend integration engineer
+P06
+Intent attempt and payment state engine
+P02 P03 P04 P05
+Backend engineer
+P07
+Durable idempotency concurrency and recovery
+P06
+Backend reliability engineer
+P08
+Ledger acknowledgement and fulfilment handoff
+P01 P06 P07
+Ledger and backend engineers
+P09
+OleKard Wallet payment adapter
+P06 P07 P08
+Wallet and backend engineers
+P10
+E25 adapter framework and callback ingress
+P05 P06 P07
+Integration engineer
+P11
+Outbox inbox notifications and domain delivery
+P08 P10
+Backend messaging engineer
+P12
+Bank 1 adapter and certification
+P10 P11
+Provider integration engineer
+P13
+Bank 2 adapter and certification
+P10 P11
+Provider integration engineer
+P14
+Bank 3 adapter and certification
+P10 P11
+Provider integration engineer
+P15
+Shared refund engine and original method return
+P08 P09 P10 P11
+Finance and backend engineers
+P16
+Reversals disputes and chargebacks
+P15
+Finance and risk engineers
+P17
+Reconciliation clearing and provider settlement
+P08 P10 P15 P16
+Finance systems engineer
+P18
+Beneficiary verification and payout lifecycle
+P03 P08 P15 P16 P17
+Finance and payout engineers
+P19
+Receipts communication and payment history APIs
+P08 P11 P15
+Backend and communications engineers
+P20
+Admin provider configuration and policy screens
+P03 P05 P10
+Next.js admin engineer
+P21
+Admin finance dashboard and operations screens
+P17 P18 P19 P20
+Next.js admin and finance engineers
+P22
+Shared Flutter checkout and recovery
+P06 P09 P10 P19
+Flutter engineer
+P23
+Flutter receipts history refunds and support
+P19 P22
+Flutter engineer
+P24
+Funeral Assistance complete shared payment journey
+P18 P19 P22 P23
+Community domain engineers
+P25
+Paid Events ticketing and admission journey
+P18 P19 P22 P23
+Events domain engineers
+P26
+Free invitation and complimentary event journey
+P25
+Events domain engineers
+P27
+Permitted raffle entry draw and prize journey
+P18 P19 P22 P23
+Raffle domain engineers
+P28
+Donation fundraising and beneficiary journey
+P18 P19 P22 P23
+Fundraising domain engineers
+P29
+Scoped reporting support and closure controls
+P21 P23 P24 P25 P26 P27 P28
+Reporting and support engineers
+P30
+Operations observability incident and recovery
+P10 P11 P17 P18 P21
+Operations and reliability engineers
+P31
+Security privacy and financial resilience verification
+P29 P30
+Security and QA engineers
+P32
+Wallet caller migration and controlled rollout
+P24 P25 P26 P27 P28 P29 P30 P31
+Technical lead and release engineer
+P33
+Final convergence lifecycle evidence and release report
+P00 to P32 with explicit conditional deferrals
+Delivery manager and QA lead
+P12, P13 and P14 can remain blocked on bank documentation while Wallet and independent platform work progress. Implement P22 against certified contracts and development test fixtures where a live bank is unavailable, but do not count mock-backed UI testing as provider certification. P32/P33 may deliver a qualified release for explicitly approved enabled scope while conditional capabilities remain disabled and tracked.
+Requirement coverage matrix
+Source requirement or lifecycle
+Primary prompt coverage
+Sections 1 and 2 architecture and ownership
+P00 P01 P02 P08 P09 P10 P32 P33
+FD01 Identity and scope
+P03 P20 P21 P31
+FD02 Quotes and purpose
+P04 P06 P24 P25 P27 P28
+FD03 Registry and eligibility
+P05 P20 P22
+FD04 Orchestration
+P06 P07
+FD05 Wallet and ledger
+P08 P09
+FD06 Adapters and callback
+P10 P12 P13 P14
+FD07 Accounting and fulfilment
+P08 P11 P24 P25 P27 P28
+FD08 Refund reversal dispute
+P15 P16
+FD09 Reconciliation
+P17
+FD10 Payout boundary
+P18
+FD11 Shared foundation services
+P19 P29
+AD01 and AD06 to AD11 Operations screens
+P21
+AD02 to AD05 and AD12 Configuration
+P20 P30
+MB01 to MB06 and MB08 Checkout
+P22
+MB07 and MB08 History privacy
+P23
+LC01 Provider configuration
+P05 P10 P12 P13 P14 P20
+LC02 Common checkout
+P04 P06 P07 P22
+LC03 Bank flows
+P08 P10 P12 P13 P14 P22
+LC04 Wallet flow
+P09 P22
+LC05 Callback and delivery
+P10 P11
+LC06 Funeral
+P24
+LC07 Paid event
+P25
+LC08 Free event
+P26
+LC09 Raffle
+P27
+LC10 Donation
+P28
+LC11 Refund
+P15 P21 P23
+LC12 Dispute
+P16 P21
+LC13 Reconciliation settlement
+P17 P21
+LC14 Payout
+P18 P21
+LC15 Support and closure
+P19 P23 P29
+LC16 Recovery
+P30 P32
+Section 6 Data API states events
+P01 P02 P06 P07 P08 P11
+Section 8 Configuration onboarding
+P05 P10 P12 P13 P14 P20
+Section 9 Security operations acceptance
+P03 P30 P31 P33
+Section 10 Delivery migration
+P00 P32 P33
+Section 11 Decisions references
+P00 P01 P33
+The matrix identifies primary ownership; a prompt may consume another package’s contract. Cross-package dependencies must not become duplicate implementations. If inspection reveals that one package exceeds an independently reviewable feature, split it into repository stories while preserving its P ID and source traceability.
+P00 Repository assessment and delivery register
+START PROMPT
+Execute P00 — Repository assessment and delivery register. Mode: Assess only. Suggested responsible role: Technical lead.
+Required predecessors: None. Source references: Sections 1 2 10 11. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Inspect constitution, AGENTS.md, installed Spec Kit workflow, completed specifications, branches, backend, admin, Flutter, Wallet, ledger and E25. Inventory direct wallet/payment callers and existing tests.
+2. Create a current-state versus target gap register and dependency map. Classify requirements as implemented, partial, missing, externally blocked or awaiting decision, with file and test evidence.
+3. Create a managed backlog using P00 to P33 as document-local work-package IDs. Map them to existing or new epic/story/task IDs without overwriting repository numbering. Record owners as roles until actual people are assigned.
+4. Create an execution register with status, dependencies, source references, acceptance evidence, risks, blockers, next action and restart context. Separate code completion, provider certification and production readiness.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: No implementation, schema migration or provider execution.
+Required verification and acceptance: Every classification has evidence; all 34 packages are registered; no source requirement is silently dropped. Identify bank-documentation, custody, accounting and domain-policy decisions.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P01 Architecture contracts and accounting decisions
+START PROMPT
+Execute P01 — Architecture contracts and accounting decisions. Mode: Design only. Suggested responsible role: Architect and finance reviewer.
+Required predecessors: P00. Source references: Sections 1 2 6 11; FD05 FD06 FD10. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Document modular-monolith boundaries for Payments, Wallet, ledger, E25 and each business domain. Define module-owned tables, dependency direction and approved interfaces.
+2. Define purpose-handler, provider capability, Wallet operation, ledger acknowledgement and payout contracts. Separate provider, provider account, instrument and consumer display option.
+3. Define capture/accounting/fulfilment/refund/settlement/payout meanings and their events. Record why a bank purchase does not implicitly top up the consumer wallet.
+4. Record custody, merchant account ownership, chart-of-accounts mappings, fee bearers and late-payment decisions as confirmed or unresolved. Use existing approved ADRs first.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: Do not move working wallet code or select undocumented bank behaviour.
+Required verification and acceptance: Contracts and ownership are unambiguous; one authoritative ledger remains; implementation dependencies and blocking decisions are explicit.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P02 Payment schema and API contracts
+START PROMPT
+Execute P02 — Payment schema and API contracts. Mode: Implement. Suggested responsible role: Backend engineer.
+Required predecessors: P01. Source references: Section 6; FD02 FD04 FD08 FD09. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Design and implement the owned Payments schema, exact-money types, opaque references, organisation context, versions and timestamps following schema-per-module conventions.
+2. Create intent, attempt, allocation, quote/fee snapshot, refund and reconciliation structures with constraints. Retain separate finance, accounting and fulfilment states.
+3. Publish versioned API and event schemas with permission scope, validation, safe error codes, pagination, idempotency behaviour and typed next actions.
+4. Implement additive migrations and safe compatibility strategy; include indices, retention-sensitive fields and stable operation references. Do not create a second wallet journal.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: No live charge or broad caller migration.
+Required verification and acceptance: Migration and rollback strategy verified on test data; schema validation rejects invalid amounts/currencies; uniqueness and version constraints are exercised.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P03 Tenant isolation and payment permissions
+START PROMPT
+Execute P03 — Tenant isolation and payment permissions. Mode: Implement. Suggested responsible role: Security and backend engineers.
+Required predecessors: P02. Source references: FD01; admin permission matrix; section 9. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Reuse existing identity, session, organisation and RBAC contracts; derive payer and scope server-side.
+2. Define permissions for payment read, configuration draft/approve, refunds request/approve, reconciliation and payouts. Apply maker-checker and step-up policies where required.
+3. Enforce scope across queries, mutations, callback-account mapping, jobs, exports, files and support views; redact sensitive fields.
+4. Connect permission checks to existing admin/mobile access patterns without inventing new identity credentials or granting sponsors/gate operators finance access.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Required verification and acceptance: Negative tests cover ID substitution, cross-tenant export/job access and revoked membership; an operator cannot approve their own controlled request.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P04 Purpose validation quotes and fee snapshots
+START PROMPT
+Execute P04 — Purpose validation quotes and fee snapshots. Mode: Implement. Suggested responsible role: Backend and domain engineers.
+Required predecessors: P02 P03. Source references: FD02; LC02; sections 6 and 8. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Create purpose-handler registration and server-side payable validation for ownership, eligibility, amount, currency, beneficiary allocation, resource hold and expiry.
+2. Create immutable quote/version and effective-dated fee snapshots with exact rounding and approval metadata. Begin with one currency and one payment option per intent.
+3. Revalidate stale quotes and selected-option fees before execution. Require renewed consumer confirmation for a changed total.
+4. Expose quote APIs and document how each domain supplies trusted payable references without importing domain internals into Payments.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: No split tender, FX, recurring mandates or domain-specific pricing inside Payments.
+Required verification and acceptance: Tampered client prices fail; stale quotes refresh before charging; purpose ownership and fee rounding are tested.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P05 Provider registry and option eligibility
+START PROMPT
+Execute P05 — Provider registry and option eligibility. Mode: Implement. Suggested responsible role: Backend integration engineer.
+Required predecessors: P02 P03 P04. Source references: FD03; LC01 LC02; section 8. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Implement provider, account, instrument, display-option and capability records using an installed adapter allowlist and secret references.
+2. Evaluate options by platform restrictions then organisation/module/purpose/country/currency/amount eligibility. Include provider account environment and operational state.
+3. Implement versioned configuration states, draft validation, sensitive-change approval, display order and safe preview of eligibility reasons.
+4. Keep account suspension for new execution separate from the ability to resolve historical attempts and refunds. Preserve original attempt configuration/version references.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: Do not allow arbitrary executable adapter uploads or unrestricted endpoint URLs.
+Required verification and acceptance: Unavailable options cannot be requested through direct APIs; cross-account configuration is denied; a suspended provider still resolves existing operations.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P06 Intent attempt and payment state engine
+START PROMPT
+Execute P06 — Intent attempt and payment state engine. Mode: Implement. Suggested responsible role: Backend engineer.
+Required predecessors: P02 P03 P04 P05. Source references: FD04; LC02 LC03; section 6. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Implement create/resume intent and start/query attempt orchestration with obligation identity, quote version and durable operation IDs.
+2. Implement allowed CREATED, SUBMITTING, REQUIRES_ACTION, PROCESSING, UNKNOWN and final outcome transitions with authoritative evidence checks.
+3. Persist before external execution; keep database locks out of network waits. Expose typed next actions and independent accounting/fulfilment state.
+4. Block unsafe provider switching while prior attempts may have charged; define handling for expired holds, contradictory evidence and excess captures.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: No success inferred from app redirects; no automatic alternate-provider retry on unknown outcome.
+Required verification and acceptance: Double taps and multiple devices do not create uncontrolled attempts; timeout remains UNKNOWN; out-of-order results do not regress success.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P07 Durable idempotency concurrency and recovery
+START PROMPT
+Execute P07 — Durable idempotency concurrency and recovery. Mode: Implement. Suggested responsible role: Backend reliability engineer.
+Required predecessors: P06. Source references: Section 6 constraints; FD04 FD05; LC03 LC04 LC16. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Apply PostgreSQL-authoritative idempotency with Redis acceleration following existing Hybrid Option C. Bind keys to actor/scope, operation and request hash.
+2. Use durable provider/Wallet operation IDs, uniqueness, consistent lock order and bounded deadlock retries. Retain recovery references beyond cache expiry.
+3. Implement crash recovery after submission/debit/capture with query-by-reference or a documented blocked/manual resolution path when provider capability is insufficient.
+4. Handle duplicate real captures as recorded excess funds requiring compensation; do not suppress their evidence to force one-success assumptions.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Required verification and acceptance: Exercise concurrent duplicate requests, changed-payload key reuse, Redis loss and crash windows. Evidence shows one intended financial effect or an explicit safely managed exception.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P08 Ledger acknowledgement and fulfilment handoff
+START PROMPT
+Execute P08 — Ledger acknowledgement and fulfilment handoff. Mode: Implement. Suggested responsible role: Ledger and backend engineers.
+Required predecessors: P01 P06 P07. Source references: FD07; LC03 LC04 LC05; section 6. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Integrate with the existing authoritative ledger contract using approved account mappings and stable posting source IDs.
+2. Separate verified capture from accounting acknowledgement and domain fulfilment. Preserve capture if ledger unavailable and repair accounting without recharging.
+3. Implement the agreed Payment.Confirmed threshold and durable publication; use idempotent domain allocation references. Wallet journals must not be posted twice.
+4. Cover external clearing, merchant/community liabilities, fees and reversal references according to finance-approved mapping; document pending-accounting visibility.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: Do not invent approved accounting/custody decisions or use direct balance edits.
+Required verification and acceptance: Ledger request replay creates one journal; capture survives ledger outage; a replayed confirmation cannot allocate the same entitlement twice.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P09 OleKard Wallet payment adapter
+START PROMPT
+Execute P09 — OleKard Wallet payment adapter. Mode: Implement. Suggested responsible role: Wallet and backend engineers.
+Required predecessors: P06 P07 P08. Source references: FD05; LC04. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Implement the common payment adapter using existing Wallet contracts, ownership, pocket/currency, spendable balance and transaction-limit validation.
+2. Reuse approved payment PIN/step-up verification. Support existing reservation/capture or atomic debit semantics rather than inventing a different model.
+3. Use stable operation IDs for debit/query/release and refund capability; return wallet transaction and authoritative journal references.
+4. Handle insufficient funds, concurrent spend, expired reservations and crashes after debit before Payments acknowledgement. Preserve existing wallet routes via compatibility where required.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: No new wallet ledger, automatic FX or external-style checkout for an internal debit.
+Required verification and acceptance: Concurrent spending cannot overspend; retry after successful debit recovers the original effect; ownership/currency/PIN failures and Wallet refund contract are tested.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P10 E25 adapter framework and callback ingress
+START PROMPT
+Execute P10 — E25 adapter framework and callback ingress. Mode: Implement. Suggested responsible role: Integration engineer.
+Required predecessors: P05 P06 P07. Source references: FD06; LC01 LC03 LC05; sections 1 and 8. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Reuse E25 connector lifecycle, secret resolution, transport and webhook ingress. Payments owns the financial adapter contract and semantic state processing.
+2. Implement capability interfaces for initiate/query/refund and optional payout separately. Unsupported capabilities fail explicitly.
+3. Add raw-body provider verification, trusted account mapping, durable receipt, deduplication, safe acknowledgement, restricted evidence and retry/quarantine routes.
+4. Provide development-only mock adapters with explicit scenario controls and enforce that they cannot activate in production. Document provider onboarding/certification requirements.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: Do not fabricate Bank 1/2/3 API endpoints or credentials.
+Required verification and acceptance: Invalid callbacks cannot mutate money; duplicate/account-mismatched receipts are handled safely; mocked success is visibly test-only and production enablement fails.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P11 Outbox inbox notifications and domain delivery
+START PROMPT
+Execute P11 — Outbox inbox notifications and domain delivery. Mode: Implement. Suggested responsible role: Backend messaging engineer.
+Required predecessors: P08 P10. Source references: FD07 FD11; LC05; section 6 event contract. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Implement or extend existing transactional outbox/inbox mechanisms for ledger acknowledgement, payment confirmation and domain fulfilment.
+2. Follow repository dot-notation PascalCase naming, schema versioning, causation/correlation and minimal personal data.
+3. Commit event intent with owned domain state; commit consumer deduplication with the downstream domain effect. Support bounded retry, poison-message quarantine and audited replay.
+4. Expose lag/age and repair APIs to operations. Keep message acknowledgement distinct from business completion and notification delivery.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: No exactly-once transport claims or duplicate generic messaging platform.
+Required verification and acceptance: Crash before/after publish and repeated delivery cause no lost durable intent or duplicate entitlement; event schema compatibility and replay are verified.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P12 Bank 1 adapter and certification
+START PROMPT
+Execute P12 — Bank 1 adapter and certification. Mode: Implement. Suggested responsible role: Provider integration engineer.
+Required predecessors: P10 P11. Source references: FD06; LC01 LC03 LC05; section 8. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Inspect the actual Bank 1 contract, merchant ownership, authentication, supported methods/currencies, category restrictions, idempotency and query-by-reference finality. Record unresolved requirements.
+2. Implement only Bank 1 protocol mapping behind the approved contract. Support its certified next action, capture/query, callbacks and refunds only where documented.
+3. Test timeouts, duplicate and out-of-order evidence, account/amount mismatch, late success and safe resolution. Map provider errors without leaking secrets.
+4. Create sandbox configuration, test evidence, production enablement checklist, secret rotation and support runbook. Keep configuration disabled until required verification passes.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: Do not modify core/business logic for protocol differences, invent capabilities or treat mocks as bank certification.
+Required verification and acceptance: Contract tests and documented sandbox evidence validate Bank 1; missing documentation/access means BLOCKED for live certification. Other adapters and business code remain independent.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P13 Bank 2 adapter and certification
+START PROMPT
+Execute P13 — Bank 2 adapter and certification. Mode: Implement. Suggested responsible role: Provider integration engineer.
+Required predecessors: P10 P11. Source references: FD06; LC01 LC03 LC05; section 8. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Inspect the actual Bank 2 contract, merchant ownership, authentication, supported methods/currencies, category restrictions, idempotency and query-by-reference finality. Record unresolved requirements.
+2. Implement only Bank 2 protocol mapping behind the approved contract. Support its certified next action, capture/query, callbacks and refunds only where documented.
+3. Test timeouts, duplicate and out-of-order evidence, account/amount mismatch, late success and safe resolution. Map provider errors without leaking secrets.
+4. Create sandbox configuration, test evidence, production enablement checklist, secret rotation and support runbook. Keep configuration disabled until required verification passes.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: Do not modify core/business logic for protocol differences, invent capabilities or treat mocks as bank certification.
+Required verification and acceptance: Contract tests and documented sandbox evidence validate Bank 2; missing documentation/access means BLOCKED for live certification. Other adapters and business code remain independent.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P14 Bank 3 adapter and certification
+START PROMPT
+Execute P14 — Bank 3 adapter and certification. Mode: Implement. Suggested responsible role: Provider integration engineer.
+Required predecessors: P10 P11. Source references: FD06; LC01 LC03 LC05; section 8. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Inspect the actual Bank 3 contract, merchant ownership, authentication, supported methods/currencies, category restrictions, idempotency and query-by-reference finality. Record unresolved requirements.
+2. Implement only Bank 3 protocol mapping behind the approved contract. Support its certified next action, capture/query, callbacks and refunds only where documented.
+3. Test timeouts, duplicate and out-of-order evidence, account/amount mismatch, late success and safe resolution. Map provider errors without leaking secrets.
+4. Create sandbox configuration, test evidence, production enablement checklist, secret rotation and support runbook. Keep configuration disabled until required verification passes.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: Do not modify core/business logic for protocol differences, invent capabilities or treat mocks as bank certification.
+Required verification and acceptance: Contract tests and documented sandbox evidence validate Bank 3; missing documentation/access means BLOCKED for live certification. Other adapters and business code remain independent.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P15 Shared refund engine and original method return
+START PROMPT
+Execute P15 — Shared refund engine and original method return. Mode: Implement. Suggested responsible role: Finance and backend engineers.
+Required predecessors: P08 P09 P10 P11. Source references: FD08; LC11; AD07. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Integrate domain refund eligibility with financial allocations, original method capability and exact refundable balance.
+2. Reserve completed plus in-flight refund value atomically; implement request, approval, submit, pending/unknown, confirmed and definitive-failure states.
+3. Execute refund with stable IDs via Wallet or external adapters; preserve capture history and append accounting/normalised events.
+4. Handle unsupported methods, fee policy, consumed entitlement and delayed outcome through approved exceptions. Expose APIs for mobile/admin without recreating domain cancellation rules.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: No silent substitute wallet credit or success on refund request acceptance.
+Required verification and acceptance: Concurrent partial refunds cannot over-refund; unknown execution keeps reservation; rejection/confirmation update balances and domain state correctly.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P16 Reversals disputes and chargebacks
+START PROMPT
+Execute P16 — Reversals disputes and chargebacks. Mode: Implement. Suggested responsible role: Finance and risk engineers.
+Required predecessors: P15. Source references: FD08; LC12. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Authenticate provider reversal/dispute events and map original capture, amount, account and currency.
+2. Create case deadlines, evidence permissions, exposure assessment and authorised holds. Coordinate domain restrictions for unused versus consumed entitlements.
+3. Implement provider outcome, fees, linked correcting journals and hold release; account for prior refunds to prevent double compensation.
+4. Expose auditable case actions and document already-settled funds, raffle post-draw disputes and organiser/beneficiary liability exceptions.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: No unauthorised wallet clawback or rewriting captured history as never paid.
+Required verification and acceptance: Duplicate case events do not duplicate adjustments; won/lost paths, response deadlines and settled-funds exposure are traceable.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P17 Reconciliation clearing and provider settlement
+START PROMPT
+Execute P17 — Reconciliation clearing and provider settlement. Mode: Implement. Suggested responsible role: Finance systems engineer.
+Required predecessors: P08 P10 P15 P16. Source references: FD09; LC13; AD08. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Ingest authenticated provider statements with account, environment, currency, period/cutoff and duplicate-source controls.
+2. Match attempts, Wallet operations, ledger journals, capture, fees, refunds, reversals and settlement references; classify unresolved exceptions with owner and ageing.
+3. Implement evidence-backed correction approval through ledger contracts and settlement-bank matching. Keep capture clearing separate from actual provider settlement.
+4. Publish qualified versus reconciled totals and cleared availability for payout. Wallet internal transfers do not create fictitious bank settlement.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: No manual mark-as-paid or editing posted journals to clear a mismatch.
+Required verification and acceptance: Duplicate statement imports post once; orphan capture, missing callback, fee mismatch and partial settlement remain visible until resolved.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P18 Beneficiary verification and payout lifecycle
+START PROMPT
+Execute P18 — Beneficiary verification and payout lifecycle. Mode: Implement. Suggested responsible role: Finance and payout engineers.
+Required predecessors: P03 P08 P15 P16 P17. Source references: FD10; LC14; AD10. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Reuse or implement the separate shared payout capability with verified destination, domain entitlement and cleared payable balance.
+2. Reserve available funds net of refunds, disputes and prior payouts; separate maker/approver and invalidate approval after amount/destination edits.
+3. Execute/query through a separately supported payout adapter with stable operation IDs; retain reservations on pending/unknown results.
+4. Confirm ledger disbursement and reconcile provider evidence before marking settled. Return permitted beneficiary and aggregate domain statuses.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: Incoming payment capability does not imply payout support. Do not fabricate bank payout APIs.
+Required verification and acceptance: Concurrent payouts cannot overspend; unknown/retry cannot duplicate release; destination changes and submitted failures follow controlled recovery.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P19 Receipts communication and payment history APIs
+START PROMPT
+Execute P19 — Receipts communication and payment history APIs. Mode: Implement. Suggested responsible role: Backend and communications engineers.
+Required predecessors: P08 P11 P15. Source references: FD11; LC15; MB07. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Build scoped payment/receipt history with original financial and domain references, exact amount/currency, fees, refunds and safe status.
+2. Reuse private files, audit and notification delivery. Trigger transactional notices from durable events with template versions and deduplication.
+3. Separate receipt from domain tax invoice/entitlement and separate transactional communication from marketing consent.
+4. Provide secure domain deep links, authorised expiring downloads and sanitised exports. Notification failure must not reverse financial success.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Required verification and acceptance: Receipt retrieval denies another payer; duplicate delivery does not spam; history reconciles to journals and pending refunds are clearly labelled.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P20 Admin provider configuration and policy screens
+START PROMPT
+Execute P20 — Admin provider configuration and policy screens. Mode: Implement. Suggested responsible role: Next.js admin engineer.
+Required predecessors: P03 P05 P10. Source references: AD02 AD03 AD04 AD05 AD12; LC01. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Implement screens inside the existing admin module/shell for provider capabilities, merchant accounts, secret references, limits, fees, module availability and display order.
+2. Provide draft/preview/validate/approve/activate/suspend/version-history flows with scoped permissions and maker-checker for sensitive changes.
+3. Mask credentials, restrict endpoints/adapters to approved values and prevent test/production confusion. Reuse existing design tokens and form components.
+4. Implement conflict, validation, approval-pending, denied, empty, loading and outage states. Keep resolution traffic available during suspension.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: No competing admin-app/admin-portal project or executable adapter upload UI.
+Required verification and acceptance: Authorisation is server-enforced; edited settings invalidate approval; mobile eligibility reflects activated configuration; no secrets are returned to browser.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P21 Admin finance dashboard and operations screens
+START PROMPT
+Execute P21 — Admin finance dashboard and operations screens. Mode: Implement. Suggested responsible role: Next.js admin and finance engineers.
+Required predecessors: P17 P18 P19 P20. Source references: AD01 AD06 AD07 AD08 AD09 AD10 AD11; LC11 LC12 LC13 LC14 LC15. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Implement scoped dashboard, payment/attempt timeline, journal links, fulfilment backlog and safe status-query action.
+2. Provide refund/approval, disputes, reconciliation exceptions, verified payout and sanitized callback/worker screens using existing backend contracts.
+3. Provide filterable reports, currency separation, freshness/cutoff, masks, case links and audit evidence. Keep financial and attendance/domain totals distinct.
+4. Implement all permission, stale-data, conflict, empty, export-in-progress and retry states. Controlled replay preserves original operation IDs and cannot invent success.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Required verification and acceptance: An authorised operator can investigate a stuck captured order end to end; support cannot approve refund/payout or view credentials; totals reconcile.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P22 Shared Flutter checkout and recovery
+START PROMPT
+Execute P22 — Shared Flutter checkout and recovery. Mode: Implement. Suggested responsible role: Flutter engineer.
+Required predecessors: P06 P09 P10 P19. Source references: MB01 MB02 MB03 MB04 MB05 MB06 MB08; LC02 LC03 LC04. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Build one reusable Riverpod checkout feature launched with a trusted payable/quote reference and validated return route.
+2. Render server-driven bank/Wallet options, fees, currency, recipient, summary and restrictions; reuse existing app theme and navigation.
+3. Implement Wallet step-up and supported bank redirect/SDK/app-switch through typed next actions and allowlisted return destinations.
+4. Recover intent/attempt after restart/network loss; show unknown/pending, confirmed and fulfilment-processing separately. Refresh backend after return and block unsafe provider replacement.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: No provider secrets or offline money execution; no duplicated checkout inside each business feature.
+Required verification and acceptance: Tampered totals cannot charge; app-return success cannot fabricate a paid result; Wallet insufficient funds, provider outage and restart flows work.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P23 Flutter receipts history refunds and support
+START PROMPT
+Execute P23 — Flutter receipts history refunds and support. Mode: Implement. Suggested responsible role: Flutter engineer.
+Required predecessors: P19 P22. Source references: MB07 MB08; LC11 LC15. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Implement shared activity filters, transaction detail, safe receipt access and domain deep links under existing navigation.
+2. Display capture, accounting, service readiness and refund status distinctly; route refund requests through domain eligibility APIs.
+3. Add support-from-transaction with stable references and safe attachments; secure private cache and clear on logout/account switch.
+4. Provide accessible large-text/screen-reader, loading, offline-stale, denied, pending, failure and unavailable states. Marketing preference remains separate.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Required verification and acceptance: Another payer receipt/deep link is denied; confirmed refund differs from pending request; account switching clears private data and reports remain authoritative.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P24 Funeral Assistance complete shared payment journey
+START PROMPT
+Execute P24 — Funeral Assistance complete shared payment journey. Mode: Implement. Suggested responsible role: Community domain engineers.
+Required predecessors: P18 P19 P22 P23. Source references: LC06; FD02 FD07 FD10. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Implement or complete community/household onboarding, verified representatives, collection review and beneficiary verification according to approved scope.
+2. Activate with eligibility snapshot, one obligation per household, source-standard BWP20 amount and approved exemptions/privacy. Notify eligible households respectfully.
+3. Use shared checkout and confirmation to fulfil obligations once; keep pending, confirmed, refunds, fees and net support distinct. No direct bank or wallet debit code belongs here.
+4. Close new payments, resolve late successes through approved policy, reconcile and request family disbursement through shared payout. Publish permitted aggregate closure report and archive with explicit unresolved liabilities.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: Do not invent mandatory-debt rules, public non-contributor lists or extra-donation policy.
+Required verification and acceptance: Concurrent delegates do not duplicate obligation fulfilment; late capture and beneficiary edit are controlled; collection-to-family-disbursement journey has linked evidence.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P25 Paid Events ticketing and admission journey
+START PROMPT
+Execute P25 — Paid Events ticketing and admission journey. Mode: Implement. Suggested responsible role: Events domain engineers.
+Required predecessors: P18 P19 P22 P23. Source references: LC07; section 2 ownership. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Implement or complete event authoring, approval, category/price/capacity, sales windows, organiser, sponsor and published cancellation/transfer/entry policies.
+2. Reserve inventory atomically, create trusted quote, use shared checkout and idempotently issue unique credentials after the approved confirmation threshold.
+3. Implement scoped online gate validation, duplicate/revoked/refunded denial and attendance reporting. Keep approved offline mode explicit about disconnected-scanner duplicate risk.
+4. Handle late capture after hold expiry with reacquire-or-refund; finish event, resolve refunds/disputes, reconcile reserves and request organiser payout through shared services.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: No BTC hard-coding, unapproved offline guarantee or invented resale/seat-map scope.
+Required verification and acceptance: Last-ticket race cannot oversell; online parallel scans admit once; payment confirmed with delayed ticket is repairable; settlement is distinct from event completion.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P26 Free invitation and complimentary event journey
+START PROMPT
+Execute P26 — Free invitation and complimentary event journey. Mode: Implement. Suggested responsible role: Events domain engineers.
+Required predecessors: P25. Source references: LC08. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Implement free/complimentary categories, quotas, invitation recipient/expiry/use limits and minimal attendee data.
+2. Validate invitation and allocate capacity atomically, issuing a domain entitlement without a fake captured payment.
+3. Reuse My Tickets and gate controls, cancellation/revocation notices and approved offline policy from paid events.
+4. Report free registrations, paid sales, unique admissions and no-shows separately. Skip settlement and refund creation for zero-price entitlements.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Required verification and acceptance: Expired/used invitations fail safely; sold-out events cannot issue; free ticket admission is traceable without manufactured financial transactions.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P27 Permitted raffle entry draw and prize journey
+START PROMPT
+Execute P27 — Permitted raffle entry draw and prize journey. Mode: Implement. Suggested responsible role: Raffle domain engineers.
+Required predecessors: P18 P19 P22 P23. Source references: LC09; section 2; section 9. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Implement or complete jurisdiction/operating approval, eligibility, campaign rules, prizes, sale cutoff, draw method/supervision and claim terms; keep activation disabled until approval evidence passes.
+2. Create eligible payable quotes, offer only provider-approved campaign methods and issue immutable entries idempotently after financial confirmation.
+3. Close sales, resolve unknown/late money, invalidate eligible refunds and reconcile before freezing entry count/digest. Execute the approved controlled draw with immutable evidence and prize allocation.
+4. Verify winners, fulfil prizes, handle unclaimed/disputed prizes under approved policy, reconcile net proceeds and request beneficiary payout. Preserve draw/entry/payment traceability.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: No invented legal permission, provider eligibility or self-selected/randomness-untested production draw.
+Required verification and acceptance: No approval means no activation; editable or unreconciled entry population cannot draw; replay cannot add entries or overwrite a draw; prize-to-entry evidence is complete.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P28 Donation fundraising and beneficiary journey
+START PROMPT
+Execute P28 — Donation fundraising and beneficiary journey. Mode: Implement. Suggested responsible role: Fundraising domain engineers.
+Required predecessors: P18 P19 P22 P23. Source references: LC10. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Implement reviewed purpose, verified beneficiary, permitted amounts, fees, dates, target handling and unconditional/all-or-nothing terms.
+2. Validate server-side donation quotes and use common bank/Wallet checkout; store one confirmed donation allocation and receipt.
+3. Keep donations distinct from raffle entries; show approved aggregate gross/refunds/fees/net without exposing donor records.
+4. Close donations, resolve late outcomes and incomplete-target policy, reconcile, release eligible funds through shared payout and publish support report.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: No automatic target-failure refund rule, campaign transfer or unrelated marketing consent.
+Required verification and acceptance: Donation does not issue raffle rights; failed target follows published policy; duplicate callbacks fulfil once and beneficiary change pauses release.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P29 Scoped reporting support and closure controls
+START PROMPT
+Execute P29 — Scoped reporting support and closure controls. Mode: Implement. Suggested responsible role: Reporting and support engineers.
+Required predecessors: P21 P23 P24 P25 P26 P27 P28. Source references: FD11; LC15; AD11. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Complete cross-domain scoped financial facts, report jobs, cutoff/freshness, qualified exception views and aggregate-versus-personal access.
+2. Route cases to domain, Payments, Finance or E25 with references, owner, priority and escalation. Allow verified repairs only through existing authorised operations.
+3. Enforce closure gates for unresolved attempts, refunds, prize claims and liabilities; retain explicit carried-forward obligations and owners.
+4. Implement authorised export, sanitisation, private evidence, retention/legal-hold and data-request workflow integration. Archives preserve permitted receipt/support access.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Required verification and acceptance: Reports reconcile by account/currency/cutoff; unresolved totals are provisional; archive does not hide money liabilities; support cannot mark paid.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P30 Operations observability incident and recovery
+START PROMPT
+Execute P30 — Operations observability incident and recovery. Mode: Implement. Suggested responsible role: Operations and reliability engineers.
+Required predecessors: P10 P11 P17 P18 P21. Source references: LC16; AD09 AD12; section 9. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Implement metrics/alerts for pending age, signature failures, ledger/fulfilment lag, retries, duplicate capture, reconciliation and settlement exposure with named role owners.
+2. Provide safe pause by provider/account/module, status resolution traffic, secret rotation, quarantine/replay and adapter-version retirement procedures.
+3. Write and demonstrate runbooks for provider outage, Wallet ambiguity, stuck captured order, lost callback, compromised credential and database restore.
+4. Restore durable records, reconcile provider reality before replaying money commands, recover original operation IDs and record resumption evidence. Confirm workload/recovery targets instead of inventing SLAs.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Required verification and acceptance: Redis loss/restore cannot cause blind recharging; controlled pause allows safe resolution; alert routing, replay, credential rotation and incident audit are demonstrated.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P31 Security privacy and financial resilience verification
+START PROMPT
+Execute P31 — Security privacy and financial resilience verification. Mode: Implement. Suggested responsible role: Security and QA engineers.
+Required predecessors: P29 P30. Source references: FD01; MB08; section 9; all LC01 to LC16. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Threat-model tenant leakage, account takeover, fake callbacks, replay, malicious uploads, redirect abuse, unsafe endpoint configuration and internal finance abuse.
+2. Assess RBAC, MFA/step-up, secret handling, callback authenticity, sensitive logging, mobile cache, exports and approved privacy/retention/legal-hold controls.
+3. Run targeted concurrency, crash, duplicate/out-of-order callback, unknown execution, refund/payout race and entitlement replay tests across enabled methods.
+4. Record findings with source/work-package links, severity, reproduction and remediation. Fix authorised in-scope defects and run focused regression; document residual risks and approvals.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: Do not infer legal compliance or production readiness from automated test success.
+Required verification and acceptance: No unresolved critical/high issue is silently waived; actual tests and skips are recorded; unsupported certification/privacy decisions remain explicit blockers.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P32 Wallet caller migration and controlled rollout
+START PROMPT
+Execute P32 — Wallet caller migration and controlled rollout. Mode: Implement. Suggested responsible role: Technical lead and release engineer.
+Required predecessors: P24 P25 P26 P27 P28 P29 P30 P31. Source references: Section 10 migration; LC16. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Inventory direct Wallet/payment callers and historical operations; map each to shared contracts while preserving IDs and financial evidence.
+2. Introduce compatibility facades and feature-flag routing. Shadow only read-only quotes/reporting; never execute two live charge paths.
+3. Migrate one domain/cohort at a time after dependencies pass. In-flight attempts retain their original route, account and adapter version until safely resolved.
+4. Validate reconciliation/regression and rollback before removing duplicate caller logic. Keep conditional/unapproved raffle or bank functionality disabled and explicitly deferred.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: No forced rollout of blocked banks or domain features; no production deployment without existing authorisation.
+Required verification and acceptance: Old/new routes preserve financial invariants; flag rollback changes future routing only; no in-flight operation is stranded or executed twice.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT
+P33 Final convergence lifecycle evidence and release report
+START PROMPT
+Execute P33 — Final convergence lifecycle evidence and release report. Mode: Implement. Suggested responsible role: Delivery manager and QA lead.
+Required predecessors: P00 to P32 with explicit conditional deferrals. Source references: Sections 9 10 11; all FD AD MB and LC IDs. Verify prerequisite contracts and evidence; do not infer readiness from a checked task alone.
+Read the repository constitution, AGENTS.md, current implementation, existing Spec Kit artifacts and the accessible source document OleKard_Shared_Payment_Architecture.docx version 1.1. Verify the actual source path/version; do not guess missing provider contracts. Inspect completed work and predecessor evidence before changing files. Reuse working functionality and preserve backward compatibility. Follow installed Spec Kit commands and repository conventions; do not invent command names or overwrite unrelated work.
+Create or update this package’s specification, stories, plan, tasks and requirement/test traceability using the installed workflow. Resolve only genuinely blocking ambiguities; record assumptions and pending decisions. For implementation packages, complete unblocked in-scope code, migrations, APIs, UI and meaningful tests. If a prerequisite is missing, mark the affected work BLOCKED and continue only independent scope. Use development-only mocks only where explicitly permitted and label them. Never invent bank APIs or permission/certification evidence.
+Scope for this work package
+1. Cross-check requirement-to-spec/story/task/code/test links for every source section, FD01 to FD11, AD01 to AD12, MB01 to MB08 and LC01 to LC16. Run installed analysis/convergence workflow only if available.
+2. Run full applicable regression and end-to-end evidence for enabled Wallet/banks, all delivered domain flows, refunds, settlement, payout, incidents and migration. Keep mock demos distinct from certified integrations.
+3. Review architecture boundaries, finance reconciliation, security, support, observability, recovery, training and deployment/rollback documentation. Record blocked/deferred scope and owners.
+4. Publish COMPLETED/PARTIAL/BLOCKED status per package and a separate release recommendation. Update managerial register, open decisions, risk log and remaining evidence; identify go/no-go authority.
+Maintain one shared Payments module, separate provider adapters, Wallet-owned balances and the authoritative ledger. E25 owns common external ingress/connector infrastructure. Derive money and tenant context server-side; keep unknown financial outcomes unresolved until verified. Do not duplicate charges, ledger postings or domain entitlements.
+Boundary: Do not automatically deploy, start another epic or claim user approval from elapsed time.
+Required verification and acceptance: Every mapped requirement is passed, failed, blocked or explicitly deferred; no pending critical money invariant or missing certification is reported as production-ready.
+For every flow touched, document trigger, prerequisites, states, admin/mobile/foundation responsibilities, success path, failure/recovery, completion evidence and operator runbook. Retain independent payment, accounting, fulfilment, refund, settlement and payout states.
+Report Status COMPLETED / PARTIAL / BLOCKED; scope implemented; source-to-story/task/code/test links; files/migrations/API/UI changes; tests actually run with pass/fail/skip counts; security/finance evidence; blockers, decisions and technical debt; DoD PASS/FAIL per criterion; and the next permitted action. Update the managerial register and write restart notes with branch/commit and unresolved operations. Do not start the next prompt automatically or deploy production without existing authorisation.
+END PROMPT

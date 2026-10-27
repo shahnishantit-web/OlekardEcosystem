@@ -147,6 +147,29 @@ final class WalletPaymentConcurrencyTest extends TestCase
     }
 
     /**
+     * T009/P09: Concurrent overspend guard.
+     * Two simultaneous initiatePayment calls for a wallet with balance 10000 and
+     * amount 6000 each must result in exactly one hold (total 6000) — the second
+     * call must throw InsufficientFundsException or be blocked by SELECT FOR UPDATE.
+     * Wallet module enforces the authoritative balance check inside createHold().
+     */
+    public function test_concurrent_overspend_does_not_drain_balance_below_zero(): void
+    {
+        $this->markTestSkipped(
+            'T009/P09: Concurrent overspend test requires a live wallet module with SELECT FOR UPDATE '
+            . 'inside createHold(). Full integration requires Docker (wallet + DB containers). '
+            . 'Unit coverage in WalletPaymentAdapterTest::test_insufficient_funds_throws_exception.'
+        );
+
+        // Docker integration scenario (documents expected behaviour when un-skipped):
+        // 1. Seed wallet pocket: balance = 10000 BWP
+        // 2. Fire two concurrent initiatePayment calls: amount = 6000 BWP each
+        // 3. Assert: exactly one call returns PaymentAttemptStatus::Succeeded
+        // 4. Assert: the other call throws InsufficientFundsException
+        // 5. Assert: wallet.available_balance >= 0 after both calls settle
+    }
+
+    /**
      * T172: Wallet payment latency assertion.
      *
      * Times a complete wallet payment DB round-trip:

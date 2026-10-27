@@ -1,0 +1,455 @@
+openapi: "3.1.0"
+info:
+  title: P20 — Admin Provider Configuration API Contracts
+  description: >
+    New backend endpoints required by P20 admin screens.
+    All existing P03/P05 endpoints (provider CRUD, draft approve/reject, suspend)
+    are already live and not duplicated here.
+    These endpoints are ADDITIONS only.
+  version: "1.0.0"
+
+servers:
+  - url: /api/v1/admin/payment
+    description: Admin payment API base
+
+security:
+  - bearerAuth: []
+
+paths:
+
+  # ── Provider Accounts ────────────────────────────────────────────────────────
+
+  /providers/{providerId}/accounts:
+    get:
+      operationId: listProviderAccounts
+      summary: List all accounts for a provider
+      tags: [ProviderAccounts]
+      parameters:
+        - name: providerId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: status
+          in: query
+          schema: { type: string, enum: [draft, pending_approval, active, suspended, retired, rejected] }
+      responses:
+        "200":
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ProviderAccount' }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "404": { $ref: '#/components/responses/NotFound' }
+
+  /providers/{providerId}/accounts/{accountId}:
+    get:
+      operationId: getProviderAccount
+      summary: Get account detail
+      tags: [ProviderAccounts]
+      parameters:
+        - name: providerId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Account detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ProviderAccount' }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "404": { $ref: '#/components/responses/NotFound' }
+
+    patch:
+      operationId: updateProviderAccount
+      summary: >
+        Update provider account configuration.
+        Non-high-risk fields apply immediately.
+        High-risk fields (merchant_account_reference, callback_secret_reference)
+        return 202 with draft_id for approval.
+      tags: [ProviderAccounts]
+      parameters:
+        - name: providerId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateAccountPayload' }
+      responses:
+        "200":
+          description: Account updated (non-high-risk fields applied)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ProviderAccount' }
+        "202":
+          description: High-risk fields require approval; draft created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:        { type: string }
+                  requires_approval: { type: boolean, const: true }
+                  draft_id:       { type: string, format: uuid }
+                  high_risk_fields:
+                    type: array
+                    items: { type: string }
+        "409":
+          description: Configuration version conflict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:    { type: string, enum: [CONFIGURATION_VERSION_CONFLICT] }
+                      message: { type: string }
+        "422": { $ref: '#/components/responses/ValidationError' }
+        "403": { $ref: '#/components/responses/Forbidden' }
+
+  /providers/{providerId}/accounts/{accountId}/lifecycle:
+    post:
+      operationId: transitionAccountLifecycle
+      summary: Transition provider account lifecycle status
+      tags: [ProviderAccounts]
+      parameters:
+        - name: providerId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action, reason]
+              properties:
+                action:
+                  type: string
+                  enum: [activate, suspend, restore, retire]
+                reason:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+      responses:
+        "200":
+          description: Lifecycle transition applied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ProviderAccount' }
+        "409":
+          description: Invalid lifecycle transition
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:    { type: string, enum: [INVALID_LIFECYCLE_TRANSITION] }
+                      message: { type: string }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "404": { $ref: '#/components/responses/NotFound' }
+
+  # ── Config Change Drafts ─────────────────────────────────────────────────────
+
+  /providers/{providerId}/config-changes:
+    get:
+      operationId: listConfigDrafts
+      summary: List config change drafts for a provider
+      tags: [ConfigDrafts]
+      parameters:
+        - name: providerId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, pending_approval, approved, rejected, superseded]
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        "200":
+          description: List of drafts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ConfigDraft' }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+        "403": { $ref: '#/components/responses/Forbidden' }
+
+  /providers/{providerId}/config-changes/{draftId}:
+    get:
+      operationId: getConfigDraft
+      summary: Get a single config change draft with full diff
+      tags: [ConfigDrafts]
+      parameters:
+        - name: providerId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: draftId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Draft detail with diff
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ConfigDraft' }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "404": { $ref: '#/components/responses/NotFound' }
+
+  # ── Module Configuration ─────────────────────────────────────────────────────
+
+  /config/modules:
+    get:
+      operationId: getModuleConfigs
+      summary: Get all payment module availability and display order configs
+      tags: [ModuleConfig]
+      responses:
+        "200":
+          description: List of module configs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ModuleConfig' }
+        "403": { $ref: '#/components/responses/Forbidden' }
+
+    patch:
+      operationId: updateModuleConfigs
+      summary: Update module availability and display order
+      tags: [ModuleConfig]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [modules]
+              properties:
+                modules:
+                  type: array
+                  items:
+                    type: object
+                    required: [module_key]
+                    properties:
+                      module_key:    { type: string }
+                      is_enabled:    { type: boolean }
+                      display_order: { type: integer, minimum: 0 }
+                      description:   { type: string, nullable: true }
+      responses:
+        "200":
+          description: Module configs updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ModuleConfig' }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  schemas:
+
+    ProviderAccount:
+      type: object
+      properties:
+        id:                         { type: string, format: uuid }
+        provider_id:                { type: string, format: uuid }
+        merchant_account_reference: { type: string, nullable: true }
+        supported_currencies:       { type: array, items: { type: string } }
+        supported_payment_methods:  { type: array, items: { type: string } }
+        min_amount_minor:           { type: integer }
+        max_amount_minor:           { type: integer }
+        daily_limit_minor:          { type: integer, nullable: true }
+        enabled_organisations:      { type: array, items: { type: string } }
+        enabled_modules:            { type: array, items: { type: string } }
+        enabled_purpose_types:      { type: array, items: { type: string } }
+        country_restrictions:       { type: array, items: { type: string } }
+        callback_url:               { type: string, nullable: true, description: "Always null — E25 owns ingress" }
+        callback_secret_reference:
+          type: object
+          nullable: true
+          description: "Masked secret reference — raw value never returned"
+          properties:
+            key:    { type: string }
+            masked: { type: string, example: "****" }
+        capability_flags:           { type: object, additionalProperties: { type: boolean } }
+        fee_rule_ids:               { type: array, items: { type: string } }
+        is_active:                  { type: boolean }
+        config_version:             { type: integer }
+        display_label:              { type: string, nullable: true }
+        display_description:        { type: string, nullable: true }
+        display_icon_key:           { type: string, nullable: true }
+        display_badge:              { type: string, nullable: true }
+        display_sort_order:         { type: integer }
+        account_lifecycle_status:
+          type: string
+          enum: [draft, pending_approval, active, suspended, retired, rejected]
+        submitted_by_actor_id:      { type: string, nullable: true }
+        approved_by_actor_id:       { type: string, nullable: true }
+        approved_at:                { type: string, format: date-time, nullable: true }
+        activated_at:               { type: string, format: date-time, nullable: true }
+        suspended_at:               { type: string, format: date-time, nullable: true }
+        rejection_reason:           { type: string, nullable: true }
+        created_at:                 { type: string, format: date-time }
+        updated_at:                 { type: string, format: date-time, nullable: true }
+
+    UpdateAccountPayload:
+      type: object
+      properties:
+        supported_currencies:       { type: array, items: { type: string } }
+        supported_payment_methods:  { type: array, items: { type: string } }
+        min_amount_minor:           { type: integer, minimum: 0 }
+        max_amount_minor:           { type: integer, minimum: 0 }
+        daily_limit_minor:          { type: integer, minimum: 0, nullable: true }
+        enabled_organisations:      { type: array, items: { type: string } }
+        enabled_modules:            { type: array, items: { type: string } }
+        enabled_purpose_types:      { type: array, items: { type: string } }
+        country_restrictions:       { type: array, items: { type: string } }
+        capability_flags:           { type: object, additionalProperties: { type: boolean } }
+        display_label:              { type: string, nullable: true }
+        display_description:        { type: string, nullable: true }
+        display_icon_key:           { type: string, nullable: true }
+        display_badge:              { type: string, nullable: true }
+        display_sort_order:         { type: integer, minimum: 0 }
+        merchant_account_reference: { type: string, description: "HIGH RISK — triggers draft workflow" }
+        callback_secret_reference:  { type: string, description: "HIGH RISK — secret key path only, not raw value" }
+
+    ConfigDraft:
+      type: object
+      properties:
+        id:              { type: string, format: uuid }
+        provider_id:     { type: string, format: uuid }
+        change_type:     { type: string, enum: [high_risk_update, credential_rotation, module_config] }
+        change_diff:
+          type: object
+          description: "Field-level diff: field → {current, proposed}. Secret fields shown masked."
+          additionalProperties:
+            type: object
+            properties:
+              current:  {}
+              proposed: {}
+        status:
+          type: string
+          enum: [draft, pending_approval, approved, rejected, superseded]
+        drafted_by_actor_id:  { type: string }
+        reviewed_by_actor_id: { type: string, nullable: true }
+        reviewed_at:          { type: string, format: date-time, nullable: true }
+        review_notes:         { type: string, nullable: true }
+        account_config_version_at_draft_time: { type: integer, nullable: true }
+        created_at:           { type: string, format: date-time }
+
+    ModuleConfig:
+      type: object
+      properties:
+        id:           { type: string, format: uuid }
+        module_key:   { type: string }
+        display_name: { type: string }
+        is_enabled:   { type: boolean }
+        display_order: { type: integer }
+        description:  { type: string, nullable: true }
+        updated_by_actor_id: { type: string, nullable: true }
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page: { type: integer }
+        per_page:     { type: integer }
+        total:        { type: integer }
+        last_page:    { type: integer }
+
+  responses:
+    Forbidden:
+      description: Permission denied
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:   { type: string }
+              message: { type: string }
+
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items: { type: string }

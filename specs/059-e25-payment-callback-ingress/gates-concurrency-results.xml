@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\Modules\Payment\P10PaymentGateConcurrencyTest" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10PaymentGateConcurrencyTest.php" tests="2" assertions="28" errors="0" failures="0" skipped="0" time="3.818748">
+    <testcase name="test_two_processes_with_different_keys_execute_one_operation" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10PaymentGateConcurrencyTest.php" line="15" class="Tests\Feature\Modules\Payment\P10PaymentGateConcurrencyTest" classname="Tests.Feature.Modules.Payment.P10PaymentGateConcurrencyTest" assertions="11" time="1.663169"/>
+    <testcase name="test_hard_crash_recovers_original_operation_without_second_initiation" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10PaymentGateConcurrencyTest.php" line="20" class="Tests\Feature\Modules\Payment\P10PaymentGateConcurrencyTest" classname="Tests.Feature.Modules.Payment.P10PaymentGateConcurrencyTest" assertions="17" time="2.155579"/>
+  </testsuite>
+</testsuites>

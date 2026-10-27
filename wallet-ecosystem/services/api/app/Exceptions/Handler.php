@@ -6,6 +6,7 @@ namespace App\Exceptions;
 
 use App\Modules\Fees\Domain\Exceptions\FeeRuleConflictException;
 use App\Modules\Fees\Domain\Exceptions\FeeRuleNotFoundException;
+use App\Modules\Payment\Domain\Exceptions\ConcurrentModificationException;
 use App\Modules\Platform\Domain\Exceptions\WebhookSignatureException;
 use App\Modules\Reporting\Domain\Exceptions\ConcurrentJobLimitExceededException;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -39,6 +40,7 @@ final class Handler
             ModuleConnectionUnavailableException::class,
             IdempotencyKeyMismatchException::class,
             IdempotencyInProgressException::class,
+            ConcurrentModificationException::class,
             TbdConfigurationException::class,
         ]);
 
@@ -90,6 +92,7 @@ final class Handler
                 $e instanceof FeeRuleConflictException => self::conflict('FEE_RULE_CONFLICT', $e->getMessage(), $correlationId),
                 $e instanceof IdempotencyKeyMismatchException => self::conflict('IDEMPOTENCY_KEY_MISMATCH', $e->getMessage(), $correlationId),
                 $e instanceof IdempotencyInProgressException => self::conflict('IDEMPOTENCY_IN_PROGRESS', $e->getMessage(), $correlationId),
+                $e instanceof ConcurrentModificationException => self::conflict('CONCURRENT_MODIFICATION', $e->getMessage(), $correlationId),
                 $e instanceof DuplicateResourceException => self::conflict('RESOURCE_CONFLICT', $e->getMessage(), $correlationId),
                 $e instanceof BusinessRuleViolationException => self::businessRuleError($e, $correlationId),
                 $e instanceof TbdConfigurationException => self::tbdConfigError($e, $correlationId),

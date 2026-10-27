@@ -33,7 +33,7 @@ function WalletRow({ wallet }: { wallet: AdminWallet }) {
       </td>
       <td className="py-3 px-4 text-sm text-text-primary">
         <Link
-          href={`/admin-portal/users/${ownerUserId}`}
+          href={`/users/${ownerUserId}`}
           className="text-ok-primary underline hover:text-ok-primary-hover"
           aria-label={`View user ${ownerName}`}
         >
@@ -51,7 +51,7 @@ function WalletRow({ wallet }: { wallet: AdminWallet }) {
         {wallet.created_at ? new Date(wallet.created_at).toLocaleDateString() : '—'}
       </td>
       <td className="py-3 px-4">
-        <Link href={`/admin-portal/wallets/${wallet.id}`}>
+        <Link href={`/wallets/${wallet.id}`}>
           <Button variant="secondary" aria-label={`View wallet ${wallet.wallet_number ?? wallet.id.substring(0, 8)}`}>
             View
           </Button>

@@ -67,7 +67,7 @@ abstract class LedgerTestCase extends IdentityTestCase
 
             DB::connection('identity')->table('identity.roles')->insert([
                 'id'             => $roleId,
-                'slug'           => 'test-role-' . substr($roleId, 0, 8),
+                'slug'           => 'test-role-' . substr($roleId, -12) . '-' . bin2hex(random_bytes(4)),
                 'display_name'   => 'Test Role',
                 'is_system_role' => false,
                 'created_at'     => now(),
@@ -100,7 +100,7 @@ abstract class LedgerTestCase extends IdentityTestCase
         }
 
         $userId = (string) Uuid::uuid7();
-        $email  = 'ledger-test-' . substr($userId, 0, 8) . '@test.local';
+        $email  = 'ledger-test-' . substr($userId, -12) . '-' . bin2hex(random_bytes(4)) . '@test.local';
         $mobile = '+9' . mt_rand(100000000, 999999999);
 
         DB::connection('identity')->table('identity.users')->insert([

@@ -57,7 +57,7 @@ test('authenticated user list reaches API and detail renders its read model', as
   const listResponse = page.waitForResponse(response =>
     response.url().includes(':8001/v1/admin/customers') && response.request().method() === 'GET',
   );
-  await page.goto('/admin-portal/users');
+  await page.goto('/users');
   const response = await listResponse;
   expect(response.status()).toBe(200);
   expect(Boolean((await response.request().allHeaders())['authorization'])).toBe(true);
@@ -73,11 +73,11 @@ test('authenticated user list reaches API and detail renders its read model', as
   expect(user).toHaveProperty('status');
   expect(user).toHaveProperty('profile');
   const userDetail = page.waitForResponse(r => r.url().includes(`/v1/admin-app/users/${user.id}`) && r.request().method() === 'GET');
-  await page.locator(`a[href="/admin-portal/users/${user.id}"]`).click();
+  await page.locator(`a[href="/users/${user.id}"]`).click();
   const userDetailResponse = await userDetail;
   expect(userDetailResponse.status()).toBe(200);
   expect((await userDetailResponse.json()).data.user_id).toBe(user.id);
-  await expect(page).toHaveURL(new RegExp(`/admin-portal/users/${user.id}$`));
+  await expect(page).toHaveURL(new RegExp(`/users/${user.id}$`));
   await expect(page.getByRole('heading', { name: 'User Detail' })).toBeVisible();
   await expect.poll(() => detailReads.filter(read => read.path.endsWith('/wallets') || read.path.endsWith('/transactions')).length).toBe(2);
   expect(detailReads.filter(read => read.path.endsWith('/wallets') || read.path.endsWith('/transactions')).map(read => read.status)).toEqual([200, 200]);
@@ -119,7 +119,7 @@ test('authenticated agent list reaches API, detail renders, and reversible statu
   const listResponse = page.waitForResponse(response =>
     response.url().includes(':8001/v1/admin-app/agents') && response.request().method() === 'GET',
   );
-  await page.goto('/admin-portal/agents');
+  await page.goto('/agents');
   const response = await listResponse;
   expect(response.status()).toBe(200);
   expect(Boolean((await response.request().allHeaders())['authorization'])).toBe(true);
@@ -132,14 +132,14 @@ test('authenticated agent list reaches API, detail renders, and reversible statu
   expect(agent).toHaveProperty('agent_id');
   expect(agent).toHaveProperty('user_id');
   const activeAgent = body.data.find((candidate: { agent_status: string }) => candidate.agent_status === 'active') ?? body.data[0];
-  const agentLink = page.locator(`a[href="/admin-portal/agents/${activeAgent.agent_id}"]`);
+  const agentLink = page.locator(`a[href="/agents/${activeAgent.agent_id}"]`);
   const agentDetail = page.waitForResponse(r => r.url().includes(`/v1/admin-app/agents/${activeAgent.agent_id}`) && r.request().method() === 'GET');
   await agentLink.click();
   const agentDetailResponse = await agentDetail;
   expect(agentDetailResponse.status()).toBe(200);
   expect((await agentDetailResponse.json()).data.agent_id).toBe(activeAgent.agent_id);
   const selectedAgent = body.data.find((candidate: { agent_id: string }) => candidate.agent_id === activeAgent.agent_id)!;
-  await expect(page).toHaveURL(new RegExp(`/admin-portal/agents/${selectedAgent.agent_id}$`));
+  await expect(page).toHaveURL(new RegExp(`/agents/${selectedAgent.agent_id}$`));
   await expect(page.getByRole('heading', { name: 'Float Balance' })).toBeVisible();
 
   if (selectedAgent.agent_status === 'active') {

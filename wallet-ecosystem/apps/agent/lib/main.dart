@@ -3,12 +3,15 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_payment/shared_payment.dart';
 
+import 'package:wallet_agent/core/api/api_client.dart';
 import 'package:wallet_agent/core/connectivity/connectivity_service.dart';
 import 'package:wallet_agent/core/notifications/push_notification_service.dart';
 import 'package:wallet_agent/core/router/app_router.dart';
 import 'package:wallet_agent/core/security/app_lifecycle_observer.dart';
 import 'package:wallet_agent/core/theme/app_theme.dart';
+import 'package:wallet_agent/modules/payment/agent_step_up_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,7 +22,13 @@ Future<void> main() async {
       debugPrint('Firebase init warning: $e');
     }
   }
-  runApp(const ProviderScope(child: AgentApp()));
+  runApp(ProviderScope(
+    overrides: [
+      httpClientProvider.overrideWithValue(createDio(null)),
+      stepUpServiceProvider.overrideWith((ref) => AgentStepUpService(ref)),
+    ],
+    child: const AgentApp(),
+  ));
 }
 
 class AgentApp extends ConsumerStatefulWidget {

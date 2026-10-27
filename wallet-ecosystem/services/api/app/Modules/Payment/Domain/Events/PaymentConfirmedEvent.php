@@ -8,6 +8,7 @@ use App\Modules\Platform\Domain\Contracts\IntegrationEventInterface;
 
 final readonly class PaymentConfirmedEvent implements IntegrationEventInterface
 {
+    private string $allocationReference;
     public function __construct(
         private string $paymentIntentId,
         private string $paymentAttemptId,
@@ -21,7 +22,9 @@ final readonly class PaymentConfirmedEvent implements IntegrationEventInterface
         private int    $feeMinor,
         private string $correlationId,
         private string $occurredAt,
+        string $allocationReference = '',
     ) {
+        $this->allocationReference = $allocationReference === '' ? $paymentIntentId : $allocationReference;
     }
 
     public function eventName(): string
@@ -64,7 +67,8 @@ final readonly class PaymentConfirmedEvent implements IntegrationEventInterface
             'provider_code'      => $this->providerCode,
             'fee_minor'          => $this->feeMinor,
             'correlation_id'     => $this->correlationId,
-            'occurred_at'        => $this->occurredAt,
+            'occurred_at'          => $this->occurredAt,
+            'allocation_reference' => $this->allocationReference,
         ];
     }
 }

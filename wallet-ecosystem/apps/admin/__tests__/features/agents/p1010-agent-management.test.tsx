@@ -197,7 +197,7 @@ describe('US-P1-010-001: Agent list', () => {
     render(<AgentManagementPage />);
     await waitFor(() => expect(screen.getByText('Kefilwe Mokoena')).toBeInTheDocument());
     const [viewBtn] = screen.getAllByRole('button', { name: /view agent Kefilwe Mokoena/i });
-    expect(viewBtn!.closest('a')).toHaveAttribute('href', '/admin-portal/agents/agt-002');
+    expect(viewBtn!.closest('a')).toHaveAttribute('href', '/agents/agt-002');
   });
 
   it('shows empty state when no agents', async () => {
@@ -555,7 +555,7 @@ describe('US-P1-010-004: Agent performance metrics', () => {
     render(<AgentDetailPage agentId="agt-002" />);
     await waitForActiveAgentLoaded();
     const userLink = screen.getByRole('link', { name: /usr-002/i });
-    expect(userLink).toHaveAttribute('href', '/admin-portal/users/usr-002');
+    expect(userLink).toHaveAttribute('href', '/users/usr-002');
   });
 
   it('shows breadcrumb link back to agents list', async () => {
@@ -563,7 +563,7 @@ describe('US-P1-010-004: Agent performance metrics', () => {
     render(<AgentDetailPage agentId="agt-002" />);
     await waitForActiveAgentLoaded();
     const agentsLink = screen.getByRole('link', { name: /^agents$/i });
-    expect(agentsLink).toHaveAttribute('href', '/admin-portal/agents');
+    expect(agentsLink).toHaveAttribute('href', '/agents');
   });
 
   it('shows error state on fetch failure', async () => {

@@ -57,3 +57,21 @@ test('health exposes unknown buckets and safe error log', async () => {
     expect(screen.getByText('Provider probe timed out')).toBeInTheDocument();
     expect(screen.getByText(/Missing observations are unknown/)).toBeInTheDocument();
 });
+
+test('development payment evidence is labelled and can be quarantined', async () => {
+    mockClient.get.mockResolvedValue({ data: [{ id: 'receipt-1', event: 'payment.success', endpoint: '/v1/webhooks/test', status: 'retrying', attempts: 0, last_attempt_at: null, test_only: true }], meta });
+    mockClient.post.mockResolvedValue({ data: {} });
+    render(<WebhookMonitorPage />);
+    expect(await screen.findByText('Development mock — test only')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Quarantine' }));
+    await screen.findByText('Callback quarantined for operator review.');
+    expect(mockClient.post).toHaveBeenCalledWith('/v1/admin/webhooks/deliveries/receipt-1/quarantine', {});
+});
+
+test('quarantined receipts are visible and retain a retry action', async () => {
+    mockClient.get.mockResolvedValue({ data: [{ id: 'receipt-1', event: 'payment.success', endpoint: '/v1/webhooks/test', status: 'failed', attempts: 1, last_attempt_at: null, quarantined: true }], meta });
+    render(<WebhookMonitorPage />);
+    expect(await screen.findByText('Quarantined')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Quarantine' })).not.toBeInTheDocument();
+});

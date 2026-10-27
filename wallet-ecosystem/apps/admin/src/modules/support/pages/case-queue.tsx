@@ -34,7 +34,7 @@ export function CaseQueuePage() {
  {!rows && !error && <Loading label="Loading support cases"/>}
  {rows && <Card><h2 className="mb-3 font-semibold">{rows.total} cases</h2>{rows.items.length === 0 ? <p>No cases match these filters.</p> : <Table<Case> data={rows.items} getRowKey={r => r.id} columns={[
                     { key: 'number', header: 'Case ID', render: r => <Link className="text-brand-primary underline" href={'/support/cases/' + r.id}>{r.number}</Link> },
-                    { key: 'customer', header: 'Customer', render: r => <Link className="underline" href={'/admin-portal/users/' + r.customer_id}>{r.customer_id}</Link> },
+                    { key: 'customer', header: 'Customer', render: r => <Link className="underline" href={'/users/' + r.customer_id}>{r.customer_id}</Link> },
                     { key: 'type', header: 'Type' }, { key: 'priority', header: 'Priority' },
                     { key: 'status', header: 'Status', render: r => <span>{r.status}{r.overdue && <strong className="block text-error-primary">Overdue</strong>}</span> },
                     { key: 'created_at', header: 'Created', render: r => new Date(r.created_at).toLocaleString() },

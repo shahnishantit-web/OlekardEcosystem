@@ -31,6 +31,8 @@ final class ReconciliationExceptionModel extends Model
         'resolved_by',
         'resolved_at',
         'resolution_reason',
+        'owner',
+        'aged_at',
     ];
 
     /** @return array<string, string|class-string> */
@@ -41,6 +43,7 @@ final class ReconciliationExceptionModel extends Model
             'detected_amount_minor' => 'integer',
             'expected_amount_minor' => 'integer',
             'resolved_at'           => 'immutable_datetime',
+            'aged_at'               => 'immutable_datetime',
             'created_at'            => 'immutable_datetime',
             'updated_at'            => 'immutable_datetime',
         ];

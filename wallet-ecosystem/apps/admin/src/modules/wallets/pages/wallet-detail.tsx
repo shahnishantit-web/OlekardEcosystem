@@ -240,7 +240,7 @@ export function WalletDetailPage({ walletId }: { walletId: string }) {
       <PageHeader
         title={wallet.wallet_number ?? `Wallet ${wallet.id.substring(0, 8)}…`}
         breadcrumbs={[
-          { label: 'Wallets', href: '/admin-portal/wallets' },
+          { label: 'Wallets', href: '/wallets' },
           { label: wallet.wallet_number ?? wallet.id.substring(0, 8) },
         ]}
       />
@@ -263,7 +263,7 @@ export function WalletDetailPage({ walletId }: { walletId: string }) {
             <DetailField label="Wallet ID"     value={wallet.wallet_number ?? wallet.id} mono />
             <DetailField label="Status"        value={<WalletStatusBadge wallet={wallet} />} />
             <DetailField label="Owner"         value={
-              <Link href={`/admin-portal/users/${ownerUserId}`} className="text-ok-primary underline hover:text-ok-primary-hover">
+              <Link href={`/users/${ownerUserId}`} className="text-ok-primary underline hover:text-ok-primary-hover">
                 {ownerName}
               </Link>
             } />

@@ -7,7 +7,7 @@ info:
     public webhook receiver, and webhook monitoring endpoints.
 
 servers:
-  - url: /api/v1
+  - url: /v1
 
 security:
   - IdentityAuth: []
@@ -23,7 +23,27 @@ components:
       scheme: bearer
       description: |
         M2M API client credentials encoded as Bearer base64(api_key:secret).
-        Used only on the public webhook endpoint (no user session required).
+        For approved M2M consumers. Public webhook ingress uses provider signatures.
+
+  responses:
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
 
   schemas:
     ApiClient:
@@ -642,6 +662,14 @@ paths:
     post:
       operationId: receiveWebhook
       summary: Receive inbound provider webhook. No user auth — signature verification only.
+      description: |
+        E25 verifies exact raw bytes before receipt. Payment account/environment comes
+        from trusted connector configuration, never a payload tenant selector.
+        Payment receipts retain encrypted evidence, a digest and sanitized notification,
+        with account/environment-scoped event uniqueness and durable recovery delivery.
+        HTTP 200 acknowledges durable receipt only. Invalid signatures cannot mutate
+        payment state; conflicting bytes for an existing payment event identity return 409.
+        Payment mismatches or unknown outcomes quarantine during semantic processing.
       tags: [Webhooks]
       security: []
       parameters:
@@ -904,24 +932,3 @@ paths:
                     $ref: '#/components/schemas/ProviderCallLog'
         '404':
           $ref: '#/components/responses/NotFound'
-
-components:
-  responses:
-    Forbidden:
-      description: Insufficient permissions
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-    NotFound:
-      description: Resource not found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-    ValidationError:
-      description: Request validation failed
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'

@@ -1,0 +1,419 @@
+openapi: "3.1.0"
+info:
+  title: "P12 — Admin Bank Management API"
+  version: "1.0.0"
+  description: |
+    Admin endpoints for managing banks and integration accounts.
+    All endpoints require `payment.configuration` permission.
+    Mutations require `Idempotency-Key` header.
+
+servers:
+  - url: /v1/admin/payments
+
+security:
+  - bearerAuth: []
+
+paths:
+  /banks:
+    get:
+      summary: List banks
+      operationId: listBanks
+      tags: [Banks]
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [draft, active, suspended, retired] }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, default: 20, maximum: 100 }
+      responses:
+        "200":
+          description: Paginated bank list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/BankSummary" }
+                  meta: { $ref: "#/components/schemas/PaginationMeta" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+    post:
+      summary: Create bank
+      operationId: createBank
+      tags: [Banks]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateBankRequest" }
+      responses:
+        "201":
+          description: Bank created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/BankDetail" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /banks/{bankId}:
+    get:
+      summary: Get bank detail
+      operationId: getBank
+      tags: [Banks]
+      parameters:
+        - $ref: "#/components/parameters/BankId"
+      responses:
+        "200":
+          description: Bank detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/BankDetail" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+    patch:
+      summary: Update bank metadata
+      operationId: updateBank
+      tags: [Banks]
+      parameters:
+        - $ref: "#/components/parameters/BankId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateBankRequest" }
+      responses:
+        "200":
+          description: Bank updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/BankDetail" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /banks/{bankId}/accounts:
+    get:
+      summary: List integration accounts for a bank
+      operationId: listAccounts
+      tags: [Integration Accounts]
+      parameters:
+        - $ref: "#/components/parameters/BankId"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, validated, sandbox_testing, evidence_review, approved, active, suspended, retired]
+      responses:
+        "200":
+          description: Account list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/AccountSummary" }
+
+    post:
+      summary: Create integration account
+      operationId: createAccount
+      tags: [Integration Accounts]
+      parameters:
+        - $ref: "#/components/parameters/BankId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateAccountRequest" }
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/AccountDetail" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /banks/{bankId}/accounts/{accountId}:
+    get:
+      summary: Get integration account detail
+      operationId: getAccount
+      tags: [Integration Accounts]
+      parameters:
+        - $ref: "#/components/parameters/BankId"
+        - $ref: "#/components/parameters/AccountId"
+      responses:
+        "200":
+          description: Account detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/AccountDetail" }
+
+    patch:
+      summary: Update account metadata (creates draft if Active)
+      operationId: updateAccount
+      tags: [Integration Accounts]
+      parameters:
+        - $ref: "#/components/parameters/BankId"
+        - $ref: "#/components/parameters/AccountId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateAccountRequest" }
+      responses:
+        "200":
+          description: Account updated (or draft created)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/AccountDetail" }
+                  draft_created:
+                    type: boolean
+                    description: True when editing an Active account created a new Draft version
+
+  /integration-profiles:
+    get:
+      summary: List available integration profiles
+      operationId: listIntegrationProfiles
+      tags: [Integration Profiles]
+      responses:
+        "200":
+          description: Profile list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/IntegrationProfile" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    BankId:
+      name: bankId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    AccountId:
+      name: accountId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+
+  responses:
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    Conflict:
+      description: Conflict (optimistic lock or concurrent edit)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ValidationErrorEnvelope" }
+
+  schemas:
+    ErrorEnvelope:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+
+    ValidationErrorEnvelope:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string, example: validation_failed }
+            message: { type: string }
+            errors:
+              type: object
+              additionalProperties:
+                type: array
+                items: { type: string }
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page: { type: integer }
+        per_page: { type: integer }
+        total: { type: integer }
+
+    BankSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string }
+        display_name: { type: string }
+        lifecycle_status: { type: string, enum: [draft, active, suspended, retired] }
+        environment: { type: string, enum: [sandbox, production, mock] }
+        account_count: { type: integer }
+        created_at: { type: string, format: date-time }
+
+    BankDetail:
+      allOf:
+        - $ref: "#/components/schemas/BankSummary"
+        - type: object
+          properties:
+            description: { type: string, nullable: true }
+            logo_reference: { type: string, nullable: true }
+            supported_countries: { type: array, items: { type: string } }
+            adapter_identifier: { type: string }
+            adapter_version: { type: string }
+            metadata_version: { type: integer }
+            updated_at: { type: string, format: date-time }
+
+    CreateBankRequest:
+      type: object
+      required: [code, display_name, adapter_identifier, adapter_version, environment]
+      properties:
+        code: { type: string, maxLength: 64 }
+        display_name: { type: string, maxLength: 255 }
+        description: { type: string, nullable: true }
+        adapter_identifier: { type: string, maxLength: 128 }
+        adapter_version: { type: string, maxLength: 32 }
+        environment: { type: string, enum: [sandbox, production] }
+        supported_countries: { type: array, items: { type: string } }
+        logo_reference: { type: string, nullable: true }
+
+    UpdateBankRequest:
+      type: object
+      properties:
+        display_name: { type: string, maxLength: 255 }
+        description: { type: string, nullable: true }
+        supported_countries: { type: array, items: { type: string } }
+        logo_reference: { type: string, nullable: true }
+        metadata_version:
+          type: integer
+          description: Optimistic lock — must match current metadata_version
+
+    AccountSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        bank_id: { type: string, format: uuid }
+        merchant_account_reference: { type: string }
+        environment: { type: string, enum: [sandbox, production] }
+        account_lifecycle_status:
+          type: string
+          enum: [draft, validated, sandbox_testing, evidence_review, approved, active, suspended, retired]
+        supported_currencies: { type: array, items: { type: string } }
+        display_label: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    AccountDetail:
+      allOf:
+        - $ref: "#/components/schemas/AccountSummary"
+        - type: object
+          properties:
+            supported_payment_methods: { type: array, items: { type: string } }
+            capability_flags: { type: object, additionalProperties: true }
+            enabled_organisations: { type: array, items: { type: string, format: uuid } }
+            enabled_modules: { type: array, items: { type: string } }
+            callback_url: { type: string, nullable: true }
+            callback_secret_reference:
+              type: object
+              description: Masked secret reference — never raw value
+              properties:
+                key: { type: string }
+                masked: { type: string, example: "****" }
+            active_config_version_id: { type: string, format: uuid, nullable: true }
+            submitted_by_actor_id: { type: string, format: uuid, nullable: true }
+            approved_by_actor_id: { type: string, format: uuid, nullable: true }
+            approved_at: { type: string, format: date-time, nullable: true }
+            config_version: { type: integer }
+            updated_at: { type: string, format: date-time }
+
+    CreateAccountRequest:
+      type: object
+      required: [merchant_account_reference, environment, adapter_profile_identifier]
+      properties:
+        merchant_account_reference: { type: string, maxLength: 255 }
+        environment: { type: string, enum: [sandbox, production] }
+        adapter_profile_identifier: { type: string }
+        supported_currencies: { type: array, items: { type: string } }
+        supported_payment_methods: { type: array, items: { type: string } }
+        enabled_organisations: { type: array, items: { type: string, format: uuid } }
+        display_label: { type: string, maxLength: 255, nullable: true }
+        callback_secret_reference: { type: string, maxLength: 500, nullable: true, description: "Key name in secrets manager — not the raw value" }
+
+    UpdateAccountRequest:
+      type: object
+      properties:
+        display_label: { type: string, maxLength: 255, nullable: true }
+        supported_currencies: { type: array, items: { type: string } }
+        supported_payment_methods: { type: array, items: { type: string } }
+        enabled_organisations: { type: array, items: { type: string, format: uuid } }
+        callback_url: { type: string, nullable: true }
+        callback_secret_reference: { type: string, maxLength: 500, nullable: true }
+        config_version:
+          type: integer
+          description: Optimistic lock
+
+    IntegrationProfile:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        profile_identifier: { type: string }
+        version: { type: string }
+        display_name: { type: string }
+        supported_auth_mechanisms: { type: array, items: { type: string } }
+        supported_capabilities: { type: array, items: { type: string } }
+        is_active: { type: boolean }

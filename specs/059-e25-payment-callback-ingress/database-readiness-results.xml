@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\Modules\Payment\P10ReadinessTest" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10ReadinessTest.php" tests="2" assertions="4" errors="1" failures="0" skipped="0" time="0.911255">
+    <testcase name="test_unknown_recovery_persists_once_preserves_hold_and_operation" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10ReadinessTest.php" line="29" class="Tests\Feature\Modules\Payment\P10ReadinessTest" classname="Tests.Feature.Modules.Payment.P10ReadinessTest" assertions="0" time="0.725558">
+      <error type="Illuminate\Database\QueryException">Tests\Feature\Modules\Payment\P10ReadinessTest::test_unknown_recovery_persists_once_preserves_hold_and_operation&#13;
+Illuminate\Database\QueryException: SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table "payment_attempts" violates foreign key constraint "payment_attempts_account_id_fk"
+DETAIL:  Key (provider_account_id)=(01a1630c-9ec9-73c6-ae7b-b2d2272eba66) is not present in table "payment_provider_accounts". (Connection: payment, SQL: insert into "payment"."payment_attempts" ("id", "payment_intent_id", "provider_code", "provider_account_id", "status", "operation_id", "idempotency_key", "initiated_at", "updated_at", "created_at") values (01a1630c-9ec9-73c6-ae7b-b2d22699a05a, 01a1630c-9ebb-70a7-82e4-004910b49bff, p10-readiness, 01a1630c-9ec9-73c6-ae7b-b2d2272eba66, submitting, 01a1630c-9ec9-73c6-ae7b-b2d225d8f7ee, 01a1630c-9ec9-73c6-ae7b-b2d227fc647c, 2026-10-22 09:58:53, 2026-10-22 09:58:53, 2026-10-22 09:58:53))
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Connection.php:825
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Connection.php:779
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Connection.php:560
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Connection.php:524
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3717
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2120
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1335
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1163
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1128
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Support\helpers.php:399
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1127
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2372
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2384
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10ReadinessTest.php:37</error>
+    </testcase>
+    <testcase name="test_database_replay_survives_cache_outage_without_new_execution" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10ReadinessTest.php" line="59" class="Tests\Feature\Modules\Payment\P10ReadinessTest" classname="Tests.Feature.Modules.Payment.P10ReadinessTest" assertions="4" time="0.185696"/>
+  </testsuite>
+</testsuites>

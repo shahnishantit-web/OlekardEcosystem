@@ -35,7 +35,7 @@ test('legacy browser has a script-free no-JS fallback', async ({ browser }) => {
 test('repaired role dialog keeps layout, keyboard dismissal and action payload',async({page,context})=>{
  await session(context);const mutations:{body:unknown;key:string|undefined}[]=[];
  await page.route('**/v1/**',async route=>{const request=route.request();if(request.method()==='POST'){mutations.push({body:request.postDataJSON(),key:request.headers()['idempotency-key']});await route.fulfill({contentType:'application/json',body:JSON.stringify({data:{role_id:'new-role',role_name:'repair_test',permission_slugs:[]}})});}else await route.fulfill({contentType:'application/json',body:JSON.stringify({data:{data:[],meta:{total:0,current_page:1,per_page:50,last_page:1}}})});});
- await page.goto('/admin-portal/roles');const open=page.getByRole('button',{name:'Create new role'});await open.click();
+ await page.goto('/roles');const open=page.getByRole('button',{name:'Create new role'});await open.click();
  const dialog=page.getByRole('dialog',{name:'Create Custom Role'});await expect(dialog).toBeFocused();await page.keyboard.press('Tab');await expect(page.getByLabel('Role Name')).toBeFocused();
  await page.getByLabel('Role Name').fill('repair_test');await expect(dialog).toBeVisible();await shot(page,'repair-role-dialog-desktop.png');
  await page.keyboard.press('Escape');await expect(dialog).toHaveCount(0);await expect(open).toBeFocused();

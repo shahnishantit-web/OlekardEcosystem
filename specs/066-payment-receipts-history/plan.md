@@ -1,0 +1,207 @@
+# Implementation Plan: P19 — Receipts, Communication and Payment History APIs
+
+**Branch**: `066-payment-receipts-history` | **Date**: 2026-10-25 | **Spec**: [spec.md](spec.md)
+
+**Input**: Feature specification from `specs/066-payment-receipts-history/spec.md`
+
+---
+
+## Summary
+
+P19 provides consumers, agents and administrators with scoped payment history, authorised receipt downloads, transactional receipt notifications and sanitised CSV exports. The implementation is **read-dominant**: all new financial data is derived from existing tables (no new ledger entries created). Three new DB tables support token management and notification deduplication. The entire history/receipt surface is built on the existing `PaymentIntentModel`, `PaymentAttemptModel` and `PaymentRefundModel`.
+
+---
+
+## Technical Context
+
+**Language/Version**: PHP 8.4+ (Laravel 11) — existing project constraint
+
+**Primary Dependencies**:
+- Laravel Eloquent ORM (existing)
+- Laravel Queues + Horizon (existing, `payment` queue for `GeneratePaymentExportJob`)
+- Laravel Storage (existing, for export CSV files)
+- Laravel Events (existing outbox pattern via P11)
+- `NotificationService` (P11 — existing contract; P19 adds two new listeners)
+- `AuditServiceInterface` (existing — P19 calls for export access audit)
+
+**Storage**: PostgreSQL `payment` schema — three new tables (migrations 000024–000026). No new Redis usage beyond existing queue infrastructure.
+
+**Testing**:
+- PHPUnit via `vendor/bin/phpunit`
+- Unit tests: `tests/Unit/Payment/`
+- Feature tests: `tests/Feature/Payment/`
+- Concurrency test: `tests/Concurrency/Modules/Payment/`
+
+**Target Platform**: Linux server (Docker Compose for local dev)
+
+**Project Type**: Laravel modular monolith — Payment module addition
+
+**Performance Goals**: History endpoint < 500ms p95 for up to 500 records (SC-001)
+
+**Constraints**:
+- Receipt data sourced from immutable ledger entries only (FR-009; Principle 4)
+- Download tokens single-use + configurable TTL (default 15 min); stored in DB not cache (Decision 3 — audit requirement)
+- Notification dispatch must survive listener failure without altering payment status (FR-015; Principle 4)
+- Export CSV formula-injection-safe per OWASP guidance (FR-021; Decision 7)
+- Cross-payer access impossible through any guessable reference pattern (FR-001, SC-004)
+
+**Scale/Scope**: ~500 records per history page; exports up to ~100k rows async; 3 new DB tables; 5 new services; 2 new listeners; 3 new migrations
+
+---
+
+## Constitution Check
+
+*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+
+| Principle | Assessment | Notes |
+|-----------|-----------|-------|
+| P1 Source-of-truth | **PASS** | History/receipt reads existing confirmed data; no new financial state invented |
+| P2 TBD Governance | **PASS** | No TBD values; token TTL default `15` is configurable via `payment.receipt.download_token_ttl_minutes` |
+| P3 Configuration | **PASS** | Token TTL and export token TTL are configurable; no hard-coded financial values |
+| P4 Financial Integrity | **PASS** | No ledger mutations; receipts read immutable `payment_attempts.fee_minor`; pending refunds labelled correctly |
+| P5 Authorization | **PASS** | Ownership checks on all endpoints; five new permissions scoped correctly; admin scope requires explicit permissions |
+| P6 Zero Trust | **PASS** | Download tokens are cryptographically random 64-hex; no account numbers/secrets in outputs (FR-012) |
+| P7 Domain Boundaries | **PASS** | History/Receipt services in Payment module; notification listeners in Notification module; controllers thin |
+| P8 API Contracts | **PASS** | `/v1` versioned routes; UUID v7 IDs; UTC timestamps; OpenAPI in `contracts/payment-history-api.yaml`; state-changing endpoints idempotent by token uniqueness |
+| P9 Event Reliability | **PASS** | `receipt_notification_deliveries` deduplication table; listeners idempotent by `event_idempotency_key` UNIQUE constraint |
+| P12 Test-First Quality | **PASS** | Unit + feature + concurrency tests planned; SC-001–SC-009 quickstart validation |
+| P13 Observability | **PASS** | Export access audited via `AuditServiceInterface`; template version stored in `receipt_notification_deliveries` |
+| P14 No Silent Changes | **PASS** | No framework or ORM changes; listeners added to Notification module following established pattern |
+
+**Post-design re-check**: All gates PASS. No violations requiring justification.
+
+---
+
+## Project Structure
+
+### Documentation (this feature)
+
+```text
+specs/066-payment-receipts-history/
+├── plan.md                               # This file
+├── research.md                           # Phase 0 — 11 technical decisions
+├── data-model.md                         # Phase 1 — 3 new tables + 2 read models
+├── quickstart.md                         # Phase 1 — SC-001–SC-009 validation
+├── contracts/
+│   └── payment-history-api.yaml          # Phase 1 — OpenAPI 3.1 contract
+└── tasks.md                              # Phase 2 (generated by /speckit-tasks)
+```
+
+### Source Code (Payment module additions)
+
+```text
+app/Modules/Payment/
+├── Infrastructure/
+│   ├── Migrations/
+│   │   ├── 2026_10_25_000024_create_receipt_download_tokens_table.php
+│   │   ├── 2026_10_25_000025_create_payment_export_requests_table.php
+│   │   └── 2026_10_25_000026_create_receipt_notification_deliveries_table.php
+│   ├── Models/
+│   │   ├── ReceiptDownloadTokenModel.php
+│   │   ├── PaymentExportRequestModel.php
+│   │   └── ReceiptNotificationDeliveryModel.php
+├── Http/
+│   ├── Controllers/
+│   │   ├── Customer/
+│   │   │   ├── PaymentHistoryController.php       # GET /v1/payment/history (consumer)
+│   │   │   └── ReceiptController.php               # GET /v1/payment/receipts/{id}, POST download-token
+│   │   ├── Admin/
+│   │   │   ├── PaymentHistoryAdminController.php  # GET /v1/admin/payment/history
+│   │   │   └── PaymentExportAdminController.php   # POST/GET /v1/admin/payment/exports, GET download
+│   │   └── ReceiptDownloadController.php           # GET /v1/payment/receipts/download/{token} — no auth
+│   └── Requests/
+│       ├── GetPaymentHistoryRequest.php            # shared by consumer + admin history
+│       └── CreatePaymentExportRequest.php          # IssueReceiptDownloadTokenRequest not needed (path param only)
+├── Application/
+│   ├── Services/
+│   │   ├── PaymentHistoryService.php               # US1: scoped history aggregation
+│   │   ├── ReceiptService.php                      # US2: immutable receipt compilation
+│   │   ├── ReceiptDownloadTokenService.php         # US2: token issuance, validation, redemption
+│   │   └── PaymentExportService.php                # US4: export request creation + async dispatch
+│   ├── Jobs/
+│   │   └── GeneratePaymentExportJob.php            # US4: async CSV generation
+│   └── Queries/
+│       ├── GetPaymentHistoryQuery.php
+│       └── CompileReceiptQuery.php
+├── Domain/
+│   ├── Enums/
+│   │   ├── ReceiptDownloadTokenStatus.php          # pending, used, expired (derived)
+│   │   ├── PaymentExportRequestStatus.php          # queued, generating, ready, failed, expired
+│   │   └── ReceiptNotificationDeliveryStatus.php   # dispatched, failed, skipped
+│   └── ValueObjects/
+│       └── CsvFormulaSanitiser.php                 # FR-021: formula injection prevention
+└── Providers/
+    └── PaymentServiceProvider.php                  # Add P19 routes
+
+app/Modules/Notification/
+└── Application/
+    └── Listeners/
+        ├── PaymentConfirmedReceiptListener.php     # US3: payment.confirmed → receipt notification
+        └── RefundConfirmedReceiptListener.php      # US3: refund.confirmed → refund notification
+```
+
+### Routes
+
+```text
+routes/modules/payment.php (actual file — loaded via PaymentServiceProvider::loadRoutesFrom):
+
+# Consumer / Agent
+GET  /v1/payment/history
+GET  /v1/payment/receipts/{intentId}
+POST /v1/payment/receipts/{intentId}/download-token
+GET  /v1/payment/receipts/download/{token}          # no auth required — token is credential
+
+# Admin
+GET  /v1/admin/payment/history
+POST /v1/admin/payment/exports
+GET  /v1/admin/payment/exports/{exportId}
+GET  /v1/admin/payment/exports/download/{token}     # no auth required — token is credential
+```
+
+### Tests
+
+```text
+tests/
+├── Unit/Payment/
+│   ├── PaymentHistoryServiceTest.php               # T030
+│   ├── ReceiptServiceTest.php                      # T031
+│   ├── ReceiptDownloadTokenServiceTest.php         # T032
+│   ├── PaymentExportServiceTest.php                # T033
+│   ├── CsvFormulaSanitiserTest.php                 # T034
+│   ├── PaymentConfirmedReceiptListenerTest.php     # T045
+│   └── RefundConfirmedReceiptListenerTest.php      # T046
+├── Feature/Payment/
+│   ├── PaymentHistoryApiTest.php                   # T047
+│   ├── ReceiptApiTest.php                          # T048
+│   ├── ReceiptDownloadTokenApiTest.php             # T049
+│   └── PaymentExportApiTest.php                   # T050
+└── Concurrency/Modules/Payment/
+    └── PaymentHistoryConcurrentTest.php            # T051 (Docker-gated)
+```
+
+### OpenAPI (existing file)
+
+```text
+openapi/v1/payment.yaml     # Append P19 schemas and paths after last P18 path
+```
+
+---
+
+## Implementation Strategy
+
+**MVP (P1 user stories — implement first)**:
+
+1. **Phase 1 — Migrations**: Tables 000024–000026 and permissions. Unblocks all other work.
+2. **Phase 2 — History API (US1)**: `PaymentHistoryService` + `PaymentHistoryController` + routes + unit test. No new tables needed — reads existing tables.
+3. **Phase 3 — Receipt API (US2)**: `ReceiptService` + `ReceiptDownloadTokenService` + controllers + token lifecycle tests.
+4. **Phase 4 — Notification Listeners (US3)**: `PaymentConfirmedReceiptListener` + `RefundConfirmedReceiptListener` + deduplication via `receipt_notification_deliveries`.
+
+**P2 user stories (implement after P1)**:
+
+5. **Phase 5 — Exports (US4)**: `PaymentExportService` + `GeneratePaymentExportJob` + `CsvFormulaSanitiser` + admin export routes.
+6. **Phase 6 — Deep Links (US5)**: Adds `domain_deep_link` and `refund_eligible` to the History API response (extends Phase 2 service output) + `purpose_type` filter already in Phase 2.
+
+**Polish**:
+7. Append P19 paths to `openapi/v1/payment.yaml`
+8. PHPStan level-8 pass (Docker-gated)
+9. Quickstart SC-001–SC-009 validation (Docker-gated)

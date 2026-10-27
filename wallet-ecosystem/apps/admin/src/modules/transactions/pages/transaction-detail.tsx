@@ -157,7 +157,7 @@ export function TransactionDetailPage({ transactionId }: { transactionId: string
       <PageHeader
         title={ref}
         breadcrumbs={[
-          { label: 'Transactions', href: '/admin-portal/transactions' },
+          { label: 'Transactions', href: '/transactions' },
           { label: ref },
         ]}
       />
@@ -189,7 +189,7 @@ export function TransactionDetailPage({ transactionId }: { transactionId: string
               label="Initiator"
               value={
                 initiatorId ? (
-                  <Link href={`/admin-portal/users/${initiatorId}`} className="text-ok-primary underline hover:text-ok-primary-hover">
+                  <Link href={`/users/${initiatorId}`} className="text-ok-primary underline hover:text-ok-primary-hover">
                     {initiatorName}
                   </Link>
                 ) : (
@@ -201,7 +201,7 @@ export function TransactionDetailPage({ transactionId }: { transactionId: string
               <DetailField
                 label="Source Wallet"
                 value={
-                  <Link href={`/admin-portal/wallets/${tx.source_wallet_id}`} className="text-ok-primary underline hover:text-ok-primary-hover font-mono">
+                  <Link href={`/wallets/${tx.source_wallet_id}`} className="text-ok-primary underline hover:text-ok-primary-hover font-mono">
                     {tx.source_wallet_id.substring(0, 8)}…
                   </Link>
                 }
@@ -211,7 +211,7 @@ export function TransactionDetailPage({ transactionId }: { transactionId: string
               <DetailField
                 label="Destination Wallet"
                 value={
-                  <Link href={`/admin-portal/wallets/${tx.destination_wallet_id}`} className="text-ok-primary underline hover:text-ok-primary-hover font-mono">
+                  <Link href={`/wallets/${tx.destination_wallet_id}`} className="text-ok-primary underline hover:text-ok-primary-hover font-mono">
                     {tx.destination_wallet_id.substring(0, 8)}…
                   </Link>
                 }
@@ -221,7 +221,7 @@ export function TransactionDetailPage({ transactionId }: { transactionId: string
               <DetailField
                 label="Reversal Tx"
                 value={
-                  <Link href={`/admin-portal/transactions/${tx.reversal_id}`} className="text-ok-primary underline hover:text-ok-primary-hover font-mono">
+                  <Link href={`/transactions/${tx.reversal_id}`} className="text-ok-primary underline hover:text-ok-primary-hover font-mono">
                     {tx.reversal_id.substring(0, 8)}…
                   </Link>
                 }

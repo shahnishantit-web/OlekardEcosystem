@@ -52,7 +52,7 @@ parameters:
         - '#Class App\\Modules\\Notifications\\Application\\(NotificationService|DeviceTokenService) not found#'
         - '#Call to (method|static method) .+ on an unknown class App\\Modules\\Notifications\\Application#'
         # fopen() returns resource|false; null-check in callers guards against false at runtime.
-        - '#Parameter #1 \$stream of function (fputcsv|rewind|stream_get_contents|fclose) expects resource, resource\|false given#'
+        - '#Parameter \#1 \$stream of function (fputcsv|rewind|stream_get_contents|fclose) expects resource, resource\|false given#'
         # auth()->id() returns int in Laravel; downstream service methods accept string.
         - '#Parameter .+ expects string, int given#'
         # Property written in constructor via constructor promotion and read via Eloquent query methods.
@@ -61,4 +61,6 @@ parameters:
         - '#(Instantiated class|Call to (static method|method)|has invalid return type) .+DisputeHoldModel#'
         # IdempotencyConflictException cross-namespace reference resolved at runtime.
         - '#(Instantiated class|Throwing object of an unknown class) App\\Modules\\CommunityServices\\Application\\IdempotencyConflictException#'
+        # Identity UserModel cross-module reference — resolved at runtime via auth middleware.
+        - '#(PHPDoc tag @var|Access to property \$id|unknown class) .+Identity\\Infrastructure\\Models\\UserModel#'
     checkMissingIterableValueType: false

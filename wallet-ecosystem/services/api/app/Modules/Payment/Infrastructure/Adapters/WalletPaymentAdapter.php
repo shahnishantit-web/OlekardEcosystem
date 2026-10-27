@@ -9,6 +9,10 @@ use App\Modules\Payment\Domain\Contracts\PaymentAttemptRepositoryInterface;
 use App\Modules\Payment\Domain\Enums\PaymentAttemptStatus;
 use App\Modules\Payment\Domain\Exceptions\InsufficientFundsException;
 use App\Modules\Payment\Domain\Exceptions\StepUpRequiredException;
+use App\Modules\Payment\Domain\Exceptions\TransactionLimitExceededException;
+use App\Modules\Wallet\Domain\Enums\WalletStatus;
+use App\Modules\Wallet\Domain\Exceptions\UnsupportedCurrencyException;
+use App\Modules\Wallet\Domain\Exceptions\WalletNotTransactableException;
 use App\Modules\Payment\Domain\ValueObjects\PaymentAttemptResult;
 use App\Modules\Payment\Domain\ValueObjects\PaymentCancelResult;
 use App\Modules\Payment\Domain\ValueObjects\PaymentInitiateRequest;
@@ -64,12 +68,15 @@ final class WalletPaymentAdapter implements PaymentAdapterInterface
     }
 
     /**
-     * T092: initiatePayment
-     * 1. Verify wallet ownership
-     * 2. Check spendable balance
-     * 3. Step-up check above threshold
-     * 4. createHold via WalletModuleContract
-     * 5. Return PaymentAttemptResult with status=succeeded, walletHoldId set
+     * T092/P09: initiatePayment — 8-gate validation order (research Decision 1)
+     * 1. walletId not null
+     * 2. isActive() — wallet must be operable
+     * 3. ownerActorId() — ownership verification
+     * 4. pocketExists() — currency pocket exists
+     * 5. availableBalance() — optimistic pre-check
+     * 6. transaction limit config check
+     * 7. step-up authentication if above threshold
+     * 8. createHold() — authoritative SELECT FOR UPDATE balance enforcement
      */
     public function initiatePayment(PaymentInitiateRequest $request): PaymentAttemptResult
     {
@@ -78,7 +85,12 @@ final class WalletPaymentAdapter implements PaymentAdapterInterface
             throw new \InvalidArgumentException('walletId is required for wallet payments.');
         }
 
-        // 1. Verify ownership
+        // 1. Wallet must be active and operable
+        if (!$this->wallet->isActive($walletId)) {
+            throw new WalletNotTransactableException(WalletStatus::Suspended);
+        }
+
+        // 2. Verify ownership
         $ownerActorId = $this->wallet->ownerActorId($walletId);
         if ($ownerActorId !== $request->payerActorId) {
             throw new \DomainException(
@@ -86,13 +98,24 @@ final class WalletPaymentAdapter implements PaymentAdapterInterface
             );
         }
 
-        // 2. Check spendable balance — optimistic pre-check; createHold is the authoritative check
+        // 3. Pocket for this currency must exist on the wallet
+        if (!$this->wallet->pocketExists($walletId, $request->currencyCode)) {
+            throw new UnsupportedCurrencyException($request->currencyCode);
+        }
+
+        // 4. Check spendable balance — optimistic pre-check; createHold is the authoritative check
         $available = $this->wallet->availableBalance($walletId, $request->currencyCode) ?? 0;
         if ($available < $request->amountMinor) {
             throw new InsufficientFundsException($available, $request->amountMinor, $request->currencyCode);
         }
 
-        // 3. Step-up auth check above configured threshold
+        // 5. Per-currency transaction limit (null = no limit configured)
+        $limit = $this->config->getOrDefault('payment.wallet_transaction_limit_' . $request->currencyCode, null);
+        if ($limit !== null && $request->amountMinor > (int) $limit) {
+            throw new TransactionLimitExceededException($request->amountMinor, (int) $limit, $request->currencyCode);
+        }
+
+        // 6. Step-up auth check above configured threshold
         $stepUpThreshold = (int) ($this->config->getOrDefault('auth.step_up_threshold', 100000) ?? 100000);
         if ($request->amountMinor >= $stepUpThreshold) {
             if (empty($request->stepUpToken)) {

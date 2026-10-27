@@ -1,68 +1,114 @@
 import 'package:wallet_agent/modules/transactions/domain/entities/agent_transaction.dart';
 
 class AgentTransactionDto {
-  final String id;
-  final String referenceNumber;
-  final String type;
-  final int amountMinorUnits;
-  final int feeMinorUnits;
-  final String currencyCode;
-  final String counterpartyName;
-  final String status;
-  final DateTime createdAt;
-
-  const AgentTransactionDto({
-    required this.id,
-    required this.referenceNumber,
-    required this.type,
-    required this.amountMinorUnits,
-    required this.feeMinorUnits,
-    required this.currencyCode,
-    required this.counterpartyName,
-    required this.status,
-    required this.createdAt,
-  });
-
-  factory AgentTransactionDto.fromJson(Map<String, dynamic> json) {
-    return AgentTransactionDto(
+  static PaymentHistoryItem fromJson(Map<String, dynamic> json) {
+    return PaymentHistoryItem(
       id: json['id'] as String,
-      referenceNumber: json['reference_number'] as String,
-      type: json['type'] as String,
-      amountMinorUnits: json['amount_minor_units'] as int,
-      feeMinorUnits: json['fee_minor_units'] as int,
+      referenceNumber: (json['reference_number'] ??
+          json['reference']) as String,
+      purposeType: _parsePurposeType(
+          json['purpose_type'] as String? ??
+          json['type'] as String? ??
+          'unknown'),
+      status: _parseStatus(json['status'] as String? ?? 'pending'),
+      amountMinorUnits:
+          (json['amount'] ?? json['amount_minor_units']) as int? ?? 0,
+      feeMinorUnits: json['fee_minor_units'] as int? ?? 0,
       currencyCode: json['currency_code'] as String,
-      counterpartyName: json['counterparty_name'] as String,
-      status: json['status'] as String,
+      counterpartyName: json['counterparty_name'] as String?,
+      counterpartyWalletNumber: json['counterparty_wallet_number'] as String?,
+      description: json['description'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
+      completedAt: json['completed_at'] != null
+          ? DateTime.parse(json['completed_at'] as String)
+          : null,
+      captureStatus: _parseCaptureStatus(
+          json['capture_status'] as String? ?? 'pending'),
+      accountingStatus: _parseAccountingStatus(
+          json['accounting_status'] as String? ?? 'pending'),
+      serviceStatus: _parseServiceStatus(
+          json['service_status'] as String? ?? 'pending'),
+      refundStatus: json['refund_status'] != null
+          ? _parseRefundStatus(json['refund_status'] as String)
+          : null,
+      refundEligible: json['refund_eligible'] as bool? ?? false,
+      domainDeepLink: _parseDomainDeepLink(json['domain_deep_link']),
+      receiptAvailable: json['receipt_available'] as bool? ?? false,
+      providerName: json['provider_name'] as String?,
+      providerReference: json['provider_reference'] as String?,
+      direction: _parseDirection(json['direction'] as String? ?? 'debit'),
     );
   }
 
-  AgentTransaction toEntity() => AgentTransaction(
-        id: id,
-        referenceNumber: referenceNumber,
-        type: _parseType(type),
-        amountMinorUnits: amountMinorUnits,
-        feeMinorUnits: feeMinorUnits,
-        currencyCode: currencyCode,
-        counterpartyName: counterpartyName,
-        status: status,
-        createdAt: createdAt,
-      );
+  static PaymentPurposeType _parsePurposeType(String s) => switch (s) {
+        'cash_in' || 'funding_agent_cash_in' =>
+          PaymentPurposeType.fundingAgentCashIn,
+        'cash_out' || 'withdrawal' => PaymentPurposeType.withdrawal,
+        'float_top_up' || 'funding_bank_transfer' =>
+          PaymentPurposeType.fundingBankTransfer,
+        'wallet_transfer' || 'transfer' => PaymentPurposeType.walletTransfer,
+        'commission' => PaymentPurposeType.servicePayment,
+        'reversal' => PaymentPurposeType.reversal,
+        'service_payment' => PaymentPurposeType.servicePayment,
+        'bill_payment' => PaymentPurposeType.billPayment,
+        _ => PaymentPurposeType.unknown,
+      };
 
-  static AgentTransactionType _parseType(String t) {
-    switch (t) {
-      case 'cash_in':
-        return AgentTransactionType.cashIn;
-      case 'cash_out':
-        return AgentTransactionType.cashOut;
-      case 'float_top_up':
-        return AgentTransactionType.floatTopUp;
-      case 'commission':
-        return AgentTransactionType.commission;
-      case 'reversal':
-        return AgentTransactionType.reversal;
-      default:
-        return AgentTransactionType.other;
+  static PaymentStatus _parseStatus(String s) => switch (s) {
+        'pending' => PaymentStatus.pending,
+        'processing' => PaymentStatus.processing,
+        'completed' => PaymentStatus.completed,
+        'failed' => PaymentStatus.failed,
+        'reversed' => PaymentStatus.reversed,
+        'cancelled' => PaymentStatus.cancelled,
+        _ => PaymentStatus.pending,
+      };
+
+  static CaptureStatus _parseCaptureStatus(String s) => switch (s) {
+        'authorized' => CaptureStatus.authorized,
+        'captured' => CaptureStatus.captured,
+        'voided' => CaptureStatus.voided,
+        'failed' => CaptureStatus.failed,
+        _ => CaptureStatus.pending,
+      };
+
+  static AccountingStatus _parseAccountingStatus(String s) => switch (s) {
+        'posted' => AccountingStatus.posted,
+        'rejected' => AccountingStatus.rejected,
+        _ => AccountingStatus.pending,
+      };
+
+  static ServiceStatus _parseServiceStatus(String s) => switch (s) {
+        'submitted' => ServiceStatus.submitted,
+        'confirmed' => ServiceStatus.confirmed,
+        'failed' => ServiceStatus.failed,
+        _ => ServiceStatus.pending,
+      };
+
+  static RefundStatus _parseRefundStatus(String s) => switch (s) {
+        'requested' => RefundStatus.requested,
+        'approved' => RefundStatus.approved,
+        'rejected' => RefundStatus.rejected,
+        'reversed' => RefundStatus.reversed,
+        _ => RefundStatus.pending,
+      };
+
+  static PaymentDirection _parseDirection(String s) =>
+      s == 'credit' ? PaymentDirection.credit : PaymentDirection.debit;
+
+  static DomainDeepLink? _parseDomainDeepLink(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is String) return AvailableLink(url: raw);
+    if (raw is Map<String, dynamic>) {
+      if (raw.containsKey('url')) {
+        return AvailableLink(
+          url: raw['url'] as String,
+          label: raw['label'] as String?,
+        );
+      }
+      return UnavailableLink(
+          reason: raw['reason'] as String? ?? 'unavailable');
     }
+    return null;
   }
 }

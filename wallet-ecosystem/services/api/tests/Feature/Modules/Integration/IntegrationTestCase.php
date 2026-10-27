@@ -28,6 +28,9 @@ abstract class IntegrationTestCase extends LedgerTestCase
         parent::setUp();
         app('cache')->forgetDriver('redis');
         config(['cache.default' => 'array']);
+        // Isolated source per test; real Redis sliding-window keys expire in 61s.
+        // Never flush the shared application Redis database.
+        $this->withServerVariables(['REMOTE_ADDR' => '10.'.random_int(1, 254).'.'.random_int(1, 254).'.'.random_int(1, 254)]);
     }
 
     protected function postSignedWebhook(string $url, array $payload): TestResponse

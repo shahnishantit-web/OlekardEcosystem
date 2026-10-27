@@ -1,0 +1,786 @@
+openapi: "3.1.0"
+info:
+  title: P18 Payout Lifecycle API
+  version: "1.0.0"
+  description: |
+    Beneficiary verification, funds reservation (maker/checker), and payout lifecycle.
+
+    **BLOCKED endpoints** (marked with x-blocked) require architectural decisions:
+    - US3 (execution): BLOCKED pending AD-14 (payout contract ownership)
+    - US4 (settlement): BLOCKED pending AD-10 (custody account type) + LC14 (disbursement ledger contract)
+
+servers:
+  - url: /api/v1/admin/payment
+
+tags:
+  - name: Beneficiaries
+    description: Payout beneficiary registration and verification
+  - name: PayoutRequests
+    description: Payout request initiation and lifecycle
+  - name: Reservations
+    description: Funds reservation with maker/checker approval
+
+paths:
+  # ─────────────────────────────────────────────────
+  # Beneficiary endpoints
+  # ─────────────────────────────────────────────────
+
+  /payout/beneficiaries:
+    post:
+      operationId: registerPayoutBeneficiary
+      summary: Register a new payout beneficiary
+      tags: [Beneficiaries]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterBeneficiaryRequest"
+      responses:
+        "201":
+          description: Beneficiary registered (pending verification)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BeneficiaryResponse"
+        "409":
+          description: Duplicate idempotency key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    get:
+      operationId: listPayoutBeneficiaries
+      summary: List payout beneficiaries
+      tags: [Beneficiaries]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organisation_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/PayoutBeneficiaryStatus"
+        - name: account_type
+          in: query
+          schema:
+            $ref: "#/components/schemas/PayoutBeneficiaryAccountType"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        "200":
+          description: Paginated list of beneficiaries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BeneficiaryListResponse"
+
+  /payout/beneficiaries/{beneficiaryId}:
+    get:
+      operationId: getPayoutBeneficiary
+      summary: Get beneficiary details
+      tags: [Beneficiaries]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/BeneficiaryId"
+      responses:
+        "200":
+          description: Beneficiary detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BeneficiaryResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /payout/beneficiaries/{beneficiaryId}/verify:
+    post:
+      operationId: verifyPayoutBeneficiary
+      summary: Record beneficiary verification
+      tags: [Beneficiaries]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/BeneficiaryId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyBeneficiaryRequest"
+      responses:
+        "200":
+          description: Beneficiary verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BeneficiaryResponse"
+        "422":
+          description: Verification evidence invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ─────────────────────────────────────────────────
+  # Payout request endpoints
+  # ─────────────────────────────────────────────────
+
+  /payout/requests:
+    post:
+      operationId: initiatePayout
+      summary: Initiate a payout request (US1 — verify beneficiary + compute payable balance)
+      tags: [PayoutRequests]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InitiatePayoutRequest"
+      responses:
+        "201":
+          description: Payout request created; payable balance computed server-side
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PayoutRequestResponse"
+        "400":
+          description: Beneficiary not verified or domain entitlement not granted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Duplicate idempotency key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    get:
+      operationId: listPayoutRequests
+      summary: List payout requests
+      tags: [PayoutRequests]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organisation_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/PayoutRequestStatus"
+        - name: fund_reference_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        "200":
+          description: Paginated list of payout requests
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PayoutRequestListResponse"
+
+  /payout/requests/{payoutId}:
+    get:
+      operationId: getPayoutRequest
+      summary: Get payout request detail
+      tags: [PayoutRequests]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PayoutId"
+      responses:
+        "200":
+          description: Payout request with reservation and attempt summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PayoutRequestDetailResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /payout/requests/{payoutId}/balance:
+    get:
+      operationId: getPayableBalance
+      summary: Get current payable balance for a payout request (US1 — live recompute)
+      tags: [PayoutRequests]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PayoutId"
+      responses:
+        "200":
+          description: Current payable balance breakdown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PayableBalanceResponse"
+
+  # ─────────────────────────────────────────────────
+  # Reservation endpoints (US2)
+  # ─────────────────────────────────────────────────
+
+  /payout/requests/{payoutId}/reserve:
+    post:
+      operationId: createPayoutReservation
+      summary: Create funds reservation (maker step — US2)
+      tags: [Reservations]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PayoutId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReservationRequest"
+      responses:
+        "201":
+          description: Reservation created; awaiting approval
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationResponse"
+        "400":
+          description: Insufficient payable balance or payout not in valid state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Duplicate idempotency key or reservation already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /payout/requests/{payoutId}/approve-reservation:
+    post:
+      operationId: approvePayoutReservation
+      summary: Approve reservation (checker step — US2; cannot be same actor as maker)
+      tags: [Reservations]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PayoutId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Reservation approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationResponse"
+        "403":
+          description: Self-approval attempted (maker cannot approve their own reservation)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Reservation not in awaiting_approval state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /payout/requests/{payoutId}/reject-reservation:
+    post:
+      operationId: rejectPayoutReservation
+      summary: Reject reservation (checker step — US2)
+      tags: [Reservations]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PayoutId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectReservationRequest"
+      responses:
+        "200":
+          description: Reservation rejected; amount released
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationResponse"
+
+  /payout/requests/{payoutId}/execute:
+    post:
+      operationId: executePayoutRequest
+      summary: "Submit payout to adapter (US3 — BLOCKED: AD-14 must be resolved)"
+      tags: [PayoutRequests]
+      x-blocked: "AD-14 — payout contract ownership unresolved; endpoint stub only"
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PayoutId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "501":
+          description: Not implemented — blocked pending AD-14 resolution
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /payout/requests/{payoutId}/confirm-settlement:
+    post:
+      operationId: confirmPayoutSettlement
+      summary: "Confirm settlement with provider evidence (US4 — BLOCKED: AD-10 + LC14 must be resolved)"
+      tags: [PayoutRequests]
+      x-blocked: "AD-10 + LC14 — custody account type and disbursement ledger contract unresolved; endpoint stub only"
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PayoutId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "501":
+          description: Not implemented — blocked pending AD-10 and LC14 resolution
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+# ─────────────────────────────────────────────────
+# Components
+# ─────────────────────────────────────────────────
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 200
+      description: Client-generated idempotency key; duplicate keys return existing result
+
+    BeneficiaryId:
+      name: beneficiaryId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    PayoutId:
+      name: payoutId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+
+    # ─── Enums ───────────────────────────────────────
+
+    PayoutBeneficiaryStatus:
+      type: string
+      enum: [pending_verification, verified, suspended, rejected]
+
+    PayoutBeneficiaryAccountType:
+      type: string
+      enum: [bank_account, mobile_money, wallet]
+
+    PayoutRequestStatus:
+      type: string
+      enum:
+        - pending_verification
+        - awaiting_approval
+        - reserved
+        - approved
+        - executing
+        - pending_settlement
+        - settled
+        - failed
+        - manual_review
+        - cancelled
+
+    PayoutReservationStatus:
+      type: string
+      enum: [awaiting_approval, approved, invalidated, rejected, expired, released]
+
+    # ─── Request bodies ──────────────────────────────
+
+    RegisterBeneficiaryRequest:
+      type: object
+      required: [organisation_id, account_type, account_number, account_holder_name, currency_code]
+      properties:
+        organisation_id:
+          type: string
+          format: uuid
+        account_type:
+          $ref: "#/components/schemas/PayoutBeneficiaryAccountType"
+        account_number:
+          type: string
+          minLength: 4
+          maxLength: 200
+        bank_code:
+          type: string
+          maxLength: 50
+          description: Required for bank_account type
+        bank_name:
+          type: string
+          maxLength: 200
+        account_holder_name:
+          type: string
+          minLength: 2
+          maxLength: 200
+        currency_code:
+          type: string
+          minLength: 3
+          maxLength: 3
+
+    VerifyBeneficiaryRequest:
+      type: object
+      required: [verification_reference]
+      properties:
+        verification_reference:
+          type: string
+          maxLength: 200
+          description: Reference from the external KYC/verification service
+        verification_note:
+          type: string
+          maxLength: 500
+
+    InitiatePayoutRequest:
+      type: object
+      required: [fund_reference_id, purpose_type, organisation_id, beneficiary_id, currency_code]
+      properties:
+        fund_reference_id:
+          type: string
+          format: uuid
+        purpose_type:
+          type: string
+          maxLength: 100
+        organisation_id:
+          type: string
+          format: uuid
+        beneficiary_id:
+          type: string
+          format: uuid
+        currency_code:
+          type: string
+          minLength: 3
+          maxLength: 3
+        requested_amount_minor:
+          type: integer
+          minimum: 1
+          description: |
+            Informational only — the server recomputes the authoritative payable balance.
+            This field is NOT used as the disbursement amount.
+
+    CreateReservationRequest:
+      type: object
+      required: [reserved_amount_minor]
+      properties:
+        reserved_amount_minor:
+          type: integer
+          minimum: 1
+          description: Amount to reserve; must not exceed server-computed cleared payable balance
+
+    RejectReservationRequest:
+      type: object
+      required: [rejection_reason]
+      properties:
+        rejection_reason:
+          type: string
+          minLength: 10
+          maxLength: 1000
+
+    # ─── Response bodies ─────────────────────────────
+
+    BeneficiaryResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/BeneficiarySummary"
+
+    BeneficiaryListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/BeneficiarySummary"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    BeneficiarySummary:
+      type: object
+      required: [id, organisation_id, account_type, account_holder_name, currency_code, status, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        organisation_id:
+          type: string
+          format: uuid
+        account_type:
+          $ref: "#/components/schemas/PayoutBeneficiaryAccountType"
+        account_holder_name:
+          type: string
+        bank_name:
+          type: string
+          nullable: true
+        currency_code:
+          type: string
+        status:
+          $ref: "#/components/schemas/PayoutBeneficiaryStatus"
+        verified_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    PayableBalanceResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [fund_reference_id, currency_code, custody_balance_minor, confirmed_refunds_minor, open_dispute_holds_minor, existing_reservations_minor, payable_minor, computed_at]
+          properties:
+            fund_reference_id:
+              type: string
+              format: uuid
+            currency_code:
+              type: string
+            custody_balance_minor:
+              type: integer
+            confirmed_refunds_minor:
+              type: integer
+            open_dispute_holds_minor:
+              type: integer
+            existing_reservations_minor:
+              type: integer
+            payable_minor:
+              type: integer
+              description: max(0, custody - refunds - holds - reservations)
+            computed_at:
+              type: string
+              format: date-time
+
+    PayoutRequestResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/PayoutRequestSummary"
+
+    PayoutRequestListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PayoutRequestSummary"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    PayoutRequestDetailResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          allOf:
+            - $ref: "#/components/schemas/PayoutRequestSummary"
+            - type: object
+              properties:
+                reservation:
+                  $ref: "#/components/schemas/ReservationSummary"
+                  nullable: true
+
+    PayoutRequestSummary:
+      type: object
+      required: [id, fund_reference_id, purpose_type, organisation_id, beneficiary_id, currency_code, computed_payable_minor, status, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        fund_reference_id:
+          type: string
+          format: uuid
+        purpose_type:
+          type: string
+        organisation_id:
+          type: string
+          format: uuid
+        beneficiary_id:
+          type: string
+          format: uuid
+        currency_code:
+          type: string
+        requested_amount_minor:
+          type: integer
+        computed_payable_minor:
+          type: integer
+          description: Server-authoritative payable balance at time of request
+        status:
+          $ref: "#/components/schemas/PayoutRequestStatus"
+        operation_id:
+          type: string
+          nullable: true
+        settled_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    ReservationResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/ReservationSummary"
+
+    ReservationSummary:
+      type: object
+      required: [id, payout_request_id, reserved_amount_minor, currency_code, status, maker_id, expires_at, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        payout_request_id:
+          type: string
+          format: uuid
+        reserved_amount_minor:
+          type: integer
+        currency_code:
+          type: string
+        status:
+          $ref: "#/components/schemas/PayoutReservationStatus"
+        maker_id:
+          type: string
+          format: uuid
+        approver_id:
+          type: string
+          format: uuid
+          nullable: true
+        approved_at:
+          type: string
+          format: date-time
+          nullable: true
+        rejection_reason:
+          type: string
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    PaginationMeta:
+      type: object
+      required: [current_page, per_page, total]
+      properties:
+        current_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+        last_page:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+        existing_id:
+          type: string
+          format: uuid
+          description: Present on 409 responses — the ID of the existing record

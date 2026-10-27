@@ -112,7 +112,7 @@ final class IdempotencyService implements IdempotencyServiceInterface
             return new IdempotencyLock($id, $idempotencyKey, $actorId);
         }
 
-        if ($existing->request_hash !== $requestHash || $existing->http_method !== $httpMethod) {
+        if ($existing->request_hash !== $requestHash || $existing->http_method !== $httpMethod || $existing->http_path !== $httpPath) {
             Log::warning('idempotency.conflict', [
                 'actor_id'        => $actorId,
                 'idempotency_key' => $idempotencyKey,
@@ -168,14 +168,16 @@ final class IdempotencyService implements IdempotencyServiceInterface
         string $requestHash,
         string $correlationId,
     ): ?array {
-        $completed = $this->findCompletedResponse($idempotencyKey, $actorId);
-        if ($completed !== null) {
-            return $completed;
-        }
-
+        // Validate the request against the authoritative record before replay;
+        // a completed key may not be reused for another body.
         $this->acquireLock($idempotencyKey, $actorId, $requestHash, $httpMethod, $httpPath, $correlationId);
-
-        return null;
+        $record = DB::connection('platform')->table('platform.idempotency_records')
+            ->where('actor_id', $actorId)->where('idempotency_key', $idempotencyKey)
+            ->where('status', 'completed')->first(['response_status', 'response_body']);
+        return $record === null ? null : [
+            'status' => $record->response_status,
+            'body' => json_decode($record->response_body, true),
+        ];
     }
 
     public function complete(string $idempotencyKey, string $actorId, int $responseStatus, array $responseBody): void

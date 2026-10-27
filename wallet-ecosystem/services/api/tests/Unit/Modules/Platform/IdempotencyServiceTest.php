@@ -20,12 +20,12 @@ beforeEach(function () {
     $this->service = new IdempotencyService($this->cache);
 });
 
-test('cache hit returns cached response without DB query', function () {
+test('completed response lookup can use the cache without a DB query', function () {
     $this->cache->shouldReceive('find')
         ->once()
         ->andReturn(['status' => 200, 'body' => ['success' => true]]);
 
-    $result = $this->service->resolve('key-1', 'actor-1', 'POST', '/v1/test', 'hash-abc', 'corr-1');
+    $result = $this->service->findCompletedResponse('key-1', 'actor-1');
 
     expect($result)->toEqual(['status' => 200, 'body' => ['success' => true]]);
 });

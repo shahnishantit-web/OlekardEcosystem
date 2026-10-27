@@ -261,7 +261,7 @@ export function UserDetailPage({ userId }: Props) {
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-text-primary">Wallets</h3>
               <Link
-                href={`/admin-portal/wallets?user_id=${userId}`}
+                href={`/wallets?user_id=${userId}`}
                 className="text-xs text-ok-primary hover:underline"
               >
                 View all →
@@ -296,7 +296,7 @@ export function UserDetailPage({ userId }: Props) {
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-text-primary">Recent Transactions</h3>
               <Link
-                href={`/admin-portal/transactions?user_id=${userId}`}
+                href={`/transactions?user_id=${userId}`}
                 className="text-xs text-ok-primary hover:underline"
               >
                 View all →
@@ -396,7 +396,7 @@ export function UserDetailPage({ userId }: Props) {
             <h3 className="text-sm font-semibold text-text-primary mb-3">Devices &amp; Sessions</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Link
-                href={`/admin-portal/users/${userId}/devices`}
+                href={`/devices?user_id=${userId}`}
                 className="flex items-center justify-between rounded-lg border border-ok-border px-4 py-3 text-sm text-text-primary hover:bg-ok-hover-bg transition-colors"
                 aria-label="View enrolled devices"
               >
@@ -404,7 +404,7 @@ export function UserDetailPage({ userId }: Props) {
                 <span className="text-text-secondary" aria-hidden="true">→</span>
               </Link>
               <Link
-                href={`/admin-portal/users/${userId}/sessions`}
+                href={`/sessions?user_id=${userId}`}
                 className="flex items-center justify-between rounded-lg border border-ok-border px-4 py-3 text-sm text-text-primary hover:bg-ok-hover-bg transition-colors"
                 aria-label="View active sessions"
               >

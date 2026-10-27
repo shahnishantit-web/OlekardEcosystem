@@ -15,5 +15,13 @@ interface PaymentProviderRepositoryInterface
     /** @return PaymentProviderAccountModel[] */
     public function findActiveForContext(OptionsQuery $query): array;
 
+    /**
+     * Returns ALL accounts with their provider relation loaded, ordered by provider sort_order.
+     * No eligibility filtering applied — used by admin eligibility preview.
+     *
+     * @return PaymentProviderAccountModel[]
+     */
+    public function findAllWithProviders(): array;
+
     public function findProviderAccount(string $providerAccountId): ?PaymentProviderAccountModel;
 }

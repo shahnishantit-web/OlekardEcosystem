@@ -6,6 +6,11 @@ namespace App\Modules\Payment\Domain\Enums;
 
 enum PaymentAttemptStatus: string
 {
+    // P06: new states
+    case Submitting   = 'submitting';
+    case Unknown      = 'unknown';
+
+    // Pre-P06: kept for backward compatibility with existing DB rows
     case Initiated      = 'initiated';
     case Processing     = 'processing';
     case AwaitingAction = 'awaiting_action';
@@ -22,6 +27,7 @@ enum PaymentAttemptStatus: string
             self::Failed,
             self::Cancelled,
             self::Expired => true,
+            // Unknown and TimedOut are NOT terminal — outcome is unresolved, hold preserved
             default       => false,
         };
     }
@@ -30,9 +36,11 @@ enum PaymentAttemptStatus: string
     private static function transitions(): array
     {
         return [
-            self::Initiated->value      => [self::Processing, self::AwaitingAction, self::Succeeded, self::Failed, self::Cancelled, self::Expired],
-            self::Processing->value     => [self::Succeeded, self::Failed, self::TimedOut],
-            self::AwaitingAction->value => [self::Processing, self::Cancelled, self::Expired, self::TimedOut],
+            self::Submitting->value     => [self::Processing, self::AwaitingAction, self::Succeeded, self::Failed, self::Unknown],
+            self::Initiated->value      => [self::Processing, self::AwaitingAction, self::Succeeded, self::Failed, self::Cancelled, self::Expired, self::Unknown],
+            self::Processing->value     => [self::Succeeded, self::Failed, self::TimedOut, self::Unknown],
+            self::AwaitingAction->value => [self::Processing, self::Cancelled, self::Expired, self::TimedOut, self::Unknown],
+            self::Unknown->value        => [self::Succeeded, self::Failed, self::Expired],
             self::TimedOut->value       => [self::Succeeded, self::Failed, self::Expired],
             self::Succeeded->value      => [],
             self::Failed->value         => [],

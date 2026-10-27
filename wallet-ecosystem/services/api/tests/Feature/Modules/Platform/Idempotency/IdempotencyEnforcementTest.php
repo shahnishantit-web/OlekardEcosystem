@@ -81,6 +81,7 @@ final class IdempotencyEnforcementTest extends TestCase
     {
         $key = (string) Uuid::uuid7();
         $actorId = (string) Uuid::uuid7();
+        $payload = $this->fundingPayload();
 
         // Seed a completed idempotency record for this key
         DB::connection('platform')->table('platform.idempotency_records')->insert([
@@ -88,7 +89,7 @@ final class IdempotencyEnforcementTest extends TestCase
             'idempotency_key' => $key,
             'actor_id'        => $actorId,
             'actor_type'      => 'USER',
-            'request_hash'    => hash('sha256', 'POST:/api/v1/funding/transactions:' . json_encode($this->fundingPayload())),
+            'request_hash'    => hash('sha256', 'POST:api/v1/funding/transactions:' . json_encode($payload)),
             'http_method'     => 'POST',
             'http_path'       => 'api/v1/funding/transactions',
             'status'          => 'completed',
@@ -103,7 +104,7 @@ final class IdempotencyEnforcementTest extends TestCase
             'Idempotency-Key' => $key,
             'X-Test-User-Id'  => $actorId,
             'X-Actor-ID'      => $actorId,
-        ]))->postJson('/api/v1/funding/transactions', $this->fundingPayload());
+        ]))->postJson('/api/v1/funding/transactions', $payload);
 
         $response->assertStatus(200)
             ->assertHeader('Idempotency-Replay', 'true');

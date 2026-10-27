@@ -8,6 +8,7 @@ use App\Modules\Payment\Domain\Enums\ReconciliationExceptionType;
 use App\Modules\Payment\Infrastructure\Models\ReconciliationExceptionModel;
 use App\Modules\Platform\Domain\Contracts\AuditServiceInterface;
 use App\Modules\Platform\Domain\ValueObjects\AuditEventData;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Ramsey\Uuid\Uuid;
@@ -18,11 +19,92 @@ use Ramsey\Uuid\Uuid;
  * NO mark-as-paid path. Financial state changes only via verified provider evidence.
  * All resolution actions are audited.
  */
-final class ReconciliationExceptionService
+class ReconciliationExceptionService
 {
     public function __construct(
         private readonly AuditServiceInterface $audit,
     ) {
+    }
+
+    /**
+     * List reconciliation exceptions with optional org-scope and status/type filters.
+     * When organisationId is non-null, results are scoped to intents belonging to that org.
+     */
+    public function listExceptions(
+        ?string $status = null,
+        ?string $type = null,
+        int $page = 1,
+        int $perPage = 20,
+        ?string $organisationId = null,
+    ): LengthAwarePaginator {
+        $query = ReconciliationExceptionModel::query();
+
+        if ($status !== null) {
+            $query->where('status', $status);
+        }
+
+        if ($type !== null) {
+            $query->where('exception_type', $type);
+        }
+
+        if ($organisationId !== null) {
+            $intentIds = DB::connection('payment')
+                ->table('payment.payment_intents')
+                ->where('organisation_id', $organisationId)
+                ->pluck('id');
+
+            $query->whereIn('payment_intent_id', $intentIds);
+        }
+
+        return $query->orderByDesc('created_at')->paginate($perPage, ['*'], 'page', $page);
+    }
+
+    /**
+     * Update a reconciliation exception status or investigation notes.
+     */
+    public function updateException(
+        string $id,
+        ?string $status,
+        ?string $notes,
+        string $actorId,
+        string $correlationId,
+    ): ReconciliationExceptionModel {
+        return DB::connection('payment')->transaction(function () use (
+            $id, $status, $notes, $actorId, $correlationId
+        ): ReconciliationExceptionModel {
+            /** @var ReconciliationExceptionModel|null $exception */
+            $exception = ReconciliationExceptionModel::query()->find($id);
+
+            if ($exception === null) {
+                throw new \RuntimeException("ReconciliationException not found: {$id}");
+            }
+
+            $beforeState = ['status' => $exception->status];
+
+            if ($status !== null) {
+                $exception->status = $status;
+            }
+
+            if ($notes !== null) {
+                $exception->investigation_notes = $notes;
+            }
+
+            $exception->save();
+
+            $this->audit->record(new AuditEventData(
+                action:        'reconciliation.exception.updated',
+                actorId:       $actorId,
+                actorType:     'user',
+                resourceType:  'reconciliation_exception',
+                resourceId:    $id,
+                correlationId: $correlationId,
+                outcome:       'success',
+                beforeState:   $beforeState,
+                afterState:    ['status' => $exception->status, 'notes_updated' => $notes !== null],
+            ));
+
+            return $exception;
+        });
     }
 
     /**
@@ -51,6 +133,9 @@ final class ReconciliationExceptionService
             $exception->currency_code   = $data['currency_code'] ?? null;
             $exception->description     = $data['description'] ?? $type->value;
             $exception->status          = 'open';
+            if (isset($data['owner'])) {
+                $exception->owner = $data['owner'];
+            }
             $exception->save();
 
             Log::info('ReconciliationException created', [
@@ -109,6 +194,63 @@ final class ReconciliationExceptionService
                     'resolved_by'    => $resolvedBy,
                 ],
             ));
+        });
+    }
+
+    /**
+     * Acknowledge an orphan_provider exception as a valid external charge (P17 US4-4).
+     *
+     * Sets status = 'acknowledged_external'. Does NOT post any ledger entry.
+     * Only permitted for open exceptions of type orphan_provider.
+     */
+    public function acknowledgeExternal(
+        string $exceptionId,
+        string $actorId,
+        string $evidenceNote,
+    ): ReconciliationExceptionModel {
+        return DB::connection('payment')->transaction(function () use (
+            $exceptionId, $actorId, $evidenceNote
+        ): ReconciliationExceptionModel {
+            /** @var ReconciliationExceptionModel|null $exception */
+            $exception = ReconciliationExceptionModel::query()->find($exceptionId);
+
+            if ($exception === null) {
+                throw new \RuntimeException("ReconciliationException not found: {$exceptionId}");
+            }
+
+            if ($exception->exception_type !== \App\Modules\Payment\Domain\Enums\ReconciliationExceptionType::OrphanProvider) {
+                throw new \InvalidArgumentException(
+                    "Only orphan_provider exceptions can be acknowledged as external. Got: {$exception->exception_type->value}"
+                );
+            }
+
+            if ($exception->status !== 'open') {
+                throw new \InvalidArgumentException(
+                    "Only open exceptions can be acknowledged. Current status: {$exception->status}"
+                );
+            }
+
+            $exception->status = 'acknowledged_external';
+            $exception->investigation_notes = ($exception->investigation_notes ?? '')
+                ."\n[Acknowledged external by {$actorId} at ".now()->toIso8601String()."]: {$evidenceNote}";
+            $exception->save();
+
+            $this->audit->record(new AuditEventData(
+                action:        'payment.reconciliation.exception_acknowledged_external',
+                actorId:       $actorId,
+                actorType:     'user',
+                resourceType:  'reconciliation_exception',
+                resourceId:    $exceptionId,
+                correlationId: $exceptionId,
+                outcome:       'success',
+                afterState:    [
+                    'exception_id' => $exceptionId,
+                    'actor_id'     => $actorId,
+                    'evidence_note' => substr($evidenceNote, 0, 200),
+                ],
+            ));
+
+            return $exception;
         });
     }
 

@@ -1,6 +1,9 @@
 <?php
 
 use App\Modules\Integration\Infrastructure\Jobs\DeliverAdminRetryIntentsJob;
+use App\Modules\Payment\Application\Jobs\MonitorDisputeDeadlinesJob;
+use App\Modules\Payment\Application\Jobs\PayoutReservationExpiryJob;
+use App\Modules\Payment\Application\Jobs\SettlementAgeingCheckJob;
 use App\Modules\Notification\Application\Jobs\DeliverAdminNotificationEventsJob;
 use App\Modules\Ops\Application\Jobs\AlertEvaluationJob;
 use App\Modules\Ops\Application\Jobs\BackupRetentionJob;
@@ -40,3 +43,12 @@ Schedule::job(DeliverInvestigationEventsJob::class)->everyMinute()->withoutOverl
 Schedule::job(DeliverAdminNotificationEventsJob::class)->everyMinute()->withoutOverlapping();
 
 Schedule::job(DeliverAdminRetryIntentsJob::class)->everyMinute()->withoutOverlapping();
+
+// T043: P16 — Monitor open dispute cases approaching their response deadline (hourly, read-only)
+Schedule::job(MonitorDisputeDeadlinesJob::class)->hourly()->withoutOverlapping();
+
+// T045: P17 — Daily settlement ageing check; flags clearing records past the configured threshold
+Schedule::job(SettlementAgeingCheckJob::class)->daily()->withoutOverlapping();
+
+// P18: Expire payout reservations that have passed their awaiting_approval window
+Schedule::job(PayoutReservationExpiryJob::class)->hourly()->withoutOverlapping();

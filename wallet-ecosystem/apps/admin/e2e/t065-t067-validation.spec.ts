@@ -83,7 +83,7 @@ test.describe('T065 — Responsive Layout', () => {
     });
     const page = await ctx.newPage();
 
-    await page.goto(`${BASE}/admin-portal/users`);
+    await page.goto(`${BASE}/users`);
     await page.waitForLoadState('load');
     expect(page.url()).not.toContain('/login');
 
@@ -256,7 +256,7 @@ test.describe('T067 — Business Workflow Smoke Tests', () => {
   });
 
   test('user search page: loads and has a search input', async ({ page }) => {
-    await page.goto(`${BASE}/admin-portal/users`);
+    await page.goto(`${BASE}/users`);
     await page.waitForLoadState('load');
     expect(page.url()).not.toContain('/login');
     await expect(page.locator('main')).toBeVisible();
@@ -271,7 +271,7 @@ test.describe('T067 — Business Workflow Smoke Tests', () => {
   });
 
   test('transaction list: loads without hard error', async ({ page }) => {
-    await page.goto(`${BASE}/admin-portal/transactions`);
+    await page.goto(`${BASE}/transactions`);
     await page.waitForLoadState('load');
     expect(page.url()).not.toContain('/login');
     await expect(page.locator('#main-content, main')).toBeAttached();

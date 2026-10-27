@@ -17,8 +17,11 @@ final class RateLimitTest extends IntegrationTestCase
     {
         parent::setUp();
 
-        // Flush rate-limit keys before each test to avoid cross-test pollution.
-        Redis::connection()->flushdb();
+        \Illuminate\Support\Facades\Route::get('/_test/e25-client', fn () => response()->json(['ok' => true]))
+            ->middleware([
+                \App\Modules\Integration\Infrastructure\Http\Middleware\ApiClientAuthMiddleware::class,
+                \App\Modules\Integration\Infrastructure\Http\Middleware\DualRateLimitMiddleware::class,
+            ]);
 
         // Reset metrics collector so counts are per-test.
         /** @var InMemoryCollector $collector */
@@ -37,7 +40,7 @@ final class RateLimitTest extends IntegrationTestCase
         for ($i = 0; $i < 5; $i++) {
             $response = $this->withHeaders([
                 'Authorization' => $this->bearerHeader($client['api_key'], $client['raw_secret']),
-            ])->getJson('/api/v1/integrations/clients');
+            ])->getJson('/_test/e25-client');
 
             $response->assertStatus(200);
         }
@@ -49,18 +52,18 @@ final class RateLimitTest extends IntegrationTestCase
         $headers = ['Authorization' => $this->bearerHeader($client['api_key'], $client['raw_secret'])];
 
         // First two succeed.
-        $this->withHeaders($headers)->getJson('/api/v1/integrations/clients')->assertStatus(200);
-        $this->withHeaders($headers)->getJson('/api/v1/integrations/clients')->assertStatus(200);
+        $this->withHeaders($headers)->getJson('/_test/e25-client')->assertStatus(200);
+        $this->withHeaders($headers)->getJson('/_test/e25-client')->assertStatus(200);
 
         // Third exceeds the limit.
-        $response = $this->withHeaders($headers)->getJson('/api/v1/integrations/clients');
+        $response = $this->withHeaders($headers)->getJson('/_test/e25-client');
         $response->assertStatus(429)
-            ->assertJsonStructure(['message'])
+            ->assertJsonStructure(['error' => ['message']])
             ->assertHeader('X-RateLimit-Limit')
             ->assertHeader('X-RateLimit-Remaining')
             ->assertHeader('Retry-After');
 
-        $this->assertEquals('0', $response->header('X-RateLimit-Remaining'));
+        $this->assertEquals('0', $response->headers->get('X-RateLimit-Remaining'));
     }
 
     public function test_rate_limit_headers_are_present_on_successful_request(): void
@@ -69,7 +72,7 @@ final class RateLimitTest extends IntegrationTestCase
 
         $response = $this->withHeaders([
             'Authorization' => $this->bearerHeader($client['api_key'], $client['raw_secret']),
-        ])->getJson('/api/v1/integrations/clients');
+        ])->getJson('/_test/e25-client');
 
         $response->assertStatus(200)
             ->assertHeader('X-RateLimit-Limit')
@@ -80,7 +83,7 @@ final class RateLimitTest extends IntegrationTestCase
 
     public function test_missing_authorization_header_returns_401(): void
     {
-        $response = $this->getJson('/api/v1/integrations/clients');
+        $response = $this->getJson('/_test/e25-client');
         // Without identity.auth or client-auth on this endpoint, expect 401.
         $response->assertStatus(401);
     }
@@ -89,7 +92,7 @@ final class RateLimitTest extends IntegrationTestCase
     {
         $response = $this->withHeaders([
             'Authorization' => 'Bearer not-valid-base64!!!',
-        ])->getJson('/api/v1/integrations/clients');
+        ])->getJson('/_test/e25-client');
 
         $response->assertStatus(401);
     }
@@ -100,7 +103,7 @@ final class RateLimitTest extends IntegrationTestCase
 
         $response = $this->withHeaders([
             'Authorization' => $this->bearerHeader($client['api_key'], 'wrong-secret'),
-        ])->getJson('/api/v1/integrations/clients');
+        ])->getJson('/_test/e25-client');
 
         $response->assertStatus(401);
     }
@@ -111,7 +114,7 @@ final class RateLimitTest extends IntegrationTestCase
 
         $response = $this->withHeaders([
             'Authorization' => $this->bearerHeader($client['api_key'], $client['raw_secret']),
-        ])->getJson('/api/v1/integrations/clients');
+        ])->getJson('/_test/e25-client');
 
         $response->assertStatus(401);
     }
@@ -130,8 +133,8 @@ final class RateLimitTest extends IntegrationTestCase
         // We configure a rate limit of 1 and send 2 requests.
         config(['integration.ip_rate_limit_per_minute' => 1]);
 
-        $this->postJson('/api/v1/webhooks/metric-test-provider', ['event' => 'test']);
-        $this->postJson('/api/v1/webhooks/metric-test-provider', ['event' => 'test']);
+        $this->postJson('/v1/webhooks/metric-test-provider', ['event' => 'test']);
+        $this->postJson('/v1/webhooks/metric-test-provider', ['event' => 'test']);
 
         // At least one 429 should have been emitted (IP window exceeded on 2nd request).
         $this->assertGreaterThanOrEqual(
@@ -160,7 +163,7 @@ final class RateLimitTest extends IntegrationTestCase
 
     public function test_auth_failure_emits_auth_failure_metric(): void
     {
-        $this->postJson('/api/v1/webhooks/nonexistent-provider', [])
+        $this->postJson('/v1/webhooks/nonexistent-provider', [])
             ->assertStatus(404); // 404 from WebhookProviderNotFoundException — not an auth failure
 
         // Wrong secret on a known provider triggers ApiClientAuthMiddleware only if

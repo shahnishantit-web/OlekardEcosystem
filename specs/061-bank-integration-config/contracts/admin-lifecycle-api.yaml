@@ -1,0 +1,445 @@
+openapi: "3.1.0"
+info:
+  title: "P12 — Admin Lifecycle, Operation Config, and Certification API"
+  version: "1.0.0"
+  description: |
+    Lifecycle transition, API operation configuration, and certification evidence endpoints.
+    All require `payment.configuration` permission.
+
+servers:
+  - url: /v1/admin/payments
+
+security:
+  - bearerAuth: []
+
+paths:
+  /banks/{bankId}/accounts/{accountId}/lifecycle:
+    post:
+      summary: Submit lifecycle transition
+      operationId: submitLifecycleTransition
+      tags: [Lifecycle]
+      parameters:
+        - $ref: "#/components/parameters/BankId"
+        - $ref: "#/components/parameters/AccountId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LifecycleTransitionRequest" }
+      responses:
+        "200":
+          description: Transition applied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      account_id: { type: string, format: uuid }
+                      previous_status: { type: string }
+                      new_status: { type: string }
+                      transitioned_at: { type: string, format: date-time }
+        "409":
+          description: Invalid transition or approval conflict
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /banks/{bankId}/accounts/{accountId}/operations:
+    get:
+      summary: List API operation configurations
+      operationId: listOperationConfigs
+      tags: [Operation Config]
+      parameters:
+        - $ref: "#/components/parameters/BankId"
+        - $ref: "#/components/parameters/AccountId"
+      responses:
+        "200":
+          description: Operation config list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/OperationConfigSummary" }
+
+    put:
+      summary: Save/replace operation configuration (validates SSRF + mappings)
+      operationId: saveOperationConfig
+      tags: [Operation Config]
+      description: |
+        Saves a complete operation configuration for the account.
+        If the account is Active, creates a new Draft version automatically.
+        Validates: HTTPS-only base_url, no scripts/executables in mappings, no payout operations.
+      parameters:
+        - $ref: "#/components/parameters/BankId"
+        - $ref: "#/components/parameters/AccountId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                operations:
+                  type: array
+                  items: { $ref: "#/components/schemas/OperationConfigInput" }
+      responses:
+        "200":
+          description: Operations saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/OperationConfigSummary" }
+                  draft_created: { type: boolean }
+        "422":
+          description: SSRF or mapping validation failure
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ValidationErrorEnvelope" }
+
+  /banks/{bankId}/accounts/{accountId}/operations/validate:
+    post:
+      summary: Validate operation configuration without saving
+      operationId: validateOperationConfig
+      tags: [Operation Config]
+      parameters:
+        - $ref: "#/components/parameters/BankId"
+        - $ref: "#/components/parameters/AccountId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                operations:
+                  type: array
+                  items: { $ref: "#/components/schemas/OperationConfigInput" }
+      responses:
+        "200":
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid: { type: boolean }
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        operation_type: { type: string }
+                        field: { type: string }
+                        message: { type: string }
+
+  /banks/{bankId}/accounts/{accountId}/evidence:
+    get:
+      summary: List certification evidence
+      operationId: listEvidence
+      tags: [Certification]
+      parameters:
+        - $ref: "#/components/parameters/BankId"
+        - $ref: "#/components/parameters/AccountId"
+      responses:
+        "200":
+          description: Evidence list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/CertificationEvidenceSummary" }
+
+    post:
+      summary: Upload certification evidence
+      operationId: uploadEvidence
+      tags: [Certification]
+      parameters:
+        - $ref: "#/components/parameters/BankId"
+        - $ref: "#/components/parameters/AccountId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UploadEvidenceRequest" }
+      responses:
+        "201":
+          description: Evidence recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/CertificationEvidenceSummary" }
+
+  /banks/{bankId}/accounts/{accountId}/sandbox-test:
+    post:
+      summary: Run sandbox connectivity test (status-query only — does NOT initiate a payment)
+      operationId: runSandboxTest
+      tags: [Certification]
+      parameters:
+        - $ref: "#/components/parameters/BankId"
+        - $ref: "#/components/parameters/AccountId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Test result (pass/fail, never initiates payment)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result: { type: string, enum: [pass, fail] }
+                  message: { type: string }
+                  duration_ms: { type: integer }
+                  evidence_id: { type: string, format: uuid, description: "Automatically created test_run evidence record" }
+
+  /banks/{bankId}/accounts/{accountId}/rotate-credential:
+    post:
+      summary: Rotate a credential reference
+      operationId: rotateCredential
+      tags: [Credentials]
+      description: |
+        Records a credential rotation in the rotation log.
+        The new key_name must already exist in the secrets manager before calling this endpoint.
+        Raw secret values are never accepted or returned.
+        Creates a draft if account is Active.
+      parameters:
+        - $ref: "#/components/parameters/BankId"
+        - $ref: "#/components/parameters/AccountId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [secret_role, new_key_name]
+              properties:
+                secret_role: { type: string, description: "e.g. api_key, callback_secret" }
+                new_key_name: { type: string, description: "Key name in secrets manager — not the raw value" }
+                rotation_reason: { type: string, nullable: true }
+      responses:
+        "200":
+          description: Rotation recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rotation_id: { type: string, format: uuid }
+                  effective_from: { type: string, format: date-time }
+
+  /banks/{bankId}/accounts/{accountId}/version-history:
+    get:
+      summary: List configuration version history
+      operationId: listVersionHistory
+      tags: [Version History]
+      parameters:
+        - $ref: "#/components/parameters/BankId"
+        - $ref: "#/components/parameters/AccountId"
+      responses:
+        "200":
+          description: Version history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/ConfigurationVersionSummary" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    BankId:
+      name: bankId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    AccountId:
+      name: accountId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+
+  responses:
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ValidationErrorEnvelope" }
+
+  schemas:
+    ErrorEnvelope:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+
+    ValidationErrorEnvelope:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            errors:
+              type: object
+              additionalProperties:
+                type: array
+                items: { type: string }
+
+    LifecycleTransitionRequest:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [submit_for_validation, initiate_sandbox_testing, submit_evidence, approve, reject, request_changes, activate, suspend, reactivate, retire]
+        reason: { type: string, nullable: true, description: "Required for reject and request_changes" }
+
+    OperationConfigInput:
+      type: object
+      required: [operation_type, base_url, endpoint_path, http_method]
+      properties:
+        operation_type:
+          type: string
+          enum: [initiate, query, cancel, full_refund, partial_refund, callback, reconciliation]
+        base_url:
+          type: string
+          description: "HTTPS only; validated against SSRF allowlist"
+        endpoint_path: { type: string }
+        http_method: { type: string, enum: [GET, POST, PUT, PATCH] }
+        content_type: { type: string, default: "application/json" }
+        non_secret_headers:
+          type: object
+          additionalProperties: { type: string }
+          description: "Static headers — no secret values"
+        auth_profile:
+          type: string
+          enum: [bearer_token, api_key, hmac_signed, oauth2_client_credentials]
+        secret_key_references:
+          type: object
+          additionalProperties: { type: string }
+          description: "Role → secret manager key name; never raw values"
+        request_field_mappings:
+          type: array
+          items: { $ref: "#/components/schemas/FieldMappingRule" }
+        response_field_mappings:
+          type: array
+          items: { $ref: "#/components/schemas/FieldMappingRule" }
+        provider_txn_ref_mapping: { type: string, nullable: true }
+        idempotency_ref_mapping: { type: string, nullable: true }
+        amount_format:
+          type: string
+          enum: [minor_integer, decimal_string, decimal_number]
+          default: minor_integer
+        currency_format: { type: string, default: iso4217_upper }
+        success_status_values:
+          type: array
+          items: { type: string }
+        pending_status_values:
+          type: array
+          items: { type: string }
+        failure_status_values:
+          type: array
+          items: { type: string }
+        timeout_ms: { type: integer, minimum: 1000, maximum: 120000, default: 30000 }
+        max_retries: { type: integer, minimum: 0, maximum: 5, default: 2 }
+        retry_backoff_ms: { type: integer, minimum: 100, default: 1000 }
+        callback_verification_profile: { type: string, nullable: true }
+        api_version: { type: string, nullable: true }
+
+    FieldMappingRule:
+      type: object
+      required: [source_field, target_field, transform_type]
+      properties:
+        source_field: { type: string }
+        target_field: { type: string }
+        transform_type:
+          type: string
+          enum: [literal, json_path, constant, amount_minor, amount_decimal, currency_code, uuid_v7, timestamp_iso8601, boolean_string]
+        required: { type: boolean, default: true }
+
+    OperationConfigSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        operation_type: { type: string }
+        base_url: { type: string }
+        endpoint_path: { type: string }
+        http_method: { type: string }
+        auth_profile: { type: string }
+        config_version_id: { type: string, format: uuid, nullable: true }
+        updated_at: { type: string, format: date-time }
+
+    CertificationEvidenceSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        evidence_type:
+          type: string
+          enum: [test_run, documentation, merchant_ownership, sandbox_access, refund_evidence, reconciliation_evidence, other]
+        title: { type: string }
+        notes: { type: string, nullable: true }
+        test_run_result: { type: object, nullable: true }
+        submitted_by_actor_id: { type: string, format: uuid }
+        created_at: { type: string, format: date-time }
+
+    UploadEvidenceRequest:
+      type: object
+      required: [evidence_type, title]
+      properties:
+        evidence_type:
+          type: string
+          enum: [documentation, merchant_ownership, sandbox_access, refund_evidence, reconciliation_evidence, other]
+        title: { type: string, maxLength: 255 }
+        notes: { type: string, nullable: true }
+        file_reference: { type: string, nullable: true, description: "Storage key of pre-uploaded file" }
+
+    ConfigurationVersionSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        version_number: { type: integer }
+        activated_at: { type: string, format: date-time }
+        activated_by_actor_id: { type: string, format: uuid }
+        superseded_at: { type: string, format: date-time, nullable: true }

@@ -89,7 +89,7 @@ function AgentManagementInner() {
     if (updated.search) qs.set('search', updated.search);
     if (updated.status) qs.set('status', updated.status);
     if (updated.region) qs.set('region', updated.region);
-    router.replace(`/admin-portal/agents?${qs.toString()}`);
+    router.replace(`/agents?${qs.toString()}`);
   };
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
@@ -213,7 +213,7 @@ function AgentManagementInner() {
                         <td className="py-2 px-4 text-sm text-text-secondary">{agentRegion(agent)}</td>
                         <td className="py-2 px-4 text-sm text-text-secondary">{agentJoined(agent)}</td>
                         <td className="py-2 px-4 text-right">
-                          <Link href={`/admin-portal/agents/${id}`}>
+                          <Link href={`/agents/${id}`}>
                             <Button variant="secondary" size="sm" aria-label={`View agent ${agentName(agent)}`}>View</Button>
                           </Link>
                         </td>

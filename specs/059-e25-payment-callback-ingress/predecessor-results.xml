@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="CLI Arguments" tests="66" assertions="74" errors="25" failures="2" skipped="0" time="1.490985">
+    <testsuite name="App\Modules\Payment\Tests\Unit\AdapterAllowlistTest" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\AdapterAllowlistTest.php" tests="7" assertions="8" errors="2" failures="0" skipped="0" time="0.051486">
+      <testcase name="test_known_adapter_is_allowed" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\AdapterAllowlistTest.php" line="24" class="App\Modules\Payment\Tests\Unit\AdapterAllowlistTest" classname="App.Modules.Payment.Tests.Unit.AdapterAllowlistTest" assertions="2" time="0.022749"/>
+      <testcase name="test_unknown_adapter_is_rejected" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\AdapterAllowlistTest.php" line="33" class="App\Modules\Payment\Tests\Unit\AdapterAllowlistTest" classname="App.Modules.Payment.Tests.Unit.AdapterAllowlistTest" assertions="1" time="0.000615"/>
+      <testcase name="test_get_allowed_identifiers_returns_list" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\AdapterAllowlistTest.php" line="41" class="App\Modules\Payment\Tests\Unit\AdapterAllowlistTest" classname="App.Modules.Payment.Tests.Unit.AdapterAllowlistTest" assertions="1" time="0.000776"/>
+      <testcase name="test_fallback_used_when_config_key_missing" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\AdapterAllowlistTest.php" line="49" class="App\Modules\Payment\Tests\Unit\AdapterAllowlistTest" classname="App.Modules.Payment.Tests.Unit.AdapterAllowlistTest" assertions="0" time="0.021872">
+        <error type="RuntimeException">App\Modules\Payment\Tests\Unit\AdapterAllowlistTest::test_fallback_used_when_config_key_missing&#13;
+RuntimeException: A facade root has not been set.
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:358
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Infrastructure\Config\AdapterAllowlistConfig.php:39
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Infrastructure\Config\AdapterAllowlistConfig.php:26
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\AdapterAllowlistTest.php:54</error>
+      </testcase>
+      <testcase name="test_explicit_empty_array_config_denies_all_adapters" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\AdapterAllowlistTest.php" line="58" class="App\Modules\Payment\Tests\Unit\AdapterAllowlistTest" classname="App.Modules.Payment.Tests.Unit.AdapterAllowlistTest" assertions="2" time="0.000233"/>
+      <testcase name="test_create_provider_throws_when_adapter_not_in_allowlist" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\AdapterAllowlistTest.php" line="67" class="App\Modules\Payment\Tests\Unit\AdapterAllowlistTest" classname="App.Modules.Payment.Tests.Unit.AdapterAllowlistTest" assertions="2" time="0.003925"/>
+      <testcase name="test_create_provider_succeeds_with_allowed_adapter" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\AdapterAllowlistTest.php" line="86" class="App\Modules\Payment\Tests\Unit\AdapterAllowlistTest" classname="App.Modules.Payment.Tests.Unit.AdapterAllowlistTest" assertions="0" time="0.001315">
+        <error type="RuntimeException">App\Modules\Payment\Tests\Unit\AdapterAllowlistTest::test_create_provider_succeeds_with_allowed_adapter&#13;
+RuntimeException: A facade root has not been set.
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:358
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Application\Services\PaymentProviderAdminService.php:81
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\AdapterAllowlistTest.php:98</error>
+      </testcase>
+    </testsuite>
+    <testsuite name="App\Modules\Payment\Tests\Unit\CapabilityValidationTest" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CapabilityValidationTest.php" tests="6" assertions="7" errors="0" failures="0" skipped="0" time="0.025458">
+      <testcase name="test_unknown_capability_flag_key_throws" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CapabilityValidationTest.php" line="30" class="App\Modules\Payment\Tests\Unit\CapabilityValidationTest" classname="App.Modules.Payment.Tests.Unit.CapabilityValidationTest" assertions="1" time="0.001204"/>
+      <testcase name="test_known_capability_flag_keys_accepted" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CapabilityValidationTest.php" line="36" class="App\Modules\Payment\Tests\Unit\CapabilityValidationTest" classname="App.Modules.Payment.Tests.Unit.CapabilityValidationTest" assertions="1" time="0.000181"/>
+      <testcase name="test_unknown_instrument_type_throws" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CapabilityValidationTest.php" line="49" class="App\Modules\Payment\Tests\Unit\CapabilityValidationTest" classname="App.Modules.Payment.Tests.Unit.CapabilityValidationTest" assertions="1" time="0.000745"/>
+      <testcase name="test_known_instrument_types_accepted" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CapabilityValidationTest.php" line="55" class="App\Modules\Payment\Tests\Unit\CapabilityValidationTest" classname="App.Modules.Payment.Tests.Unit.CapabilityValidationTest" assertions="1" time="0.000149"/>
+      <testcase name="test_pipeline_stage_8_excludes_account_without_required_capability" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CapabilityValidationTest.php" line="64" class="App\Modules\Payment\Tests\Unit\CapabilityValidationTest" classname="App.Modules.Payment.Tests.Unit.CapabilityValidationTest" assertions="2" time="0.022825"/>
+      <testcase name="test_pipeline_includes_account_with_required_capability" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CapabilityValidationTest.php" line="94" class="App\Modules\Payment\Tests\Unit\CapabilityValidationTest" classname="App.Modules.Payment.Tests.Unit.CapabilityValidationTest" assertions="1" time="0.000353"/>
+    </testsuite>
+    <testsuite name="App\Modules\Payment\Tests\Unit\ConcurrentAttemptTest" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\ConcurrentAttemptTest.php" tests="1" assertions="5" errors="0" failures="0" skipped="0" time="0.035692">
+      <testcase name="test_duplicate_idempotency_key_returns_same_attempt" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\ConcurrentAttemptTest.php" line="95" class="App\Modules\Payment\Tests\Unit\ConcurrentAttemptTest" classname="App.Modules.Payment.Tests.Unit.ConcurrentAttemptTest" assertions="5" time="0.035692"/>
+    </testsuite>
+    <testsuite name="App\Modules\Payment\Tests\Unit\ConcurrentPurposeIntentTest" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\ConcurrentPurposeIntentTest.php" tests="1" assertions="0" errors="1" failures="0" skipped="0" time="0.048400">
+      <testcase name="test_idempotency_key_guard_returns_existing_without_resolution" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\ConcurrentPurposeIntentTest.php" line="101" class="App\Modules\Payment\Tests\Unit\ConcurrentPurposeIntentTest" classname="App.Modules.Payment.Tests.Unit.ConcurrentPurposeIntentTest" assertions="0" time="0.048400">
+        <error type="Error">App\Modules\Payment\Tests\Unit\ConcurrentPurposeIntentTest::test_idempotency_key_guard_returns_existing_without_resolution&#13;
+Error: Call to a member function connection() on null
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1851
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1817
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\HasAttributes.php:1586
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\HasAttributes.php:1538
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\HasAttributes.php:1037
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2272
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\ConcurrentPurposeIntentTest.php:82
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\ConcurrentPurposeIntentTest.php:103</error>
+      </testcase>
+    </testsuite>
+    <testsuite name="App\Modules\Payment\Tests\Unit\ConfigVersioningTest" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\ConfigVersioningTest.php" tests="1" assertions="2" errors="0" failures="0" skipped="0" time="0.001770">
+      <testcase name="test_draft_validation_fails_for_unknown_capability_flag" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\ConfigVersioningTest.php" line="63" class="App\Modules\Payment\Tests\Unit\ConfigVersioningTest" classname="App.Modules.Payment.Tests.Unit.ConfigVersioningTest" assertions="2" time="0.001770"/>
+    </testsuite>
+    <testsuite name="App\Modules\Payment\Tests\Unit\CrashRecoveryJobTest" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CrashRecoveryJobTest.php" tests="6" assertions="0" errors="6" failures="0" skipped="0" time="0.000000">
+      <testcase name="test_scan_job_dispatches_per_stuck_attempt" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CrashRecoveryJobTest.php" line="48" class="App\Modules\Payment\Tests\Unit\CrashRecoveryJobTest" classname="App.Modules.Payment.Tests.Unit.CrashRecoveryJobTest" assertions="0" time="0.000000">
+        <error type="PHPUnit\Framework\MockObject\Generator\ClassIsFinalException">App\Modules\Payment\Tests\Unit\CrashRecoveryJobTest::test_scan_job_dispatches_per_stuck_attempt&#13;
+PHPUnit\Framework\MockObject\Generator\ClassIsFinalException: Class "App\Modules\Payment\Application\PaymentOrchestrationService" is declared "final" and cannot be doubled
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CrashRecoveryJobTest.php:38</error>
+      </testcase>
+      <testcase name="test_single_recovery_dispatches_succeeded_when_provider_succeeded" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CrashRecoveryJobTest.php" line="78" class="App\Modules\Payment\Tests\Unit\CrashRecoveryJobTest" classname="App.Modules.Payment.Tests.Unit.CrashRecoveryJobTest" assertions="0" time="0.000000">
+        <error type="PHPUnit\Framework\MockObject\Generator\ClassIsFinalException">App\Modules\Payment\Tests\Unit\CrashRecoveryJobTest::test_single_recovery_dispatches_succeeded_when_provider_succeeded&#13;
+PHPUnit\Framework\MockObject\Generator\ClassIsFinalException: Class "App\Modules\Payment\Application\PaymentOrchestrationService" is declared "final" and cannot be doubled
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CrashRecoveryJobTest.php:38</error>
+      </testcase>
+      <testcase name="test_single_recovery_marks_failed_when_provider_has_no_record" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CrashRecoveryJobTest.php" line="115" class="App\Modules\Payment\Tests\Unit\CrashRecoveryJobTest" classname="App.Modules.Payment.Tests.Unit.CrashRecoveryJobTest" assertions="0" time="0.000000">
+        <error type="PHPUnit\Framework\MockObject\Generator\ClassIsFinalException">App\Modules\Payment\Tests\Unit\CrashRecoveryJobTest::test_single_recovery_marks_failed_when_provider_has_no_record&#13;
+PHPUnit\Framework\MockObject\Generator\ClassIsFinalException: Class "App\Modules\Payment\Application\PaymentOrchestrationService" is declared "final" and cannot be doubled
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CrashRecoveryJobTest.php:38</error>
+      </testcase>
+      <testcase name="test_single_recovery_transitions_to_unknown_when_no_adapter" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CrashRecoveryJobTest.php" line="149" class="App\Modules\Payment\Tests\Unit\CrashRecoveryJobTest" classname="App.Modules.Payment.Tests.Unit.CrashRecoveryJobTest" assertions="0" time="0.000000">
+        <error type="PHPUnit\Framework\MockObject\Generator\ClassIsFinalException">App\Modules\Payment\Tests\Unit\CrashRecoveryJobTest::test_single_recovery_transitions_to_unknown_when_no_adapter&#13;
+PHPUnit\Framework\MockObject\Generator\ClassIsFinalException: Class "App\Modules\Payment\Application\PaymentOrchestrationService" is declared "final" and cannot be doubled
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CrashRecoveryJobTest.php:38</error>
+      </testcase>
+      <testcase name="test_single_recovery_skips_terminal_attempt" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CrashRecoveryJobTest.php" line="182" class="App\Modules\Payment\Tests\Unit\CrashRecoveryJobTest" classname="App.Modules.Payment.Tests.Unit.CrashRecoveryJobTest" assertions="0" time="0.000000">
+        <error type="PHPUnit\Framework\MockObject\Generator\ClassIsFinalException">App\Modules\Payment\Tests\Unit\CrashRecoveryJobTest::test_single_recovery_skips_terminal_attempt&#13;
+PHPUnit\Framework\MockObject\Generator\ClassIsFinalException: Class "App\Modules\Payment\Application\PaymentOrchestrationService" is declared "final" and cannot be doubled
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CrashRecoveryJobTest.php:38</error>
+      </testcase>
+      <testcase name="test_single_recovery_marks_failed_when_provider_confirmed_failed" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CrashRecoveryJobTest.php" line="200" class="App\Modules\Payment\Tests\Unit\CrashRecoveryJobTest" classname="App.Modules.Payment.Tests.Unit.CrashRecoveryJobTest" assertions="0" time="0.000000">
+        <error type="PHPUnit\Framework\MockObject\Generator\ClassIsFinalException">App\Modules\Payment\Tests\Unit\CrashRecoveryJobTest::test_single_recovery_marks_failed_when_provider_confirmed_failed&#13;
+PHPUnit\Framework\MockObject\Generator\ClassIsFinalException: Class "App\Modules\Payment\Application\PaymentOrchestrationService" is declared "final" and cannot be doubled
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CrashRecoveryJobTest.php:38</error>
+      </testcase>
+    </testsuite>
+    <testsuite name="App\Modules\Payment\Tests\Unit\CreateIntentIdempotencyTest" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CreateIntentIdempotencyTest.php" tests="4" assertions="2" errors="2" failures="2" skipped="0" time="0.032749">
+      <testcase name="test_same_idempotency_key_returns_same_intent" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CreateIntentIdempotencyTest.php" line="108" class="App\Modules\Payment\Tests\Unit\CreateIntentIdempotencyTest" classname="App.Modules.Payment.Tests.Unit.CreateIntentIdempotencyTest" assertions="0" time="0.009553">
+        <error type="Illuminate\Contracts\Container\BindingResolutionException">App\Modules\Payment\Tests\Unit\CreateIntentIdempotencyTest::test_same_idempotency_key_returns_same_intent&#13;
+Illuminate\Contracts\Container\BindingResolutionException: Target class [config] does not exist.
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Container\Container.php:961
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Container\Container.php:832
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Foundation\Application.php:1078
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Container\Container.php:763
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Foundation\Application.php:1058
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Container\Container.php:1580
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\DatabaseManager.php:222
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\DatabaseManager.php:191
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\DatabaseManager.php:103
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1851
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1817
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\HasAttributes.php:1586
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\HasAttributes.php:1538
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\HasAttributes.php:1037
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2272
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CreateIntentIdempotencyTest.php:84
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CreateIntentIdempotencyTest.php:110</error>
+      </testcase>
+      <testcase name="test_resume_returns_existing_active_intent" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CreateIntentIdempotencyTest.php" line="129" class="App\Modules\Payment\Tests\Unit\CreateIntentIdempotencyTest" classname="App.Modules.Payment.Tests.Unit.CreateIntentIdempotencyTest" assertions="0" time="0.005635">
+        <error type="Illuminate\Contracts\Container\BindingResolutionException">App\Modules\Payment\Tests\Unit\CreateIntentIdempotencyTest::test_resume_returns_existing_active_intent&#13;
+Illuminate\Contracts\Container\BindingResolutionException: Target class [config] does not exist.
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Container\Container.php:961
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Container\Container.php:832
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Foundation\Application.php:1078
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Container\Container.php:763
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Foundation\Application.php:1058
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Container\Container.php:1580
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\DatabaseManager.php:222
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\DatabaseManager.php:191
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\DatabaseManager.php:103
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1851
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1817
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\HasAttributes.php:1586
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\HasAttributes.php:1538
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\HasAttributes.php:1037
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2272
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CreateIntentIdempotencyTest.php:84
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CreateIntentIdempotencyTest.php:131</error>
+      </testcase>
+      <testcase name="test_expired_purpose_throws_purpose_not_payable" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CreateIntentIdempotencyTest.php" line="159" class="App\Modules\Payment\Tests\Unit\CreateIntentIdempotencyTest" classname="App.Modules.Payment.Tests.Unit.CreateIntentIdempotencyTest" assertions="1" time="0.008261">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">App\Modules\Payment\Tests\Unit\CreateIntentIdempotencyTest::test_expired_purpose_throws_purpose_not_payable&#13;
+Failed asserting that exception of type "ArgumentCountError" matches expected exception "App\Modules\Payment\Domain\Exceptions\PurposeNotPayableException". Message was: "Too few arguments to function App\Modules\Payment\Domain\Exceptions\PurposeNotPayableException::__construct(), 1 passed in C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Application\PaymentOrchestrationService.php on line 111 and at least 2 expected" at
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Domain\Exceptions\PurposeNotPayableException.php:9
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Application\PaymentOrchestrationService.php:111
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CreateIntentIdempotencyTest.php:176
+.</failure>
+      </testcase>
+      <testcase name="test_wrong_actor_throws_purpose_not_payable" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CreateIntentIdempotencyTest.php" line="184" class="App\Modules\Payment\Tests\Unit\CreateIntentIdempotencyTest" classname="App.Modules.Payment.Tests.Unit.CreateIntentIdempotencyTest" assertions="1" time="0.009300">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">App\Modules\Payment\Tests\Unit\CreateIntentIdempotencyTest::test_wrong_actor_throws_purpose_not_payable&#13;
+Failed asserting that exception of type "ArgumentCountError" matches expected exception "App\Modules\Payment\Domain\Exceptions\PurposeNotPayableException". Message was: "Too few arguments to function App\Modules\Payment\Domain\Exceptions\PurposeNotPayableException::__construct(), 1 passed in C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Application\PaymentOrchestrationService.php on line 114 and at least 2 expected" at
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Domain\Exceptions\PurposeNotPayableException.php:9
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Application\PaymentOrchestrationService.php:114
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\CreateIntentIdempotencyTest.php:201
+.</failure>
+      </testcase>
+    </testsuite>
+    <testsuite name="App\Modules\Payment\Tests\Unit\DeadlockRetryTest" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\DeadlockRetryTest.php" tests="4" assertions="2" errors="3" failures="0" skipped="0" time="0.514706">
+      <testcase name="test_succeeds_on_first_try_without_retries" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\DeadlockRetryTest.php" line="47" class="App\Modules\Payment\Tests\Unit\DeadlockRetryTest" classname="App.Modules.Payment.Tests.Unit.DeadlockRetryTest" assertions="2" time="0.166614"/>
+      <testcase name="test_retries_once_and_succeeds" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\DeadlockRetryTest.php" line="60" class="App\Modules\Payment\Tests\Unit\DeadlockRetryTest" classname="App.Modules.Payment.Tests.Unit.DeadlockRetryTest" assertions="0" time="0.114868">
+        <error type="PHPUnit\Framework\MockObject\MethodCannotBeConfiguredException">App\Modules\Payment\Tests\Unit\DeadlockRetryTest::test_retries_once_and_succeeds&#13;
+PHPUnit\Framework\MockObject\MethodCannotBeConfiguredException: Trying to configure method "getCode" which cannot be configured because it does not exist, has not been specified, is final, or is static
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\DeadlockRetryTest.php:41
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\DeadlockRetryTest.php:63</error>
+      </testcase>
+      <testcase name="test_throws_concurrent_modification_after_max_retries" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\DeadlockRetryTest.php" line="78" class="App\Modules\Payment\Tests\Unit\DeadlockRetryTest" classname="App.Modules.Payment.Tests.Unit.DeadlockRetryTest" assertions="0" time="0.110526">
+        <error type="PHPUnit\Framework\MockObject\MethodCannotBeConfiguredException">App\Modules\Payment\Tests\Unit\DeadlockRetryTest::test_throws_concurrent_modification_after_max_retries&#13;
+PHPUnit\Framework\MockObject\MethodCannotBeConfiguredException: Trying to configure method "getCode" which cannot be configured because it does not exist, has not been specified, is final, or is static
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\DeadlockRetryTest.php:41
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\DeadlockRetryTest.php:80</error>
+      </testcase>
+      <testcase name="test_non_deadlock_query_exception_is_not_retried" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\DeadlockRetryTest.php" line="90" class="App\Modules\Payment\Tests\Unit\DeadlockRetryTest" classname="App.Modules.Payment.Tests.Unit.DeadlockRetryTest" assertions="0" time="0.122698">
+        <error type="PHPUnit\Framework\MockObject\MethodCannotBeConfiguredException">App\Modules\Payment\Tests\Unit\DeadlockRetryTest::test_non_deadlock_query_exception_is_not_retried&#13;
+PHPUnit\Framework\MockObject\MethodCannotBeConfiguredException: Trying to configure method "getCode" which cannot be configured because it does not exist, has not been specified, is final, or is static
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\DeadlockRetryTest.php:97</error>
+      </testcase>
+    </testsuite>
+    <testsuite name="App\Modules\Payment\Tests\Unit\DuplicateCaptureTest" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\DuplicateCaptureTest.php" tests="3" assertions="5" errors="1" failures="0" skipped="0" time="0.362538">
+      <testcase name="test_duplicate_capture_creates_exception_and_returns_silently" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\DuplicateCaptureTest.php" line="122" class="App\Modules\Payment\Tests\Unit\DuplicateCaptureTest" classname="App.Modules.Payment.Tests.Unit.DuplicateCaptureTest" assertions="2" time="0.154908">
+        <error type="PHPUnit\Framework\MockObject\RuntimeException">App\Modules\Payment\Tests\Unit\DuplicateCaptureTest::test_duplicate_capture_creates_exception_and_returns_silently&#13;
+PHPUnit\Framework\MockObject\RuntimeException: Return value for App\Modules\Payment\Application\Services\ReconciliationExceptionService::create() cannot be generated: Class "App\Modules\Payment\Infrastructure\Models\ReconciliationExceptionModel" is declared "final" and cannot be doubled
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Application\PaymentOrchestrationService.php:510
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\DuplicateCaptureTest.php:114
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\mockery\mockery\library\Mockery\Expectation.php:926
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\mockery\mockery\library\Mockery\Expectation.php:778
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\vendor\mockery\mockery\library\Mockery\ExpectationDirector.php:89
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Application\PaymentOrchestrationService.php:469
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Domain\Traits\DeadlockRetryTrait.php:26
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Application\PaymentOrchestrationService.php:465
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\DuplicateCaptureTest.php:143</error>
+      </testcase>
+      <testcase name="test_same_reference_is_idempotent_replay_not_duplicate_capture" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\DuplicateCaptureTest.php" line="157" class="App\Modules\Payment\Tests\Unit\DuplicateCaptureTest" classname="App.Modules.Payment.Tests.Unit.DuplicateCaptureTest" assertions="2" time="0.111287"/>
+      <testcase name="test_null_incoming_reference_is_idempotent_replay" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\DuplicateCaptureTest.php" line="185" class="App\Modules\Payment\Tests\Unit\DuplicateCaptureTest" classname="App.Modules.Payment.Tests.Unit.DuplicateCaptureTest" assertions="1" time="0.096344"/>
+    </testsuite>
+    <testsuite name="App\Modules\Payment\Tests\Unit\EligibilityPipelineTest" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPipelineTest.php" tests="19" assertions="31" errors="0" failures="0" skipped="0" time="0.006762">
+      <testcase name="test_provider_disabled_fails_stage_1" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPipelineTest.php" line="63" class="App\Modules\Payment\Tests\Unit\EligibilityPipelineTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPipelineTest" assertions="2" time="0.000914"/>
+      <testcase name="test_provider_suspended_fails_stage_1" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPipelineTest.php" line="74" class="App\Modules\Payment\Tests\Unit\EligibilityPipelineTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPipelineTest" assertions="2" time="0.000517"/>
+      <testcase name="test_account_inactive_fails_stage_1" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPipelineTest.php" line="85" class="App\Modules\Payment\Tests\Unit\EligibilityPipelineTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPipelineTest" assertions="2" time="0.000330"/>
+      <testcase name="test_empty_enabled_orgs_allows_any_org" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPipelineTest.php" line="98" class="App\Modules\Payment\Tests\Unit\EligibilityPipelineTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPipelineTest" assertions="1" time="0.000330"/>
+      <testcase name="test_org_not_in_restricted_list_fails_stage_2" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPipelineTest.php" line="108" class="App\Modules\Payment\Tests\Unit\EligibilityPipelineTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPipelineTest" assertions="2" time="0.000244"/>
+      <testcase name="test_module_not_in_restricted_list_fails_stage_3" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPipelineTest.php" line="121" class="App\Modules\Payment\Tests\Unit\EligibilityPipelineTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPipelineTest" assertions="2" time="0.000240"/>
+      <testcase name="test_purpose_type_not_in_restricted_list_fails_stage_4" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPipelineTest.php" line="134" class="App\Modules\Payment\Tests\Unit\EligibilityPipelineTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPipelineTest" assertions="2" time="0.000255"/>
+      <testcase name="test_empty_enabled_purpose_types_allows_any_purpose" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPipelineTest.php" line="145" class="App\Modules\Payment\Tests\Unit\EligibilityPipelineTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPipelineTest" assertions="1" time="0.000269"/>
+      <testcase name="test_country_in_deny_list_fails_stage_5" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPipelineTest.php" line="157" class="App\Modules\Payment\Tests\Unit\EligibilityPipelineTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPipelineTest" assertions="2" time="0.000252"/>
+      <testcase name="test_empty_country_restrictions_allows_any_country" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPipelineTest.php" line="168" class="App\Modules\Payment\Tests\Unit\EligibilityPipelineTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPipelineTest" assertions="1" time="0.000273"/>
+      <testcase name="test_unsupported_currency_fails_stage_6" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPipelineTest.php" line="180" class="App\Modules\Payment\Tests\Unit\EligibilityPipelineTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPipelineTest" assertions="2" time="0.000297"/>
+      <testcase name="test_amount_below_minimum_fails_stage_7" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPipelineTest.php" line="193" class="App\Modules\Payment\Tests\Unit\EligibilityPipelineTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPipelineTest" assertions="2" time="0.000265"/>
+      <testcase name="test_amount_above_maximum_fails_stage_7" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPipelineTest.php" line="204" class="App\Modules\Payment\Tests\Unit\EligibilityPipelineTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPipelineTest" assertions="2" time="0.000330"/>
+      <testcase name="test_zero_amount_skips_stage_7" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPipelineTest.php" line="215" class="App\Modules\Payment\Tests\Unit\EligibilityPipelineTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPipelineTest" assertions="1" time="0.000273"/>
+      <testcase name="test_missing_required_capability_fails_stage_8" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPipelineTest.php" line="227" class="App\Modules\Payment\Tests\Unit\EligibilityPipelineTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPipelineTest" assertions="2" time="0.000284"/>
+      <testcase name="test_null_required_capability_skips_stage_8" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPipelineTest.php" line="238" class="App\Modules\Payment\Tests\Unit\EligibilityPipelineTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPipelineTest" assertions="1" time="0.000311"/>
+      <testcase name="test_present_required_capability_passes_stage_8" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPipelineTest.php" line="248" class="App\Modules\Payment\Tests\Unit\EligibilityPipelineTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPipelineTest" assertions="1" time="0.000345"/>
+      <testcase name="test_stage_1_failure_does_not_evaluate_later_stages" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPipelineTest.php" line="260" class="App\Modules\Payment\Tests\Unit\EligibilityPipelineTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPipelineTest" assertions="1" time="0.000226"/>
+      <testcase name="test_all_stages_pass_returns_eligible" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPipelineTest.php" line="276" class="App\Modules\Payment\Tests\Unit\EligibilityPipelineTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPipelineTest" assertions="2" time="0.000806"/>
+    </testsuite>
+    <testsuite name="App\Modules\Payment\Tests\Unit\EligibilityPreviewTest" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPreviewTest.php" tests="3" assertions="0" errors="3" failures="0" skipped="0" time="0.000000">
+      <testcase name="test_preview_returns_annotated_list_with_all_accounts" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPreviewTest.php" line="59" class="App\Modules\Payment\Tests\Unit\EligibilityPreviewTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPreviewTest" assertions="0" time="0.000000">
+        <error type="PHPUnit\Framework\MockObject\Generator\ClassIsFinalException">App\Modules\Payment\Tests\Unit\EligibilityPreviewTest::test_preview_returns_annotated_list_with_all_accounts&#13;
+PHPUnit\Framework\MockObject\Generator\ClassIsFinalException: Class "App\Modules\Payment\Application\Services\EligibilityPipeline" is declared "final" and cannot be doubled
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPreviewTest.php:35</error>
+      </testcase>
+      <testcase name="test_preview_includes_config_version_in_response" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPreviewTest.php" line="88" class="App\Modules\Payment\Tests\Unit\EligibilityPreviewTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPreviewTest" assertions="0" time="0.000000">
+        <error type="PHPUnit\Framework\MockObject\Generator\ClassIsFinalException">App\Modules\Payment\Tests\Unit\EligibilityPreviewTest::test_preview_includes_config_version_in_response&#13;
+PHPUnit\Framework\MockObject\Generator\ClassIsFinalException: Class "App\Modules\Payment\Application\Services\EligibilityPipeline" is declared "final" and cannot be doubled
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPreviewTest.php:35</error>
+      </testcase>
+      <testcase name="test_preview_ineligibility_reason_is_string_value" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPreviewTest.php" line="104" class="App\Modules\Payment\Tests\Unit\EligibilityPreviewTest" classname="App.Modules.Payment.Tests.Unit.EligibilityPreviewTest" assertions="0" time="0.000000">
+        <error type="PHPUnit\Framework\MockObject\Generator\ClassIsFinalException">App\Modules\Payment\Tests\Unit\EligibilityPreviewTest::test_preview_ineligibility_reason_is_string_value&#13;
+PHPUnit\Framework\MockObject\Generator\ClassIsFinalException: Class "App\Modules\Payment\Application\Services\EligibilityPipeline" is declared "final" and cannot be doubled
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\EligibilityPreviewTest.php:35</error>
+      </testcase>
+    </testsuite>
+    <testsuite name="App\Modules\Payment\Tests\Unit\IdempotencyServiceTest" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\IdempotencyServiceTest.php" tests="5" assertions="9" errors="2" failures="0" skipped="0" time="0.404953">
+      <testcase name="test_redis_hit_returns_replay_without_db" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\IdempotencyServiceTest.php" line="47" class="App\Modules\Payment\Tests\Unit\IdempotencyServiceTest" classname="App.Modules.Payment.Tests.Unit.IdempotencyServiceTest" assertions="5" time="0.088044"/>
+      <testcase name="test_db_fallback_returns_replay_and_repopulates_redis" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\IdempotencyServiceTest.php" line="64" class="App\Modules\Payment\Tests\Unit\IdempotencyServiceTest" classname="App.Modules.Payment.Tests.Unit.IdempotencyServiceTest" assertions="3" time="0.088863"/>
+      <testcase name="test_hash_mismatch_throws_key_mismatch_exception" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\IdempotencyServiceTest.php" line="83" class="App\Modules\Payment\Tests\Unit\IdempotencyServiceTest" classname="App.Modules.Payment.Tests.Unit.IdempotencyServiceTest" assertions="1" time="0.072486"/>
+      <testcase name="test_first_time_key_returns_proceed" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\IdempotencyServiceTest.php" line="97" class="App\Modules\Payment\Tests\Unit\IdempotencyServiceTest" classname="App.Modules.Payment.Tests.Unit.IdempotencyServiceTest" assertions="0" time="0.075129">
+        <error type="PHPUnit\Framework\MockObject\MethodCannotBeConfiguredException">App\Modules\Payment\Tests\Unit\IdempotencyServiceTest::test_first_time_key_returns_proceed&#13;
+PHPUnit\Framework\MockObject\MethodCannotBeConfiguredException: Trying to configure method "lock" which cannot be configured because it does not exist, has not been specified, is final, or is static
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\IdempotencyServiceTest.php:104</error>
+      </testcase>
+      <testcase name="test_store_writes_to_redis_and_db" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\IdempotencyServiceTest.php" line="113" class="App\Modules\Payment\Tests\Unit\IdempotencyServiceTest" classname="App.Modules.Payment.Tests.Unit.IdempotencyServiceTest" assertions="0" time="0.080431">
+        <error type="PHPUnit\Framework\MockObject\MethodCannotBeConfiguredException">App\Modules\Payment\Tests\Unit\IdempotencyServiceTest::test_store_writes_to_redis_and_db&#13;
+PHPUnit\Framework\MockObject\MethodCannotBeConfiguredException: Trying to configure method "lock" which cannot be configured because it does not exist, has not been specified, is final, or is static
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\IdempotencyServiceTest.php:120</error>
+      </testcase>
+    </testsuite>
+    <testsuite name="App\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest.php" tests="5" assertions="0" errors="5" failures="0" skipped="0" time="0.000000">
+      <testcase name="test_ineligible_account_excluded_from_results" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest.php" line="73" class="App\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest" classname="App.Modules.Payment.Tests.Unit.ProviderRegistryEligibilityTest" assertions="0" time="0.000000">
+        <error type="PHPUnit\Framework\MockObject\Generator\ClassIsFinalException">App\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest::test_ineligible_account_excluded_from_results&#13;
+PHPUnit\Framework\MockObject\Generator\ClassIsFinalException: Class "App\Modules\Payment\Application\Services\EligibilityPipeline" is declared "final" and cannot be doubled
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest.php:36</error>
+      </testcase>
+      <testcase name="test_eligible_account_included_in_results" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest.php" line="89" class="App\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest" classname="App.Modules.Payment.Tests.Unit.ProviderRegistryEligibilityTest" assertions="0" time="0.000000">
+        <error type="PHPUnit\Framework\MockObject\Generator\ClassIsFinalException">App\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest::test_eligible_account_included_in_results&#13;
+PHPUnit\Framework\MockObject\Generator\ClassIsFinalException: Class "App\Modules\Payment\Application\Services\EligibilityPipeline" is declared "final" and cannot be doubled
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest.php:36</error>
+      </testcase>
+      <testcase name="test_response_includes_display_metadata" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest.php" line="109" class="App\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest" classname="App.Modules.Payment.Tests.Unit.ProviderRegistryEligibilityTest" assertions="0" time="0.000000">
+        <error type="PHPUnit\Framework\MockObject\Generator\ClassIsFinalException">App\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest::test_response_includes_display_metadata&#13;
+PHPUnit\Framework\MockObject\Generator\ClassIsFinalException: Class "App\Modules\Payment\Application\Services\EligibilityPipeline" is declared "final" and cannot be doubled
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest.php:36</error>
+      </testcase>
+      <testcase name="test_wallet_balance_check_runs_for_eligible_wallet_provider" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest.php" line="126" class="App\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest" classname="App.Modules.Payment.Tests.Unit.ProviderRegistryEligibilityTest" assertions="0" time="0.000000">
+        <error type="PHPUnit\Framework\MockObject\Generator\ClassIsFinalException">App\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest::test_wallet_balance_check_runs_for_eligible_wallet_provider&#13;
+PHPUnit\Framework\MockObject\Generator\ClassIsFinalException: Class "App\Modules\Payment\Application\Services\EligibilityPipeline" is declared "final" and cannot be doubled
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest.php:36</error>
+      </testcase>
+      <testcase name="test_wallet_balance_check_skipped_for_non_wallet_provider" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest.php" line="150" class="App\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest" classname="App.Modules.Payment.Tests.Unit.ProviderRegistryEligibilityTest" assertions="0" time="0.000000">
+        <error type="PHPUnit\Framework\MockObject\Generator\ClassIsFinalException">App\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest::test_wallet_balance_check_skipped_for_non_wallet_provider&#13;
+PHPUnit\Framework\MockObject\Generator\ClassIsFinalException: Class "App\Modules\Payment\Application\Services\EligibilityPipeline" is declared "final" and cannot be doubled
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\ProviderRegistryEligibilityTest.php:36</error>
+      </testcase>
+    </testsuite>
+    <testsuite name="App\Modules\Payment\Tests\Unit\QuoteArithmeticTest" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\QuoteArithmeticTest.php" tests="1" assertions="3" errors="0" failures="0" skipped="0" time="0.006471">
+      <testcase name="test_idempotency_returns_existing_active_v1_quote" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\app\Modules\Payment\Tests\Unit\QuoteArithmeticTest.php" line="128" class="App\Modules\Payment\Tests\Unit\QuoteArithmeticTest" classname="App.Modules.Payment.Tests.Unit.QuoteArithmeticTest" assertions="3" time="0.006471"/>
+    </testsuite>
+  </testsuite>
+</testsuites>

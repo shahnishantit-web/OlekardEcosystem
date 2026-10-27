@@ -1,3 +1,4 @@
+// ignore_for_file: argument_type_not_assignable
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -5,12 +6,13 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:wallet_customer/modules/payment/data/payment_repository.dart';
-import 'package:wallet_customer/modules/payment/domain/models/payment_intent.dart';
-import 'package:wallet_customer/modules/payment/domain/models/payment_option.dart';
-import 'package:wallet_customer/modules/payment/domain/models/payment_status.dart';
-import 'package:wallet_customer/modules/payment/domain/payment_notifier.dart';
-import 'package:wallet_customer/modules/payment/presentation/payment_checkout_sheet.dart';
+import 'package:shared_payment/src/data/payment_repository.dart';
+import 'package:shared_payment/src/domain/models/payment_intent.dart';
+import 'package:shared_payment/src/domain/models/payment_option.dart';
+import 'package:shared_payment/src/domain/models/payment_status.dart';
+import 'package:shared_payment/src/application/payment_notifier.dart';
+import 'package:shared_payment/src/presentation/payment_checkout_sheet.dart';
+import 'package:shared_payment/src/domain/checkout_state.dart';
 import 'payment_checkout_sheet_test.mocks.dart';
 
 @GenerateMocks([PaymentRepository])
@@ -144,7 +146,7 @@ void main() {
       idempotencyKey: anyNamed('idempotencyKey'),
       stepUpToken: anyNamed('stepUpToken'),
     )).thenAnswer(
-        (_) async => {'status': 'succeeded', 'next_action_type': null});
+        (_) async => {'status': 'processing', 'next_action_type': 'wallet_pin'});
 
     when(mockRepository.getStatus(any))
         .thenAnswer((_) async => PaymentIntentStatus.succeeded);
@@ -267,7 +269,8 @@ void main() {
     ]);
     addTearDown(container.dispose);
     final provider = paymentNotifierProvider((purposeType: 'stub_payment',
-      purposeReference: 'ref-001', currencyCode: 'BWP', estimatedAmountMinor: 10000));
+      purposeReference: 'ref-001', currencyCode: 'BWP', estimatedAmountMinor: 10000,
+      returnRoute: null));
     final subscription = container.listen(provider, (_, __) {});
     addTearDown(subscription.close);
     await container.read(provider.future);

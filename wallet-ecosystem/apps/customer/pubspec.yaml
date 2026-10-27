@@ -13,6 +13,8 @@ dependencies:
     sdk: flutter
   design_system:
     path: ../../packages/design-system
+  shared_payment:
+    path: ../../packages/shared-payment
   firebase_core: ^5.0.0
   flutter_riverpod: ^3.1.0
   riverpod_annotation: ^4.0.0

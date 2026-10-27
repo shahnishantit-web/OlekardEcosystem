@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Payment\Application\Services;
 
+use App\Modules\Payment\Infrastructure\Models\ConfigurationVersionModel;
+use App\Modules\Payment\Infrastructure\Models\PaymentAttemptModel;
 use App\Modules\Platform\Domain\Contracts\Providers\ProviderWebhookContract;
 use App\Modules\Platform\Domain\Exceptions\ProviderException;
 use Illuminate\Contracts\Container\Container;
@@ -50,5 +52,25 @@ final class PaymentCallbackService
             'payment.callback_parser.'.$providerCode,
             $parserClass,
         );
+    }
+
+    /**
+     * T080: Resolve the ConfigurationVersion snapshot for a payment attempt's callback.
+     *
+     * Callbacks MUST use the config version recorded at attempt initiation (FR-023),
+     * not the current account state. This ensures callbacks continue processing even
+     * when the account is suspended or retired.
+     *
+     * Returns null if the attempt has no configuration_version_id (pre-P12 attempt).
+     */
+    public function resolveConfigVersionForAttempt(string $attemptId): ?ConfigurationVersionModel
+    {
+        $attempt = PaymentAttemptModel::query()->find($attemptId);
+
+        if ($attempt === null || empty($attempt->configuration_version_id)) {
+            return null;
+        }
+
+        return ConfigurationVersionModel::query()->find($attempt->configuration_version_id);
     }
 }

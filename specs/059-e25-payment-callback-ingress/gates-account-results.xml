@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\Modules\Payment\P10AccountSelectionTest" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10AccountSelectionTest.php" tests="4" assertions="7" errors="0" failures="1" skipped="0" time="1.582053">
+    <testcase name="test_omitted_account_is_selected_from_authoritative_context_and_version" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10AccountSelectionTest.php" line="40" class="Tests\Feature\Modules\Payment\P10AccountSelectionTest" classname="Tests.Feature.Modules.Payment.P10AccountSelectionTest" assertions="2" time="0.910015">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\Modules\Payment\P10AccountSelectionTest::test_omitted_account_is_selected_from_authoritative_context_and_version&#13;
+Failed asserting that 1 is identical to null.
+&#13;
+C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10AccountSelectionTest.php:45</failure>
+    </testcase>
+    <testcase name="test_cross_organisation_account_cannot_execute" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10AccountSelectionTest.php" line="48" class="Tests\Feature\Modules\Payment\P10AccountSelectionTest" classname="Tests.Feature.Modules.Payment.P10AccountSelectionTest" assertions="2" time="0.308666"/>
+    <testcase name="test_unrecognised_selected_account_cannot_execute" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10AccountSelectionTest.php" line="54" class="Tests\Feature\Modules\Payment\P10AccountSelectionTest" classname="Tests.Feature.Modules.Payment.P10AccountSelectionTest" assertions="2" time="0.204606"/>
+    <testcase name="test_live_processing_remains_disabled" file="C:\Projects\OleKardEcosystem\wallet-ecosystem\services\api\tests\Feature\Modules\Payment\P10AccountSelectionTest.php" line="60" class="Tests\Feature\Modules\Payment\P10AccountSelectionTest" classname="Tests.Feature.Modules.Payment.P10AccountSelectionTest" assertions="1" time="0.158767"/>
+  </testsuite>
+</testsuites>
