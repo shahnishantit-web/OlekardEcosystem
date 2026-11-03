@@ -251,17 +251,23 @@ final class MfaService
             throw InvalidCredentialsException::make();
         }
 
+        $actorType = (string) ($payload['actor_type'] ?? 'CUSTOMER');
+        // Integration events are persisted by the Platform outbox publisher,
+        // which requires the event row and domain transition to share a DB
+        // transaction. Keep the one-time Redis challenge until that durable
+        // write succeeds so a transient outbox failure can be retried safely.
+        DB::connection('platform')->transaction(function () use ($userId, $cmd, $actorType): void {
+            $this->events->publish(new MfaChallengeVerifiedEvent(
+                userId:        $userId,
+                actorId:       $userId,
+                correlationId: $cmd->correlationId,
+                actorType:     $actorType,
+                method:        $cmd->method,
+            ));
+        });
+
         $redis->del(IdentityRedisKeys::mfaPending($tokenHash));
         $this->resetMfaFailures($userId);
-
-        $actorType = (string) ($payload['actor_type'] ?? 'CUSTOMER');
-        $this->events->publish(new MfaChallengeVerifiedEvent(
-            userId:        $userId,
-            actorId:       $userId,
-            correlationId: $cmd->correlationId,
-            actorType:     $actorType,
-            method:        $cmd->method,
-        ));
 
         return $payload;
     }

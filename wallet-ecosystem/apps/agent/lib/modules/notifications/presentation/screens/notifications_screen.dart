@@ -17,18 +17,21 @@ import 'package:wallet_agent/modules/notifications/presentation/notification_pro
 final _notificationListProvider =
     FutureProvider.autoDispose<PaginatedResult<AppNotification>>((ref) async {
   final dio = createDio(null);
-  final response =
-      await dio.get<Map<String, dynamic>>('/v1/agent/notifications');
+  final response = await dio.get<Map<String, dynamic>>(
+    '/v1/notifications/inbox',
+    queryParameters: const <String, Object>{'per_page': 100},
+  );
   final data = response.data!;
   final items = (data['data'] as List<dynamic>)
       .map((e) =>
           AppNotificationDto.fromJson(e as Map<String, dynamic>).toEntity())
       .toList();
+  final meta = data['meta'] as Map<String, dynamic>;
   return PaginatedResult(
     data: items,
-    currentPage: data['current_page'] as int,
-    total: data['total'] as int,
-    lastPage: data['last_page'] as int,
+    currentPage: meta['current_page'] as int,
+    total: meta['total'] as int,
+    lastPage: meta['last_page'] as int,
   );
 });
 
@@ -71,8 +74,7 @@ class NotificationsScreen extends ConsumerWidget {
                       itemCount: page.data.length,
                       itemBuilder: (ctx, i) => _NotificationTile(
                         notification: page.data[i],
-                        onTap: () =>
-                            _handleTap(ctx, ref, page.data[i]),
+                        onTap: () => _handleTap(ctx, ref, page.data[i]),
                       ),
                     ),
             ),
@@ -89,9 +91,7 @@ class NotificationsScreen extends ConsumerWidget {
   ) async {
     // Mark as read silently
     try {
-      await ref
-          .read(notificationRepositoryProvider)
-          .markRead(notification.id);
+      await ref.read(notificationRepositoryProvider).markRead(notification.id);
       ref.invalidate(_notificationListProvider);
       ref.invalidate(unreadCountProvider);
     } catch (_) {

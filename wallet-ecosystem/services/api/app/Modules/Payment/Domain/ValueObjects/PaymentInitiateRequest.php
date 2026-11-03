@@ -18,6 +18,7 @@ final readonly class PaymentInitiateRequest
         public ?string $walletId = null,
         public ?string $stepUpToken = null,
         public ?string $sessionId = null,
+        public ?string $organisationId = null,
     ) {
     }
 }

@@ -6,11 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 
 import 'package:wallet_agent/core/api/api_response.dart';
-import 'package:wallet_agent/modules/transactions/application/payment_history_notifier.dart';
-import 'package:wallet_agent/modules/transactions/domain/entities/agent_transaction.dart';
 import 'package:wallet_agent/modules/transactions/domain/entities/payment_history_filter.dart';
 import 'package:wallet_agent/modules/transactions/infrastructure/payment_cache_store.dart';
 import 'package:wallet_agent/modules/transactions/presentation/transaction_providers.dart';
+import 'package:wallet_agent/modules/transactions/domain/entities/agent_transaction.dart';
 
 import 'agent_transaction_test.mocks.dart';
 
@@ -60,7 +59,8 @@ void main() {
 
   // ─── SC-01: list loads ────────────────────────────────────────────────────────
 
-  test('SC-01: build() fetches and transitions to PaymentHistoryLoaded', () async {
+  test('SC-01: build() fetches and transitions to PaymentHistoryLoaded',
+      () async {
     final items = [makeItem('1'), makeItem('2'), makeItem('3')];
     when(mockRepo.fetchHistory(any)).thenAnswer((_) async => page(items));
 
@@ -99,7 +99,8 @@ void main() {
 
   // ─── SC-02: filter applied ────────────────────────────────────────────────────
 
-  test('SC-02: applyFilter reloads with new filter and resets page to 1', () async {
+  test('SC-02: applyFilter reloads with new filter and resets page to 1',
+      () async {
     when(mockRepo.fetchHistory(any))
         .thenAnswer((_) async => page([makeItem('1')]));
 
@@ -110,9 +111,8 @@ void main() {
     when(mockRepo.fetchHistory(any))
         .thenAnswer((_) async => page([makeItem('2')]));
 
-    await container
-        .read(paymentHistoryProvider('agent1').notifier)
-        .applyFilter(const PaymentHistoryFilter(status: PaymentStatus.completed));
+    await container.read(paymentHistoryProvider('agent1').notifier).applyFilter(
+        const PaymentHistoryFilter(status: PaymentStatus.completed));
 
     final state = container.read(paymentHistoryProvider('agent1')).value;
     expect(state, isA<PaymentHistoryLoaded>());
@@ -127,7 +127,9 @@ void main() {
 
   // ─── SC-03: offline stale ─────────────────────────────────────────────────────
 
-  test('SC-03: network failure + cached data → PaymentHistoryError(isOffline, staleItems)', () async {
+  test(
+      'SC-03: network failure + cached data → PaymentHistoryError(isOffline, staleItems)',
+      () async {
     when(mockRepo.fetchHistory(any)).thenThrow(DioException(
       requestOptions: RequestOptions(),
       type: DioExceptionType.connectionError,
@@ -159,12 +161,12 @@ void main() {
     });
 
     final cachedAt = DateTime(2026, 10, 1);
-    when(mockCache.readHistoryPage('agent1')).thenAnswer((_) async =>
-        PaymentCacheEntry(
-          rawJson: cachedJson,
-          cachedAt: cachedAt,
-          staleAfterSeconds: 0,
-        ));
+    when(mockCache.readHistoryPage('agent1'))
+        .thenAnswer((_) async => PaymentCacheEntry(
+              rawJson: cachedJson,
+              cachedAt: cachedAt,
+              staleAfterSeconds: 0,
+            ));
 
     final container = makeContainer();
     addTearDown(container.dispose);
@@ -179,7 +181,9 @@ void main() {
     expect(error.staleAt, cachedAt);
   });
 
-  test('SC-03: network failure + no cache → PaymentHistoryError(isOffline, no staleItems)', () async {
+  test(
+      'SC-03: network failure + no cache → PaymentHistoryError(isOffline, no staleItems)',
+      () async {
     when(mockRepo.fetchHistory(any)).thenThrow(DioException(
       requestOptions: RequestOptions(),
       type: DioExceptionType.connectionError,

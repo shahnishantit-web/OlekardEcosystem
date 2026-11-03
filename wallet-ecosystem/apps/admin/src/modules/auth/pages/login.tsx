@@ -460,7 +460,7 @@ export function AdminLoginPage() {
                   <input
                     ref={mfaInputRef}
                     id="mfa-input"
-                    type="text"
+                    type={selectedMethod === 'totp' ? 'password' : 'text'}
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     maxLength={6}

@@ -130,13 +130,17 @@ describe('TOTP enrollment + confirm + login gate + verify (T115, T120, T122)', f
         expect(count($confirmResp->json('data.backup_codes')))->toBe(8);
 
         // Step 3: login again — MFA gate must fire
-        $loginResp = $this->postJson('/v1/auth/login', [
+        $allowedAdminOrigin = 'http://localhost:3000';
+        config(['cors.allowed_origins' => [$allowedAdminOrigin, 'http://127.0.0.1:3000']]);
+        $loginResp = $this->withHeader('Origin', $allowedAdminOrigin)->postJson('/v1/auth/login', [
             'credential_type'    => 'pin',
             'identifier'         => '+26772001001',
             'credential'         => '654321',
             'device_fingerprint' => 'mfa-device-fp',
         ]);
         $loginResp->assertStatus(200);
+        $loginResp->assertHeader('Access-Control-Allow-Origin', $allowedAdminOrigin);
+        expect($loginResp->headers->get('Vary'))->toContain('Origin');
         expect($loginResp->json('data.mfa_required'))->toBeTrue();
         expect($loginResp->json('data.mfa_token'))->not->toBeNull();
         expect($loginResp->json('data.methods'))->toContain('totp');
@@ -146,12 +150,14 @@ describe('TOTP enrollment + confirm + login gate + verify (T115, T120, T122)', f
         $mfaToken = $loginResp->json('data.mfa_token');
 
         // Step 4: verify MFA to get full session
-        $verifyResp = $this->postJson('/v1/auth/mfa/verify', [
+        $verifyResp = $this->withHeader('Origin', $allowedAdminOrigin)->postJson('/v1/auth/mfa/verify', [
             'mfa_token' => $mfaToken,
             'method'    => 'totp',
             'code'      => mfaGenerateTotpCode($secret),
         ]);
         $verifyResp->assertStatus(200);
+        $verifyResp->assertHeader('Access-Control-Allow-Origin', $allowedAdminOrigin);
+        expect($verifyResp->headers->get('Vary'))->toContain('Origin');
         expect($verifyResp->json('success'))->toBeTrue();
         expect($verifyResp->json('data.access_token'))->not->toBeNull();
         expect($verifyResp->json('data.refresh_token'))->not->toBeNull();
@@ -372,12 +378,16 @@ describe('mfa_pending token rejection (T120)', function (): void {
     });
 
     it('returns 401 when mfa_token is invalid', function (): void {
-        $resp = $this->postJson('/v1/auth/mfa/verify', [
+        $allowedAdminOrigin = 'http://localhost:3000';
+        config(['cors.allowed_origins' => [$allowedAdminOrigin, 'http://127.0.0.1:3000']]);
+        $resp = $this->withHeader('Origin', $allowedAdminOrigin)->postJson('/v1/auth/mfa/verify', [
             'mfa_token' => 'garbage-token-value',
             'method'    => 'totp',
             'code'      => '123456',
         ]);
         $resp->assertStatus(401);
+        $resp->assertHeader('Access-Control-Allow-Origin', $allowedAdminOrigin);
+        expect($resp->headers->get('Vary'))->toContain('Origin');
         expect($resp->json('error.code'))->toBe('IDENTITY_014');
     });
 

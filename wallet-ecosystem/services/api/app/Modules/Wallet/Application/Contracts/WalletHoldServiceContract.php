@@ -40,6 +40,7 @@ interface WalletHoldServiceContract
         ?string $transactionReference = null,
         ?string $description = null,
         ?\DateTimeImmutable $expiresAt = null,
+        ?string $organisationId = null,
     ): WalletHoldModel;
 
     /**

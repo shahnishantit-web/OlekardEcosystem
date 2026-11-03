@@ -22,6 +22,11 @@ use Illuminate\Support\Carbon;
  * @property string|null        $provider_reference_id
  * @property string|null        $wallet_hold_id
  * @property string|null        $ledger_journal_id
+ * @property int|null           $captured_amount_minor
+ * @property string|null        $captured_currency_code
+ * @property string|null        $capture_evidence_reference
+ * @property string|null        $ledger_debit_account_reference
+ * @property string|null        $ledger_credit_account_reference
  * @property string|null        $next_action_type
  * @property array<string, mixed>|null $next_action_data
  * @property int|null           $fee_minor
@@ -55,6 +60,11 @@ final class PaymentAttemptModel extends Model
         'provider_reference_id',
         'wallet_hold_id',
         'ledger_journal_id',
+        'captured_amount_minor',
+        'captured_currency_code',
+        'capture_evidence_reference',
+        'ledger_debit_account_reference',
+        'ledger_credit_account_reference',
         'next_action_type',
         'next_action_data',
         'fee_minor',
@@ -72,6 +82,7 @@ final class PaymentAttemptModel extends Model
         return [
             'status'          => PaymentAttemptStatus::class,
             'fee_minor'                => 'integer',
+            'captured_amount_minor'    => 'integer',
             'quote_version'            => 'integer',
             'provider_account_version' => 'integer',
             'next_action_data'         => 'array',

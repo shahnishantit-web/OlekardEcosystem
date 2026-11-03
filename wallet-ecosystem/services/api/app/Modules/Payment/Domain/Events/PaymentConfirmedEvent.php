@@ -23,6 +23,9 @@ final readonly class PaymentConfirmedEvent implements IntegrationEventInterface
         private string $correlationId,
         private string $occurredAt,
         string $allocationReference = '',
+        private ?int $capturedAmountMinor = null,
+        private ?string $capturedCurrencyCode = null,
+        private ?string $ledgerJournalId = null,
     ) {
         $this->allocationReference = $allocationReference === '' ? $paymentIntentId : $allocationReference;
     }
@@ -69,6 +72,9 @@ final readonly class PaymentConfirmedEvent implements IntegrationEventInterface
             'correlation_id'     => $this->correlationId,
             'occurred_at'          => $this->occurredAt,
             'allocation_reference' => $this->allocationReference,
+            'captured_amount_minor' => $this->capturedAmountMinor,
+            'captured_currency_code' => $this->capturedCurrencyCode,
+            'ledger_journal_id' => $this->ledgerJournalId,
         ];
     }
 }

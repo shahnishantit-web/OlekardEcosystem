@@ -1,10 +1,11 @@
+import 'package:design_system/design_system.dart';
+import 'package:flutter/material.dart';
+
 export 'package:design_system/design_system.dart' show OkPinPadWidget;
 
-import 'package:flutter/material.dart';
-import 'package:pin_code_fields/pin_code_fields.dart';
-import 'package:wallet_agent/core/theme/design_tokens.dart';
-
-class PinPadWidget extends StatefulWidget {
+/// Agent-facing adapter that preserves the existing PIN widget API while
+/// using the shared accessible Flutter text-input bridge.
+class PinPadWidget extends StatelessWidget {
   final void Function(String pin) onCompleted;
   final int length;
   final String? errorText;
@@ -17,58 +18,21 @@ class PinPadWidget extends StatefulWidget {
   });
 
   @override
-  State<PinPadWidget> createState() => _PinPadWidgetState();
-}
-
-class _PinPadWidgetState extends State<PinPadWidget> {
-  final _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        PinCodeTextField(
-          appContext: context,
-          length: widget.length,
-          controller: _controller,
-          obscureText: true,
-          obscuringCharacter: '●',
-          keyboardType: TextInputType.number,
-          animationType: AnimationType.fade,
-          pinTheme: PinTheme(
-            shape: PinCodeFieldShape.box,
-            borderRadius: BorderRadius.circular(AppSpacing.borderRadiusSm),
-            fieldHeight: 52,
-            fieldWidth: 44,
-            activeFillColor: AppColors.surface,
-            inactiveFillColor: AppColors.background,
-            selectedFillColor: AppColors.surface,
-            activeColor: AppColors.primary,
-            inactiveColor: AppColors.divider,
-            selectedColor: AppColors.primary,
-          ),
-          enableActiveFill: true,
-          onCompleted: (value) {
-            // Do NOT log the value here — PIN security requirement.
-            widget.onCompleted(value);
-          },
-          onChanged: (_) {},
-          beforeTextPaste: (_) => false,
-        ),
-        if (widget.errorText != null)
-          Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.sm),
-            child: Text(widget.errorText!,
-                style: const TextStyle(color: AppColors.error, fontSize: 13)),
-          ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          OkPinPadWidget(onCompleted: onCompleted, pinLength: length),
+          if (errorText != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                errorText!,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+        ],
+      );
 }

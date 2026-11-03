@@ -79,10 +79,12 @@ class _TransactionDetailScreenState
       return _DetailContent(
         state: state,
         intentId: widget.id,
-        onInitiateRefund: () =>
-            ref.read(paymentDetailProvider(widget.id).notifier).initiateRefund(),
-        onOpenSupport: () =>
-            ref.read(paymentDetailProvider(widget.id).notifier).openSupportDraft(),
+        onInitiateRefund: () => ref
+            .read(paymentDetailProvider(widget.id).notifier)
+            .initiateRefund(),
+        onOpenSupport: () => ref
+            .read(paymentDetailProvider(widget.id).notifier)
+            .openSupportDraft(),
       );
     }
     if (state is PaymentDetailRefundConfirm) {
@@ -122,10 +124,12 @@ class _TransactionDetailScreenState
           deepLink: state.item.domainDeepLink,
         ),
         intentId: widget.id,
-        onInitiateRefund: () =>
-            ref.read(paymentDetailProvider(widget.id).notifier).initiateRefund(),
-        onOpenSupport: () =>
-            ref.read(paymentDetailProvider(widget.id).notifier).openSupportDraft(),
+        onInitiateRefund: () => ref
+            .read(paymentDetailProvider(widget.id).notifier)
+            .initiateRefund(),
+        onOpenSupport: () => ref
+            .read(paymentDetailProvider(widget.id).notifier)
+            .openSupportDraft(),
       );
     }
     if (state is PaymentDetailRefundSubmitted) {
@@ -135,7 +139,7 @@ class _TransactionDetailScreenState
           children: [
             const Icon(Icons.check_circle, color: Colors.green, size: 64),
             const SizedBox(height: AppSpacing.md),
-            Text('Refund requested', style: AppTypography.label),
+            const Text('Refund requested', style: AppTypography.label),
             const SizedBox(height: AppSpacing.md),
             OutlinedButton(
               onPressed: () =>
@@ -185,7 +189,7 @@ class _DetailContent extends StatelessWidget {
         if (item.description != null) _Row('Description', item.description!),
         _Row('Date', DateFormat.yMMMMd().add_jm().format(item.createdAt)),
         const Divider(height: AppSpacing.lg),
-        Text('Status Details', style: AppTypography.caption),
+        const Text('Status Details', style: AppTypography.caption),
         const SizedBox(height: AppSpacing.sm),
         PaymentStatusRow(label: 'Capture', value: rows.captureStatus),
         PaymentStatusRow(label: 'Accounting', value: rows.accountingStatus),
@@ -284,7 +288,7 @@ class _RefundConfirmSheetState extends State<_RefundConfirmSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Request Refund', style: AppTypography.label),
+          const Text('Request Refund', style: AppTypography.label),
           const SizedBox(height: AppSpacing.md),
           TextField(
             controller: _reasonController,

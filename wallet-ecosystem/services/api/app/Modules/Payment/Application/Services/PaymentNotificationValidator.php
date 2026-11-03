@@ -25,9 +25,10 @@ final class PaymentNotificationValidator
             || ($context['merchant_account'] ?? null) !== $account->merchant_account_reference) {
             return 'account_mismatch';
         }
-        if (($context['amount_minor'] ?? null) !== $intent->amount_minor
-            || ($context['currency'] ?? null) !== $intent->currency_code) {
-            return 'money_mismatch';
+        if (! is_int($context['amount_minor'] ?? null) || $context['amount_minor'] < 0
+            || ! is_string($context['currency'] ?? null)
+            || preg_match('/^[A-Z]{3}$/D', $context['currency']) !== 1) {
+            return 'capture_evidence_missing';
         }
         if (! is_string($notification['provider_reference'] ?? null)
             || $notification['provider_reference'] === ''

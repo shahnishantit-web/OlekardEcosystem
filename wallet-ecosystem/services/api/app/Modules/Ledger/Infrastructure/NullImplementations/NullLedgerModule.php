@@ -6,6 +6,7 @@ namespace App\Modules\Ledger\Infrastructure\NullImplementations;
 
 use App\Exceptions\ModuleNotImplementedException;
 use App\Modules\Ledger\Domain\Contracts\LedgerModuleContract;
+use App\Modules\Ledger\Domain\ValueObjects\PostedJournalEvidence;
 
 final class NullLedgerModule implements LedgerModuleContract
 {
@@ -46,5 +47,10 @@ final class NullLedgerModule implements LedgerModuleContract
     public function getTransactionHistory(string $transactionReference): array
     {
         throw new ModuleNotImplementedException('Ledger', 'getTransactionHistory');
+    }
+
+    public function findPostedJournalEvidence(string $idempotencyKey): ?PostedJournalEvidence
+    {
+        throw new ModuleNotImplementedException('Ledger', 'findPostedJournalEvidence');
     }
 }

@@ -7,6 +7,15 @@ import 'package:wallet_customer/core/security/biometric_service.dart';
 import 'package:wallet_customer/core/security/secure_storage_service.dart';
 import 'package:wallet_customer/modules/auth/presentation/auth_providers.dart';
 
+const _p26CustomerPhone = String.fromEnvironment(
+  'P26_E2E_CUSTOMER_PHONE',
+  defaultValue: '+26771000001',
+);
+const _p26CustomerPin = String.fromEnvironment(
+  'P26_E2E_CUSTOMER_PIN',
+  defaultValue: '123456',
+);
+
 class _NoBiometrics extends BiometricService {
   @override
   Future<bool> isAvailable() async => false;
@@ -25,7 +34,7 @@ void main() {
     addTearDown(container.dispose);
     final result = await tester.runAsync(() => container
         .read(authRepositoryProvider)
-        .initiateLogin(phone: '+26771000001', method: 'pin'));
+        .initiateLogin(phone: _p26CustomerPhone, method: 'pin'));
     expect(result, isNotNull);
     expect(result!.challengeToken, isNotEmpty);
     expect(result.method, 'pin');
@@ -45,7 +54,7 @@ void main() {
     ));
     container.read(routerProvider).go('/login');
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextFormField), '+26771000001');
+    await tester.enterText(find.byType(TextFormField), _p26CustomerPhone);
     await tester.tap(find.text('Log In'));
     await tester.runAsync(() async {
       await Future<void>(() async {
@@ -62,7 +71,12 @@ void main() {
     expect(find.text('Enter your PIN'), findsOneWidget);
     expect(tester.takeException(), isNull);
     if (const bool.fromEnvironment('RUN_LOCAL_PIN_SMOKE')) {
-      await tester.enterText(find.byType(TextFormField).last, '123456');
+      final pinInput = find.byWidgetPredicate(
+        (widget) =>
+            widget is TextField && widget.keyboardType == TextInputType.number,
+      );
+      expect(pinInput, findsOneWidget);
+      await tester.enterText(pinInput, _p26CustomerPin);
       await tester.pump(const Duration(milliseconds: 500));
       await tester.runAsync(() async {
         await Future<void>(() async {
@@ -76,7 +90,7 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
       expect(container.read(authProvider).error, isNull);
       expect(container.read(authProvider).isAuthenticated, isTrue);
-      expect(container.read(authProvider).customer?.phone, '+26771000001');
+      expect(container.read(authProvider).customer?.phone, _p26CustomerPhone);
       expect(
           container
               .read(routerProvider)

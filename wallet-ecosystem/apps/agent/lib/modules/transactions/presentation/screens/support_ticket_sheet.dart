@@ -34,9 +34,6 @@ class _SupportTicketDraftSheetState
   String? _submittedReference;
   String? _submitError;
 
-  static const int _maxAttachmentBytes = 10 * 1024 * 1024;
-  static const Set<String> _allowedExtensions = {'pdf', 'png', 'jpg', 'jpeg'};
-
   @override
   void initState() {
     super.initState();
@@ -52,27 +49,6 @@ class _SupportTicketDraftSheetState
 
   Future<void> _pickAttachment() async {
     setState(() => _attachmentError = 'File picker integration required');
-  }
-
-  void _validateAndAddAttachment(String path, int sizeBytes) {
-    final ext = path.split('.').last.toLowerCase();
-    if (!_allowedExtensions.contains(ext)) {
-      setState(() {
-        _attachmentError = 'Unsupported file type. Use PDF, PNG, or JPEG.';
-      });
-      return;
-    }
-    if (sizeBytes > _maxAttachmentBytes) {
-      final maxMb = _maxAttachmentBytes ~/ (1024 * 1024);
-      setState(() {
-        _attachmentError = 'File too large. Maximum size is ${maxMb}MB.';
-      });
-      return;
-    }
-    setState(() {
-      _attachmentPaths.add(path);
-      _attachmentError = null;
-    });
   }
 
   Future<void> _submit() async {
@@ -121,7 +97,7 @@ class _SupportTicketDraftSheetState
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Get Support', style: AppTypography.titleMedium),
+            const Text('Get Support', style: AppTypography.titleMedium),
             const SizedBox(height: AppSpacing.md),
             InputDecorator(
               decoration: const InputDecoration(
@@ -157,12 +133,11 @@ class _SupportTicketDraftSheetState
               ..._attachmentPaths.map(
                 (p) => ListTile(
                   leading: const Icon(Icons.attach_file),
-                  title: Text(p.split('/').last,
-                      style: AppTypography.bodySmall),
+                  title:
+                      Text(p.split('/').last, style: AppTypography.bodySmall),
                   trailing: IconButton(
                     icon: const Icon(Icons.close),
-                    onPressed: () =>
-                        setState(() => _attachmentPaths.remove(p)),
+                    onPressed: () => setState(() => _attachmentPaths.remove(p)),
                   ),
                 ),
               ),
@@ -172,8 +147,8 @@ class _SupportTicketDraftSheetState
                 padding: const EdgeInsets.only(top: AppSpacing.xs),
                 child: Text(
                   _attachmentError!,
-                  style: AppTypography.bodySmall
-                      .copyWith(color: AppColors.error),
+                  style:
+                      AppTypography.bodySmall.copyWith(color: AppColors.error),
                 ),
               ),
             SizedBox(
@@ -190,8 +165,8 @@ class _SupportTicketDraftSheetState
                 padding: const EdgeInsets.only(top: AppSpacing.sm),
                 child: Text(
                   _submitError!,
-                  style: AppTypography.bodySmall
-                      .copyWith(color: AppColors.error),
+                  style:
+                      AppTypography.bodySmall.copyWith(color: AppColors.error),
                 ),
               ),
             const SizedBox(height: AppSpacing.lg),
@@ -229,7 +204,7 @@ class _SuccessView extends StatelessWidget {
         children: [
           const Icon(Icons.check_circle, color: Colors.green, size: 64),
           const SizedBox(height: AppSpacing.md),
-          Text('Ticket submitted', style: AppTypography.titleMedium),
+          const Text('Ticket submitted', style: AppTypography.titleMedium),
           const SizedBox(height: AppSpacing.sm),
           Semantics(
             label: 'Support reference: $reference',

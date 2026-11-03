@@ -5,20 +5,23 @@ declare(strict_types=1);
 namespace App\Modules\Identity\Application;
 
 use App\Modules\Identity\Domain\Contracts\ActorStepUpVerifierContract;
-use App\Modules\Identity\Domain\Contracts\CredentialRepositoryInterface;
 use App\Modules\Identity\Domain\Contracts\AuthenticatedActor;
+use App\Modules\Identity\Domain\Contracts\CredentialRepositoryInterface;
 use App\Modules\Identity\Domain\Contracts\IdentityModuleContract;
 use App\Modules\Identity\Domain\Contracts\JwksProviderContract;
 use App\Modules\Identity\Domain\Contracts\ServiceActor;
 use App\Modules\Identity\Domain\Contracts\SessionRepositoryInterface;
 use App\Modules\Identity\Domain\Contracts\UserContactInfo;
 use App\Modules\Identity\Domain\Contracts\UserRepositoryInterface;
+use App\Modules\Identity\Domain\Exceptions\AccountLockedException;
 use App\Modules\Identity\Domain\Services\ConfigurationSecurityService;
+use App\Modules\Identity\Domain\Services\LockoutService;
 use App\Modules\Identity\Domain\Services\PermissionResolverService;
 use App\Modules\Identity\Infrastructure\Cache\IdentityRedisKeys;
+use App\Modules\Platform\Infrastructure\Security\PiiMasker;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Str;
 use Lcobucci\Clock\SystemClock;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Ecdsa\Sha256;
@@ -206,6 +209,16 @@ final class IdentityModule implements ActorStepUpVerifierContract, IdentityModul
         return $user->id;
     }
 
+    public function findActiveCustomerActorId(string $actorId): ?string
+    {
+        $user = $this->users->findById($actorId);
+        if ($user === null || $user->status !== 'active' || $user->actor_type !== 'CUSTOMER') {
+            return null;
+        }
+
+        return $user->id;
+    }
+
     // -------------------------------------------------------------------------
     // E08/E09 extensions — Transaction PIN verification
     // -------------------------------------------------------------------------
@@ -216,22 +229,30 @@ final class IdentityModule implements ActorStepUpVerifierContract, IdentityModul
         $credential = $this->credentials->findByUserAndType($actorId, 'pin');
         if ($user === null || $user->status !== 'active' || $credential === null
             || $credential->status !== 'active'
-            || ($credential->expires_at !== null && $credential->expires_at->isPast())) return false;
-        $correlation = request()->header('X-Correlation-ID', (string) \Illuminate\Support\Str::uuid7());
-        $lockout = app(\App\Modules\Identity\Domain\Services\LockoutService::class);
+            || ($credential->expires_at !== null && $credential->expires_at->isPast())) {
+            return false;
+        }
+        $correlation = request()->header('X-Correlation-ID', (string) Str::uuid7());
+        $lockout = app(LockoutService::class);
         try {
             $lockout->assertNotLocked($user, $correlation, hash('sha256', request()->ip() ?? ''));
             if (! password_verify($pin, (string) $credential->credential_hash)) {
                 $lockout->recordFailure($user, $correlation, hash('sha256', request()->ip() ?? ''),
-                    \App\Modules\Platform\Infrastructure\Security\PiiMasker::maskPhone($user->mobile_number ?? ''));
+                    PiiMasker::maskPhone($user->mobile_number ?? ''));
+
                 return false;
             }
-        } catch (\App\Modules\Identity\Domain\Exceptions\AccountLockedException) { return false; }
+        } catch (AccountLockedException) {
+            return false;
+        }
         if ($requireStepUp) {
             $scope = str_contains(request()->path(), 'withdrawals') ? 'withdrawal.confirm' : 'transfer.confirm';
             if (! $this->verifyStepUpForActor((string) request()->header('X-StepUp-Token', ''), $scope,
-                $actorId, (string) request()->attributes->get('identity.session_id', ''))) return false;
+                $actorId, (string) request()->attributes->get('identity.session_id', ''))) {
+                return false;
+            }
         }
+
         return true;
     }
 
@@ -248,18 +269,37 @@ final class IdentityModule implements ActorStepUpVerifierContract, IdentityModul
      */
     private function parseJwt(string $rawJwt): array
     {
+        if ($rawJwt === '') {
+            throw new \InvalidArgumentException('JWT must not be empty.');
+        }
+
         $signingKey = $this->jwks->getSigningKey();
-        $privDetails = openssl_pkey_get_details(openssl_pkey_get_private($signingKey->privateKeyPem));
+        $privateKeyPem = trim($signingKey->privateKeyPem);
+        if ($privateKeyPem === '') {
+            throw new \RuntimeException('JWT signing key is empty.');
+        }
+
+        $privateKey = openssl_pkey_get_private($privateKeyPem);
+        if ($privateKey === false) {
+            throw new \RuntimeException('JWT signing key is invalid.');
+        }
+
+        $privDetails = openssl_pkey_get_details($privateKey);
 
         if ($privDetails === false) {
             throw new \RuntimeException('Cannot extract public key for JWT verification.');
         }
 
-        $publicKeyPem = $privDetails['key'];
+        $publicKeyPem = $privDetails['key'] ?? null;
+        if (! is_string($publicKeyPem) || trim($publicKeyPem) === '') {
+            throw new \RuntimeException('JWT signing key has no usable public key.');
+        }
+
+        $publicKeyPem = trim($publicKeyPem);
 
         $config = Configuration::forAsymmetricSigner(
             new Sha256,
-            InMemory::plainText($signingKey->privateKeyPem),
+            InMemory::plainText($privateKeyPem),
             InMemory::plainText($publicKeyPem),
         );
 

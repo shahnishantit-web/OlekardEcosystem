@@ -4,7 +4,7 @@ import 'package:wallet_agent/modules/auth/domain/entities/auth_token.dart';
 abstract class AuthRepository {
   Future<({AuthToken token, Agent agent})> login({
     required String phone,
-    required String pinHash,
+    required String pin,
   });
 
   Future<void> logout();

@@ -72,9 +72,13 @@ Note: `LedgerFailed` (from P06 migration constraint) is now also the terminal st
 
 ---
 
-## No New Tables
+## Authorized evidence extension (2026-10-28)
 
-P08 does not create new tables. All state is stored in the existing `payment.payment_intents`, `payment.payment_attempts`, and `platform.outbox_events` tables.
+Migration `2026_10_28_000001_add_capture_evidence_and_fulfilment_ack.php` adds nullable `captured_amount_minor`, `captured_currency_code`, `capture_evidence_reference`, `ledger_debit_account_reference`, and `ledger_credit_account_reference` to `payment.payment_attempts`. Null capture facts explicitly mean unknown; no expected amount is substituted. Capture provenance is the E25 verified receipt ID. The journal reference/account references are committed to Payment with `accounting_status=ledger_posted` and the outbox event after Ledger evidence verification.
+
+The migration also creates `payment.fulfilment_acknowledgements`, unique by intent and idempotency key. It records organisation/purpose, consumer service, durable fulfilment reference and acknowledgement time. The row and `payment_intents.fulfilment_status` transition are one Payment-connection transaction. No Events order, issuance or transactional inbox is created here.
+
+The prior two intent repair columns and `PaymentConfirmedEvent.allocation_reference` remain unchanged. This additive schema has not yet been applied to the shared local schema because the existing migration run fails at the legacy Identity schema/history conflict; do not reset or rewrite migration history.
 
 ---
 

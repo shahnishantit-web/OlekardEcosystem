@@ -6,7 +6,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 
 import 'package:wallet_customer/core/api/paginated_result.dart';
-import 'package:wallet_customer/modules/transactions/domain/entities/payment_history_filter.dart';
 import 'package:wallet_customer/modules/transactions/domain/entities/transaction.dart';
 import 'package:wallet_customer/modules/transactions/presentation/screens/transaction_list_screen.dart';
 import 'package:wallet_customer/modules/transactions/presentation/transaction_providers.dart';
@@ -70,7 +69,8 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Transaction list tiles: no overflow at 2× scale', (tester) async {
+  testWidgets('Transaction list tiles: no overflow at 2× scale',
+      (tester) async {
     final items = [_makeItem('1'), _makeItem('2')];
     when(mockRepo.fetchHistory(any)).thenAnswer((_) async =>
         PaginatedResult(data: items, currentPage: 1, total: 2, lastPage: 1));

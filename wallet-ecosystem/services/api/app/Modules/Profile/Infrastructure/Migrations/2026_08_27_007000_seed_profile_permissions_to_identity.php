@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 return new class extends Migration
@@ -16,6 +18,24 @@ return new class extends Migration
     }
 
     public function up(): void
+    {
+        // This migration predates the Identity role/permission schema. On a clean
+        // install its effects are applied by the post-prerequisite migration
+        // 2026_09_09_010000_seed_profile_permissions_after_identity.php.
+        foreach (['identity.permissions', 'identity.roles', 'identity.role_permissions'] as $table) {
+            if (! Schema::connection('identity')->hasTable($table)) {
+                Log::notice('profile.permission_seed_deferred', [
+                    'missing_identity_table' => $table,
+                    'follow_up_migration' => '2026_09_09_010000_seed_profile_permissions_after_identity',
+                ]);
+                return;
+            }
+        }
+
+        $this->seedPermissions();
+    }
+
+    private function seedPermissions(): void
     {
         $permissions = [
             ['slug' => 'profile.read',         'module' => 'profile', 'display_name' => 'Read User Profiles (Admin)'],
@@ -65,6 +85,11 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (! Schema::connection('identity')->hasTable('identity.permissions')
+            || ! Schema::connection('identity')->hasTable('identity.role_permissions')) {
+            return;
+        }
+
         $slugs = ['profile.read', 'profile.update', 'account.reactivate', 'account.close'];
 
         $permissionIds = DB::connection('identity')->table('identity.permissions')

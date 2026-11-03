@@ -23,18 +23,58 @@ describe('CreateProfileOnUserRegisteredListener — error rollback', function ()
         $userId = (string) Uuid::uuid7();
 
         // Bind a stub that always throws
-        app()->bind(IdentityModuleContract::class, fn () => new class implements IdentityModuleContract {
-            public function resolveActorFromToken(string $bearerToken): ?AuthenticatedActor { return null; }
-            public function resolveServiceActor(string $bearerToken): ?ServiceActor { return null; }
-            public function verifyStepUpScope(string $stepUpToken, string $requiredScope): bool { return false; }
+        app()->bind(IdentityModuleContract::class, fn () => new class implements IdentityModuleContract
+        {
+            public function resolveActorFromToken(string $bearerToken): ?AuthenticatedActor
+            {
+                return null;
+            }
+
+            public function resolveServiceActor(string $bearerToken): ?ServiceActor
+            {
+                return null;
+            }
+
+            public function verifyStepUpScope(string $stepUpToken, string $requiredScope): bool
+            {
+                return false;
+            }
+
             public function revokeSession(string $sessionId, string $revokedByActorId): void {}
+
             public function getUserContactInfo(string $userId): ?UserContactInfo
             {
-                throw new \BadMethodCallException('E01 T239-T244 not complete');
+                throw new BadMethodCallException('E01 T239-T244 not complete');
             }
+
             public function updateUserContact(string $userId, ?string $email, ?string $mobile): void
             {
-                throw new \BadMethodCallException('E01 T239-T244 not complete');
+                throw new BadMethodCallException('E01 T239-T244 not complete');
+            }
+
+            public function hasPermission(string $actorId, string $permission): bool
+            {
+                return false;
+            }
+
+            public function findCustomerIdByMobile(string $mobileNumber): ?string
+            {
+                return null;
+            }
+
+            public function findActiveCustomerActorId(string $actorId): ?string
+            {
+                return null;
+            }
+
+            public function verifyTransactionPin(string $actorId, string $pin, bool $requireStepUp = false): bool
+            {
+                return false;
+            }
+
+            public function getIdentitySnapshot(string $userId): ?array
+            {
+                return null;
             }
         });
 
@@ -42,10 +82,10 @@ describe('CreateProfileOnUserRegisteredListener — error rollback', function ()
         $profiles = app(EloquentUserProfileRepository::class);
 
         expect(fn () => $listener->handle('Identity.User.Registered', [
-            'user_id'        => $userId,
+            'user_id' => $userId,
             'correlation_id' => (string) Uuid::uuid7(),
-            'actor_type'     => 'CUSTOMER',
-        ]))->toThrow(\BadMethodCallException::class);
+            'actor_type' => 'CUSTOMER',
+        ]))->toThrow(BadMethodCallException::class);
 
         // No partial profile record persisted
         expect($profiles->exists($userId))->toBeFalse();

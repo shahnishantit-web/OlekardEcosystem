@@ -9,6 +9,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property string $id
+ * @property string $wallet_id
+ * @property string $currency_code
+ * @property string $ledger_account_reference
+ * @property PocketStatus $status
+ */
 class CurrencyPocketModel extends Model
 {
     protected $connection = 'wallet';

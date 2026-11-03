@@ -20,6 +20,7 @@ import 'package:wallet_agent/modules/cash_out/presentation/screens/cash_out_cust
 import 'package:wallet_agent/modules/cash_out/presentation/screens/cash_out_form_screen.dart';
 import 'package:wallet_agent/modules/cash_out/presentation/screens/cash_out_result_screen.dart';
 import 'package:wallet_agent/modules/cash_out/presentation/screens/pickup_code_screen.dart';
+import 'package:wallet_agent/modules/events/presentation/screens/event_gate_scan_screen.dart';
 import 'package:wallet_agent/modules/commissions/presentation/screens/commissions_screen.dart';
 import 'package:wallet_agent/modules/customer_onboarding/domain/entities/customer_profile.dart';
 import 'package:wallet_agent/modules/customer_onboarding/presentation/screens/customer_lookup_screen.dart';
@@ -141,6 +142,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/cash-out/scan',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (_, __) => const PickupCodeScreen(),
+      ),
+      GoRoute(
+        path: '/events/gate-scan',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (_, __) => const EventGateScanScreen(),
       ),
       // Alternative entry: customer search (retained for manual lookup)
       GoRoute(

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -11,6 +12,7 @@ import 'package:wallet_agent/modules/auth/presentation/auth_providers.dart';
 import 'package:wallet_agent/core/security/secure_storage_service.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
+
 class MockSecureStorageService extends Mock implements SecureStorageService {}
 
 void main() {
@@ -25,7 +27,9 @@ void main() {
   });
 
   group('AuthState transitions', () {
-    test('starts in unknown state and transitions to unauthenticated when no token', () async {
+    test(
+        'starts in unknown state and transitions to unauthenticated when no token',
+        () async {
       final notifier = AuthNotifier(
         repository: mockRepository,
         storage: mockStorage,
@@ -48,7 +52,8 @@ void main() {
       when(() => mockStorage.saveAccessToken(any())).thenAnswer((_) async {});
       when(() => mockStorage.saveRefreshToken(any())).thenAnswer((_) async {});
       when(
-        () => mockRepository.login(phone: any(named: 'phone'), pinHash: any(named: 'pinHash')),
+        () => mockRepository.login(
+            phone: any(named: 'phone'), pin: any(named: 'pin')),
       ).thenAnswer((_) async => (token: token, agent: agent));
 
       final notifier = AuthNotifier(
@@ -57,14 +62,47 @@ void main() {
       );
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      await notifier.login(phone: '+26771000001', pinHash: 'hashed_pin');
+      await notifier.login(phone: '+26771000001', pin: '123456');
 
       expect(notifier.state.status, AuthStateEnum.authenticated);
       expect(notifier.state.agent?.phone, '+26771000001');
       expect(notifier.state.agent?.fullName, 'Sipho Dlamini');
     });
 
-    test('requireReauth() transitions authenticated state to requiresReauth', () async {
+    test('late session initialization cannot undo a successful login',
+        () async {
+      final accessTokenRead = Completer<String?>();
+      when(() => mockStorage.getAccessToken())
+          .thenAnswer((_) => accessTokenRead.future);
+      final fixtureJson = json.decode(
+        File('test/fixtures/agent.json').readAsStringSync(),
+      ) as Map<String, dynamic>;
+      final dto = AuthResponseDto.fromJson(fixtureJson);
+      final token = dto.toAuthToken();
+      final agent = dto.agent.toEntity();
+      when(() => mockStorage.saveAccessToken(any())).thenAnswer((_) async {});
+      when(() => mockStorage.saveRefreshToken(any())).thenAnswer((_) async {});
+      when(
+        () => mockRepository.login(
+          phone: any(named: 'phone'),
+          pin: any(named: 'pin'),
+        ),
+      ).thenAnswer((_) async => (token: token, agent: agent));
+
+      final notifier = AuthNotifier(
+        repository: mockRepository,
+        storage: mockStorage,
+      );
+      await notifier.login(phone: '+26771000001', pin: '123456');
+      accessTokenRead.complete(null);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(notifier.state.status, AuthStateEnum.authenticated);
+      expect(notifier.state.agent?.id, agent.id);
+    });
+
+    test('requireReauth() transitions authenticated state to requiresReauth',
+        () async {
       final notifier = AuthNotifier(
         repository: mockRepository,
         storage: mockStorage,

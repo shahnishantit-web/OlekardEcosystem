@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/semantics.dart';
 import 'package:shared_payment/shared_payment.dart';
 
 import 'package:wallet_agent/core/api/api_client.dart';
@@ -15,6 +16,8 @@ import 'package:wallet_agent/modules/payment/agent_step_up_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  const enableWebSemanticsForP26E2e =
+      bool.fromEnvironment('P26_E2E_ENABLE_WEB_SEMANTICS');
   if (!kIsWeb) {
     try {
       await Firebase.initializeApp();
@@ -25,10 +28,16 @@ Future<void> main() async {
   runApp(ProviderScope(
     overrides: [
       httpClientProvider.overrideWithValue(createDio(null)),
-      stepUpServiceProvider.overrideWith((ref) => AgentStepUpService(ref)),
+      stepUpServiceProvider.overrideWith((_) => AgentStepUpService()),
     ],
     child: const AgentApp(),
   ));
+  if (kIsWeb && enableWebSemanticsForP26E2e) {
+    // Only the isolated P26 E2E build opts in; normal startup keeps Flutter's
+    // standard accessibility opt-in behaviour.
+    await WidgetsBinding.instance.endOfFrame;
+    SemanticsBinding.instance.ensureSemantics();
+  }
 }
 
 class AgentApp extends ConsumerStatefulWidget {
@@ -64,7 +73,10 @@ class _AgentAppState extends ConsumerState<AgentApp> {
       ref.read(connectivityProvider.notifier).state = isOnline;
 
       // Subscribe to connectivity changes
-      ref.read(connectivityServiceProvider).onConnectivityChanged.listen((online) {
+      ref
+          .read(connectivityServiceProvider)
+          .onConnectivityChanged
+          .listen((online) {
         ref.read(connectivityProvider.notifier).state = online;
       });
     } catch (e) {

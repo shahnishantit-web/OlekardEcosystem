@@ -94,8 +94,8 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
           if (receipt.maskedProviderReference != null)
             _Row('Provider Ref', receipt.maskedProviderReference!),
           const Divider(),
-          ...receipt.lineItems.map<Widget>((item) =>
-              _Row(item.description, '${item.currencyCode} ${(item.amountMinorUnits / 100.0).toStringAsFixed(2)}')),
+          ...receipt.lineItems.map<Widget>((item) => _Row(item.description,
+              '${item.currencyCode} ${(item.amountMinorUnits / 100.0).toStringAsFixed(2)}')),
           const Divider(),
           _Row('Total',
               '${receipt.currencyCode} ${(receipt.totalAmountMinorUnits / 100.0).toStringAsFixed(2)}'),
@@ -120,9 +120,9 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
   Future<void> _launchDownload(BuildContext context, String url) async {
     final launched =
         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-    if (!launched && mounted) {
+    if (!launched && context.mounted) {
       await Clipboard.setData(ClipboardData(text: url));
-      if (!mounted) return;
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No PDF viewer — link copied')),
       );
@@ -147,8 +147,7 @@ class _Row extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label, style: const TextStyle(color: Colors.grey)),
-            Flexible(
-                child: Text(value, textAlign: TextAlign.end)),
+            Flexible(child: Text(value, textAlign: TextAlign.end)),
           ],
         ),
       );

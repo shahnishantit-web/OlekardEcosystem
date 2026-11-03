@@ -7,6 +7,7 @@ namespace App\Modules\Payment\Application\Services;
 use App\Modules\Payment\Domain\Enums\EligibilityReason;
 use App\Modules\Payment\Domain\ValueObjects\EligibilityResult;
 use App\Modules\Payment\Domain\ValueObjects\OptionsQuery;
+use App\Modules\Payment\Domain\ValueObjects\StaticEligibilityContext;
 use App\Modules\Payment\Infrastructure\Models\PaymentProviderAccountModel;
 
 /**
@@ -17,7 +18,7 @@ use App\Modules\Payment\Infrastructure\Models\PaymentProviderAccountModel;
  */
 final class EligibilityPipeline
 {
-    public function evaluate(PaymentProviderAccountModel $account, OptionsQuery $query): EligibilityResult
+    public function evaluate(PaymentProviderAccountModel $account, OptionsQuery|StaticEligibilityContext $query): EligibilityResult
     {
         // Stage 1: Platform restrictions
         $provider = $account->provider;

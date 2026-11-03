@@ -56,6 +56,7 @@ interface WalletModuleContract
         string $correlationId,
         string $transactionReference,
         ?\DateTimeImmutable $expiresAt = null,
+        ?string $organisationId = null,
     ): string;
 
     /**

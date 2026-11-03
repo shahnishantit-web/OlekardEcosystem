@@ -9,18 +9,30 @@ class NotificationRepositoryImpl implements NotificationRepository {
   @override
   Future<int> getUnreadCount() async {
     final response = await _dio.get<Map<String, dynamic>>(
-      '/v1/agent/notifications/unread-count',
+      '/v1/notifications/inbox/unread-count',
     );
-    return (response.data?['count'] as num?)?.toInt() ?? 0;
+    final count = response.data?['data']?['unread_count'];
+    if (count is! num || count < 0) {
+      throw const FormatException('Invalid unread notification count.');
+    }
+    return count.toInt();
   }
 
   @override
   Future<void> markRead(String notificationId) async {
-    await _dio.patch<void>('/v1/agent/notifications/$notificationId/read');
+    await _dio.patch<void>(
+      '/v1/notifications/inbox/read',
+      data: <String, Object>{
+        'ids': <String>[notificationId]
+      },
+    );
   }
 
   @override
   Future<void> markAllRead() async {
-    await _dio.post<void>('/v1/agent/notifications/mark-all-read');
+    await _dio.patch<void>(
+      '/v1/notifications/inbox/read',
+      data: const <String, Object>{'mark_all': true},
+    );
   }
 }

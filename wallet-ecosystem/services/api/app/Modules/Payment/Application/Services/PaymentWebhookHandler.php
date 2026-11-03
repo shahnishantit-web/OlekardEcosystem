@@ -53,7 +53,10 @@ final class PaymentWebhookHandler
             'payment_attempt_id' => $attempt->id,
             'outcome' => $notification['status'] === 'success' ? 'succeeded' : 'failed',
             'provider_reference_id' => $notification['provider_reference'],
-            'captured_amount_minor' => $intent->amount_minor,
+            'captured_amount_minor' => $notification['context']['amount_minor'] ?? null,
+            'captured_currency_code' => $notification['context']['currency'] ?? null,
+            'capture_evidence_verified' => true,
+            'capture_evidence_reference' => $receipt->id,
             'fee_minor' => $attempt->fee_minor ?? 0,
             'correlation_id' => $notification['correlation_id'],
         ]);

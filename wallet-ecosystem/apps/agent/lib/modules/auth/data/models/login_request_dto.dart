@@ -1,12 +1,12 @@
 class LoginRequestDto {
   final String phone;
-  final String pinHash;
+  final String pin;
 
-  const LoginRequestDto({required this.phone, required this.pinHash});
+  const LoginRequestDto({required this.phone, required this.pin});
 
   Map<String, dynamic> toJson() => {
         'phone': phone,
-        'pin_hash': pinHash,
+        'pin': pin,
       };
 }
 

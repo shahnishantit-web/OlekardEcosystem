@@ -14,6 +14,7 @@ import '../../../core/session/session_event_bus.dart';
 enum AuthStateEnum {
   unauthenticated,
   authenticating,
+  verifyingPin,
   authenticated,
   registering,
   otpPending,
@@ -75,6 +76,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final PinService _pinService;
   final BiometricService _biometric;
   final Ref _ref;
+  bool _loginVerificationInProgress = false;
 
   AuthNotifier(this._repo, this._pinService, this._biometric, this._ref)
       : super(const AuthState(status: AuthStateEnum.unauthenticated));
@@ -208,8 +210,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> verifyLogin(String pin) async {
     final challengeToken = state.challengeToken;
-    if (challengeToken == null) return;
+    if (challengeToken == null || _loginVerificationInProgress) return;
 
+    _loginVerificationInProgress = true;
+    state = state.copyWith(status: AuthStateEnum.verifyingPin, error: null);
     try {
       const storage = SecureStorageService();
       final customer = await _repo.verifyLogin(
@@ -226,7 +230,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       await _registerPushToken();
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(
+        status: AuthStateEnum.otpPending,
+        error: e.toString(),
+      );
+    } finally {
+      _loginVerificationInProgress = false;
     }
   }
 

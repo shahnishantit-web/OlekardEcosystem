@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Ledger\Domain\Contracts;
 
+use App\Modules\Ledger\Domain\ValueObjects\PostedJournalEvidence;
+
 /**
  * LedgerModuleContract — the only cross-module interface for ledger operations (FR-E07-042, FR-E07-043).
  *
@@ -41,6 +43,9 @@ interface LedgerModuleContract
 
     /** Posted journal lines for one transaction; pending transactions return no lines. */
     public function getTransactionHistory(string $transactionReference): array;
+
+    /** Resolve a journal by its stable idempotency key and return immutable posted evidence. */
+    public function findPostedJournalEvidence(string $idempotencyKey): ?PostedJournalEvidence;
 
     /**
      * Returns the authoritative settled balance (integer, minor units) for the account.

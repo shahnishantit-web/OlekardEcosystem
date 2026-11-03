@@ -21,7 +21,7 @@ void main() {
   late MockTransactionRepository mockRepo;
   late MockPaymentCacheStore mockCache;
 
-  PaymentHistoryItem _makeItem(String id) => PaymentHistoryItem(
+  PaymentHistoryItem makeItem(String id) => PaymentHistoryItem(
         id: id,
         referenceNumber: 'REF-$id',
         purposeType: PaymentPurposeType.walletTransfer,
@@ -38,7 +38,8 @@ void main() {
         direction: PaymentDirection.debit,
       );
 
-  PaginatedResult<PaymentHistoryItem> _page(List<PaymentHistoryItem> items) =>
+  PaginatedResult<PaymentHistoryItem> makePage(
+          List<PaymentHistoryItem> items) =>
       PaginatedResult(
         data: items,
         currentPage: 1,
@@ -46,7 +47,7 @@ void main() {
         lastPage: 1,
       );
 
-  ProviderContainer _container() {
+  ProviderContainer createContainer() {
     return ProviderContainer(
       overrides: [
         transactionRepositoryProvider.overrideWithValue(mockRepo),
@@ -63,11 +64,12 @@ void main() {
 
   // ─── SC-01: list loads ────────────────────────────────────────────────────────
 
-  test('SC-01: build() fetches and transitions to PaymentHistoryLoaded', () async {
-    final items = [_makeItem('1'), _makeItem('2'), _makeItem('3')];
-    when(mockRepo.fetchHistory(any)).thenAnswer((_) async => _page(items));
+  test('SC-01: build() fetches and transitions to PaymentHistoryLoaded',
+      () async {
+    final items = [makeItem('1'), makeItem('2'), makeItem('3')];
+    when(mockRepo.fetchHistory(any)).thenAnswer((_) async => makePage(items));
 
-    final container = _container();
+    final container = createContainer();
     addTearDown(container.dispose);
 
     await container
@@ -85,10 +87,9 @@ void main() {
   });
 
   test('SC-01: empty page → PaymentHistoryEmpty', () async {
-    when(mockRepo.fetchHistory(any))
-        .thenAnswer((_) async => _page([]));
+    when(mockRepo.fetchHistory(any)).thenAnswer((_) async => makePage([]));
 
-    final container = _container();
+    final container = createContainer();
     addTearDown(container.dispose);
     final state = await container.read(paymentHistoryProvider('user1').future);
 
@@ -97,17 +98,18 @@ void main() {
 
   // ─── SC-02: filter applied ────────────────────────────────────────────────────
 
-  test('SC-02: applyFilter calls fetchHistory with new filter and reloads', () async {
-    final items = [_makeItem('1')];
-    when(mockRepo.fetchHistory(any)).thenAnswer((_) async => _page(items));
+  test('SC-02: applyFilter calls fetchHistory with new filter and reloads',
+      () async {
+    final items = [makeItem('1')];
+    when(mockRepo.fetchHistory(any)).thenAnswer((_) async => makePage(items));
 
-    final container = _container();
+    final container = createContainer();
     addTearDown(container.dispose);
     await container.read(paymentHistoryProvider('user1').future);
 
-    final filteredItems = [_makeItem('2')];
+    final filteredItems = [makeItem('2')];
     when(mockRepo.fetchHistory(any))
-        .thenAnswer((_) async => _page(filteredItems));
+        .thenAnswer((_) async => makePage(filteredItems));
 
     final notifier = container.read(paymentHistoryProvider('user1').notifier);
     await notifier.applyFilter(const PaymentHistoryFilter(
@@ -129,13 +131,15 @@ void main() {
 
   // ─── SC-03: offline stale served with banner ──────────────────────────────────
 
-  test('SC-03: network failure + cached data → PaymentHistoryError(isOffline, staleItems)', () async {
+  test(
+      'SC-03: network failure + cached data → PaymentHistoryError(isOffline, staleItems)',
+      () async {
     when(mockRepo.fetchHistory(any)).thenThrow(DioException(
       requestOptions: RequestOptions(),
       type: DioExceptionType.connectionError,
     ));
 
-    final cachedItems = [_makeItem('stale1')];
+    final cachedItems = [makeItem('stale1')];
     final cachedJson = jsonEncode({
       'data': cachedItems
           .map((i) => {
@@ -159,14 +163,14 @@ void main() {
     });
 
     final cachedAt = DateTime(2026, 10, 1);
-    when(mockCache.readHistoryPage('user1')).thenAnswer((_) async =>
-        PaymentCacheEntry(
-          rawJson: cachedJson,
-          cachedAt: cachedAt,
-          staleAfterSeconds: 0,
-        ));
+    when(mockCache.readHistoryPage('user1'))
+        .thenAnswer((_) async => PaymentCacheEntry(
+              rawJson: cachedJson,
+              cachedAt: cachedAt,
+              staleAfterSeconds: 0,
+            ));
 
-    final container = _container();
+    final container = createContainer();
     addTearDown(container.dispose);
     final state = await container.read(paymentHistoryProvider('user1').future);
 
@@ -179,14 +183,16 @@ void main() {
     expect(error.staleAt, cachedAt);
   });
 
-  test('SC-03: network failure + no cache → PaymentHistoryError(isOffline, no staleItems)', () async {
+  test(
+      'SC-03: network failure + no cache → PaymentHistoryError(isOffline, no staleItems)',
+      () async {
     when(mockRepo.fetchHistory(any)).thenThrow(DioException(
       requestOptions: RequestOptions(),
       type: DioExceptionType.connectionError,
     ));
     when(mockCache.readHistoryPage(any)).thenAnswer((_) async => null);
 
-    final container = _container();
+    final container = createContainer();
     addTearDown(container.dispose);
     final state = await container.read(paymentHistoryProvider('user1').future);
 
@@ -199,8 +205,8 @@ void main() {
   // ─── Pagination ───────────────────────────────────────────────────────────────
 
   test('loadNextPage appends items when hasNextPage is true', () async {
-    final page1Items = [_makeItem('1'), _makeItem('2')];
-    final page2Items = [_makeItem('3')];
+    final page1Items = [makeItem('1'), makeItem('2')];
+    final page2Items = [makeItem('3')];
 
     when(mockRepo.fetchHistory(any)).thenAnswer((inv) async {
       final filter = inv.positionalArguments[0] as PaymentHistoryFilter;
@@ -220,7 +226,7 @@ void main() {
       );
     });
 
-    final container = _container();
+    final container = createContainer();
     addTearDown(container.dispose);
     await container.read(paymentHistoryProvider('user1').future);
 
@@ -236,10 +242,10 @@ void main() {
   });
 
   test('loadNextPage is no-op when not on last page', () async {
-    final items = [_makeItem('1')];
-    when(mockRepo.fetchHistory(any)).thenAnswer((_) async => _page(items));
+    final items = [makeItem('1')];
+    when(mockRepo.fetchHistory(any)).thenAnswer((_) async => makePage(items));
 
-    final container = _container();
+    final container = createContainer();
     addTearDown(container.dispose);
     await container.read(paymentHistoryProvider('user1').future);
 

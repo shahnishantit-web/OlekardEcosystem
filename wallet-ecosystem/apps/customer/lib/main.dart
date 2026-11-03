@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/semantics.dart';
 import 'package:shared_payment/shared_payment.dart';
 import 'core/di/providers.dart';
 import 'core/notifications/deep_link_handler.dart';
@@ -14,17 +15,27 @@ import 'modules/payment/customer_step_up_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  const enableWebSemanticsForP26E2e =
+      bool.fromEnvironment('P26_E2E_ENABLE_WEB_SEMANTICS');
   if (!kIsWeb) {
     await Firebase.initializeApp();
     await PushNotificationService.initialize();
   }
   runApp(ProviderScope(
     overrides: [
-      httpClientProvider.overrideWith((ref) => ref.watch(apiClientProvider).dio),
+      httpClientProvider
+          .overrideWith((ref) => ref.watch(apiClientProvider).dio),
       stepUpServiceProvider.overrideWith((ref) => CustomerStepUpService(ref)),
     ],
     child: const CustomerApp(),
   ));
+  if (kIsWeb && enableWebSemanticsForP26E2e) {
+    // The isolated browser journey needs Flutter's accessible DOM tree.
+    // This opt-in is supplied only by the P26 E2E runner; normal app startup
+    // retains Flutter's standard accessibility opt-in behaviour.
+    await WidgetsBinding.instance.endOfFrame;
+    SemanticsBinding.instance.ensureSemantics();
+  }
 }
 
 class CustomerApp extends ConsumerStatefulWidget {

@@ -88,7 +88,7 @@ export function CampaignListPage({ serviceType }: { serviceType?: string }) {
       <PageHeader
         title={title}
         actions={
-          <Button variant="primary" onClick={() => router.push('/community/campaigns/new')} disabled={serviceType === 'funeral'}>
+          <Button variant="primary" onClick={() => router.push(serviceType === 'events' ? '/community/events' : '/community/campaigns/new')} disabled={serviceType === 'funeral'}>
             {serviceType === 'funeral' ? 'New Collection' : serviceType === 'events' ? 'Create Event' : 'New Campaign'}
           </Button>
         }

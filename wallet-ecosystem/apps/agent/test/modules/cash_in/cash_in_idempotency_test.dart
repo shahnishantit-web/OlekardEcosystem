@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -96,10 +95,10 @@ void main() {
           data: any(named: 'data'),
           options: any(named: 'options'),
         )).thenAnswer((_) async => Response(
-      data: rawResult,
-      statusCode: 200,
-      requestOptions: RequestOptions(path: '/v1/agent/cash-in'),
-    ));
+          data: rawResult,
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/v1/agent/cash-in'),
+        ));
 
     const request = CashInRequestDto(
       walletId: 'w',

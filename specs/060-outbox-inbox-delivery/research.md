@@ -112,3 +112,7 @@ Evidence: `OutboxEventPublisher::publishOnConnection()` line 28: `DB::connection
 | OD-1 | Per-domain outbox sharding (dedicated `payment.outbox_events` table) | Deferred — future ADR | None for P11 |
 | OD-2 | Listener-to-child-event causation ID threading (requires InProcessDriver to pass outbox row ID) | Deferred to P12+ | causation_id = null for child events in P11 |
 | OD-3 | Unifying `DeadLetterItemModel` and `OutboxEventModel.dead_letter` into one store | Deferred — future ADR | Two separate admin UIs in P11 |
+
+## Payment confirmation listener boundary correction - 2026-10-28
+
+`PaymentConfirmedListener` now emits only the idempotent customer confirmation notification. The former insert into `payment.payment_allocations` supplied schema-invalid values (`allocation_type=payment`, `recipient_type=merchant`) and guessed a financial recipient from `purpose_reference`. It was removed so the listener cannot fabricate an allocation or prevent a valid outbox message from dispatching. Financial allocation remains in the shared Payment/Finance allocation and settlement ownership path with approved recipient/split rules. The P11 notification regression tests pass. This correction does not implement a generic Events inbox: the P11 research decision continues to prefer a unique durable domain effect as the inbox/idempotency boundary.

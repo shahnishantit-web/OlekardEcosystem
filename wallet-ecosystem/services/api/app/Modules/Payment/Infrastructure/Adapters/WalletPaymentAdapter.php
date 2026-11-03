@@ -4,42 +4,42 @@ declare(strict_types=1);
 
 namespace App\Modules\Payment\Infrastructure\Adapters;
 
+use App\Modules\Identity\Domain\Contracts\ActorStepUpVerifierContract;
 use App\Modules\Payment\Domain\Contracts\PaymentAdapterInterface;
 use App\Modules\Payment\Domain\Contracts\PaymentAttemptRepositoryInterface;
 use App\Modules\Payment\Domain\Enums\PaymentAttemptStatus;
+use App\Modules\Payment\Domain\Enums\PaymentRefundStatus;
 use App\Modules\Payment\Domain\Exceptions\InsufficientFundsException;
 use App\Modules\Payment\Domain\Exceptions\StepUpRequiredException;
 use App\Modules\Payment\Domain\Exceptions\TransactionLimitExceededException;
-use App\Modules\Wallet\Domain\Enums\WalletStatus;
-use App\Modules\Wallet\Domain\Exceptions\UnsupportedCurrencyException;
-use App\Modules\Wallet\Domain\Exceptions\WalletNotTransactableException;
 use App\Modules\Payment\Domain\ValueObjects\PaymentAttemptResult;
 use App\Modules\Payment\Domain\ValueObjects\PaymentCancelResult;
 use App\Modules\Payment\Domain\ValueObjects\PaymentInitiateRequest;
 use App\Modules\Payment\Domain\ValueObjects\PaymentRefundRequest;
 use App\Modules\Payment\Domain\ValueObjects\PaymentRefundResult;
 use App\Modules\Payment\Domain\ValueObjects\PaymentStatusResult;
-use App\Modules\Payment\Domain\Enums\PaymentRefundStatus;
-use App\Modules\Identity\Domain\Contracts\ActorStepUpVerifierContract;
+use App\Modules\Payment\Domain\ValueObjects\RefundStatusResult;
 use App\Modules\Platform\Domain\Contracts\AuditServiceInterface;
 use App\Modules\Platform\Domain\Contracts\ConfigurationServiceInterface;
 use App\Modules\Platform\Domain\Enums\ProviderCapabilityEnum;
+use App\Modules\Platform\Domain\ValueObjects\AuditEventData;
 use App\Modules\Platform\Domain\ValueObjects\Providers\ProviderCapabilitySet;
 use App\Modules\Platform\Domain\ValueObjects\Providers\ProviderRequest;
 use App\Modules\Platform\Domain\ValueObjects\Providers\ProviderResponse;
-use App\Modules\Platform\Domain\ValueObjects\AuditEventData;
 use App\Modules\Wallet\Domain\Contracts\WalletModuleContract;
+use App\Modules\Wallet\Domain\Enums\WalletStatus;
+use App\Modules\Wallet\Domain\Exceptions\UnsupportedCurrencyException;
+use App\Modules\Wallet\Domain\Exceptions\WalletNotTransactableException;
 
 final class WalletPaymentAdapter implements PaymentAdapterInterface
 {
     public function __construct(
-        private readonly WalletModuleContract              $wallet,
-        private readonly ConfigurationServiceInterface     $config,
-        private readonly AuditServiceInterface             $audit,
+        private readonly WalletModuleContract $wallet,
+        private readonly ConfigurationServiceInterface $config,
+        private readonly AuditServiceInterface $audit,
         private readonly PaymentAttemptRepositoryInterface $attemptRepository,
-        private readonly ActorStepUpVerifierContract       $stepUpVerifier,
-    ) {
-    }
+        private readonly ActorStepUpVerifierContract $stepUpVerifier,
+    ) {}
 
     public function getProviderIdentifier(): string
     {
@@ -86,7 +86,7 @@ final class WalletPaymentAdapter implements PaymentAdapterInterface
         }
 
         // 1. Wallet must be active and operable
-        if (!$this->wallet->isActive($walletId)) {
+        if (! $this->wallet->isActive($walletId)) {
             throw new WalletNotTransactableException(WalletStatus::Suspended);
         }
 
@@ -99,7 +99,7 @@ final class WalletPaymentAdapter implements PaymentAdapterInterface
         }
 
         // 3. Pocket for this currency must exist on the wallet
-        if (!$this->wallet->pocketExists($walletId, $request->currencyCode)) {
+        if (! $this->wallet->pocketExists($walletId, $request->currencyCode)) {
             throw new UnsupportedCurrencyException($request->currencyCode);
         }
 
@@ -110,7 +110,7 @@ final class WalletPaymentAdapter implements PaymentAdapterInterface
         }
 
         // 5. Per-currency transaction limit (null = no limit configured)
-        $limit = $this->config->getOrDefault('payment.wallet_transaction_limit_' . $request->currencyCode, null);
+        $limit = $this->config->getOrDefault('payment.wallet_transaction_limit_'.$request->currencyCode, null);
         if ($limit !== null && $request->amountMinor > (int) $limit) {
             throw new TransactionLimitExceededException($request->amountMinor, (int) $limit, $request->currencyCode);
         }
@@ -120,7 +120,7 @@ final class WalletPaymentAdapter implements PaymentAdapterInterface
         if ($request->amountMinor >= $stepUpThreshold) {
             if (empty($request->stepUpToken)) {
                 throw new StepUpRequiredException(
-                    challengeType:   'totp',
+                    challengeType: 'totp',
                     paymentIntentId: $request->paymentIntentId,
                 );
             }
@@ -136,7 +136,7 @@ final class WalletPaymentAdapter implements PaymentAdapterInterface
 
             if (! $valid) {
                 throw new StepUpRequiredException(
-                    challengeType:   'totp',
+                    challengeType: 'totp',
                     paymentIntentId: $request->paymentIntentId,
                 );
             }
@@ -144,24 +144,25 @@ final class WalletPaymentAdapter implements PaymentAdapterInterface
 
         // 4. Create hold — WalletModuleContract handles SELECT FOR UPDATE + balance check
         $holdId = $this->wallet->createHold(
-            walletId:             $walletId,
-            currencyCode:         $request->currencyCode,
-            amount:               $request->amountMinor,
-            actorId:              $request->payerActorId,
-            correlationId:        $request->correlationId,
+            walletId: $walletId,
+            currencyCode: $request->currencyCode,
+            amount: $request->amountMinor,
+            actorId: $request->payerActorId,
+            correlationId: $request->correlationId,
             transactionReference: $request->paymentAttemptId,
+            organisationId: $request->organisationId,
         );
 
         $this->audit->record(new AuditEventData(
-            action:        'payment.wallet.hold_placed',
-            actorId:       $request->payerActorId,
-            actorType:     'customer',
-            resourceType:  'payment_attempt',
-            resourceId:    $request->paymentAttemptId,
+            action: 'payment.wallet.hold_placed',
+            actorId: $request->payerActorId,
+            actorType: 'customer',
+            resourceType: 'payment_attempt',
+            resourceId: $request->paymentAttemptId,
             correlationId: $request->correlationId,
-            outcome:       'success',
-            afterState:    [
-                'hold_id'      => $holdId,
+            outcome: 'success',
+            afterState: [
+                'hold_id' => $holdId,
                 'amount_minor' => $request->amountMinor,
                 'currency_code' => $request->currencyCode,
             ],
@@ -169,8 +170,8 @@ final class WalletPaymentAdapter implements PaymentAdapterInterface
 
         // Wallet payments are synchronous — status is immediately succeeded
         return new PaymentAttemptResult(
-            status:       PaymentAttemptStatus::Succeeded,
-            feeMinor:     0,
+            status: PaymentAttemptStatus::Succeeded,
+            feeMinor: 0,
             walletHoldId: $holdId,
         );
     }
@@ -187,7 +188,7 @@ final class WalletPaymentAdapter implements PaymentAdapterInterface
         $status = $attempt?->status ?? PaymentAttemptStatus::Failed;
 
         return new PaymentStatusResult(
-            status:              $status,
+            status: $status,
             providerReferenceId: $providerReferenceId,
         );
     }
@@ -207,15 +208,15 @@ final class WalletPaymentAdapter implements PaymentAdapterInterface
         // Here we confirm the wallet refund action is complete
 
         $this->audit->record(new AuditEventData(
-            action:        'payment.wallet.refund_initiated',
-            actorId:       'system',
-            actorType:     'system',
-            resourceType:  'payment_refund',
-            resourceId:    $request->refundId,
+            action: 'payment.wallet.refund_initiated',
+            actorId: 'system',
+            actorType: 'system',
+            resourceType: 'payment_refund',
+            resourceId: $request->refundId,
             correlationId: $request->correlationId,
-            outcome:       'success',
-            afterState:    [
-                'refund_id'    => $request->refundId,
+            outcome: 'success',
+            afterState: [
+                'refund_id' => $request->refundId,
                 'amount_minor' => $request->amountMinor,
                 'currency_code' => $request->currencyCode,
             ],
@@ -224,6 +225,15 @@ final class WalletPaymentAdapter implements PaymentAdapterInterface
         return new PaymentRefundResult(
             status: PaymentRefundStatus::Succeeded,
         );
+    }
+
+    /**
+     * Wallet has no asynchronous provider refund query. Keep a queried refund
+     * unresolved instead of manufacturing a terminal outcome.
+     */
+    public function queryRefundStatus(string $refundId, string $providerSubmittedRef): RefundStatusResult
+    {
+        return new RefundStatusResult('pending', null, 'olekard_wallet');
     }
 
     /**

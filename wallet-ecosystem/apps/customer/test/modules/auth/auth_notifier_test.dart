@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,6 +29,8 @@ class _Repository extends Fake implements AuthRepository {
   var loggedOut = false;
   var rejectOtp = false;
   var rejectPin = false;
+  var verifyLoginCalls = 0;
+  Completer<Customer>? pendingLoginVerification;
 
   @override
   Future<String> register(
@@ -64,9 +68,12 @@ class _Repository extends Fake implements AuthRepository {
   @override
   Future<Customer> verifyLogin(
       {required String challengeToken, required String pin}) async {
+    verifyLoginCalls++;
     lastChallenge = challengeToken;
     lastLoginPin = pin;
     if (rejectPin) throw StateError('PIN rejected');
+    final pending = pendingLoginVerification;
+    if (pending != null) return pending.future;
     return customer;
   }
 
@@ -179,6 +186,42 @@ void main() {
     expect(await const SecureStorageService().readPinHash(), 'cached-pin-hash');
     expect(container.read(authProvider).isAuthenticated, isFalse);
     expect(container.read(authProvider).error, contains('PIN rejected'));
+  });
+
+  test('rejected PIN preserves the challenge and permits a corrected retry',
+      () async {
+    repository.rejectPin = true;
+    final notifier = container.read(authProvider.notifier);
+    await notifier.login('+26771000001');
+    await notifier.verifyLogin('001230');
+
+    final rejected = container.read(authProvider);
+    expect(rejected.status, AuthStateEnum.otpPending);
+    expect(rejected.challengeToken, 'challenge-token');
+    expect(rejected.error, contains('PIN rejected'));
+    expect(rejected.isAuthenticated, isFalse);
+
+    repository.rejectPin = false;
+    await notifier.verifyLogin('001234');
+    expect(repository.lastLoginPin, '001234');
+    expect(container.read(authProvider).isAuthenticated, isTrue);
+  });
+
+  test('a pending PIN verification exposes loading and accepts one request',
+      () async {
+    repository.pendingLoginVerification = Completer<Customer>();
+    final notifier = container.read(authProvider.notifier);
+    await notifier.login('+26771000001');
+
+    final first = notifier.verifyLogin('001234');
+    expect(container.read(authProvider).status, AuthStateEnum.verifyingPin);
+    final duplicate = notifier.verifyLogin('001234');
+    expect(repository.verifyLoginCalls, 1);
+
+    repository.pendingLoginVerification!.complete(repository.customer);
+    await Future.wait([first, duplicate]);
+    expect(container.read(authProvider).isAuthenticated, isTrue);
+    expect(repository.verifyLoginCalls, 1);
   });
 
   test(

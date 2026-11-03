@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-21
 
-**Status**: Draft
+**Status**: In Progress — bounded evidence/acknowledgement implementation; operational accounting and activation remain blocked
 
 **Input**: P08 — Ledger acknowledgement and fulfilment handoff. Predecessors: P01, P06, P07. Source refs: FD07; LC03 LC04 LC05; section 6. ADR-E48-003.
 
@@ -12,6 +12,10 @@
 - P01 COMPLETE — `LedgerModuleContract` interface confirmed at `app/Modules/Ledger/Domain/Contracts/LedgerModuleContract.php`; `WalletModuleContract::getPocketLedgerAccountRef()` confirmed present; ADR-E48-003 accounting decisions reviewed
 - P06 COMPLETE — `PaymentAttemptStatus::Succeeded`, `PaymentIntent.accounting_status` (LedgerPosted/LedgerFailed/PendingLedger), `PaymentIntent.fulfilment_status` confirmed
 - P07 COMPLETE — `PaymentIdempotencyService`, `DeadlockRetryTrait`, Guard D all confirmed present
+
+**Source verification (2026-10-28)**: The previously cited source is present at the exact path `docs/sources/Olekard_Shared_Payment_Architecture_v1.1.docx`; its body identifies version 1.1 and describes shared Payments/Ledger ownership, durable outbox and distinct fulfilment state. It explicitly treats bank names as placeholders and states no live bank contract/API was inspected. It does not supply AD-08 or AD-09 mappings.
+
+**Implementation reconciliation**: Earlier P08 tasks T001–T025 are present in code, but the old checkboxes are not evidence that P08 was complete. P08's succeeded-attempt path did not persist the journal reference, attempts did not preserve actual capture facts, and no typed service evidence/fulfilment acknowledgement existed. This authorized extension adds those boundaries; test and static-analysis completion is tracked separately below. P08 does not create an Events order or resolver.
 
 **Accounting decision status** (from ADR-E48-003 — reviewed 2026-10-21):
 - AD-01 CONFIRMED — Wallet balance owned exclusively by `WalletModuleContract`

@@ -2,10 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 
-import 'package:wallet_agent/modules/transactions/application/payment_detail_notifier.dart';
-import 'package:wallet_agent/modules/transactions/domain/entities/agent_transaction.dart';
-import 'package:wallet_agent/modules/transactions/domain/entities/domain_deep_link.dart';
 import 'package:wallet_agent/modules/transactions/presentation/transaction_providers.dart';
+import 'package:wallet_agent/modules/transactions/domain/entities/agent_transaction.dart';
 
 import 'agent_transaction_test.mocks.dart';
 
@@ -52,13 +50,16 @@ void main() {
 
   // ─── T085: US2 tests ──────────────────────────────────────────────────────────
 
-  test('build() fetches item and transitions to PaymentDetailLoaded with 4 status rows', () async {
+  test(
+      'build() fetches item and transitions to PaymentDetailLoaded with 4 status rows',
+      () async {
     final item = makeItem();
     when(mockRepo.fetchDetail(any)).thenAnswer((_) async => item);
 
     final container = makeContainer();
     addTearDown(container.dispose);
-    final state = await container.read(paymentDetailProvider('intent-1').future);
+    final state =
+        await container.read(paymentDetailProvider('intent-1').future);
 
     expect(state, isA<PaymentDetailLoaded>());
     final loaded = state as PaymentDetailLoaded;
@@ -69,14 +70,17 @@ void main() {
     expect(loaded.statusRows.refundStatus, isNull);
   });
 
-  test('build() with AvailableLink → deepLink populated in loaded state', () async {
-    const link = AvailableLink(url: 'https://example.com/domain', label: 'Domain');
+  test('build() with AvailableLink → deepLink populated in loaded state',
+      () async {
+    const link =
+        AvailableLink(url: 'https://example.com/domain', label: 'Domain');
     final item = makeItem(deepLink: link);
     when(mockRepo.fetchDetail(any)).thenAnswer((_) async => item);
 
     final container = makeContainer();
     addTearDown(container.dispose);
-    final state = await container.read(paymentDetailProvider('intent-1').future);
+    final state =
+        await container.read(paymentDetailProvider('intent-1').future);
 
     expect(state, isA<PaymentDetailLoaded>());
     final loaded = state as PaymentDetailLoaded;
@@ -88,7 +92,8 @@ void main() {
 
     final container = makeContainer();
     addTearDown(container.dispose);
-    final state = await container.read(paymentDetailProvider('intent-1').future);
+    final state =
+        await container.read(paymentDetailProvider('intent-1').future);
 
     expect(state, isA<PaymentDetailError>());
   });
@@ -100,7 +105,8 @@ void main() {
 
     final container = makeContainer();
     addTearDown(container.dispose);
-    final state = await container.read(paymentDetailProvider('intent-1').future);
+    final state =
+        await container.read(paymentDetailProvider('intent-1').future);
 
     expect(state, isA<PaymentDetailLoaded>());
     expect((state as PaymentDetailLoaded).deepLink, isA<UnavailableLink>());
@@ -108,7 +114,8 @@ void main() {
 
   // ─── T088: US4 refund tests ───────────────────────────────────────────────────
 
-  test('initiateRefund() on refundEligible=true → PaymentDetailRefundConfirm', () async {
+  test('initiateRefund() on refundEligible=true → PaymentDetailRefundConfirm',
+      () async {
     final item = makeItem(refundEligible: true);
     when(mockRepo.fetchDetail(any)).thenAnswer((_) async => item);
 
@@ -116,13 +123,17 @@ void main() {
     addTearDown(container.dispose);
     await container.read(paymentDetailProvider('intent-1').future);
 
-    await container.read(paymentDetailProvider('intent-1').notifier).initiateRefund();
+    await container
+        .read(paymentDetailProvider('intent-1').notifier)
+        .initiateRefund();
 
     final state = container.read(paymentDetailProvider('intent-1')).value;
     expect(state, isA<PaymentDetailRefundConfirm>());
   });
 
-  test('initiateRefund() on refundEligible=false → state unchanged (stays Loaded)', () async {
+  test(
+      'initiateRefund() on refundEligible=false → state unchanged (stays Loaded)',
+      () async {
     final item = makeItem(refundEligible: false);
     when(mockRepo.fetchDetail(any)).thenAnswer((_) async => item);
 
@@ -130,7 +141,9 @@ void main() {
     addTearDown(container.dispose);
     await container.read(paymentDetailProvider('intent-1').future);
 
-    await container.read(paymentDetailProvider('intent-1').notifier).initiateRefund();
+    await container
+        .read(paymentDetailProvider('intent-1').notifier)
+        .initiateRefund();
 
     final state = container.read(paymentDetailProvider('intent-1')).value;
     expect(state, isA<PaymentDetailLoaded>());
@@ -153,7 +166,9 @@ void main() {
     expect(state, isA<PaymentDetailRefundSubmitted>());
   });
 
-  test('duplicate-submission guard: submitRefund when not in RefundConfirm is no-op', () async {
+  test(
+      'duplicate-submission guard: submitRefund when not in RefundConfirm is no-op',
+      () async {
     final item = makeItem(refundEligible: true);
     when(mockRepo.fetchDetail(any)).thenAnswer((_) async => item);
 
@@ -167,8 +182,7 @@ void main() {
         .submitRefund(reason: 'test');
 
     verifyNever(mockRepo.submitRefund(any));
-    expect(
-        container.read(paymentDetailProvider('intent-1')).value,
+    expect(container.read(paymentDetailProvider('intent-1')).value,
         isA<PaymentDetailLoaded>());
   });
 
@@ -185,8 +199,7 @@ void main() {
     await notifier.initiateRefund();
     await notifier.submitRefund(reason: 'wrong_item');
 
-    expect(
-        container.read(paymentDetailProvider('intent-1')).value,
+    expect(container.read(paymentDetailProvider('intent-1')).value,
         isA<PaymentDetailError>());
   });
 
@@ -200,13 +213,11 @@ void main() {
 
     final notifier = container.read(paymentDetailProvider('intent-1').notifier);
     await notifier.initiateRefund();
-    expect(
-        container.read(paymentDetailProvider('intent-1')).value,
+    expect(container.read(paymentDetailProvider('intent-1')).value,
         isA<PaymentDetailRefundConfirm>());
 
     await notifier.cancel();
-    expect(
-        container.read(paymentDetailProvider('intent-1')).value,
+    expect(container.read(paymentDetailProvider('intent-1')).value,
         isA<PaymentDetailLoaded>());
   });
 
@@ -222,8 +233,7 @@ void main() {
         .read(paymentDetailProvider('intent-1').notifier)
         .openSupportDraft();
 
-    expect(
-        container.read(paymentDetailProvider('intent-1')).value,
+    expect(container.read(paymentDetailProvider('intent-1')).value,
         isA<PaymentDetailSupportDraft>());
   });
 }

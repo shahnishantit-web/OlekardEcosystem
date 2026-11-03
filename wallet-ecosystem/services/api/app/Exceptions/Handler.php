@@ -6,6 +6,7 @@ namespace App\Exceptions;
 
 use App\Modules\Fees\Domain\Exceptions\FeeRuleConflictException;
 use App\Modules\Fees\Domain\Exceptions\FeeRuleNotFoundException;
+use App\Modules\Events\Domain\Exceptions\EventPricingUnavailable;
 use App\Modules\Payment\Domain\Exceptions\ConcurrentModificationException;
 use App\Modules\Platform\Domain\Exceptions\WebhookSignatureException;
 use App\Modules\Reporting\Domain\Exceptions\ConcurrentJobLimitExceededException;
@@ -96,6 +97,7 @@ final class Handler
                 $e instanceof DuplicateResourceException => self::conflict('RESOURCE_CONFLICT', $e->getMessage(), $correlationId),
                 $e instanceof BusinessRuleViolationException => self::businessRuleError($e, $correlationId),
                 $e instanceof TbdConfigurationException => self::tbdConfigError($e, $correlationId),
+                $e instanceof EventPricingUnavailable => self::errorEnvelope(503, 'EVENT_PRICING_UNAVAILABLE', 'Approved event pricing is not configured.', [], $correlationId),
                 $e instanceof ConcurrentJobLimitExceededException => self::errorEnvelope(429, 'CONCURRENT_JOB_LIMIT_EXCEEDED', $e->getMessage(), [], $correlationId),
                 $e instanceof ThrottleRequestsException => self::rateLimitError($e, $correlationId),
                 $e instanceof ModuleConnectionUnavailableException => self::serviceUnavailableError($e, $correlationId),

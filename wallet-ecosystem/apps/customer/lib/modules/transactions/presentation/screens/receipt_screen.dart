@@ -85,7 +85,7 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
               children: [
                 const Icon(Icons.lock_outlined, size: 64, color: Colors.red),
                 const SizedBox(height: AppSpacing.md),
-                Text('Access Denied', style: AppTypography.label),
+                const Text('Access Denied', style: AppTypography.label),
                 const SizedBox(height: AppSpacing.sm),
                 Text(state.reason, style: AppTypography.caption),
               ],
@@ -98,8 +98,7 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
     if (state is ReceiptAccessError) {
       return ErrorView(
         message: state.message,
-        onRetry: () =>
-            ref.invalidate(receiptAccessProvider(widget.intentId)),
+        onRetry: () => ref.invalidate(receiptAccessProvider(widget.intentId)),
       );
     }
 
@@ -125,8 +124,7 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
         onDownload: () => ref
             .read(receiptAccessProvider(widget.intentId).notifier)
             .requestDownload(),
-        errorMessage:
-            state is ReceiptDownloadError ? state.message : null,
+        errorMessage: state is ReceiptDownloadError ? state.message : null,
       );
     }
 
@@ -136,8 +134,11 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
   Future<void> _launchDownload(BuildContext context, String url) async {
     final launched =
         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-    if (!launched && mounted) {
+    if (!mounted) return;
+
+    if (!launched) {
       await Clipboard.setData(ClipboardData(text: url));
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -145,11 +146,10 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
         ),
       );
     }
-    if (mounted) {
-      ref
-          .read(receiptAccessProvider(widget.intentId).notifier)
-          .onDownloadLaunched();
-    }
+    if (!mounted) return;
+    ref
+        .read(receiptAccessProvider(widget.intentId).notifier)
+        .onDownloadLaunched();
   }
 }
 
@@ -176,7 +176,7 @@ class _ReceiptContent extends StatelessWidget {
         if (receipt.maskedProviderReference != null)
           _Row('Provider Ref', receipt.maskedProviderReference!),
         const Divider(height: AppSpacing.lg),
-        Text('Line Items', style: AppTypography.caption),
+        const Text('Line Items', style: AppTypography.caption),
         const SizedBox(height: AppSpacing.sm),
         ...receipt.lineItems.map<Widget>((item) => Semantics(
               label:
@@ -189,11 +189,9 @@ class _ReceiptContent extends StatelessWidget {
         const Divider(height: AppSpacing.lg),
         _Row(
           'Total',
-          _formatAmount(
-              receipt.totalAmountMinorUnits, receipt.currencyCode),
+          _formatAmount(receipt.totalAmountMinorUnits, receipt.currencyCode),
         ),
-        _Row('Fee',
-            _formatAmount(receipt.feeMinorUnits, receipt.currencyCode)),
+        _Row('Fee', _formatAmount(receipt.feeMinorUnits, receipt.currencyCode)),
         if (receipt.refundSummary != null)
           _Row('Refund', receipt.refundSummary!),
         if (errorMessage != null) ...[

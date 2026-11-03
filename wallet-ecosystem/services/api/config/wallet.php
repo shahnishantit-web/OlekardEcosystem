@@ -47,4 +47,14 @@ return [
     | from in-flight ledger postings. Requires E07 ledger integration.
     */
     'show_pending_meta' => (bool) env('WALLET_SHOW_PENDING_META', false),
+
+    /*
+    | Test-only committed capture adapter. This is deliberately not a production
+    | account mapping: AD-08 remains subject to Finance approval. The service
+    | additionally refuses production execution even if these values are set.
+    */
+    'capture' => [
+        'test_only_enabled' => (bool) env('WALLET_CAPTURE_TEST_ONLY_ENABLED', false),
+        'test_destination_accounts' => [],
+    ],
 ];

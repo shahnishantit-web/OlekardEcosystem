@@ -5,9 +5,10 @@ declare(strict_types=1);
 use App\Modules\Identity\Domain\Contracts\CredentialRepositoryInterface;
 use App\Modules\Identity\Domain\Contracts\DeviceRepositoryInterface;
 use App\Modules\Identity\Domain\Contracts\IdentityModuleContract;
+use App\Modules\Identity\Domain\Contracts\JwkSigningKey;
+use App\Modules\Identity\Domain\Contracts\JwksProviderContract;
 use App\Modules\Identity\Domain\Contracts\OtpDeliveryContract;
 use App\Modules\Identity\Domain\Contracts\OtpDeliveryResult;
-use App\Modules\Identity\Domain\Contracts\SessionRepositoryInterface;
 use App\Modules\Identity\Domain\Contracts\UserRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -26,9 +27,9 @@ use Illuminate\Support\Str;
  * - verifyStepUpScope() returns false for wrong scope, invalid/expired token, non-step-up token
  * - revokeSession() marks session revoked in DB and sets Redis key
  */
-
 beforeEach(function (): void {
-    $this->app->bind(OtpDeliveryContract::class, fn () => new class implements OtpDeliveryContract {
+    $this->app->bind(OtpDeliveryContract::class, fn () => new class implements OtpDeliveryContract
+    {
         public function deliver(string $d, string $otp, string $ch, string $c): OtpDeliveryResult
         {
             return new OtpDeliveryResult(true, 'stub', null);
@@ -43,26 +44,26 @@ beforeEach(function (): void {
 
 function svcSecCreateUser(string $mobile, string $fp = 'svc-sec-dev', string $actorType = 'CUSTOMER'): array
 {
-    $users    = app(UserRepositoryInterface::class);
+    $users = app(UserRepositoryInterface::class);
     $credRepo = app(CredentialRepositoryInterface::class);
-    $devRepo  = app(DeviceRepositoryInterface::class);
+    $devRepo = app(DeviceRepositoryInterface::class);
 
     $user = $users->create([
         'mobile_number' => $mobile,
-        'status'        => 'active',
-        'actor_type'    => $actorType,
+        'status' => 'active',
+        'actor_type' => $actorType,
     ]);
     $credRepo->create([
-        'user_id'         => $user->id,
+        'user_id' => $user->id,
         'credential_type' => 'pin',
         'credential_hash' => Hash::make('999888'),
-        'status'          => 'active',
+        'status' => 'active',
     ]);
     $devRepo->create([
-        'user_id'            => $user->id,
+        'user_id' => $user->id,
         'device_fingerprint' => hash('sha256', $fp),
-        'status'             => 'trusted',
-        'platform'           => 'android',
+        'status' => 'trusted',
+        'platform' => 'android',
     ]);
 
     return ['user' => $user, 'fingerprint' => $fp];
@@ -71,15 +72,16 @@ function svcSecCreateUser(string $mobile, string $fp = 'svc-sec-dev', string $ac
 function svcSecLogin(mixed $test, string $mobile, string $fp = 'svc-sec-dev'): array
 {
     $resp = $test->postJson('/v1/auth/login', [
-        'credential_type'    => 'pin',
-        'identifier'         => $mobile,
-        'credential'         => '999888',
+        'credential_type' => 'pin',
+        'identifier' => $mobile,
+        'credential' => '999888',
         'device_fingerprint' => $fp,
     ]);
     $resp->assertStatus(200);
+
     return [
         'access_token' => (string) $resp->json('data.access_token'),
-        'session_id'   => (string) $resp->json('data.session_id'),
+        'session_id' => (string) $resp->json('data.session_id'),
     ];
 }
 
@@ -90,13 +92,14 @@ function svcSecIssueServiceToken(mixed $test, string $serviceId = 'sec-test-svc'
 {
     $resp = $test->postJson('/v1/auth/service/token', [
         'service_id' => $serviceId,
-        'audience'   => 'test-aud',
-        'scopes'     => ['payments:read'],
+        'audience' => 'test-aud',
+        'scopes' => ['payments:read'],
     ], [
         'X-Service-Secret' => 'test-service-secret',
-        'Idempotency-Key'  => (string) Str::uuid(),
+        'Idempotency-Key' => (string) Str::uuid(),
     ]);
     $resp->assertStatus(200);
+
     return (string) $resp->json('data.access_token');
 }
 
@@ -108,17 +111,17 @@ function svcSecIssueStepUpToken(mixed $test, string $mobile, string $fp): string
     $auth = svcSecLogin($test, $mobile, $fp);
 
     $init = $test->postJson('/v1/auth/step-up/initiate', [
-        'scope'             => 'payment:high-value',
+        'scope' => 'payment:high-value',
         'operation_context' => ['amount' => 20000, 'currency' => 'BWP'],
-    ], ['Authorization' => 'Bearer ' . $auth['access_token']]);
+    ], ['Authorization' => 'Bearer '.$auth['access_token']]);
     $init->assertStatus(200);
     expect($init->json('data.step_up_required'))->toBeTrue();
 
     $verify = $test->postJson('/v1/auth/step-up/verify', [
         'step_up_token' => $init->json('data.step_up_token'),
-        'method'        => 'pin',
-        'credential'    => '999888',
-    ], ['Authorization' => 'Bearer ' . $auth['access_token']]);
+        'method' => 'pin',
+        'credential' => '999888',
+    ], ['Authorization' => 'Bearer '.$auth['access_token']]);
     $verify->assertStatus(200);
 
     return (string) $verify->json('data.step_up_access_token');
@@ -135,7 +138,7 @@ describe('IdentityModule::resolveActorFromToken (T142)', function (): void {
         $auth = svcSecLogin($this, '+26775001001');
 
         $module = app(IdentityModuleContract::class);
-        $actor  = $module->resolveActorFromToken($auth['access_token']);
+        $actor = $module->resolveActorFromToken($auth['access_token']);
 
         expect($actor)->not->toBeNull();
         expect($actor->userId)->not->toBeEmpty();
@@ -146,7 +149,7 @@ describe('IdentityModule::resolveActorFromToken (T142)', function (): void {
 
     it('returns null for a completely invalid (garbage) JWT', function (): void {
         $module = app(IdentityModuleContract::class);
-        $actor  = $module->resolveActorFromToken('not-a-jwt-at-all');
+        $actor = $module->resolveActorFromToken('not-a-jwt-at-all');
 
         expect($actor)->toBeNull();
     });
@@ -168,7 +171,7 @@ describe('IdentityModule::resolveServiceActor (T142)', function (): void {
         $serviceJwt = svcSecIssueServiceToken($this, 'verify-svc');
 
         $module = app(IdentityModuleContract::class);
-        $actor  = $module->resolveServiceActor($serviceJwt);
+        $actor = $module->resolveServiceActor($serviceJwt);
 
         expect($actor)->not->toBeNull();
         expect($actor->serviceId)->toBe('verify-svc');
@@ -179,18 +182,18 @@ describe('IdentityModule::resolveServiceActor (T142)', function (): void {
 
     it('resolves ServiceActor with on_behalf_of when delegation was requested', function (): void {
         $resp = $this->postJson('/v1/auth/service/token', [
-            'service_id'   => 'delegation-svc',
-            'audience'     => 'test-aud',
-            'scopes'       => ['transfer:initiate'],
+            'service_id' => 'delegation-svc',
+            'audience' => 'test-aud',
+            'scopes' => ['transfer:initiate'],
             'on_behalf_of' => 'user-delegate-id',
         ], [
             'X-Service-Secret' => 'test-service-secret',
-            'Idempotency-Key'  => (string) Str::uuid(),
+            'Idempotency-Key' => (string) Str::uuid(),
         ]);
         $resp->assertStatus(200);
 
         $module = app(IdentityModuleContract::class);
-        $actor  = $module->resolveServiceActor((string) $resp->json('data.access_token'));
+        $actor = $module->resolveServiceActor((string) $resp->json('data.access_token'));
 
         expect($actor)->not->toBeNull();
         expect($actor->onBehalfOf)->toBe('user-delegate-id');
@@ -201,7 +204,7 @@ describe('IdentityModule::resolveServiceActor (T142)', function (): void {
         $auth = svcSecLogin($this, '+26775002001');
 
         $module = app(IdentityModuleContract::class);
-        $actor  = $module->resolveServiceActor($auth['access_token']);
+        $actor = $module->resolveServiceActor($auth['access_token']);
 
         expect($actor)->toBeNull();
     });
@@ -255,6 +258,27 @@ describe('IdentityModule::verifyStepUpScope (T142)', function (): void {
         expect($module->verifyStepUpScope('not-a-token', 'payment:high-value'))->toBeFalse();
     });
 
+    it('rejects an empty token before asking Identity for signing material', function (): void {
+        $jwks = Mockery::mock(JwksProviderContract::class);
+        $jwks->shouldNotReceive('getSigningKey');
+        $this->app->instance(JwksProviderContract::class, $jwks);
+        $this->app->forgetInstance(IdentityModuleContract::class);
+
+        expect(app(IdentityModuleContract::class)->resolveActorFromToken(''))->toBeNull();
+    });
+
+    it('fails closed for malformed private signing key material', function (): void {
+        $jwks = Mockery::mock(JwksProviderContract::class);
+        $jwks->shouldReceive('getSigningKey')->once()->andReturn(
+            new JwkSigningKey('invalid-key', 'not a private key', 'ES256'),
+        );
+        $this->app->instance(JwksProviderContract::class, $jwks);
+        $this->app->forgetInstance(IdentityModuleContract::class);
+
+        expect(app(IdentityModuleContract::class)->resolveActorFromToken('header.payload.signature'))
+            ->toBeNull();
+    });
+
 });
 
 // ============================================================================
@@ -265,8 +289,8 @@ describe('IdentityModule::revokeSession (T142)', function (): void {
 
     it('marks session as revoked in the database', function (): void {
         svcSecCreateUser('+26775004001');
-        $auth       = svcSecLogin($this, '+26775004001');
-        $sessionId  = $auth['session_id'];
+        $auth = svcSecLogin($this, '+26775004001');
+        $sessionId = $auth['session_id'];
 
         $module = app(IdentityModuleContract::class);
         $module->revokeSession($sessionId, 'admin-actor-id');
@@ -282,21 +306,21 @@ describe('IdentityModule::revokeSession (T142)', function (): void {
 
     it('adds the session to the Redis revoked-session cache', function (): void {
         svcSecCreateUser('+26775004002');
-        $auth      = svcSecLogin($this, '+26775004002');
+        $auth = svcSecLogin($this, '+26775004002');
         $sessionId = $auth['session_id'];
 
         $module = app(IdentityModuleContract::class);
         $module->revokeSession($sessionId, 'admin-actor-id');
 
-        $cacheKey = 'identity:revoked:' . $sessionId;
-        $cached   = Redis::connection('identity')->get($cacheKey);
+        $cacheKey = 'identity:revoked:'.$sessionId;
+        $cached = Redis::connection('identity')->get($cacheKey);
         expect($cached)->toBe('1');
     });
 
     it('does not throw when session does not exist (idempotent noop)', function (): void {
         $module = app(IdentityModuleContract::class);
 
-        expect(fn () => $module->revokeSession((string) Str::uuid(), 'actor-id'))->not->toThrow(\Throwable::class);
+        expect(fn () => $module->revokeSession((string) Str::uuid(), 'actor-id'))->not->toThrow(Throwable::class);
     });
 
 });

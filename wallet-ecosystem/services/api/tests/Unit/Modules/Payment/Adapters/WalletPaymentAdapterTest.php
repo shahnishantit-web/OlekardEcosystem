@@ -48,18 +48,18 @@ final class WalletPaymentAdapterTest extends TestCase
     {
         parent::setUp();
 
-        $this->wallet         = $this->createMock(WalletModuleContract::class);
-        $this->config         = $this->createMock(ConfigurationServiceInterface::class);
-        $this->audit          = $this->createMock(AuditServiceInterface::class);
-        $this->attemptRepo    = $this->createMock(PaymentAttemptRepositoryInterface::class);
+        $this->wallet = $this->createMock(WalletModuleContract::class);
+        $this->config = $this->createMock(ConfigurationServiceInterface::class);
+        $this->audit = $this->createMock(AuditServiceInterface::class);
+        $this->attemptRepo = $this->createMock(PaymentAttemptRepositoryInterface::class);
         $this->stepUpVerifier = $this->createMock(ActorStepUpVerifierContract::class);
 
         $this->adapter = new WalletPaymentAdapter(
-            wallet:            $this->wallet,
-            config:            $this->config,
-            audit:             $this->audit,
+            wallet: $this->wallet,
+            config: $this->config,
+            audit: $this->audit,
             attemptRepository: $this->attemptRepo,
-            stepUpVerifier:    $this->stepUpVerifier,
+            stepUpVerifier: $this->stepUpVerifier,
         );
     }
 
@@ -70,20 +70,19 @@ final class WalletPaymentAdapterTest extends TestCase
     private function makeRequest(array $overrides = []): PaymentInitiateRequest
     {
         // Use array_key_exists so explicit null overrides (e.g. 'walletId' => null) are preserved
-        $get = static fn (string $key, mixed $default): mixed =>
-            array_key_exists($key, $overrides) ? $overrides[$key] : $default;
+        $get = static fn (string $key, mixed $default): mixed => array_key_exists($key, $overrides) ? $overrides[$key] : $default;
 
         return new PaymentInitiateRequest(
-            paymentIntentId:  $get('paymentIntentId',  (string) Uuid::uuid7()),
+            paymentIntentId: $get('paymentIntentId', (string) Uuid::uuid7()),
             paymentAttemptId: $get('paymentAttemptId', (string) Uuid::uuid7()),
-            amountMinor:      $get('amountMinor',      10000),
-            currencyCode:     $get('currencyCode',     'BWP'),
-            payerActorId:     $get('payerActorId',     (string) Uuid::uuid7()),
-            correlationId:    $get('correlationId',    (string) Uuid::uuid7()),
-            idempotencyKey:   $get('idempotencyKey',   (string) Uuid::uuid7()),
-            walletId:         $get('walletId',         (string) Uuid::uuid7()),
-            stepUpToken:      $get('stepUpToken',      null),
-            sessionId:        $get('sessionId',        null),
+            amountMinor: $get('amountMinor', 10000),
+            currencyCode: $get('currencyCode', 'BWP'),
+            payerActorId: $get('payerActorId', (string) Uuid::uuid7()),
+            correlationId: $get('correlationId', (string) Uuid::uuid7()),
+            idempotencyKey: $get('idempotencyKey', (string) Uuid::uuid7()),
+            walletId: $get('walletId', (string) Uuid::uuid7()),
+            stepUpToken: $get('stepUpToken', null),
+            sessionId: $get('sessionId', null),
         );
     }
 
@@ -102,6 +101,7 @@ final class WalletPaymentAdapterTest extends TestCase
                 if (str_starts_with($key, 'payment.wallet_transaction_limit_')) {
                     return null; // no limit unless test overrides
                 }
+
                 return null;
             });
     }
@@ -142,7 +142,7 @@ final class WalletPaymentAdapterTest extends TestCase
         $this->expectException(\DomainException::class);
 
         $this->adapter->initiatePayment($this->makeRequest([
-            'walletId'    => $walletId,
+            'walletId' => $walletId,
             'amountMinor' => 10000,
             'payerActorId' => 'wrong-actor',
         ]));
@@ -151,7 +151,7 @@ final class WalletPaymentAdapterTest extends TestCase
     public function test_insufficient_funds_throws_exception(): void
     {
         $walletId = (string) Uuid::uuid7();
-        $actorId  = (string) Uuid::uuid7();
+        $actorId = (string) Uuid::uuid7();
 
         $this->wallet->method('isActive')->willReturn(true);       // new gate
         $this->wallet->method('ownerActorId')->willReturn($actorId);
@@ -162,7 +162,7 @@ final class WalletPaymentAdapterTest extends TestCase
         $this->expectException(InsufficientFundsException::class);
 
         $this->adapter->initiatePayment($this->makeRequest([
-            'walletId'    => $walletId,
+            'walletId' => $walletId,
             'payerActorId' => $actorId,
             'amountMinor' => 10000,
         ]));
@@ -171,7 +171,7 @@ final class WalletPaymentAdapterTest extends TestCase
     public function test_step_up_required_when_above_threshold(): void
     {
         $walletId = (string) Uuid::uuid7();
-        $actorId  = (string) Uuid::uuid7();
+        $actorId = (string) Uuid::uuid7();
 
         $this->wallet->method('isActive')->willReturn(true);
         $this->wallet->method('ownerActorId')->willReturn($actorId);
@@ -186,7 +186,7 @@ final class WalletPaymentAdapterTest extends TestCase
         $this->expectException(StepUpRequiredException::class);
 
         $this->adapter->initiatePayment($this->makeRequest([
-            'walletId'    => $walletId,
+            'walletId' => $walletId,
             'payerActorId' => $actorId,
             'amountMinor' => 150000, // above threshold, no step-up token
         ]));
@@ -194,9 +194,9 @@ final class WalletPaymentAdapterTest extends TestCase
 
     public function test_hold_placed_with_correct_amount(): void
     {
-        $walletId  = (string) Uuid::uuid7();
-        $actorId   = (string) Uuid::uuid7();
-        $holdId    = (string) Uuid::uuid7();
+        $walletId = (string) Uuid::uuid7();
+        $actorId = (string) Uuid::uuid7();
+        $holdId = (string) Uuid::uuid7();
         $attemptId = (string) Uuid::uuid7();
 
         $this->wallet->method('isActive')->willReturn(true);
@@ -210,9 +210,9 @@ final class WalletPaymentAdapterTest extends TestCase
             ->willReturn($holdId);
 
         $result = $this->adapter->initiatePayment($this->makeRequest([
-            'walletId'        => $walletId,
-            'payerActorId'    => $actorId,
-            'amountMinor'     => 10000,
+            'walletId' => $walletId,
+            'payerActorId' => $actorId,
+            'amountMinor' => 10000,
             'paymentAttemptId' => $attemptId,
         ]));
 
@@ -246,7 +246,7 @@ final class WalletPaymentAdapterTest extends TestCase
     public function test_missing_pocket_throws_unsupported_currency(): void
     {
         $walletId = (string) Uuid::uuid7();
-        $actorId  = (string) Uuid::uuid7();
+        $actorId = (string) Uuid::uuid7();
 
         $this->wallet->method('isActive')->willReturn(true);
         $this->wallet->method('ownerActorId')->willReturn($actorId);
@@ -256,7 +256,7 @@ final class WalletPaymentAdapterTest extends TestCase
         $this->expectException(UnsupportedCurrencyException::class);
 
         $this->adapter->initiatePayment($this->makeRequest([
-            'walletId'    => $walletId,
+            'walletId' => $walletId,
             'payerActorId' => $actorId,
         ]));
     }
@@ -264,7 +264,7 @@ final class WalletPaymentAdapterTest extends TestCase
     public function test_amount_above_transaction_limit_throws_exception(): void
     {
         $walletId = (string) Uuid::uuid7();
-        $actorId  = (string) Uuid::uuid7();
+        $actorId = (string) Uuid::uuid7();
 
         $this->wallet->method('isActive')->willReturn(true);
         $this->wallet->method('ownerActorId')->willReturn($actorId);
@@ -278,6 +278,7 @@ final class WalletPaymentAdapterTest extends TestCase
                 if ($key === 'payment.wallet_transaction_limit_BWP') {
                     return 5000; // limit = 5000 BWP minor
                 }
+
                 return null;
             });
         $this->wallet->expects(self::never())->method('createHold');
@@ -285,7 +286,7 @@ final class WalletPaymentAdapterTest extends TestCase
         $this->expectException(TransactionLimitExceededException::class);
 
         $this->adapter->initiatePayment($this->makeRequest([
-            'walletId'    => $walletId,
+            'walletId' => $walletId,
             'payerActorId' => $actorId,
             'amountMinor' => 6000, // 6000 > limit 5000
         ]));
@@ -293,15 +294,15 @@ final class WalletPaymentAdapterTest extends TestCase
 
     public function test_no_limit_configured_allows_any_amount(): void
     {
-        $walletId  = (string) Uuid::uuid7();
-        $actorId   = (string) Uuid::uuid7();
-        $holdId    = (string) Uuid::uuid7();
+        $walletId = (string) Uuid::uuid7();
+        $actorId = (string) Uuid::uuid7();
+        $holdId = (string) Uuid::uuid7();
 
         $this->mockAllGatesPass($walletId, $actorId, 500000);
         $this->wallet->method('createHold')->willReturn($holdId);
 
         $result = $this->adapter->initiatePayment($this->makeRequest([
-            'walletId'    => $walletId,
+            'walletId' => $walletId,
             'payerActorId' => $actorId,
             'amountMinor' => 400000, // very large; no limit configured
         ]));
@@ -311,9 +312,9 @@ final class WalletPaymentAdapterTest extends TestCase
 
     public function test_audit_record_emitted_on_successful_hold_placement(): void
     {
-        $walletId  = (string) Uuid::uuid7();
-        $actorId   = (string) Uuid::uuid7();
-        $holdId    = (string) Uuid::uuid7();
+        $walletId = (string) Uuid::uuid7();
+        $actorId = (string) Uuid::uuid7();
+        $holdId = (string) Uuid::uuid7();
 
         $this->mockAllGatesPass($walletId, $actorId);
         $this->wallet->method('createHold')->willReturn($holdId);
@@ -325,7 +326,7 @@ final class WalletPaymentAdapterTest extends TestCase
             }));
 
         $this->adapter->initiatePayment($this->makeRequest([
-            'walletId'    => $walletId,
+            'walletId' => $walletId,
             'payerActorId' => $actorId,
         ]));
     }
@@ -336,19 +337,19 @@ final class WalletPaymentAdapterTest extends TestCase
 
     public function test_idempotent_retry_does_not_call_create_hold_twice(): void
     {
-        $walletId  = (string) Uuid::uuid7();
-        $actorId   = (string) Uuid::uuid7();
+        $walletId = (string) Uuid::uuid7();
+        $actorId = (string) Uuid::uuid7();
         $attemptId = (string) Uuid::uuid7();
-        $holdId    = (string) Uuid::uuid7();
+        $holdId = (string) Uuid::uuid7();
 
         $this->mockAllGatesPass($walletId, $actorId);
-        $this->wallet->expects(self::once()) // exactly ONE call regardless of how many times we call initiatePayment
+        $this->wallet->expects(self::exactly(2)) // retry calls Wallet with the same idempotency reference
             ->method('createHold')
             ->willReturn($holdId);
 
         $request = $this->makeRequest([
-            'walletId'        => $walletId,
-            'payerActorId'    => $actorId,
+            'walletId' => $walletId,
+            'payerActorId' => $actorId,
             'paymentAttemptId' => $attemptId,
         ]);
 
@@ -365,21 +366,21 @@ final class WalletPaymentAdapterTest extends TestCase
 
     public function test_crash_after_hold_recovery_returns_same_hold_on_retry(): void
     {
-        $walletId  = (string) Uuid::uuid7();
-        $actorId   = (string) Uuid::uuid7();
+        $walletId = (string) Uuid::uuid7();
+        $actorId = (string) Uuid::uuid7();
         $attemptId = (string) Uuid::uuid7();
-        $holdId    = (string) Uuid::uuid7();
+        $holdId = (string) Uuid::uuid7();
 
         $this->mockAllGatesPass($walletId, $actorId);
-        // Wallet module idempotency: same transactionReference → same holdId, called exactly once
-        $this->wallet->expects(self::once())
+        // Wallet module idempotency: retry repeats the same transactionReference and returns the same holdId.
+        $this->wallet->expects(self::exactly(2))
             ->method('createHold')
             ->with(self::anything(), self::anything(), self::anything(), self::anything(), self::anything(), $attemptId)
             ->willReturn($holdId);
 
         $request = $this->makeRequest([
-            'walletId'        => $walletId,
-            'payerActorId'    => $actorId,
+            'walletId' => $walletId,
+            'payerActorId' => $actorId,
             'paymentAttemptId' => $attemptId,
         ]);
 
@@ -452,7 +453,7 @@ final class WalletPaymentAdapterTest extends TestCase
     public function test_payment_below_threshold_does_not_require_step_up(): void
     {
         $walletId = (string) Uuid::uuid7();
-        $actorId  = (string) Uuid::uuid7();
+        $actorId = (string) Uuid::uuid7();
 
         $this->wallet->method('isActive')->willReturn(true);
         $this->wallet->method('ownerActorId')->willReturn($actorId);
@@ -464,7 +465,7 @@ final class WalletPaymentAdapterTest extends TestCase
 
         // amount 9999 < threshold 10000 — no step-up token needed
         $result = $this->adapter->initiatePayment($this->makeRequest([
-            'walletId'    => $walletId,
+            'walletId' => $walletId,
             'payerActorId' => $actorId,
             'amountMinor' => 9999,
             'stepUpToken' => null,
@@ -476,7 +477,7 @@ final class WalletPaymentAdapterTest extends TestCase
     public function test_payment_at_threshold_without_token_throws_step_up_required(): void
     {
         $walletId = (string) Uuid::uuid7();
-        $actorId  = (string) Uuid::uuid7();
+        $actorId = (string) Uuid::uuid7();
 
         $this->wallet->method('isActive')->willReturn(true);
         $this->wallet->method('ownerActorId')->willReturn($actorId);
@@ -489,7 +490,7 @@ final class WalletPaymentAdapterTest extends TestCase
 
         // amount 10000 >= threshold 10000, no token
         $this->adapter->initiatePayment($this->makeRequest([
-            'walletId'    => $walletId,
+            'walletId' => $walletId,
             'payerActorId' => $actorId,
             'amountMinor' => 10000,
             'stepUpToken' => null,
@@ -499,8 +500,8 @@ final class WalletPaymentAdapterTest extends TestCase
     public function test_payment_above_threshold_with_valid_token_places_hold(): void
     {
         $walletId = (string) Uuid::uuid7();
-        $actorId  = (string) Uuid::uuid7();
-        $holdId   = (string) Uuid::uuid7();
+        $actorId = (string) Uuid::uuid7();
+        $holdId = (string) Uuid::uuid7();
 
         $this->wallet->method('isActive')->willReturn(true);
         $this->wallet->method('ownerActorId')->willReturn($actorId);
@@ -513,7 +514,7 @@ final class WalletPaymentAdapterTest extends TestCase
 
         // amount 15000 > threshold 10000, valid token
         $result = $this->adapter->initiatePayment($this->makeRequest([
-            'walletId'    => $walletId,
+            'walletId' => $walletId,
             'payerActorId' => $actorId,
             'amountMinor' => 15000,
             'stepUpToken' => 'valid-token',
@@ -526,7 +527,7 @@ final class WalletPaymentAdapterTest extends TestCase
     public function test_payment_above_threshold_with_wrong_actor_token_throws(): void
     {
         $walletId = (string) Uuid::uuid7();
-        $actorId  = (string) Uuid::uuid7();
+        $actorId = (string) Uuid::uuid7();
 
         $this->wallet->method('isActive')->willReturn(true);
         $this->wallet->method('ownerActorId')->willReturn($actorId);
@@ -541,7 +542,7 @@ final class WalletPaymentAdapterTest extends TestCase
 
         // amount 15000 > threshold, token bound to wrong actor/session
         $this->adapter->initiatePayment($this->makeRequest([
-            'walletId'    => $walletId,
+            'walletId' => $walletId,
             'payerActorId' => $actorId,
             'amountMinor' => 15000,
             'stepUpToken' => 'bad-token',
@@ -565,8 +566,8 @@ final class WalletPaymentAdapterTest extends TestCase
     {
         $attemptId = (string) Uuid::uuid7();
 
-        $attempt = new PaymentAttemptModel();
-        $attempt->id     = $attemptId;
+        $attempt = new PaymentAttemptModel;
+        $attempt->id = $attemptId;
         $attempt->status = PaymentAttemptStatus::Succeeded;
 
         $this->attemptRepo->method('findById')->willReturn($attempt);
@@ -584,6 +585,15 @@ final class WalletPaymentAdapterTest extends TestCase
         self::assertSame(PaymentRefundStatus::Succeeded, $result->status);
     }
 
+    public function test_wallet_refund_status_query_remains_pending_without_async_provider_evidence(): void
+    {
+        $result = $this->adapter->queryRefundStatus('refund-001', 'wallet-refund-001');
+
+        self::assertSame('pending', $result->status);
+        self::assertNull($result->providerRef);
+        self::assertSame('olekard_wallet', $result->rawProviderCode);
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
@@ -591,13 +601,13 @@ final class WalletPaymentAdapterTest extends TestCase
     private function makeRefundRequest(array $overrides = []): PaymentRefundRequest
     {
         return new PaymentRefundRequest(
-            paymentIntentId:     $overrides['paymentIntentId']     ?? (string) Uuid::uuid7(),
-            paymentAttemptId:    $overrides['paymentAttemptId']    ?? (string) Uuid::uuid7(),
-            refundId:            $overrides['refundId']            ?? (string) Uuid::uuid7(),
-            amountMinor:         $overrides['amountMinor']         ?? 5000,
-            currencyCode:        $overrides['currencyCode']        ?? 'BWP',
-            correlationId:       $overrides['correlationId']       ?? (string) Uuid::uuid7(),
-            idempotencyKey:      $overrides['idempotencyKey']      ?? (string) Uuid::uuid7(),
+            paymentIntentId: $overrides['paymentIntentId'] ?? (string) Uuid::uuid7(),
+            paymentAttemptId: $overrides['paymentAttemptId'] ?? (string) Uuid::uuid7(),
+            refundId: $overrides['refundId'] ?? (string) Uuid::uuid7(),
+            amountMinor: $overrides['amountMinor'] ?? 5000,
+            currencyCode: $overrides['currencyCode'] ?? 'BWP',
+            correlationId: $overrides['correlationId'] ?? (string) Uuid::uuid7(),
+            idempotencyKey: $overrides['idempotencyKey'] ?? (string) Uuid::uuid7(),
             providerReferenceId: $overrides['providerReferenceId'] ?? null,
         );
     }

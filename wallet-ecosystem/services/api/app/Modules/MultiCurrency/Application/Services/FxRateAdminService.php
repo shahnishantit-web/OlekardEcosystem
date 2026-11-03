@@ -14,6 +14,7 @@ use App\Modules\Platform\Domain\Contracts\AuditServiceInterface;
 use App\Modules\Platform\Domain\Contracts\ConfigurationChangeRequestRepositoryInterface;
 use App\Modules\Platform\Domain\Enums\ChangeRequestStatus;
 use App\Modules\Platform\Domain\ValueObjects\AuditEventData;
+use Illuminate\Database\Connection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -23,9 +24,9 @@ final class FxRateAdminService
 {
     public function __construct(private readonly FxRateRepositoryInterface $fxRates, private readonly CurrencyRepositoryInterface $currencies, private readonly ConfigurationChangeRequestService $changes, private readonly ConfigurationChangeRequestRepositoryInterface $requests, private readonly AuditServiceInterface $audit) {}
 
-    public static function lock(string $key): void
+    public static function lock(string $key, ?Connection $connection = null): void
     {
-        DB::connection('platform')->select('SELECT pg_advisory_xact_lock(hashtextextended(?, 0))', [$key]);
+        ($connection ?? DB::connection('platform'))->select('SELECT pg_advisory_xact_lock(hashtextextended(?, 0))', [$key]);
     }
 
     public static function decimals(string $rate, string $spread): void

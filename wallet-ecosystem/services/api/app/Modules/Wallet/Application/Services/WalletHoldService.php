@@ -6,13 +6,14 @@ namespace App\Modules\Wallet\Application\Services;
 
 use App\Modules\Wallet\Application\Contracts\WalletHoldServiceContract;
 use App\Modules\Wallet\Domain\Enums\WalletHoldStatus;
+use App\Modules\Wallet\Domain\Enums\WalletLimitType;
 use App\Modules\Wallet\Domain\Enums\WalletStatus;
 use App\Modules\Wallet\Domain\Exceptions\InsufficientBalanceException;
 use App\Modules\Wallet\Domain\Exceptions\WalletFrozenException;
 use App\Modules\Wallet\Domain\Exceptions\WalletNotFoundException;
 use App\Modules\Wallet\Domain\Exceptions\WalletNotTransactableException;
+use App\Modules\Wallet\Infrastructure\Models\CurrencyPocketModel;
 use App\Modules\Wallet\Infrastructure\Models\WalletHoldModel;
-use App\Modules\Wallet\Infrastructure\Repositories\EloquentCurrencyPocketRepository;
 use App\Modules\Wallet\Infrastructure\Repositories\EloquentWalletRepository;
 use Illuminate\Support\Facades\DB;
 use Ramsey\Uuid\Uuid;
@@ -20,10 +21,9 @@ use Ramsey\Uuid\Uuid;
 final class WalletHoldService implements WalletHoldServiceContract
 {
     public function __construct(
-        private readonly EloquentWalletRepository         $walletRepository,
-        private readonly EloquentCurrencyPocketRepository $pocketRepository,
-        private readonly WalletBalanceService             $balanceService,
-        private readonly WalletLimitService               $limitService,
+        private readonly EloquentWalletRepository $walletRepository,
+        private readonly WalletBalanceService $balanceService,
+        private readonly WalletLimitService $limitService,
     ) {}
 
     /**
@@ -39,10 +39,11 @@ final class WalletHoldService implements WalletHoldServiceContract
         ?string $transactionReference = null,
         ?string $description = null,
         ?\DateTimeImmutable $expiresAt = null,
+        ?string $organisationId = null,
     ): WalletHoldModel {
         return DB::connection('wallet')->transaction(function () use (
-            $walletId, $currencyCode, $amount, $actorId, $correlationId,
-            $transactionReference, $description, $expiresAt
+            $walletId, $currencyCode, $amount, $actorId,
+            $transactionReference, $description, $expiresAt, $organisationId
         ): WalletHoldModel {
             $wallet = $this->walletRepository->findById($walletId);
             if ($wallet === null) {
@@ -51,15 +52,15 @@ final class WalletHoldService implements WalletHoldServiceContract
 
             // Status check before balance check
             if ($wallet->status === WalletStatus::Frozen) {
-                throw new WalletFrozenException();
+                throw new WalletFrozenException;
             }
 
-            if (!in_array($wallet->status, [WalletStatus::Active, WalletStatus::Restricted], true)) {
+            if (! in_array($wallet->status, [WalletStatus::Active, WalletStatus::Restricted], true)) {
                 throw new WalletNotTransactableException($wallet->status);
             }
 
             // SELECT FOR UPDATE on pocket to serialize concurrent debits
-            $pocket = \App\Modules\Wallet\Infrastructure\Models\CurrencyPocketModel::on('wallet')
+            $pocket = CurrencyPocketModel::on('wallet')
                 ->lockForUpdate()
                 ->where('wallet_id', $walletId)
                 ->where('currency_code', strtoupper($currencyCode))
@@ -80,20 +81,21 @@ final class WalletHoldService implements WalletHoldServiceContract
             $this->limitService->enforceLimits(
                 $walletId,
                 strtoupper($currencyCode),
-                \App\Modules\Wallet\Domain\Enums\WalletLimitType::SingleTransactionAmount,
+                WalletLimitType::SingleTransactionAmount,
                 $amount,
             );
 
-            $hold                       = new WalletHoldModel();
-            $hold->id                   = (string) Uuid::uuid7();
-            $hold->pocket_id            = $pocket->id;
-            $hold->amount               = $amount;
-            $hold->currency_code        = strtoupper($currencyCode);
-            $hold->status               = WalletHoldStatus::Active;
+            $hold = new WalletHoldModel;
+            $hold->id = (string) Uuid::uuid7();
+            $hold->pocket_id = $pocket->id;
+            $hold->amount = $amount;
+            $hold->currency_code = strtoupper($currencyCode);
+            $hold->status = WalletHoldStatus::Active;
             $hold->transaction_reference = $transactionReference;
-            $hold->description          = $description;
-            $hold->expires_at           = $expiresAt;
-            $hold->created_by           = $actorId;
+            $hold->organisation_id = $organisationId;
+            $hold->description = $description;
+            $hold->setAttribute('expires_at', $expiresAt);
+            $hold->created_by = $actorId;
             $hold->save();
 
             return $hold;
@@ -103,10 +105,20 @@ final class WalletHoldService implements WalletHoldServiceContract
     public function release(string $holdId, string $correlationId): void
     {
         DB::connection('wallet')->transaction(function () use ($holdId): void {
-            $hold = WalletHoldModel::on('wallet')->lockForUpdate()->find($holdId);
-
-            if ($hold === null) {
+            $initial = WalletHoldModel::on('wallet')->find($holdId);
+            if ($initial === null) {
                 throw new WalletNotFoundException("Hold not found: {$holdId}");
+            }
+
+            // Match capture/expiry lock order so only one operation consumes an active hold.
+            $pocket = CurrencyPocketModel::on('wallet')
+                ->lockForUpdate()->find($initial->pocket_id);
+            if ($pocket === null) {
+                throw new WalletNotFoundException("Pocket not found for hold: {$holdId}");
+            }
+            $hold = WalletHoldModel::on('wallet')->lockForUpdate()->find($holdId);
+            if ($hold === null || $hold->pocket_id !== $pocket->id) {
+                throw new WalletNotFoundException("Hold changed while releasing: {$holdId}");
             }
 
             if ($hold->status !== WalletHoldStatus::Active) {
@@ -114,7 +126,7 @@ final class WalletHoldService implements WalletHoldServiceContract
                 return;
             }
 
-            $hold->status      = WalletHoldStatus::Released;
+            $hold->status = WalletHoldStatus::Released;
             $hold->released_at = now();
             $hold->save();
         });

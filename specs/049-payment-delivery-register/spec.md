@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-21
 
-**Status**: PARTIAL — prompt pack verified; architecture document still not in repository
+**Status**: PARTIAL — source documents are available and verified; repository implementation, predecessor evidence and owner approvals remain incomplete across work packages
 
 **2026-10-22 P10 update**: the historical source-document gap above is superseded
 for P10. Architecture v1.1 was found and hash/version verified at
@@ -20,9 +20,9 @@ readiness or approvals. See [P10 evidence](../059-e25-payment-callback-ingress/e
 | Document | Location | Status |
 |----------|----------|--------|
 | `OleKard_Claude_SpecKit_Managed_Prompts.docx` v1.0 (2026-10-20) | `C:\Projects\OleKardEcosystem\OleKard_Claude_SpecKit_Managed_Prompts.docx` | ✅ FOUND — read 2026-10-21 |
-| `OleKard_Shared_Payment_Architecture.docx` v1.1 (2026-10-19) | Not in repository | ❌ AWDOC — prompt pack refers to it as governing baseline; FD/LC/AD/MB requirement codes require this document |
+| `OleKard_Shared_Payment_Architecture.docx` v1.1 (2026-10-19) | `docs/sources/OleKard_Shared_Payment_Architecture_v1.1.docx` | ✅ FOUND — SHA-256 `B5D07562EE2497C726AABEFE18782ABFFC094A39CED8D0CF3E16AA0F2CFF7837`; version/title verified |
 
-> **Note on source documents**: The prompt pack is the companion document defining P00–P33 scope, predecessors, and role owners. The architecture document (`v1.1`) is the governing requirement baseline referenced by all P-ID prompts. FD01–FD11, AD01–AD12, MB01–MB08, and LC01–LC16 requirement codes cannot be fully verified until the architecture document is provided. All such requirements are recorded as **AWDOC** in the gap register.
+> **Note on source documents**: The prompt pack defines P00–P33 scope, predecessors and role owners. The architecture document v1.1 is now present and version/hash verified; historical AWDOC entries below must be reclassified per the affected package. Source availability does not supply missing owner approvals, provider contracts or implementation evidence.
 
 **Boundary**: Assess only. No implementation, schema migration, or provider execution in this work package.
 
@@ -236,7 +236,7 @@ Classification: `IMPL` = Implemented | `PART` = Partial | `MISS` = Missing | `EX
 |-----|-------------|-------|---------|
 | R34 | Funeral Assistance payment journey (LC06) | BLOCKED | Community removed; P18 MISSING |
 | R35 | Paid Events ticketing + admission (LC07) | PARTIAL | Draft Events foundation implemented; payment/admission/payout flows remain blocked; P18 execution/settlement MISSING |
-| R36 | Free invitation + complimentary events (LC08) | BLOCKED | Depends on R35 (P25) |
+| R36 | Free invitation + complimentary events (LC08) | PARTIAL | Development zero-price allocation, registration, online admission and aggregate reporting implemented under P25 reuse. Production recipient verification/complimentary authority, free-only publication, cancellation notices, offline policy and independent review remain blocked; see specs/1002-free-invitation-complimentary-events/. |
 | R37 | Raffle entry draw and prize (LC09) | BLOCKED | Community removed; jurisdiction approval open |
 | R38 | Donation fundraising + beneficiary (LC10) | BLOCKED | Community removed; P18 MISSING |
 
@@ -244,11 +244,11 @@ Classification: `IMPL` = Implemented | `PART` = Partial | `MISS` = Missing | `EX
 
 | Req | Requirement | Class | Blocker |
 |-----|-------------|-------|---------|
-| R39 | FD01–FD11 Functional Design requirements | AWDOC | Architecture doc v1.1 not in repository |
-| R40 | AD01–AD12 Admin screen requirements | AWDOC | Architecture doc v1.1 not in repository |
-| R41 | MB01–MB08 Mobile requirements | AWDOC | Architecture doc v1.1 not in repository |
-| R42 | LC01–LC16 Lifecycle flow requirements | AWDOC | Architecture doc v1.1 not in repository |
-| R43 | Architecture doc Sections 1, 2, 9, 10, 11 | AWDOC | Architecture doc v1.1 not in repository |
+| R39 | FD01–FD11 Functional Design requirements | PART | Source available; verify each package mapping and remaining owner decisions |
+| R40 | AD01–AD12 Admin screen requirements | PART | Source available; route/access implementation and approval evidence remain package-specific |
+| R41 | MB01–MB08 Mobile requirements | PART | Source available; package implementation and runtime verification remain open |
+| R42 | LC01–LC16 Lifecycle flow requirements | PART | Source available; owner-approved policy and service evidence remain package-specific |
+| R43 | Architecture doc Sections 1, 2, 9, 10, 11 | PART | Source available; architecture/finance sign-offs and implementation traceability remain open |
 | R44 | AGENTS.md repository-wide instructions | AWDOC | Not created yet |
 
 ---
@@ -307,7 +307,7 @@ P25 clarification update (2026-10-27): issue/reschedule/cancellation notices use
 
 P25 clarification update (2026-10-27): scanner exposes only validation status/category, fails closed when online validation is unavailable, requires online exit records for re-entry, and counts only returns against the re-entry limit. Cancelled-event reactivation remains pending approved policy. Privacy, availability, scan and lifecycle evidence remain outstanding.
 
-| P26 | Free invitation and complimentary event journey | P25 | Events domain engineers | BLOCKED |
+| P26 | Free invitation and complimentary event journey | P25 | Events domain engineers | PARTIAL - development registration/admission/reporting verified; operational authority, cancellation/offline policy and independent review pending |
 | P27 | Permitted raffle entry draw and prize journey | P18 P19 P22 P23 | Raffle domain engineers | BLOCKED |
 | P28 | Donation fundraising and beneficiary journey | P18 P19 P22 P23 | Fundraising domain engineers | BLOCKED |
 | P29 | Scoped reporting support and closure controls | P21 P23 P24 P25 P26 P27 P28 | Reporting and support engineers | BLOCKED |
@@ -690,3 +690,82 @@ An architect consults the register to identify which P-ID to select next (predec
 - Community module removal (2026-10-20) is permanent for the current iteration; P24–P28 remain BLOCKED until a replacement community spec is approved.
 - P12, P13, and P14 can remain externally blocked while P01–P11 and P15–P23 proceed independently.
 - P32/P33 may deliver a qualified release for explicitly approved enabled scope (e.g. Wallet-only payments) while bank/community capabilities remain disabled and tracked.
+
+2026-10-28 P25 blocker-resolution checkpoint: internal versioned event review/publication workflow implemented in Events behind deny-by-default authorizer/readiness contracts; local migration applied; focused P25 tests 11/11 pass (41 assertions), scoped Pint and application PHPStan pass. T021 ready/implemented; T008 partially implemented but inaccessible pending B-01/B-03; other dependent financial/admission tasks unchanged. Five checklist gates remain unchecked; P25 PARTIAL. No P24/live-payment activation/deployment. Exact blocker table and single next action are in `specs/072-paid-events-ticketing/{research.md,restart.md,evidence.md}`.
+
+P25 verification correction 2026-10-28: final P25 Events feature suite is 12 pass, 0 fail, 0 skip (44 assertions); scoped Pint passes and scoped application PHPStan has 0 errors. P25 migration 100003 is Ran locally in batch 11. This supersedes the preceding 11-test checkpoint; no full migrations, P24 activation, live processing or deployment.
+
+P25 B-01 review artifact (2026-10-28): drafted `specs/072-paid-events-ticketing/authorization-matrix.md` against approved Identity global RBAC and membership contracts. Proposed P25 permissions/scopes remain unapproved and unregistered; B-01 remains blocked. A-01�A-04 are the focused decisions, with Identity/Security, Events and Finance owners identified. No production authorization changed; B-03 and B-11 remain independent blockers. T022 complete as documentation; no other READY implementation task identified.
+
+P25 update 2026-10-28: A-01/A-02/A-04 recorded as product decisions; A-03 in principle. Implemented T024 cumulative event-version contributors and separate event/Finance approvers. Focused tests 14/14 pass, 53 assertions; scoped Pint and application PHPStan pass; local migration 100004 applied. B-01 still blocked on exact A-03 mapping/owner review. No Identity grant or separate E04 package started. D-02 remains numeric re-entry limit only; return-count semantics and configuration authority are established. See P25 matrix and conditional authorization dependency proposal.
+
+2026-10-28 P25 scoped authorization checkpoint: accepted development permission IDs are registered but have no automatic role grants. Events owns exact resource assignments; scoped checks require both coarse Identity permission and applicable scope assignment. `ScopedEventAuthorization` and migration 100005 were implemented/applied locally; see P25 `research.md` and `traceability.md`. T025/T026 ready/implemented. Assignment write endpoints remain blocked by `assignment-authority-proposal.md`; T005/T011/T015/T016 remain partial/dependent as recorded. Focused verification: 19 passed, 97 assertions; Pint pass; PHPStan Events app 0 errors. No live/P24 or production change.
+
+Verification count correction: final focused Events authorization suite is 19 passed / 100 assertions; Pint passed; Events application PHPStan 0 errors; migration 100005 locally ran in batch 13. Assignment authority writer, ticket-owner/refund flow, aggregate reporting and production authorization remain unavailable.
+
+## P25 update — 2026-10-28
+
+P25 implemented development-only Events-owned org/event assignment writes and an event gate registry with scoped gate-validation delegation. Identity permission catalogue has no automatic role assignments. Two-approver bootstrap is available only through an explicit command and was not executed. P25 remains PARTIAL; independent reviews, operational bootstrap evidence, admission/finance dependencies and P24/live-processing gates remain open. See `specs/072-paid-events-ticketing/evidence.md`, `tasks.md` and `restart.md`.
+
+Correction to prior progress notes: T027 assignment administration and T029 gate registry are implemented for development. Final P25 scoped verification is 27 passed / 0 failed / 0 skipped / 136 assertions; Pint/PHPStan passed. This does not clear B-03, B-11, independent reviews or admission/fulfilment blockers.
+### P25 2026-10-28 continuation
+
+Prepared `identity-security-review-index.md` for independent review; no named P25 reviewer or appointment procedure is present in governance records. Added a production fail-closed bootstrap-evidence verifier; reference strings alone cannot create authority, and bootstrap was not executed. Added authenticated scoped draft/review routes and admin authoring workspace at `/community/events`; no publication, sales, checkout, admission, attendance or payout route/UI was enabled. Verification for this continuation is recorded in P25 `evidence.md`; prior suite-harness construction failure remains separate from focused test results. P25 remains PARTIAL. D-02, B-03, B-11 and independent Security/Finance/Privacy reviews remain open.
+
+Verification update: P25 current scoped Events suite 28 pass / 0 fail / 0 skip / 139 assertions; Events PHPStan and Pint pass; route list shows 16 P25 event routes with no publish or sales-resume route; scoped admin TypeScript passes. Full admin tsc reports only stale `.next/types` role-page imports; ESLint was interrupted without a result. Details are in P25 `evidence.md`.
+
+2026-10-28 P25 checkpoint: development authoring/review and T009 inventory-hold foundation implemented; focused Events suite 31/152 passes, Pint and scoped PHPStan pass. T009 concurrency NOT VERIFIED. P25 PARTIAL. Admin full lint/build fail on unrelated pre-existing ESLint errors; full tsc passes after Next regenerated stale .next types. B-03 proposal and independent review handoff prepared but not approved/appointed. P18 blocks only payout task T014, not P25 inventory, checkout/issuance or online admission dependencies. Live bootstrap/publication/sales, P24 and deployment remain disabled. See specs/072-paid-events-ticketing/{tasks,evidence,restart}.md.
+
+Admin verification detail: full lint has 30 errors in 7 pre-existing non-P25 files (payments forms/editor, funeral collections, campaign create/detail and reconciliation exceptions); P25 scoped lint is successful with warnings only. Full admin build compiles then fails at the same lint/type gate. Full 	sc --noEmit passes after normal build refreshed stale .next route types. See P25 evidence.md.
+
+P25 B-03 update 2026-10-28: implemented development-scoped Finance currency assignment, registered `events.currency.assign` without role grants, precision/provenance snapshot, first inventory hold currency lock, drift review issue, draft-edit preservation, and actor-free Payments static per-category eligibility service. Targeted migrations 100009/100010 applied locally. Verification: Events 40/210 pass, Payment eligibility 20/34 pass, PostgreSQL separate-session concurrency four scenarios pass including first-hold currency lock, scoped PHPStan 0 errors, Pint --test pass. Full legacy migration command fails before P25 on duplicate populated identity.users; no destructive recovery attempted. P25 remains PARTIAL: canonical Payments module/purpose/country contract, MultiCurrency cross-connection race coordination, B-06 fee/tax contract, T004 approval/recovery, T005 credential/refund/re-entry policies, independent reviews and P18-only payout remain unresolved. Publication readiness stays deny-by-default; no bootstrap, operational grant, paid sales, P24, deployment or live processing. Details: P25 research/evidence/restart and B-03 proposal.
+
+B-03 follow-up, 2026-10-28: Event precision drift is now recorded as an operator issue and pauses existing sales availability after rollback, while preserving existing monetary records. Final P25 Events feature suite 40/211 and Payment readiness unit suite 21/35 pass; PostgreSQL concurrency four scenarios pass including event currency first-lock serialization; scoped PHPStan 0 errors and Pint pass. No canonical production context was invented; readiness/publication remain denied. Full rollout boundaries remain as previously recorded.
+
+Final test count correction 2026-10-28: Events 40 passed / 0 failed / 0 skipped / 213 assertions; Payment eligibility 21/35, zero failed/skipped. The Finance currency assignment test now also verifies reassignment is denied after locking.
+
+### P25 verification continuation — 2026-10-28
+
+Events currency drift regression: 41 tests passed, 0 failed, 0 skipped, 220 assertions. Pint and scoped Events PHPStan passed. Current code tests and records inactive currency/precision drift by rejecting the attempted hold, persisting an operator-review issue plus domain audit, and pausing active sales outside the rolled-back hold transaction. Real separate-session PostgreSQL hold concurrency evidence remains the four previously recorded scenarios. Cross-module currency-change races are not verified and current locks do not serialize them. Details, canonical context proposal, country semantics, order-lock gap and migration repair proposal are in `research.md` and `evidence.md`.
+
+2026-10-28 P25 CTX/MC/FIN bounded scope: canonical events/paid_event_ticket identifiers are declared with collision safety; no Events resolver bound because there is no authoritative order model; provider account allowlists unchanged. Paid country derives from approved event record for physical single-country events only. Events and MultiCurrency share PostgreSQL transaction-scoped currency coordination and trigger; targeted local migrations applied. Three real currency races and four inventory races pass; Events 47/253, registry 3/6, eligibility 22/38 pass; targeted Pint/PHPStan pass. T010 durable-order lock remains mandatory/not implemented. Financial drift disposition, B-06/T004/T005/D-02/B-11 and independent reviews remain open. P25 PARTIAL; production bootstrap, publication, checkout/sales, deployment and P24 disabled. See P25 evidence/research/restart.
+
+Caller regression limit: existing AdminFxManagementTest is not verifiable in the current local schema (21/22 tests fail because platform.configuration_change_requests is missing; no repair authorized). Existing FuneralAssistanceFlowTest passes 6/48 and the prior one-argument currency lock callers remain source-compatible. Full details in P25 evidence.md.
+
+P25 final policy packet prepared 2026-10-28: business-policy-decision-packet.md consolidates unapproved B-06, T004, T005, D-02 and FIN-01 questions, current state/contract evidence, recommendations, owners, external evidence and verification debt. AdminFxManagementTest's 21/22 failure is directly relevant but cannot exercise writer compatibility because platform.configuration_change_requests migration 2026_10_02_000002 is Pending; API-path verification remains open. No migration, policy implementation, bootstrap, publication, checkout, sales, deployment or P24 activation.
+
+### 2026-10-28 sustained P08 dependency-chain result
+
+- P08 status: PARTIAL. Wallet-owned committed capture, posted Ledger evidence verification, Payment capture persistence/outbox and repair are implemented for development; focused PostgreSQL integration and fault injection pass. Bootstrap and clean 313-migration chain/repeat run pass in a disposable DB. P08 quickstart SC-01–SC-07 reconciliation and independent review remain open.
+- Wallet dependency: DEVELOPMENT VERIFIED / OPERATIONALLY DISABLED. AD-08 destination/account mapping and Finance evidence remain absent. Test fixtures are not production grants or mapping approval.
+- P11 status: PARTIAL. Replay route/re-dispatch and notification deduplication pass. Replay remains platform-wide under existing operations authorization. PaymentConfirmedListener no longer writes an invalid fabricated financial allocation; financial split/allocation remains a shared Finance/Payments decision and is not created by notifications. No tenant isolation claim.
+- P25 status: PARTIAL. T008 authoring/review and T009 hold/currency coordination are verified in development. T010 order/checkout/issuance awaits B-06 and T004 order-bound evidence; T011 durable entitlement awaits T010 and Identity/Security/Privacy requirements; T013 refunds/cancellation awaits policy and shared refund contract; T014 alone depends on P18/B-11. No production publication or sales.
+- Final scoped suite: 75 passed / 0 failed / 0 skipped / 411 assertions. Changed Wallet/Payment/Ledger PHPStan level 8: 0 findings. Pint: 12 scoped files pass. PostgreSQL separate-session Wallet, inventory and currency coordination scripts passed. Existing AdminFxManagementTest local schema failure remains 21 failures of 22 due absent platform.configuration_change_requests and is not counted as a pass.
+
+No migration-history repair, production bootstrap, operational grant, provider certification, deployment, P24 activation or live-processing change was made. See specs/057-ledger-ack-fulfilment/verification-traceability.md and specs/072-paid-events-ticketing/evidence.md.
+
+## Final verification result - 2026-10-28
+
+After the repair-exhaustion fix and the new SC-06/SC-07 tests, the combined P08/P11/P25 regression command completed **80 passed, 0 failed, 0 skipped, 441 assertions**. Pint check: 14 changed-slice files pass. Targeted PHPStan on changed Wallet/Payments/Ledger source plus the new P08 feature tests: 0 errors with 1G memory. Real PostgreSQL Wallet capture/release/expiry races and P25 inventory/currency coordination races passed. `git diff --check` found no whitespace errors; it printed only repository CRLF normalization warnings. These results supersede the earlier 75-test scoped count in this record.
+
+Final combined suite correction - 2026-10-28: after adding persisted Payment confirmation outbox dispatch retry coverage, the P08/P11/P25 combined regression is **81 passed, 0 failed, 0 skipped, 446 assertions**. `WalletCapturePaymentIntegrationTest::test_durable_confirmation_outbox_delivers_after_payment_commit_when_dispatch_is_retried` asserts the outbox row remains pending and no notification exists after Payment commit, then dispatches that row in a later worker invocation and asserts one delivered event/notification. This is restart/re-dispatch evidence, not a forced OS process termination. The remaining consumer commit-before-ack flow needs a P25 durable order/entitlement effect.
+
+2026-10-28 closeout: P08 PARTIAL. SC-01-SC-07 developer walkthrough passed on isolated PostgreSQL (81/0/0, 446 assertions; SC-04 scan 5/0/0, 8 assertions); AdminFxManagementTest passed schema-correct isolated DB 22/22 (118 assertions). Full Payment/Ledger PHPStan remains 485 findings (same latest baseline); targeted changed slice 0. Do not equate these results with independent operator/Finance/Security approval.
+
+P25 remains PARTIAL. Approved issuance invariant is settled; remaining development dependency is B-06 concrete fee/seller/tax/calculation input followed by Events authoritative order binding to P08 `purposeReference`, currency lock at first order/hold, durable per-ticket issuance and acknowledgement. P25 B-06 decision form is in `specs/072-paid-events-ticketing/business-policy-decision-packet.md`. Late-capture/refund/cancellation decisions and independent reviews remain pending. T014 alone awaits P18/B-11. Do not enable bootstrap, publication, checkout/sales, production access, deployment or P24.
+
+
+P26 implementation checkpoint (2026-10-30): specs/1002-free-invitation-complimentary-events/ records the verified v1.1 LC08 source, task classification, additive free entitlement schema, invitation/redemption API, atomic PostgreSQL registration, reuse of purchaser tickets/online gates, aggregate reporting, and admin/customer UI. Clean isolated PostgreSQL migration chain completed; focused Events suite 69/69 and separate-session concurrency 4 scenarios passed. Customer event widget tests and scoped analysis pass; Admin authoring lint passes. Full Flutter analyze reports 33 findings outside the scoped event files. P26 remains PARTIAL: Identity active-customer recipient verification, complimentary approval authority, free-only publication decision, P25 cancellation/notification and offline contracts, and independent Security/Privacy review remain open. No live/production gate changed.
+
+P26 verification checkpoint (2026-10-30): T011 now has seven passing separate-session PostgreSQL scenarios including revoke-first, redeem-first, synchronized revoke/redemption, post-revocation idempotent replay and rollback/retry; typed Identity active-CUSTOMER verification is implemented. Events feature tests 72/519 pass. Admin P26 component 1/1 and community accessibility 4/4 pass; customer event widget 2/2 and scoped Flutter analyze pass. P26 remains PARTIAL; T006/T007/T014/T015/T016/T020 remain gated, with full Flutter analyzer 33 findings and three pre-existing Identity PHPStan findings recorded in package evidence.
+
+P26 remediation checkpoint (2026-10-30): prior 3 Identity PHPStan findings, 1 Events Pint finding and all 33 customer Flutter analyzer findings are resolved. Current scoped PHPStan/Pint and full Flutter analyze pass; isolated Identity tests 17/45 and Events tests 89/565 pass; focused Flutter auth/event/transaction tests 50 pass. T011's prior seven PostgreSQL race/order scenarios remain verified (no registration-lock changes in this remediation). P26 remains PARTIAL: T006/T007/T014/T015/T016/T020 gates remain, and SC-007/T023 browser/device integration is not verified because safe isolated browser auth/assignment fixtures and P26 Playwright setup are absent. See specs/1002-free-invitation-complimentary-events/remediation-register.md and browser-e2e-handoff.md.
+
+
+P26 isolated-browser checkpoint (2026-10-30): T023 harness setup was implemented with a guarded per-run PostgreSQL database, runtime-target assertion, test-only identities/assignments, dedicated Playwright configuration, and Admin/Flutter-web journey spec. Seven runner invocations included six Playwright runs that verified isolated database/migrations but had zero journey passes. Exact-origin preflight and invalid-MFA CORS checks passed; successful MFA returned HTTP 200 without Access-Control-Allow-Origin, blocking Chromium before invitation UI. Admin P26-spec ESLint and TypeScript checks pass. T023 remains NOT VERIFIED; no browser/device, customer/gate/report or persisted journey evidence is claimed. See specs/1002-free-invitation-complimentary-events/browser-e2e-handoff.md.
+P26 continuation checkpoint (2026-11-03): Project-owner answers accepted the scoped complimentary approval model for development, a narrow free-only development publication rule, online-only/offline deferral for this release, and continued containment for unknown cancellation-finance outcomes. Governance was identified as the independent-review appointment authority; actual Security/Privacy appointees and signed reviews remain absent. P26 now has a typed complimentary approval evidence port with scope/requester-approver/quota/validity/revocation checks and persisted snapshots; production approval and publication bindings remain deny-by-default. Current isolated regression passes CORS 3/52, Identity MFA 10/70 and Events 77/556; scoped PHPStan under PHP 8.4.15 reports 0 Errors; Pint --test passes 11 touched PHP files. T023's strict same-run native Wallet-capture assertion remains unverified because the existing emulator is offline. T015/T020 still require P25/Payments/Ledger/Notification contracts; T014 requires formal scope-change and connectivity-loss evidence; T016/T024 require actual Governance appointments and independent outcomes. P26 remains PARTIAL; no production bootstrap/publication/sales, deployment, P18 or P24 activation.
+
+P26 current-source browser checkpoint (2026-11-03): the isolated Chromium journey passed 2/2 Playwright tests and exact persisted counts after T006 contract changes. The harness now avoids the retained 8100 container by choosing a unique port. Strict native same-run Wallet-capture absence remains pending because `emulator-5554` is offline; production and review gates remain as above. No retained test DB/container was deleted.
+
+
+P26 native checkpoint (2026-11-03): after the project-owner-approved non-wiping emulator restart, the guarded Customer+Agent native journey passed on emulator-5554. Same-run persisted counts 2|2|1|1|1|0|0|0|0|0|0|0 include zero Wallet captures and zero Payment/refund/Ledger/payout/settlement rows. Customer real challenge/PIN, free registration and ticket access passed; Agent wrong-gate denial, assigned-gate admission and repeat-scan denial passed. T023's documented native criterion is verified. P26 remains PARTIAL for T006/T007/T014/T015/T020 decisions/contracts and T016/T024 independent reviews; no activation gate changed. Details: specs/1002-free-invitation-complimentary-events/evidence.md.

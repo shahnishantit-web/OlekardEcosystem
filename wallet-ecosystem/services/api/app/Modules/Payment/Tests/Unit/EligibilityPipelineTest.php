@@ -6,7 +6,10 @@ namespace App\Modules\Payment\Tests\Unit;
 
 use App\Modules\Payment\Application\Services\EligibilityPipeline;
 use App\Modules\Payment\Domain\Enums\EligibilityReason;
+use App\Modules\Payment\Domain\PaymentContextIdentifiers;
+use App\Modules\Payment\Domain\ValueObjects\EventStaticReadinessQuery;
 use App\Modules\Payment\Domain\ValueObjects\OptionsQuery;
+use App\Modules\Payment\Domain\ValueObjects\StaticEligibilityContext;
 use App\Modules\Payment\Infrastructure\Models\PaymentProviderAccountModel;
 use App\Modules\Payment\Infrastructure\Models\PaymentProviderModel;
 use PHPUnit\Framework\TestCase;
@@ -17,7 +20,7 @@ final class EligibilityPipelineTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->pipeline = new EligibilityPipeline();
+        $this->pipeline = new EligibilityPipeline;
     }
 
     // ── helpers ─────────────────────────────────────────────────────────────
@@ -25,34 +28,34 @@ final class EligibilityPipelineTest extends TestCase
     private function baseQuery(array $overrides = []): OptionsQuery
     {
         return new OptionsQuery(
-            purposeType:      $overrides['purposeType']      ?? 'bill',
+            purposeType: $overrides['purposeType'] ?? 'bill',
             purposeReference: $overrides['purposeReference'] ?? 'ref-1',
-            currencyCode:     $overrides['currencyCode']     ?? 'BWP',
-            amountMinor:      $overrides['amountMinor']      ?? 5000,
-            organisationId:   $overrides['organisationId']   ?? 'org-001',
-            actorId:          $overrides['actorId']          ?? 'actor-001',
-            countryCode:      $overrides['countryCode']      ?? 'BW',
-            moduleKey:        $overrides['moduleKey']        ?? 'wallet',
+            currencyCode: $overrides['currencyCode'] ?? 'BWP',
+            amountMinor: $overrides['amountMinor'] ?? 5000,
+            organisationId: $overrides['organisationId'] ?? 'org-001',
+            actorId: $overrides['actorId'] ?? 'actor-001',
+            countryCode: $overrides['countryCode'] ?? 'BW',
+            moduleKey: $overrides['moduleKey'] ?? 'wallet',
             requiredCapability: $overrides['requiredCapability'] ?? null,
         );
     }
 
     private function baseAccount(array $overrides = []): PaymentProviderAccountModel
     {
-        $provider              = new PaymentProviderModel();
-        $provider->is_enabled  = $overrides['providerEnabled']   ?? true;
+        $provider = new PaymentProviderModel;
+        $provider->is_enabled = $overrides['providerEnabled'] ?? true;
         $provider->is_suspended = $overrides['providerSuspended'] ?? false;
 
-        $account                         = new PaymentProviderAccountModel();
-        $account->is_active              = $overrides['isActive']              ?? true;
-        $account->enabled_organisations  = $overrides['enabledOrgs']           ?? [];
-        $account->enabled_modules        = $overrides['enabledModules']        ?? [];
-        $account->enabled_purpose_types  = $overrides['enabledPurposeTypes']   ?? [];
-        $account->country_restrictions   = $overrides['countryRestrictions']   ?? [];
-        $account->supported_currencies   = $overrides['currencies']            ?? ['BWP'];
-        $account->min_amount_minor       = $overrides['minAmount']             ?? 100;
-        $account->max_amount_minor       = $overrides['maxAmount']             ?? 10_000_000;
-        $account->capability_flags       = $overrides['capabilityFlags']       ?? [];
+        $account = new PaymentProviderAccountModel;
+        $account->is_active = $overrides['isActive'] ?? true;
+        $account->enabled_organisations = $overrides['enabledOrgs'] ?? [];
+        $account->enabled_modules = $overrides['enabledModules'] ?? [];
+        $account->enabled_purpose_types = $overrides['enabledPurposeTypes'] ?? [];
+        $account->country_restrictions = $overrides['countryRestrictions'] ?? [];
+        $account->supported_currencies = $overrides['currencies'] ?? ['BWP'];
+        $account->min_amount_minor = $overrides['minAmount'] ?? 100;
+        $account->max_amount_minor = $overrides['maxAmount'] ?? 10_000_000;
+        $account->capability_flags = $overrides['capabilityFlags'] ?? [];
         $account->setRelation('provider', $provider);
 
         return $account;
@@ -127,6 +130,22 @@ final class EligibilityPipelineTest extends TestCase
 
         self::assertFalse($result->isEligible);
         self::assertSame(EligibilityReason::ModuleNotEnabled, $result->reason);
+    }
+
+    public function test_events_module_identifier_preserves_existing_account_allowlist_semantics(): void
+    {
+        $allowed = $this->pipeline->evaluate(
+            $this->baseAccount(['enabledModules' => []]),
+            $this->baseQuery(['moduleKey' => PaymentContextIdentifiers::MODULE_EVENTS]),
+        );
+        $denied = $this->pipeline->evaluate(
+            $this->baseAccount(['enabledModules' => ['wallet']]),
+            $this->baseQuery(['moduleKey' => PaymentContextIdentifiers::MODULE_EVENTS]),
+        );
+
+        self::assertTrue($allowed->isEligible, 'An empty module allowlist remains unrestricted as before.');
+        self::assertFalse($denied->isEligible, 'A non-empty allowlist must explicitly include Events.');
+        self::assertSame(EligibilityReason::ModuleNotEnabled, $denied->reason);
     }
 
     // ── Stage 4 — Purpose Type ───────────────────────────────────────────────
@@ -263,7 +282,7 @@ final class EligibilityPipelineTest extends TestCase
         $result = $this->pipeline->evaluate(
             $this->baseAccount([
                 'providerEnabled' => false,
-                'currencies'      => ['USD'], // would also fail stage 6
+                'currencies' => ['USD'], // would also fail stage 6
             ]),
             $this->baseQuery(['currencyCode' => 'BWP']),
         );
@@ -282,5 +301,27 @@ final class EligibilityPipelineTest extends TestCase
 
         self::assertTrue($result->isEligible);
         self::assertNull($result->reason);
+    }
+
+    public function test_actor_free_static_context_uses_the_same_configured_eligibility_rules(): void
+    {
+        $context = new StaticEligibilityContext(
+            purposeType: 'approved-test-purpose', currencyCode: 'BWP', amountMinor: 5000,
+            organisationId: 'org-001', countryCode: 'BW', moduleKey: 'approved-test-module',
+        );
+        $result = $this->pipeline->evaluate($this->baseAccount(), $context);
+
+        self::assertTrue($result->isEligible);
+        self::assertNull($result->reason);
+        self::assertFalse(property_exists($context, 'actorId'));
+    }
+
+    public function test_event_readiness_requires_shared_currency_and_tenant_context_across_categories(): void
+    {
+        $first = new StaticEligibilityContext('ticket-test', 'BWP', 5000, 'org-1', 'BW', 'events');
+        $second = new StaticEligibilityContext('ticket-test', 'USD', 7000, 'org-1', 'BW', 'events');
+
+        $this->expectException(\InvalidArgumentException::class);
+        new EventStaticReadinessQuery('event-1', 1, ['cat-1' => $first, 'cat-2' => $second]);
     }
 }

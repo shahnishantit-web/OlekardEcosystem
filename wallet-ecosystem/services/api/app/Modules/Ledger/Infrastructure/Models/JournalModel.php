@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \App\Modules\Ledger\Domain\Enums\JournalEntryType $entry_type
  * @property \App\Modules\Ledger\Domain\Enums\JournalStatus $status
  * @property string $transaction_reference
+ * @property string $idempotency_key
  * @property string $correlation_id
  * @property string $currency_code
  * @property \Illuminate\Support\Carbon|null $posted_at

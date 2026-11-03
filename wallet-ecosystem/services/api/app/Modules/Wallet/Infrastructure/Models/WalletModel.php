@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
+ * @property string $id
+ * @property string $owner_id
  * @property WalletStatus $status
  */
 class WalletModel extends Model

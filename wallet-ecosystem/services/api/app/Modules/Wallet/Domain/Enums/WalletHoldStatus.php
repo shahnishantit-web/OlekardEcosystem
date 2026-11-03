@@ -9,4 +9,5 @@ enum WalletHoldStatus: string
     case Active   = 'active';
     case Released = 'released';
     case Expired  = 'expired';
+    case Captured = 'captured';
 }

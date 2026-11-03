@@ -47,8 +47,15 @@ final class ExpireWalletHoldsCommand extends Command
 
                 try {
                     DB::connection('wallet')->transaction(function () use ($hold): void {
+                        $initial = WalletHoldModel::on('wallet')->find($hold->id);
+                        if ($initial === null) return;
+                        $pocket = \App\Modules\Wallet\Infrastructure\Models\CurrencyPocketModel::on('wallet')
+                            ->lockForUpdate()->find($initial->pocket_id);
+                        if ($pocket === null) return;
                         $locked = WalletHoldModel::on('wallet')->lockForUpdate()->find($hold->id);
-                        if ($locked === null || $locked->status !== WalletHoldStatus::Active) {
+                        if ($locked === null || $locked->pocket_id !== $pocket->id
+                            || $locked->status !== WalletHoldStatus::Active
+                            || $locked->expires_at === null || $locked->expires_at->isFuture()) {
                             return; // Already processed by another process
                         }
 
@@ -56,14 +63,9 @@ final class ExpireWalletHoldsCommand extends Command
                         $locked->expired_at = now();
                         $locked->save();
 
-                        $pocket = \App\Modules\Wallet\Infrastructure\Models\CurrencyPocketModel::on('wallet')
-                            ->select('wallet_id')
-                            ->where('id', $locked->pocket_id)
-                            ->first();
-
                         $correlationId = (string) Uuid::uuid7();
                         event(new WalletHoldExpiredEvent(
-                            $pocket?->wallet_id ?? $locked->pocket_id,
+                            $pocket->wallet_id,
                             $locked->id,
                             $locked->pocket_id,
                             $locked->amount,

@@ -14,6 +14,7 @@ final class SecurityHeadersMiddleware
     {
         $response = $next($request);
 
+
         $maxAge = (int) config('security.hsts_max_age', 31536000);
         $response->headers->set('Strict-Transport-Security', "max-age={$maxAge}; includeSubDomains");
         $response->headers->set('X-Content-Type-Options', 'nosniff');

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\MultiCurrency\Providers;
 
+use App\Modules\MultiCurrency\Application\Services\CurrencyDefinitionCoordinator;
+use App\Modules\MultiCurrency\Domain\Contracts\CurrencyDefinitionGuard;
 use App\Modules\MultiCurrency\Domain\Contracts\CurrencyRepositoryInterface;
 use App\Modules\MultiCurrency\Domain\Contracts\CurrencyWalletRepositoryInterface;
 use App\Modules\MultiCurrency\Domain\Contracts\FxQuoteRepositoryInterface;
@@ -24,6 +26,7 @@ final class MultiCurrencyServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(CurrencyDefinitionGuard::class, CurrencyDefinitionCoordinator::class);
         $this->app->bind(FxRateProviderInterface::class, UnavailableFxRateProvider::class);
         $this->app->bind(CurrencyRepositoryInterface::class, EloquentCurrencyRepository::class);
         $this->app->bind(CurrencyWalletRepositoryInterface::class, EloquentCurrencyWalletRepository::class);

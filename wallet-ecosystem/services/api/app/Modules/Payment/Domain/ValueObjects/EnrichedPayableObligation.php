@@ -7,14 +7,16 @@ namespace App\Modules\Payment\Domain\ValueObjects;
 final readonly class EnrichedPayableObligation
 {
     public function __construct(
-        public int                   $amountMinor,
-        public string                $currencyCode,
-        public string                $organisationId,
-        public string                $payerActorId,
-        public ?\DateTimeImmutable   $expiresAt             = null,
-        public ?string               $holdReference         = null,
-        public array                 $beneficiaryAllocations = [],
-        public array                 $metadata              = [],
+        public int $amountMinor,
+        public string $currencyCode,
+        public string $organisationId,
+        public string $payerActorId,
+        public ?\DateTimeImmutable $expiresAt = null,
+        public ?string $holdReference = null,
+        public array $beneficiaryAllocations = [],
+        public array $metadata = [],
+        /** The business snapshot already includes its fee and tax components. */
+        public bool $priceIncludesFeesAndTaxes = false,
     ) {
         if ($amountMinor <= 0) {
             throw new \InvalidArgumentException(

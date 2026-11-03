@@ -1,5 +1,4 @@
 import '../../domain/entities/transaction.dart';
-import '../../domain/entities/domain_deep_link.dart';
 
 class TransactionDto {
   static PaymentHistoryItem fromJson(Map<String, dynamic> json) {
@@ -22,12 +21,12 @@ class TransactionDto {
       completedAt: json['completed_at'] != null
           ? DateTime.parse(json['completed_at'] as String)
           : null,
-      captureStatus: _parseCaptureStatus(
-          json['capture_status'] as String? ?? 'pending'),
+      captureStatus:
+          _parseCaptureStatus(json['capture_status'] as String? ?? 'pending'),
       accountingStatus: _parseAccountingStatus(
           json['accounting_status'] as String? ?? 'pending'),
-      serviceStatus: _parseServiceStatus(
-          json['service_status'] as String? ?? 'pending'),
+      serviceStatus:
+          _parseServiceStatus(json['service_status'] as String? ?? 'pending'),
       refundStatus: json['refund_status'] != null
           ? _parseRefundStatus(json['refund_status'] as String)
           : null,
@@ -41,7 +40,8 @@ class TransactionDto {
   }
 
   static PaymentPurposeType _parsePurposeType(String s) => switch (s) {
-        'funding_bank_transfer' || 'funding' =>
+        'funding_bank_transfer' ||
+        'funding' =>
           PaymentPurposeType.fundingBankTransfer,
         'funding_agent_cash_in' => PaymentPurposeType.fundingAgentCashIn,
         'wallet_transfer' || 'transfer' => PaymentPurposeType.walletTransfer,
@@ -108,8 +108,7 @@ class TransactionDto {
           label: raw['label'] as String?,
         );
       }
-      return UnavailableLink(
-          reason: raw['reason'] as String? ?? 'unavailable');
+      return UnavailableLink(reason: raw['reason'] as String? ?? 'unavailable');
     }
     return null;
   }

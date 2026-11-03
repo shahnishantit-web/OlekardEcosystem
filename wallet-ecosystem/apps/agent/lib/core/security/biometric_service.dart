@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:local_auth/error_codes.dart' as auth_error;
 import 'package:flutter/services.dart';
@@ -9,6 +10,8 @@ class BiometricService {
       : _auth = auth ?? LocalAuthentication();
 
   Future<bool> isAvailable() async {
+    if (kIsWeb) return false;
+
     try {
       final canCheck = await _auth.canCheckBiometrics;
       final isDeviceSupported = await _auth.isDeviceSupported();
@@ -19,6 +22,8 @@ class BiometricService {
   }
 
   Future<bool> authenticate() async {
+    if (kIsWeb) return false;
+
     try {
       return await _auth.authenticate(
         localizedReason: 'Use biometrics to log in to Agent Portal',

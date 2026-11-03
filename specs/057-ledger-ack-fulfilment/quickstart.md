@@ -257,3 +257,49 @@ Expected: All tests pass.
 - [Data model](data-model.md)
 - [Admin API contract](contracts/pending-accounting.yaml)
 - [Spec](spec.md)
+
+## Authorized evidence-extension verification (2026-10-28)
+
+P08 extension acceptance scenarios are added in [verification-traceability.md](verification-traceability.md). The schema-backed scenarios are intentionally **not recorded as executed** because the shared local migration setup fails on the existing `identity.users` schema/history conflict. No database reset or migration-history modification is authorized.
+
+Executed targeted development checks from `wallet-ecosystem/services/api`:
+
+```text
+php artisan test tests/Feature/Modules/Payment/LedgerAcknowledgementTest.php tests/Unit/Modules/Payment/Jobs/RepairPendingAccountingJobTest.php --stop-on-failure --no-coverage
+13 passed, 0 failed, 31 assertions
+
+php artisan test tests/Unit/Modules/Payment/PaymentLedgerEvidenceVerifierTest.php tests/Unit/Modules/Payment/EventHandlers/PaymentConfirmedListenerDedupTest.php tests/Unit/Modules/Platform/Services/OutboxDeadLetterServiceTest.php --no-coverage
+5 passed, 4 skipped (dead-letter replay cases)
+```
+
+Full Payment/Ledger module PHPStan level 8 reported 490 findings; changed-file analysis passed. See restart notes for exact blockers and next safe step.
+
+## Verification correction - 2026-10-28
+
+The earlier note below stating that schema-backed checks were not executed because of the populated Identity schema conflict is superseded for the disposable PostgreSQL environment only. A clean `platform:bootstrap-schemas` run followed by two complete `php artisan migrate --force` executions passed with 313 migration rows. The existing development database/history was not touched.
+
+The automated scenario coverage for SC-01 through SC-07 now passes in the isolated suite: committed Wallet capture and posted-journal binding; pending accounting on a Ledger outage; idempotent retry; repair scan/recovery; intent-scoped allocation reference; pending-accounting route authorization and response; and repair exhaustion with a provider-linked accounting reconciliation exception. Exact tests and results are listed in `verification-traceability.md`. This is development/test evidence, not a manual live-provider run. Wallet operational capture remains disabled pending AD-08; external methods remain pending_ledger pending AD-09.
+
+### P08 SC-06/SC-07 and repair-exhaustion correction - 2026-10-28
+
+Added `PendingAccountingFeatureTest` for SC-06: unauthenticated requests return 401, operators without `payment.intents.admin` return 403, and an authorized operator receives unresolved accounting rows. Added PostgreSQL integration coverage for SC-07: repair exhaustion writes `ledger_failed` and exactly one `accounting_failure` reconciliation record carrying the authoritative succeeded attempt and provider code; a second invocation is idempotent. If succeeded-attempt evidence or the reconciliation service is absent, the Payment transaction rolls back and remains `pending_ledger` instead of falsely closing recovery.
+
+The first SC-07 run exposed a production bug: reconciliation exception schema requires `provider_code`, but repair exhaustion omitted it. `PaymentOrchestrationService::repairAccountingForIntent` now obtains it from the succeeded PaymentAttempt and fails closed when that evidence is unavailable. Targeted rerun: PendingAccountingFeatureTest + WalletCapturePaymentIntegrationTest **8 passed, 0 failed, 0 skipped, 51 assertions**. This is a regression fix, not a newly approved financial policy.
+
+### Disposable developer walkthrough execution - 2026-10-28
+
+The seven walkthrough scenarios were executed using the isolated PostgreSQL 15.19 database `wallet_ecosystem_bootstrap_20261028`, with test-only Wallet/Ledger account references. This is developer verification; no live provider call or independent operator acceptance occurred. Because the original curl-style examples predate the committed-capture contract, the scenarios were run through the current service/route acceptance tests rather than invoking the obsolete `provider_code: wallet` API sequence.
+
+| Scenario | Executed current path | Result |
+|---|---|---|
+| SC-01 | Wallet capture → posted Ledger journal → Payment capture/journal persistence and confirmation outbox: `WalletCapturePaymentIntegrationTest::test_wallet_capture_evidence_is_persisted_and_confirmation_outbox_is_atomic_and_replay_safe`; `WalletCommittedCaptureTest::test_wallet_consumes_hold_and_returns_journal_bound_capture_evidence_idempotently` | PASS |
+| SC-02 | Ledger outage preserves captured Wallet outcome and leaves accounting pending: `LedgerAcknowledgementTest::test_ledger_outage_defers_accounting_without_failing_capture` | PASS |
+| SC-03 | Repeated successful outcome uses the same Ledger idempotency key: `LedgerAcknowledgementTest::test_idempotent_success_replay_does_not_double_post` | PASS |
+| SC-04 | Repair scan dispatches per pending intent (`RepairPendingAccountingJobTest`, 5 tests / 8 assertions) and the integration suite verifies recovery/retry with the same capture/journal evidence | PASS |
+| SC-05 | Confirmation carries intent-scoped allocation reference and does not create duplicate allocations: `LedgerAcknowledgementTest::test_confirmed_event_carries_intent_id_as_allocation_reference`; `PaymentConfirmedListenerDedupTest` | PASS |
+| SC-06 | Pending-accounting route: unauthenticated 401, missing permission 403, authorized unresolved rows: `PendingAccountingFeatureTest` | PASS |
+| SC-07 | Repair exhaustion creates one provider-linked accounting reconciliation; missing succeeded-attempt evidence remains pending: `WalletCapturePaymentIntegrationTest` repair-exhaustion cases | PASS |
+
+Execution result: P08/P11/P25 scoped suite **81 passed, 0 failed, 0 skipped, 446 assertions**, plus SC-04 repair-scan suite **5 passed, 0 failed, 0 skipped, 8 assertions**. The full Payment/Ledger PHPStan run found **485** module findings, matching the latest historical baseline; changed-slice analysis remains 0 findings. `AdminFxManagementTest` passed separately in the same disposable schema-complete database: **22 passed, 0 failed, 0 skipped, 118 assertions**. The test class uses database transactions; no migrations were run against the legacy development database.
+
+Final combined suite correction - 2026-10-28: after adding persisted Payment confirmation outbox dispatch retry coverage, the P08/P11/P25 combined regression is **81 passed, 0 failed, 0 skipped, 446 assertions**. `WalletCapturePaymentIntegrationTest::test_durable_confirmation_outbox_delivers_after_payment_commit_when_dispatch_is_retried` asserts the outbox row remains pending and no notification exists after Payment commit, then dispatches that row in a later worker invocation and asserts one delivered event/notification. This is restart/re-dispatch evidence, not a forced OS process termination. The remaining consumer commit-before-ack flow needs a P25 durable order/entitlement effect.

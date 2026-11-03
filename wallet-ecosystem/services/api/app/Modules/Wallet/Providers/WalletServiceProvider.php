@@ -24,6 +24,8 @@ final class WalletServiceProvider extends ServiceProvider
             \App\Modules\Wallet\Application\WalletReferenceLookup::class);
         // T059/T162: Bind real WalletModuleContractAdapter so cross-module consumers get live data.
         $this->app->bind(WalletModuleContract::class, WalletModuleContractAdapter::class);
+        $this->app->bind(\App\Modules\Wallet\Domain\Contracts\WalletCaptureContract::class,
+            \App\Modules\Wallet\Application\WalletCaptureService::class);
 
         // WalletHoldService — internal Application service (not cross-module per research Decision 6)
         $this->app->bind(WalletHoldServiceContract::class, WalletHoldService::class);

@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 
-import 'package:wallet_customer/modules/transactions/domain/entities/domain_deep_link.dart';
 import 'package:wallet_customer/modules/transactions/domain/entities/transaction.dart';
 import 'package:wallet_customer/modules/transactions/presentation/screens/transaction_detail_screen.dart';
 import 'package:wallet_customer/modules/transactions/presentation/transaction_providers.dart';
@@ -99,7 +98,8 @@ void main() {
   // ─── T046: SC-05 — deep link tile rendered correctly ─────────────────────────
 
   testWidgets('SC-05: AvailableLink shows tappable list tile', (tester) async {
-    const link = AvailableLink(url: 'https://example.com/domain', label: 'View Domain');
+    const link =
+        AvailableLink(url: 'https://example.com/domain', label: 'View Domain');
     final item = _makeItem(deepLink: link);
     when(mockRepo.fetchDetail(any)).thenAnswer((_) async => item);
 
@@ -127,7 +127,8 @@ void main() {
 
   // ─── T046: providerReference masked ──────────────────────────────────────────
 
-  testWidgets('providerReference is masked — last 4 digits only', (tester) async {
+  testWidgets('providerReference is masked — last 4 digits only',
+      (tester) async {
     final item = _makeItem(providerReference: 'ABCD12345678');
     when(mockRepo.fetchDetail(any)).thenAnswer((_) async => item);
 
@@ -211,12 +212,14 @@ void main() {
     await tester.tap(find.text('Request Refund'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Request Refund'), findsOneWidget); // still visible in confirm UI
+    expect(find.text('Request Refund'),
+        findsOneWidget); // still visible in confirm UI
     expect(find.text('Reason for refund'), findsOneWidget);
     expect(find.text('Submit Refund Request'), findsOneWidget);
   });
 
-  testWidgets('SC-08: refundStatus=pending shows Refund status row (in progress)',
+  testWidgets(
+      'SC-08: refundStatus=pending shows Refund status row (in progress)',
       (tester) async {
     final item =
         _makeItem(refundEligible: true, refundStatus: RefundStatus.pending);

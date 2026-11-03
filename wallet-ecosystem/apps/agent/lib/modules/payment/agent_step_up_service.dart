@@ -1,11 +1,8 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_payment/shared_payment.dart';
 
 // DEV_MOCK: pending E32 agent auth module wiring for real PIN/biometric step-up.
 class AgentStepUpService implements StepUpService {
-  final Ref _ref;
-
-  AgentStepUpService(this._ref);
+  AgentStepUpService();
 
   @override
   Future<String> acquireToken({required String scope}) async {

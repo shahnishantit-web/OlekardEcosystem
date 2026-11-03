@@ -63,6 +63,7 @@ final class WalletModuleContractAdapter implements WalletModuleContract
         string $correlationId,
         string $transactionReference,
         ?\DateTimeImmutable $expiresAt = null,
+        ?string $organisationId = null,
     ): string {
         $hold = $this->holdService->place(
             walletId: $walletId,
@@ -72,6 +73,7 @@ final class WalletModuleContractAdapter implements WalletModuleContract
             correlationId: $correlationId,
             transactionReference: $transactionReference,
             expiresAt: $expiresAt,
+            organisationId: $organisationId,
         );
 
         return $hold->id;

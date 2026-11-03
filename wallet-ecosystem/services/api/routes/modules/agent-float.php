@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\AgentFloat\Infrastructure\Http\Controllers\AgentDashboardController;
 use App\Modules\AgentFloat\Infrastructure\Http\Controllers\AgentFloatCashInController;
 use App\Modules\AgentFloat\Infrastructure\Http\Controllers\AgentFloatCashOutController;
 use App\Modules\AgentFloat\Infrastructure\Http\Controllers\AgentFloatFundingController;
@@ -21,6 +22,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('v1')->middleware(['identity.auth'])->group(static function (): void {
+
+    Route::get('agent/dashboard', [AgentDashboardController::class, 'show'])
+        ->middleware([
+            'identity.require-permission:agent_float.wallet.view',
+            'identity.require-permission:agent_float.transactions.view',
+        ]);
 
     // ── Float Wallet Provisioning & View (US1, US3) ─────────────────────────
 

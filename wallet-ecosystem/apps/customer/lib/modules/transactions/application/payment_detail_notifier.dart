@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/entities/transaction.dart';
-import '../domain/entities/domain_deep_link.dart';
 import '../domain/entities/payment_status_rows.dart';
 import '../domain/entities/refund_request.dart';
 import '../domain/repositories/transaction_repository.dart';
@@ -55,8 +54,7 @@ final class PaymentDetailError extends PaymentDetailState {
 
 // ─── Notifier ─────────────────────────────────────────────────────────────────
 
-class PaymentDetailNotifier
-    extends AsyncNotifier<PaymentDetailState> {
+class PaymentDetailNotifier extends AsyncNotifier<PaymentDetailState> {
   final String intentId;
 
   PaymentDetailNotifier(this.intentId);

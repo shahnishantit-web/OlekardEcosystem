@@ -48,6 +48,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
   final SecureStorageService _storage;
+  int _authOperationGeneration = 0;
 
   AuthNotifier({
     required AuthRepository repository,
@@ -59,6 +60,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> _initialize() async {
+    final generation = _authOperationGeneration;
     try {
       final token = await _storage.getAccessToken();
       if (token != null) {
@@ -68,20 +70,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
         );
         try {
           final agent = await _repository.getProfile();
+          if (generation != _authOperationGeneration) return;
           state = AuthState(status: AuthStateEnum.authenticated, agent: agent);
         } catch (_) {
+          if (generation != _authOperationGeneration) return;
           state = const AuthState(status: AuthStateEnum.unauthenticated);
         }
       } else {
+        if (generation != _authOperationGeneration) return;
         state = const AuthState(status: AuthStateEnum.unauthenticated);
       }
     } catch (_) {
+      if (generation != _authOperationGeneration) return;
       state = const AuthState(status: AuthStateEnum.unauthenticated);
     }
   }
 
-  Future<void> login({required String phone, required String pinHash}) async {
-    final result = await _repository.login(phone: phone, pinHash: pinHash);
+  Future<void> login({required String phone, required String pin}) async {
+    _authOperationGeneration++;
+    final result = await _repository.login(phone: phone, pin: pin);
     state = AuthState(
       status: AuthStateEnum.authenticated,
       agent: result.agent,
@@ -89,6 +96,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    _authOperationGeneration++;
     await _repository.logout();
     SessionEventBus.instance.fireLogout();
     state = const AuthState(status: AuthStateEnum.unauthenticated);

@@ -30,16 +30,40 @@ return new class extends Migration
              ON payment.configuration_versions (account_id, activated_at DESC)'
         );
 
-        DB::connection('payment')->statement(
-            'ALTER TABLE payment.api_operation_configs
-             ADD CONSTRAINT IF NOT EXISTS fk_api_operation_configs_version
-             FOREIGN KEY (config_version_id) REFERENCES payment.configuration_versions(id) ON DELETE SET NULL'
+        DB::connection('payment')->statement(<<<'SQL'
+            DO $migration$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_constraint
+                    WHERE conname = 'fk_api_operation_configs_version'
+                      AND conrelid = 'payment.api_operation_configs'::regclass
+                ) THEN
+                    ALTER TABLE payment.api_operation_configs
+                    ADD CONSTRAINT fk_api_operation_configs_version
+                    FOREIGN KEY (config_version_id)
+                    REFERENCES payment.configuration_versions(id) ON DELETE SET NULL;
+                END IF;
+            END
+            $migration$;
+            SQL
         );
 
-        DB::connection('payment')->statement(
-            'ALTER TABLE payment.payment_provider_accounts
-             ADD CONSTRAINT IF NOT EXISTS fk_active_config_version
-             FOREIGN KEY (active_config_version_id) REFERENCES payment.configuration_versions(id) ON DELETE SET NULL'
+        DB::connection('payment')->statement(<<<'SQL'
+            DO $migration$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_constraint
+                    WHERE conname = 'fk_active_config_version'
+                      AND conrelid = 'payment.payment_provider_accounts'::regclass
+                ) THEN
+                    ALTER TABLE payment.payment_provider_accounts
+                    ADD CONSTRAINT fk_active_config_version
+                    FOREIGN KEY (active_config_version_id)
+                    REFERENCES payment.configuration_versions(id) ON DELETE SET NULL;
+                END IF;
+            END
+            $migration$;
+            SQL
         );
     }
 

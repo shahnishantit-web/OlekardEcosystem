@@ -4,90 +4,100 @@ declare(strict_types=1);
 
 namespace App\Modules\Payment\Providers;
 
-use App\Modules\Payment\Application\PaymentOrchestrationService;
-use App\Modules\Payment\Application\Services\ApiOperationConfigService;
-use App\Modules\Payment\Application\Services\BankAccountLifecycleService;
-use App\Modules\Payment\Application\Services\BankAdminService;
-use App\Modules\Payment\Application\Services\BusinessPurposeResolverRegistry;
-use App\Modules\Payment\Application\Services\CertificationEvidenceService;
-use App\Modules\Payment\Application\Services\CredentialRotationService;
-use App\Modules\Payment\Application\Services\ApiOperationConfigValidator;
-use App\Modules\Payment\Application\Services\IntegrationAccountService;
-use App\Modules\Payment\Application\Services\PaymentApplicationService;
-use App\Modules\Payment\Application\Services\PaymentCallbackService;
-use App\Modules\Payment\Application\Services\PaymentConfigDraftService;
-use App\Modules\Payment\Application\Services\PaymentModuleConfigService;
-use App\Modules\Payment\Application\Services\PaymentProviderAdminService;
-use App\Modules\Payment\Application\Services\PaymentProviderConfigValidator;
-use App\Modules\Payment\Application\Services\ReconciliationExceptionService;
-use App\Modules\Payment\Application\Services\EligibilityPipeline;
-use App\Modules\Payment\Application\Services\RefundService;
-use App\Modules\Payment\Application\Services\ProviderRegistryService;
-use App\Modules\Payment\Application\Services\QuoteService;
-use App\Modules\Payment\Application\Services\SandboxTestService;
-use App\Modules\Payment\Application\Services\SsrfGuard;
-use App\Modules\Payment\Domain\Contracts\AdapterAllowlistInterface;
-use App\Modules\Payment\Domain\Contracts\BankAccountLifecycleServiceInterface;
-use App\Modules\Payment\Domain\Contracts\BankRepositoryInterface;
-use App\Modules\Payment\Domain\Contracts\BusinessPurposeResolverInterface;
-use App\Modules\Payment\Domain\Contracts\IntegrationProfileRepositoryInterface;
-use App\Modules\Payment\Domain\Contracts\SsrfGuardInterface;
-use App\Modules\Payment\Infrastructure\Config\AdapterAllowlistConfig;
-use App\Modules\Payment\Domain\Contracts\PaymentAttemptRepositoryInterface;
-use App\Modules\Payment\Domain\Contracts\PaymentConfigChangeDraftRepositoryInterface;
-use App\Modules\Payment\Domain\Contracts\PaymentIntentRepositoryInterface;
-use App\Modules\Payment\Domain\Contracts\PaymentModuleContract;
-use App\Modules\Payment\Domain\Contracts\PaymentProviderRepositoryInterface;
-use App\Modules\Payment\Application\Services\PaymentIdempotencyService;
-use App\Modules\Payment\Domain\Contracts\PaymentIdempotencyRepositoryInterface;
-use App\Modules\Payment\Domain\Contracts\PaymentQuoteRepositoryInterface;
-use App\Modules\Payment\Domain\Contracts\PaymentRefundRepositoryInterface;
-use App\Modules\Payment\Infrastructure\Adapters\MockBankCallbackParser;
-use App\Modules\Payment\Infrastructure\Adapters\MockBankPaymentAdapter;
-use App\Modules\Payment\Infrastructure\Adapters\WalletPaymentAdapter;
-use App\Modules\Payment\Infrastructure\Repositories\EloquentBankRepository;
-use App\Modules\Payment\Infrastructure\Repositories\EloquentIntegrationProfileRepository;
-use App\Modules\Payment\Infrastructure\Repositories\EloquentPaymentAttemptRepository;
-use App\Modules\Payment\Infrastructure\Repositories\EloquentPaymentConfigChangeDraftRepository;
-use App\Modules\Payment\Infrastructure\Repositories\EloquentPaymentIntentRepository;
-use App\Modules\Payment\Infrastructure\Repositories\EloquentPaymentProviderRepository;
-use App\Modules\Payment\Infrastructure\Repositories\EloquentPaymentRefundRepository;
-use App\Modules\Payment\Infrastructure\Repositories\EloquentPaymentIdempotencyRepository;
-use App\Modules\Payment\Infrastructure\Repositories\EloquentPaymentQuoteRepository;
+use App\Modules\Identity\Infrastructure\Models\UserModel;
 use App\Modules\Payment\Application\EventHandlers\BankDisputeCallbackHandler;
 use App\Modules\Payment\Application\EventHandlers\BankRefundCallbackHandler;
 use App\Modules\Payment\Application\EventHandlers\BankSettlementBatchHandler;
 use App\Modules\Payment\Application\EventHandlers\PaymentEventSubscriber;
+use App\Modules\Payment\Application\PaymentOrchestrationService;
+use App\Modules\Payment\Application\Services\ApiOperationConfigService;
+use App\Modules\Payment\Application\Services\ApiOperationConfigValidator;
+use App\Modules\Payment\Application\Services\BankAccountLifecycleService;
+use App\Modules\Payment\Application\Services\BankAdminService;
+use App\Modules\Payment\Application\Services\BusinessPurposeResolverRegistry;
+use App\Modules\Payment\Application\Services\CertificationEvidenceService;
 use App\Modules\Payment\Application\Services\ClearingService;
+use App\Modules\Payment\Application\Services\CredentialRotationService;
 use App\Modules\Payment\Application\Services\DisputeService;
-use App\Modules\Payment\Application\Services\PayoutQualificationService;
-use App\Modules\Payment\Application\Services\ProviderStatementService;
-use App\Modules\Payment\Application\Services\ReconciliationCorrectionService;
-use App\Modules\Payment\Application\Services\StatementMatchingService;
-use App\Modules\Payment\Domain\Contracts\ClearingRecordRepositoryInterface;
-use App\Modules\Payment\Domain\Contracts\PaymentDisputeCaseRepositoryInterface;
-use App\Modules\Payment\Domain\Contracts\ProviderStatementRepositoryInterface;
-use App\Modules\Payment\Domain\Contracts\ReconciliationCorrectionRepositoryInterface;
-use App\Modules\Payment\Infrastructure\Repositories\EloquentClearingRecordRepository;
-use App\Modules\Payment\Infrastructure\Repositories\EloquentPaymentDisputeCaseRepository;
-use App\Modules\Payment\Infrastructure\Repositories\EloquentProviderStatementRepository;
-use App\Modules\Payment\Infrastructure\Repositories\EloquentReconciliationCorrectionRepository;
+use App\Modules\Payment\Application\Services\EligibilityPipeline;
+use App\Modules\Payment\Application\Services\IntegrationAccountService;
+use App\Modules\Payment\Application\Services\PaymentApplicationService;
+use App\Modules\Payment\Application\Services\PaymentCallbackService;
+use App\Modules\Payment\Application\Services\PaymentConfigDraftService;
+use App\Modules\Payment\Application\Services\PaymentConfirmationEvidenceService;
+use App\Modules\Payment\Application\Services\PaymentIdempotencyService;
+use App\Modules\Payment\Application\Services\PaymentModuleConfigService;
+use App\Modules\Payment\Application\Services\PaymentProviderAdminService;
+use App\Modules\Payment\Application\Services\PaymentProviderConfigValidator;
+use App\Modules\Payment\Application\Services\PaymentRefundAdmissionEligibilityService;
+use App\Modules\Payment\Application\Services\PaymentWebhookHandler;
 use App\Modules\Payment\Application\Services\PayoutBalanceService;
 use App\Modules\Payment\Application\Services\PayoutBeneficiaryService;
 use App\Modules\Payment\Application\Services\PayoutDomainEntitlementService;
+use App\Modules\Payment\Application\Services\PayoutQualificationService;
 use App\Modules\Payment\Application\Services\PayoutReservationService;
+use App\Modules\Payment\Application\Services\ProviderRegistryService;
+use App\Modules\Payment\Application\Services\ProviderStatementService;
+use App\Modules\Payment\Application\Services\QuoteService;
+use App\Modules\Payment\Application\Services\ReconciliationCorrectionService;
+use App\Modules\Payment\Application\Services\ReconciliationExceptionService;
+use App\Modules\Payment\Application\Services\RefundService;
+use App\Modules\Payment\Application\Services\SandboxTestService;
+use App\Modules\Payment\Application\Services\SsrfGuard;
+use App\Modules\Payment\Application\Services\StatementMatchingService;
+use App\Modules\Payment\Domain\Contracts\AdapterAllowlistInterface;
+use App\Modules\Payment\Domain\Contracts\BankAccountLifecycleServiceInterface;
+use App\Modules\Payment\Domain\Contracts\BankRepositoryInterface;
+use App\Modules\Payment\Domain\Contracts\ClearingRecordRepositoryInterface;
+use App\Modules\Payment\Domain\Contracts\IntegrationProfileRepositoryInterface;
+use App\Modules\Payment\Domain\Contracts\PaymentAttemptRepositoryInterface;
+use App\Modules\Payment\Domain\Contracts\PaymentConfigChangeDraftRepositoryInterface;
+use App\Modules\Payment\Domain\Contracts\PaymentDisputeCaseRepositoryInterface;
+use App\Modules\Payment\Domain\Contracts\PaymentIdempotencyRepositoryInterface;
+use App\Modules\Payment\Domain\Contracts\PaymentIntentRepositoryInterface;
+use App\Modules\Payment\Domain\Contracts\PaymentInternalConfirmationContract;
+use App\Modules\Payment\Domain\Contracts\PaymentModuleContract;
+use App\Modules\Payment\Domain\Contracts\PaymentOutcomeProcessor;
+use App\Modules\Payment\Domain\Contracts\PaymentProviderRepositoryInterface;
+use App\Modules\Payment\Domain\Contracts\PaymentQuoteRepositoryInterface;
+use App\Modules\Payment\Domain\Contracts\PaymentRefundAdmissionEligibilityContract;
+use App\Modules\Payment\Domain\Contracts\PaymentRefundRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PayoutBeneficiaryRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PayoutDomainEntitlementGatewayInterface;
 use App\Modules\Payment\Domain\Contracts\PayoutRequestRepositoryInterface;
 use App\Modules\Payment\Domain\Contracts\PayoutReservationRepositoryInterface;
+use App\Modules\Payment\Domain\Contracts\ProviderStatementRepositoryInterface;
+use App\Modules\Payment\Domain\Contracts\ReconciliationCorrectionRepositoryInterface;
+use App\Modules\Payment\Domain\Contracts\SsrfGuardInterface;
+use App\Modules\Payment\Domain\Exceptions\ProductionBlockedException;
+use App\Modules\Payment\Infrastructure\Adapters\MockBankCallbackParser;
+use App\Modules\Payment\Infrastructure\Adapters\MockBankPaymentAdapter;
+use App\Modules\Payment\Infrastructure\Adapters\PaymentWebhookFactory;
 use App\Modules\Payment\Infrastructure\Adapters\StubPayoutAdapter;
+use App\Modules\Payment\Infrastructure\Adapters\WalletPaymentAdapter;
+use App\Modules\Payment\Infrastructure\Config\AdapterAllowlistConfig;
+use App\Modules\Payment\Infrastructure\Repositories\EloquentBankRepository;
+use App\Modules\Payment\Infrastructure\Repositories\EloquentClearingRecordRepository;
+use App\Modules\Payment\Infrastructure\Repositories\EloquentIntegrationProfileRepository;
+use App\Modules\Payment\Infrastructure\Repositories\EloquentPaymentAttemptRepository;
+use App\Modules\Payment\Infrastructure\Repositories\EloquentPaymentConfigChangeDraftRepository;
+use App\Modules\Payment\Infrastructure\Repositories\EloquentPaymentDisputeCaseRepository;
+use App\Modules\Payment\Infrastructure\Repositories\EloquentPaymentIdempotencyRepository;
+use App\Modules\Payment\Infrastructure\Repositories\EloquentPaymentIntentRepository;
+use App\Modules\Payment\Infrastructure\Repositories\EloquentPaymentProviderRepository;
+use App\Modules\Payment\Infrastructure\Repositories\EloquentPaymentQuoteRepository;
+use App\Modules\Payment\Infrastructure\Repositories\EloquentPaymentRefundRepository;
 use App\Modules\Payment\Infrastructure\Repositories\EloquentPayoutBeneficiaryRepository;
 use App\Modules\Payment\Infrastructure\Repositories\EloquentPayoutRequestRepository;
 use App\Modules\Payment\Infrastructure\Repositories\EloquentPayoutReservationRepository;
+use App\Modules\Payment\Infrastructure\Repositories\EloquentProviderStatementRepository;
+use App\Modules\Payment\Infrastructure\Repositories\EloquentReconciliationCorrectionRepository;
 use App\Modules\Payment\Infrastructure\Stubs\DevPurposeStubResolver;
 use App\Modules\Payment\Infrastructure\Stubs\PermissiveEntitlementGateway;
-use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 final class PaymentServiceProvider extends ServiceProvider
@@ -112,10 +122,13 @@ final class PaymentServiceProvider extends ServiceProvider
         $this->app->singleton(BusinessPurposeResolverRegistry::class);
         $this->app->singleton(QuoteService::class);
         $this->app->singleton(PaymentOrchestrationService::class);
-        $this->app->bind(\App\Modules\Payment\Domain\Contracts\PaymentOutcomeProcessor::class, PaymentOrchestrationService::class);
+        $this->app->singleton(PaymentConfirmationEvidenceService::class);
+        $this->app->bind(PaymentInternalConfirmationContract::class, PaymentConfirmationEvidenceService::class);
+        $this->app->bind(PaymentRefundAdmissionEligibilityContract::class, PaymentRefundAdmissionEligibilityService::class);
+        $this->app->bind(PaymentOutcomeProcessor::class, PaymentOrchestrationService::class);
         $this->app->singleton(PaymentCallbackService::class);
-        $this->app->bind('integration.webhook.factory.payment', \App\Modules\Payment\Infrastructure\Adapters\PaymentWebhookFactory::class);
-        $this->app->bind('integration.webhook.handler.payment_attempt', \App\Modules\Payment\Application\Services\PaymentWebhookHandler::class);
+        $this->app->bind('integration.webhook.factory.payment', PaymentWebhookFactory::class);
+        $this->app->bind('integration.webhook.handler.payment_attempt', PaymentWebhookHandler::class);
         $this->app->singleton(ReconciliationExceptionService::class);
         $this->app->singleton(RefundService::class);
         $this->app->singleton(PaymentProviderAdminService::class);
@@ -186,10 +199,10 @@ final class PaymentServiceProvider extends ServiceProvider
             $this->app->bind('payment.callback_parser.mock_bank', MockBankCallbackParser::class);
         } else {
             $this->app->bind('payment.adapter.mock_bank', static function (): never {
-                throw new \App\Modules\Payment\Domain\Exceptions\ProductionBlockedException('mock_bank');
+                throw new ProductionBlockedException('mock_bank');
             });
             $this->app->bind('payment.callback_parser.mock_bank', static function (): never {
-                throw new \App\Modules\Payment\Domain\Exceptions\ProductionBlockedException('mock_bank_callback_parser');
+                throw new ProductionBlockedException('mock_bank_callback_parser');
             });
         }
     }
@@ -198,33 +211,35 @@ final class PaymentServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__.'/../Infrastructure/Migrations');
         $this->loadRoutesFrom(base_path('routes/modules/payment.php'));
-        $this->app['events']->subscribe(PaymentEventSubscriber::class);
+        $events = $this->app->make(Dispatcher::class);
+        $events->subscribe(PaymentEventSubscriber::class);
 
         // P15: Inbox consumer for bank.refund.callback events
-        $this->app['events']->listen('bank.refund.callback', BankRefundCallbackHandler::class);
+        $events->listen('bank.refund.callback', BankRefundCallbackHandler::class);
 
         // P16: Inbox consumer for bank.dispute.callback events
-        $this->app['events']->listen('bank.dispute.callback', BankDisputeCallbackHandler::class);
+        $events->listen('bank.dispute.callback', BankDisputeCallbackHandler::class);
 
         // P17: Inbox consumer for bank.settlement.batch events
-        $this->app['events']->listen('bank.settlement.batch', BankSettlementBatchHandler::class);
+        $events->listen('bank.settlement.batch', BankSettlementBatchHandler::class);
 
         // P04: Register DevPurposeStubResolver for local/development environments only.
         // Blocked by constructor in production/staging; never registered there.
         if ($this->app->environment('local', 'development', 'testing')) {
             $this->app->make(BusinessPurposeResolverRegistry::class)
-                ->register('dev_test_purpose', new DevPurposeStubResolver());
+                ->register('dev_test_purpose', new DevPurposeStubResolver);
         }
 
         // Rate limiter definitions — T152 (S13) will configure thresholds via ConfigurationService
-        RateLimiter::for('payment-intent', static function (Request $request): \Illuminate\Cache\RateLimiting\Limit {
-            /** @var \App\Modules\Identity\Infrastructure\Models\UserModel|null $user */
+        RateLimiter::for('payment-intent', static function (Request $request): Limit {
+            /** @var UserModel|null $user */
             $user = $request->user();
-            return \Illuminate\Cache\RateLimiting\Limit::perMinute(30)->by($user?->id ?? $request->ip());
+
+            return Limit::perMinute(30)->by($user?->id ?? $request->ip());
         });
 
-        RateLimiter::for('payment-callback', static function (Request $request): \Illuminate\Cache\RateLimiting\Limit {
-            return \Illuminate\Cache\RateLimiting\Limit::perMinute(100)->by($request->ip());
+        RateLimiter::for('payment-callback', static function (Request $request): Limit {
+            return Limit::perMinute(100)->by($request->ip());
         });
     }
 

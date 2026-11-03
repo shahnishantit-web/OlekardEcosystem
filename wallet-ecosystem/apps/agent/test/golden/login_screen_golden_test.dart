@@ -1,19 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wallet_agent/core/theme/app_theme.dart';
 
 void main() {
   group('Agent LoginScreen golden — Agent Blue theme tokens', () {
-    Widget buildSubject() {
-      return const ProviderScope(
-        child: MaterialApp(
-          theme: null, // set below
-          home: _AgentLoginShell(),
-        ),
-      );
-    }
-
     Widget buildWithTheme() {
       return MaterialApp(
         theme: AppTheme.dark,
@@ -41,8 +31,11 @@ void main() {
       await tester.pump();
 
       // backgroundColor is null when set via theme.scaffoldBackgroundColor
-      final theme = Theme.of(tester.element(find.byType(Scaffold).first));
-      expect(theme.scaffoldBackgroundColor, const Color(0xFF001329));
+      expect(
+        Theme.of(tester.element(find.byType(Scaffold).first))
+            .scaffoldBackgroundColor,
+        const Color(0xFF001329),
+      );
     });
 
     testWidgets('primary color is Agent Blue (#2563EB)', (tester) async {

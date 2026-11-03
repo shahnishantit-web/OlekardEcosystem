@@ -1,6 +1,6 @@
 <?php
 
-return [
+$providers = [
     App\Providers\AppServiceProvider::class,
 
     // Platform Foundation — cross-cutting infrastructure (fully implemented)
@@ -86,3 +86,14 @@ return [
     App\Modules\Events\Providers\EventsServiceProvider::class,
 
 ];
+
+// Test-only P26 browser approval fixture. It is impossible to register from a
+// normal runtime; its provider additionally validates the dedicated DB name.
+if (env('P26_E2E_FIXTURE_APPROVALS') === '1') {
+    if (env('APP_ENV') !== 'testing') {
+        throw new RuntimeException('P26 E2E fixture approvals require APP_ENV=testing.');
+    }
+    $providers[] = App\Modules\Events\Tests\E2E\P26BrowserE2EFixtureServiceProvider::class;
+}
+
+return $providers;

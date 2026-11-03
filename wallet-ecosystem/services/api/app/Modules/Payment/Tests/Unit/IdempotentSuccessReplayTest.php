@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Payment\Tests\Unit;
 
+use App\Modules\Ledger\Domain\Contracts\LedgerModuleContract;
+use App\Modules\Ledger\Domain\ValueObjects\PostedJournalEvidence;
 use App\Modules\Payment\Application\PaymentOrchestrationService;
 use App\Modules\Payment\Application\Services\BusinessPurposeResolverRegistry;
 use App\Modules\Payment\Application\Services\ReconciliationExceptionService;
@@ -18,10 +20,13 @@ use App\Modules\Payment\Infrastructure\Models\PaymentIntentModel;
 use App\Modules\Platform\Domain\Contracts\AuditServiceInterface;
 use App\Modules\Platform\Domain\Contracts\ConfigurationServiceInterface;
 use App\Modules\Platform\Domain\Contracts\EventPublisherInterface;
-use App\Modules\Ledger\Domain\Contracts\LedgerModuleContract;
+use App\Modules\Wallet\Domain\Contracts\WalletCaptureContract;
 use App\Modules\Wallet\Domain\Contracts\WalletModuleContract;
+use App\Modules\Wallet\Domain\ValueObjects\WalletCaptureEvidence;
+use App\Modules\Wallet\Domain\ValueObjects\WalletCaptureRequest;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\MockObject\MockObject;
 use Tests\TestCase;
 
 /**
@@ -33,25 +38,29 @@ use Tests\TestCase;
  */
 final class IdempotentSuccessReplayTest extends TestCase
 {
-    /** @var PaymentIntentRepositoryInterface&\PHPUnit\Framework\MockObject\MockObject */
+    /** @var PaymentIntentRepositoryInterface&MockObject */
     private PaymentIntentRepositoryInterface $intentRepo;
-    /** @var PaymentAttemptRepositoryInterface&\PHPUnit\Framework\MockObject\MockObject */
+
+    /** @var PaymentAttemptRepositoryInterface&MockObject */
     private PaymentAttemptRepositoryInterface $attemptRepo;
+
     private ReconciliationExceptionService $reconService;
-    /** @var LedgerModuleContract&\PHPUnit\Framework\MockObject\MockObject */
+
+    /** @var LedgerModuleContract&MockObject */
     private LedgerModuleContract $ledger;
-    /** @var EventPublisherInterface&\PHPUnit\Framework\MockObject\MockObject */
+
+    /** @var EventPublisherInterface&MockObject */
     private EventPublisherInterface $events;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->intentRepo   = $this->createMock(PaymentIntentRepositoryInterface::class);
-        $this->attemptRepo  = $this->createMock(PaymentAttemptRepositoryInterface::class);
+        $this->intentRepo = $this->createMock(PaymentIntentRepositoryInterface::class);
+        $this->attemptRepo = $this->createMock(PaymentAttemptRepositoryInterface::class);
         $this->reconService = $this->createMock(ReconciliationExceptionService::class);
-        $this->ledger       = $this->createMock(LedgerModuleContract::class);
-        $this->events       = $this->createMock(EventPublisherInterface::class);
+        $this->ledger = $this->createMock(LedgerModuleContract::class);
+        $this->events = $this->createMock(EventPublisherInterface::class);
     }
 
     private function makeService(): PaymentOrchestrationService
@@ -60,51 +69,53 @@ final class IdempotentSuccessReplayTest extends TestCase
         $config->method('getOrDefault')->willReturnArgument(1);
 
         return new PaymentOrchestrationService(
-            intentRepository:      $this->intentRepo,
-            attemptRepository:     $this->attemptRepo,
-            purposeRegistry:       new BusinessPurposeResolverRegistry(),
-            wallet:                $this->createMock(WalletModuleContract::class),
-            ledger:                $this->ledger,
-            config:                $config,
-            audit:                 $this->createMock(AuditServiceInterface::class),
-            events:                $this->events,
-            container:             $this->createMock(Container::class),
+            intentRepository: $this->intentRepo,
+            attemptRepository: $this->attemptRepo,
+            purposeRegistry: new BusinessPurposeResolverRegistry,
+            wallet: $this->createMock(WalletModuleContract::class),
+            ledger: $this->ledger,
+            config: $config,
+            audit: $this->createMock(AuditServiceInterface::class),
+            events: $this->events,
+            container: $this->createMock(Container::class),
             reconciliationService: $this->reconService,
         );
     }
 
     private function makeIntent(): PaymentIntentModel
     {
-        $m = new PaymentIntentModel();
-        $m->id                = 'intent-001';
-        $m->status            = PaymentIntentStatus::Succeeded;
+        $m = new PaymentIntentModel;
+        $m->id = 'intent-001';
+        $m->status = PaymentIntentStatus::Succeeded;
         $m->accounting_status = PaymentAccountingStatus::LedgerPosted;
         $m->fulfilment_status = PaymentFulfilmentStatus::Pending;
-        $m->amount_minor      = 10000;
-        $m->currency_code     = 'BWP';
-        $m->purpose_type      = 'bill';
+        $m->amount_minor = 10000;
+        $m->currency_code = 'BWP';
+        $m->purpose_type = 'bill';
         $m->purpose_reference = 'ref-001';
-        $m->organisation_id   = 'org-001';
-        $m->payer_actor_id    = 'actor-001';
+        $m->organisation_id = 'org-001';
+        $m->payer_actor_id = 'actor-001';
+
         return $m;
     }
 
     private function makeSucceededAttempt(string $providerRef = 'ext-ref-001'): PaymentAttemptModel
     {
-        $m = new PaymentAttemptModel();
-        $m->id                    = 'attempt-001';
-        $m->payment_intent_id     = 'intent-001';
-        $m->provider_code         = 'wallet';
-        $m->status                = PaymentAttemptStatus::Succeeded;
+        $m = new PaymentAttemptModel;
+        $m->id = 'attempt-001';
+        $m->payment_intent_id = 'intent-001';
+        $m->provider_code = 'wallet';
+        $m->status = PaymentAttemptStatus::Succeeded;
         $m->provider_reference_id = $providerRef;
-        $m->ledger_journal_id     = 'journal-already-posted';
+        $m->ledger_journal_id = 'journal-already-posted';
+
         return $m;
     }
 
     private function mockDbTransaction(): void
     {
         DB::shouldReceive('connection')->with('payment')->andReturnSelf();
-        DB::shouldReceive('transaction')->andReturnUsing(static fn(callable $cb) => $cb());
+        DB::shouldReceive('transaction')->andReturnUsing(static fn (callable $cb) => $cb());
     }
 
     /**
@@ -115,7 +126,7 @@ final class IdempotentSuccessReplayTest extends TestCase
     {
         $this->mockDbTransaction();
 
-        $intent  = $this->makeIntent();
+        $intent = $this->makeIntent();
         $attempt = $this->makeSucceededAttempt('ext-ref-001');
 
         $this->intentRepo->method('findById')->willReturn($intent);
@@ -129,11 +140,11 @@ final class IdempotentSuccessReplayTest extends TestCase
         $this->reconService->expects($this->never())->method('create');
 
         $this->makeService()->handleOutcome([
-            'payment_intent_id'    => 'intent-001',
-            'payment_attempt_id'   => 'attempt-001',
-            'outcome'              => 'succeeded',
+            'payment_intent_id' => 'intent-001',
+            'payment_attempt_id' => 'attempt-001',
+            'outcome' => 'succeeded',
             'provider_reference_id' => 'ext-ref-001',
-            'correlation_id'       => 'corr-replay-001',
+            'correlation_id' => 'corr-replay-001',
         ]);
 
         $this->assertTrue(true, 'Idempotent replay returned silently — no side effects.');
@@ -147,7 +158,7 @@ final class IdempotentSuccessReplayTest extends TestCase
     {
         $this->mockDbTransaction();
 
-        $intent  = $this->makeIntent();
+        $intent = $this->makeIntent();
         $attempt = $this->makeSucceededAttempt('ext-ref-001');
 
         $this->intentRepo->method('findById')->willReturn($intent);
@@ -159,14 +170,63 @@ final class IdempotentSuccessReplayTest extends TestCase
         $this->reconService->expects($this->never())->method('create');
 
         $this->makeService()->handleOutcome([
-            'payment_intent_id'  => 'intent-001',
+            'payment_intent_id' => 'intent-001',
             'payment_attempt_id' => 'attempt-001',
-            'outcome'            => 'succeeded',
+            'outcome' => 'succeeded',
             // no provider_reference_id — Guard A treats null as matching
-            'correlation_id'     => 'corr-replay-002',
+            'correlation_id' => 'corr-replay-002',
         ]);
 
         $this->assertTrue(true, 'Idempotent replay with null provider_ref returned silently.');
+    }
+
+    public function test_pending_wallet_accounting_replay_repairs_capture_and_ledger_acknowledgement(): void
+    {
+        $this->mockDbTransaction();
+        $intent = $this->makeIntent();
+        $intent->accounting_status = PaymentAccountingStatus::PendingLedger;
+        $attempt = $this->makeSucceededAttempt('wallet-attempt-001');
+        $attempt->wallet_hold_id = 'hold-001';
+        $attempt->ledger_journal_id = null;
+
+        $this->intentRepo->expects($this->exactly(2))->method('findById')->willReturn($intent);
+        $this->attemptRepo->expects($this->exactly(2))->method('findById')->willReturn($attempt);
+
+        $capture = $this->createMock(WalletCaptureContract::class);
+        $capture->expects($this->once())->method('captureForPayment')->with($this->isInstanceOf(WalletCaptureRequest::class))
+            ->willReturn(new WalletCaptureEvidence('capture-001', 'hold-001', 'actor-001', 'attempt-001', 'intent-001',
+                'org-001', 10000, 'BWP', 'journal-001', 'payment:intent-001:ack', 'wallet:customer', 'wallet:clearing', now()->toIso8601String()));
+        $this->ledger->expects($this->once())->method('findPostedJournalEvidence')->with('payment:intent-001:ack')
+            ->willReturn(new PostedJournalEvidence('journal-001', 'posted', 'debit', 'intent-001', 'payment:intent-001:ack', 'BWP', [
+                ['direction' => 'debit', 'account_reference' => 'wallet:customer', 'amount_minor' => 10000, 'currency_code' => 'BWP'],
+                ['direction' => 'credit', 'account_reference' => 'wallet:clearing', 'amount_minor' => 10000, 'currency_code' => 'BWP'],
+            ]));
+        $this->intentRepo->expects($this->once())->method('save')->with($this->callback(
+            static fn (PaymentIntentModel $saved): bool => $saved->accounting_status === PaymentAccountingStatus::LedgerPosted,
+        ));
+        $this->attemptRepo->expects($this->once())->method('save')->with($this->callback(
+            static fn (PaymentAttemptModel $saved): bool => $saved->ledger_journal_id === 'journal-001'
+                && $saved->captured_amount_minor === 10000 && $saved->captured_currency_code === 'BWP',
+        ));
+        $this->events->expects($this->once())->method('publish');
+
+        $service = new PaymentOrchestrationService(
+            intentRepository: $this->intentRepo,
+            attemptRepository: $this->attemptRepo,
+            purposeRegistry: new BusinessPurposeResolverRegistry,
+            wallet: $this->createMock(WalletModuleContract::class),
+            ledger: $this->ledger,
+            config: tap($this->createMock(ConfigurationServiceInterface::class), static fn ($config) => $config->method('getOrDefault')->willReturnArgument(1)),
+            audit: $this->createMock(AuditServiceInterface::class),
+            events: $this->events,
+            container: $this->createMock(Container::class),
+            reconciliationService: $this->reconService,
+            walletCaptureContract: $capture,
+        );
+        $service->handleOutcome([
+            'payment_intent_id' => 'intent-001', 'payment_attempt_id' => 'attempt-001',
+            'outcome' => 'succeeded', 'provider_reference_id' => 'wallet-attempt-001', 'correlation_id' => 'repair-001',
+        ]);
     }
 
     /**
@@ -177,7 +237,7 @@ final class IdempotentSuccessReplayTest extends TestCase
     {
         $this->mockDbTransaction();
 
-        $intent  = $this->makeIntent();
+        $intent = $this->makeIntent();
         $attempt = $this->makeSucceededAttempt('ext-ref-001');
 
         $this->intentRepo->method('findById')->willReturn($intent);
@@ -192,11 +252,11 @@ final class IdempotentSuccessReplayTest extends TestCase
         $this->expectException(\Throwable::class);
 
         $this->makeService()->handleOutcome([
-            'payment_intent_id'    => 'intent-001',
-            'payment_attempt_id'   => 'attempt-001',
-            'outcome'              => 'succeeded',
+            'payment_intent_id' => 'intent-001',
+            'payment_attempt_id' => 'attempt-001',
+            'outcome' => 'succeeded',
             'provider_reference_id' => 'ext-ref-DIFFERENT',
-            'correlation_id'       => 'corr-003',
+            'correlation_id' => 'corr-003',
         ]);
     }
 }

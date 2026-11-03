@@ -94,6 +94,7 @@ final class PlatformServiceProvider extends ServiceProvider
         }
 
         $this->commands([
+            \App\Console\Commands\BootstrapDatabaseSchemasCommand::class,
             \App\Console\Commands\CheckScopeCommand::class,
             \App\Console\Commands\ConfigurationEscalationCheckCommand::class,
             \App\Console\Commands\ConfigurationSeedDomainsCommand::class,

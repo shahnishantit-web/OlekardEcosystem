@@ -35,9 +35,9 @@ class DomainDeepLinkTile extends StatelessWidget {
     return Semantics(
       button: false,
       label: 'Domain link unavailable: $reason',
-      child: ListTile(
-        leading: const Icon(Icons.link_off),
-        title: const Text('Domain link unavailable'),
+      child: const ListTile(
+        leading: Icon(Icons.link_off),
+        title: Text('Domain link unavailable'),
         enabled: false,
       ),
     );

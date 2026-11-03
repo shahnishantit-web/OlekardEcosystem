@@ -32,6 +32,12 @@ final class ApiCorsTest extends TestCase
             'Origin' => 'https://untrusted.example',
             'Access-Control-Request-Method' => 'POST',
         ])->options('/v1/auth/login')->assertHeaderMissing('Access-Control-Allow-Origin');
+
+        Route::get('/v1/cors-test/disallowed', fn () => response()->json(['ok' => true]));
+        $this->withHeader('Origin', 'https://untrusted.example')
+            ->getJson('/v1/cors-test/disallowed')
+            ->assertStatus(200)
+            ->assertHeaderMissing('Access-Control-Allow-Origin');
     }
 
     public function test_api_success_and_error_responses_have_cors_headers(): void

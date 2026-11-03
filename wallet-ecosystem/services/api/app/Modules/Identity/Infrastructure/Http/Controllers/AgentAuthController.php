@@ -33,7 +33,9 @@ final class AgentAuthController extends Controller
 
     /**
      * POST /v1/agent/auth/login
-     * Expects: {phone, pin_hash}
+     * Expects: {phone, pin}. The historical pin_hash field is accepted as a
+     * raw numeric PIN alias for request compatibility; client-side hashes are
+     * not authentication evidence and are rejected by numeric validation.
      * Returns: {access_token, refresh_token, expires_at, agent}
      */
     public function login(Request $request): JsonResponse
@@ -43,10 +45,10 @@ final class AgentAuthController extends Controller
         $ipHash         = $this->ipHasher->hash($request->ip() ?? '0.0.0.0');
 
         $phone   = (string) $request->input('phone', '');
-        $pinHash = (string) $request->input('pin_hash', '');
+        $pin = (string) $request->input('pin', $request->input('pin_hash', ''));
 
-        if ($phone === '' || $pinHash === '') {
-            return $this->errorResponse('VALIDATION', 'phone and pin_hash are required.', 422, $correlationId);
+        if ($phone === '' || preg_match('/\A[0-9]+\z/', $pin) !== 1) {
+            return $this->errorResponse('VALIDATION', 'phone and a numeric PIN are required.', 422, $correlationId);
         }
 
         $rawFingerprint = self::RAW_FINGERPRINT_PREFIX . $phone;
@@ -54,7 +56,7 @@ final class AgentAuthController extends Controller
         try {
             $session = $this->authentication->loginWithPin(new LoginWithPinCommand(
                 identifier:           $phone,
-                pin:                  $pinHash,
+                pin:                  $pin,
                 correlationId:        $correlationId,
                 idempotencyKey:       $idempotencyKey,
                 ipHash:               $ipHash,

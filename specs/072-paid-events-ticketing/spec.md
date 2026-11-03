@@ -211,11 +211,7 @@ After event completion, authorised operations resolve refunds, disputes, reserva
 
 ### Blocking Questions
 
-1. [NEEDS CLARIFICATION: What approved hold duration, organiser configuration authority and multi-ticket assignment rules apply, and where are owner approvals and the refund contract for the selected threshold, expiry and late-capture approach recorded?]
-2. [NEEDS CLARIFICATION: Which approved organiser permission and assignment/revocation contract, reviewer authority, gate assignment/revocation contract, holder-verification method, online and offline admission and transfer rules apply, and where are owner approvals of these selected rules recorded?]
-3. [NEEDS CLARIFICATION: Which approved cancellation/completion, reserve reconciliation, retention and organiser payout eligibility rules and AD-14/AD-10/LC14 decisions apply?]
-
-These questions group dependent policy decisions; no answer is inferred from mock tests or checked tasks.
+No general clarification cycle is pending. The user-selected behavior is recorded in the clarifications and FRs. Remaining owner decisions are listed as D-01–D-09 in `research.md`; required external contracts and review records are C-01–C-07 and B-01–B-14 there. These are approvals/evidence and implementation dependencies, not questions to repeat. A recommendation is not an approval, a checked task is not runtime evidence, and no P25 flow may infer a missing policy.
 
 ### Assumptions and Boundaries
 
@@ -235,3 +231,60 @@ Event, category, inventory hold, order, quote, payment reference, ticket credent
 - **SC-004:** Cross-tenant and out-of-scope gate operations disclose no protected ticket details.
 - **SC-005:** Late capture, cancellation, refunds and payout comply with approved evidence and reconcile with independent financial states.
 - **SC-006:** Applicable verification, privacy, security and release review gates pass before P25 is enabled.
+
+### Session 2026-10-28 � A-01 through A-04 product/design decisions
+
+- **A-01 accepted as product design:** use granular `events.*` permissions with organisation/event/gate-scoped grants. Neither global `admin` nor active membership alone authorizes an Events action. Follow Identity architecture and preserve existing behavior. This is not Identity/Security approval.
+- **A-02 accepted as product design and implemented in P25:** record cumulative contributors to every event version; none may approve that version's event review or Finance prices; event reviewer and Finance price approver must be different actors. If eligible reviewers are missing, leave approval blocked. No bypass. This is not independent Security or Finance approval.
+- **A-03 accepted in principle:** least-privilege scoped assignments; explicit event-scoped grant required to resume sales. Exact action-to-permission mapping and grant/revoke authority remain pending review; disputed actions stay denied.
+- **A-04 accepted as product design:** organiser reports are aggregate-only; no named attendees, ticket identities or individual scans. Any added access needs a separately approved purpose, fields, scope and retention. This is not Privacy approval.
+
+`authorization-matrix.md` contains the proposed mapping, scope inheritance, grant/revoke authority and privileged exceptions. `authorization-dependency-proposal.md` records that Identity owns global RBAC while Events should own resource scope; a generic Identity scoped-grant extension would change E04's explicit non-goal and needs separate authorization if Identity owners require it. No Identity work package, permission migration, or grant was started. B-01 remains BLOCKED pending A-03 mapping review and independent Identity/Security plus domain-owner evidence.
+
+**Re-entry reconciliation:** the user already established organiser configuration of an event-specific allow/deny policy and limit subject to event review; entry/exit behavior is online-only; only returns count and initial admission does not count. D-02 is only the numeric maximum number of returns. It does not ask who configures the rule or whether the initial entry counts. T005/T011 remain blocked for that numeric value and the remaining credential/refund contracts.
+
+B-03 (Finance currency/payment-method readiness) and B-11 (P18 settlement/payout) remain separate. A-01 through A-04 do not clear independent Security, Finance or Privacy review. Required reviewers: independent Security reviewer for authorization/scope/revocation/privacy controls; Finance reviewer for price approval and financial state boundaries; Privacy reviewer for aggregate attendance and retention. Record each reviewer's role, independence, reviewed evidence, findings, remediation and signed outcome; no such review has passed.
+
+### 2026-10-28 authorization implementation direction
+
+For development, accepted P25 action permissions are registered through the existing Identity permission catalogue; no permissions are assigned to existing global roles. Identity's existing `hasPermission` contract remains unchanged. Events authoritatively checks explicit organisation/event/gate assignments, together with the coarse permission. Global role or organisation membership alone never authorizes an Events action. Event creation requires active organisation membership plus an explicit organisation-scoped create permission and assignment; read/update also require membership and exact event assignment; workflow actions require their exact permission and event assignment.
+
+The Events grant/revoke API and initial assignment administrator remain unavailable pending the focused authority decision in `assignment-authority-proposal.md`. Gate validation is designed to check/lock the exact assignment inside the admission transaction. Numeric re-entry maximum, ticket ownership/refund eligibility, payout eligibility, aggregate report endpoint, B-03, B-11, and independent reviews are not implied or activated by this implementation.
+
+## Assignment administration development decisions (2026-10-28)
+
+Assignment authority is explicitly designated per organisation. Non-Finance organisation/event assignments require the organisation-scoped assignment administrator; Finance-approver assignments require the separately designated Finance assignment authority. Event-scoped gate managers may grant/revoke only gate-validation assignments for gates in their assigned event. Permission and resource assignment are both required. Global admin status or organisation membership alone is insufficient. Self-assignment, self-escalation and delegation outside the grantor's authority are denied.
+
+Bootstrap requires an explicit operator and two distinct identified approvers with recorded organisation, administrator, authority and approval reference. No administrator is seeded or activated automatically. Authority revocation takes effect immediately for later operations but does not cascade prior grants. Issuer provenance is retained and prior grants are separately revocable. These are product/design decisions for development and do not constitute independent Security, Privacy, Identity or Finance approval. The bootstrap command remains unexecuted until Identity authority and approval evidence are independently verified.
+## B-03 development decision record — 2026-10-28
+
+Accepted product requirements: every paid sellable category needs an eligible configured method at its own price/currency; Wallet-only may qualify and must be labelled without claiming customer affordability; currency assignment is Finance-authorized and records provenance/precision; first durable order or hold locks currency/precision; expiry/cancellation do not unlock; post-lock reassignment/conversion is denied; inactive currency or precision drift blocks new sales/checkout and creates an operator-review condition without automatically altering existing financial records; static readiness is typed, actor-free, uncached and separate from customer-specific checkout; readiness is not provider certification or financial close; fees/taxes/discounts/order totals remain under B-06.
+
+Development code and tests are linked in `traceability.md` and `evidence.md`. Canonical Payments module key `events`, purpose `paid_event_ticket`, and Events-owned venue-country field remain proposals requiring Events Product and Payments/ProviderRegistry contract owners. Independent Finance/Security/Privacy reviews remain pending. Do not enable paid publication/sales.
+
+## CTX/MC/FIN and MC-01 implementation clarification (2026-10-28)
+
+Accepted for development under the latest product/design direction:
+- Payments identifiers are events and paid_event_ticket. Registry collisions are rejected, duplicate same-owner registration is idempotent; provider account allowlist behavior is unchanged. Events payment-purpose resolver must not exist until authoritative order persistence exists.
+- Event paid eligibility country is the approved venue country read from the server-owned Events event record. Initial scope: one physical venue and one country. Online/hybrid/multi-country are unsupported. Before first commitment, country changes increment the event version and invalidate review/readiness; after a durable hold/order they are rejected.
+- Events and MultiCurrency use a shared PostgreSQL transaction-scoped advisory lock per currency definition, acquired/read within the same caller transaction that creates an inventory hold or future order. The currency mutation trigger acquires the identical lock for status/precision updates and deletion, including direct SQL. Supported lock order is event row then currency key for Events; currency writers never acquire event rows. Same primary/database and READ COMMITTED are enforced for the guard. Retry idempotently after retryable transaction conflicts.
+- On observed currency drift, deny a new hold/checkout/payment initiation and preserve historical money and incoming shared Payments facts. Record an operator issue and pause new sales after the rejected hold transaction rolls back. Do not automatically capture, refund, cancel, or issue a ticket. Pending-hold/payment disposition is unresolved.
+- First durable order must invoke the existing Events currency lock in the same database transaction before order insertion. No authoritative order path exists and no placeholder resolver or production payment wiring is allowed.
+
+This development clarification does not satisfy B-06, T004/T005, D-02, B-11, migration repair, independent review, bootstrap, paid publication, checkout/sales activation, deployment or P24.
+
+## P25 convergence status amendment — 2026-10-29
+
+The package remains PARTIAL. Supersede earlier blanket statements that admission is unimplemented: T011 online purchaser retrieval, exact gate-scoped online validation, attendance/audit, aggregate reporting, replacement controls and customer/agent/Admin interface slices are implemented and development verified as recorded in `acceptance-matrix.md` and `evidence.md`. Also supersede earlier claims that T010 order/issuance primitives are absent: the code is implemented with deny-by-default production pricing and test-only pricing evidence.
+
+The complete requested authorized setup → real P08 payment/capture → posted-journal confirmation → real Events outbox consumer/ack → purchaser credentials → gate scan → aggregate report has NOT been run as one integrated PostgreSQL journey. P25 feature issuance tests use controlled confirmation-contract evidence and do not satisfy this end-to-end acceptance. The exact next safe work is E2E-01 in `acceptance-matrix.md`.
+
+Decisions reused: re-entry remains disabled (numeric D-02 unanswered); offline validation fails closed; transfers excluded; cancelled-event reactivation remains blocked; event scan response is status/category only; step-up is actor/session/action scoped and now one-use per ticket; organiser reporting is aggregate-only. Do not reopen these decisions. The five review checklist items remain unchecked.
+
+Unchanged blockers: B-06 fee/seller/tax evidence prevents production pricing; late-capture, refund and cancellation financial disposition remains unapproved; P18/B-11 affects organiser payout only; independent Security/Privacy/Finance review and operational production bootstrap remain pending. See acceptance matrix for owners/actions. No activation was performed.
+
+## Project-owner policy acceptance — 2026-10-30
+
+The project owner accepted development direction for organiser-as-intended-seller (subject to verified legal onboarding), organiser-paid OleKard platform fees, no customer booking fee absent later explicit approval, complete payable-total display, versioned/effective fee schedule snapshots, tax-inclusive presentation as a preference subject to qualified approval, separate ticket/service-fee tax treatment, and decimal-only pricing. Late captures must enter financial exception handling without automatic issuance; refunds/cancellation follow published/approved terms and shared Payments/Ledger ownership. Payout remains gated by B-11/P18. These are owner-level choices only and do not represent Finance, Tax/Legal, Security, Privacy, independent review, provider certification or regulatory approval.
+
+Non-test pricing now requires an explicit organiser fee schedule snapshot, tax-policy snapshot and verified seller evidence. Organiser platform fees are separate from customer payable amounts; unapproved customer-payable fees fail closed. The production pricing binding remains deny-by-default. Actual fee amounts, seller/legal relationship, tax matrix and specialist evidence are not supplied; production paid publication/checkout/sales remain unavailable. See contracts/order-ticket-pricing-and-issuance.md and T030 in tasks.md.

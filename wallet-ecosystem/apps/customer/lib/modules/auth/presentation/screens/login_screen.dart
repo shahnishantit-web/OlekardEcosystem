@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,6 +19,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  BuildContext? _pinEntrySheetContext;
+  bool _pinEntrySheetOpen = false;
 
   @override
   void dispose() {
@@ -28,9 +33,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final auth = ref.watch(authProvider);
     final isLoading = auth.status == AuthStateEnum.authenticating;
 
-    ref.listen(authProvider, (_, next) {
-      if (next.isAuthenticated) context.go('/home');
-      if (next.status == AuthStateEnum.otpPending) _showPinEntry(context);
+    ref.listen(authProvider, (previous, next) {
+      if (next.isAuthenticated) {
+        final sheetContext = _pinEntrySheetContext;
+        if (_pinEntrySheetOpen &&
+            sheetContext != null &&
+            sheetContext.mounted) {
+          Navigator.of(sheetContext).pop();
+        }
+        context.go('/home');
+      }
+      if (previous?.status == AuthStateEnum.authenticating &&
+          next.status == AuthStateEnum.otpPending) {
+        _showPinEntry(context);
+      }
       if (next.error != null) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
@@ -54,7 +70,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: AppSpacing.xl),
                 TextFormField(
                   controller: _phoneController,
-                  keyboardType: TextInputType.phone,
+                  keyboardType:
+                      kIsWeb ? TextInputType.text : TextInputType.phone,
                   decoration: const InputDecoration(
                     labelText: 'Phone Number',
                     hintText: '+254712345678',
@@ -101,31 +118,52 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _showPinEntry(BuildContext context) {
-    showModalBottomSheet<void>(
+    _pinEntrySheetOpen = true;
+    unawaited(showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-          top: AppSpacing.lg,
-          left: AppSpacing.lg,
-          right: AppSpacing.lg,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Enter your PIN', style: AppTypography.title),
-            const SizedBox(height: AppSpacing.lg),
-            PinPadWidget(
-              onCompleted: (pin) {
-                Navigator.pop(ctx);
-                ref.read(authProvider.notifier).verifyLogin(pin);
-              },
-            ),
-            const SizedBox(height: AppSpacing.lg),
-          ],
-        ),
-      ),
-    );
+      builder: (ctx) {
+        _pinEntrySheetContext = ctx;
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            top: AppSpacing.lg,
+            left: AppSpacing.lg,
+            right: AppSpacing.lg,
+          ),
+          child: Consumer(builder: (context, ref, _) {
+            final isVerifying =
+                ref.watch(authProvider).status == AuthStateEnum.verifyingPin;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Enter your PIN', style: AppTypography.title),
+                const SizedBox(height: AppSpacing.lg),
+                PinPadWidget(
+                  enabled: !isVerifying,
+                  onCompleted: (pin) {
+                    if (!isVerifying) {
+                      unawaited(
+                          ref.read(authProvider.notifier).verifyLogin(pin));
+                    }
+                  },
+                ),
+                if (isVerifying) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  Semantics(
+                    label: 'Verifying PIN',
+                    child: const CircularProgressIndicator(),
+                  ),
+                ],
+                const SizedBox(height: AppSpacing.lg),
+              ],
+            );
+          }),
+        );
+      },
+    ).whenComplete(() {
+      _pinEntrySheetOpen = false;
+      _pinEntrySheetContext = null;
+    }));
   }
 }

@@ -45,7 +45,9 @@ RUN composer dump-autoload --optimize --no-dev --no-scripts
 # Installs dev/test composer deps without Xdebug (faster CI builds)
 FROM base AS test
 
-RUN composer install --no-interaction --no-scripts
+RUN touch .env && composer install --no-interaction --no-scripts
+RUN mkdir -p bootstrap/cache storage/logs storage/framework/cache storage/framework/sessions storage/framework/views \
+    && chown -R www-data:www-data bootstrap/cache storage
 
 ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS=1
 

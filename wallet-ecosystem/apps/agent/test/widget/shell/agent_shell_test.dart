@@ -54,14 +54,14 @@ void main() {
       expect(state.matchedLocation, startsWith('/customers'));
     });
 
-    testWidgets('Agent Blue indicatorColor is set in NavigationBar', (tester) async {
+    testWidgets('Agent Blue indicatorColor is set in NavigationBar',
+        (tester) async {
       await tester.pumpWidget(_buildShell());
       await tester.pumpAndSettle();
 
       final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
-      final theme = AppTheme.dark.navigationBarTheme;
       // indicatorColor resolves to AppColors.primary (Agent Blue)
-      expect(AppColors.primary.value, equals(const Color(0xFF2563EB).value));
+      expect(AppColors.primary.toARGB32(), const Color(0xFF2563EB).toARGB32());
       expect(navBar.selectedIndex, equals(0)); // starts on dashboard
     });
 
@@ -80,7 +80,8 @@ void main() {
       });
     }
 
-    testWidgets('renders without overflow at 600dp tablet width', (tester) async {
+    testWidgets('renders without overflow at 600dp tablet width',
+        (tester) async {
       tester.view.physicalSize = const Size(600, 1024);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);

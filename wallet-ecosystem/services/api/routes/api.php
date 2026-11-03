@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,3 +21,15 @@ use Illuminate\Support\Facades\Route;
 | level (no /api prefix) via bootstrap/app.php withRouting(then:…) per FR-052.
 |
 */
+if (env('P26_E2E_FIXTURE_APPROVALS') === '1' && env('APP_ENV') === 'testing') {
+    Route::get('/p26-e2e/database', static function () {
+        $row = DB::connection('platform')->selectOne('SELECT current_database() AS database_name');
+
+        return response()->json([
+            'database' => $row->database_name ?? null,
+            'configured_database' => config('database.connections.platform.database'),
+            'host' => config('database.connections.platform.host'),
+            'port' => (string) config('database.connections.platform.port'),
+        ]);
+    });
+}

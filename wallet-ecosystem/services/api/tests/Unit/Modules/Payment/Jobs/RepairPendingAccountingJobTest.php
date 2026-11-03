@@ -11,8 +11,7 @@ use App\Modules\Payment\Domain\Enums\PaymentAccountingStatus;
 use App\Modules\Payment\Domain\Enums\PaymentIntentStatus;
 use App\Modules\Payment\Infrastructure\Models\PaymentIntentModel;
 use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\Queue;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 use Ramsey\Uuid\Uuid;
 
@@ -39,28 +38,10 @@ final class RepairPendingAccountingJobTest extends TestCase
         $this->repo->method('findPendingAccounting')
             ->willReturn(collect([$intentA, $intentB]));
 
-        $dispatched = [];
-        $job = new class($this->repo, $dispatched) extends RepairPendingAccountingJob {
-            public function __construct(
-                private readonly PaymentIntentRepositoryInterface $repoOverride,
-                private array &$dispatchedIds,
-            ) {
-            }
-
-            public function handle(PaymentIntentRepositoryInterface $repo): void
-            {
-                $pending = $this->repoOverride->findPendingAccounting(limit: 500);
-                foreach ($pending as $intent) {
-                    $this->dispatchedIds[] = $intent->id;
-                }
-            }
-        };
-
-        $job->handle($this->repo);
-
-        self::assertCount(2, $dispatched);
-        self::assertContains($intentA->id, $dispatched);
-        self::assertContains($intentB->id, $dispatched);
+        Bus::fake();
+        (new RepairPendingAccountingJob())->handle($this->repo);
+        Bus::assertDispatched(RepairSingleAccountingJob::class, static fn (RepairSingleAccountingJob $job): bool => $job->paymentIntentId === $intentA->id);
+        Bus::assertDispatched(RepairSingleAccountingJob::class, static fn (RepairSingleAccountingJob $job): bool => $job->paymentIntentId === $intentB->id);
     }
 
     public function test_no_jobs_dispatched_when_no_pending_intents(): void
@@ -68,26 +49,9 @@ final class RepairPendingAccountingJobTest extends TestCase
         $this->repo->method('findPendingAccounting')
             ->willReturn(collect([]));
 
-        $dispatched = [];
-        $job = new class($this->repo, $dispatched) extends RepairPendingAccountingJob {
-            public function __construct(
-                private readonly PaymentIntentRepositoryInterface $repoOverride,
-                private array &$dispatchedIds,
-            ) {
-            }
-
-            public function handle(PaymentIntentRepositoryInterface $repo): void
-            {
-                $pending = $this->repoOverride->findPendingAccounting(limit: 500);
-                foreach ($pending as $intent) {
-                    $this->dispatchedIds[] = $intent->id;
-                }
-            }
-        };
-
-        $job->handle($this->repo);
-
-        self::assertCount(0, $dispatched);
+        Bus::fake();
+        (new RepairPendingAccountingJob())->handle($this->repo);
+        Bus::assertNothingDispatched();
     }
 
     public function test_job_has_unique_id_preventing_overlap(): void
@@ -103,19 +67,7 @@ final class RepairPendingAccountingJobTest extends TestCase
             ->with(self::identicalTo(500))
             ->willReturn(collect([]));
 
-        $job = new class($this->repo) extends RepairPendingAccountingJob {
-            public function __construct(
-                private readonly PaymentIntentRepositoryInterface $repoOverride,
-            ) {
-            }
-
-            public function handle(PaymentIntentRepositoryInterface $repo): void
-            {
-                $this->repoOverride->findPendingAccounting(limit: 500);
-            }
-        };
-
-        $job->handle($this->repo);
+        (new RepairPendingAccountingJob())->handle($this->repo);
     }
 
     public function test_repair_single_job_unique_id_uses_intent_id(): void

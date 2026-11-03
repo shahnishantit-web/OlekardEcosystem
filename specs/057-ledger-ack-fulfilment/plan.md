@@ -163,6 +163,12 @@ Decisions resolved:
 
 ---
 
+## Authorized implementation update (2026-10-28)
+
+P08 resumes this existing package for capture evidence, posted-journal verification and fulfilment acknowledgement. Implementation uses the existing Payment and Ledger module contracts, E25 verified receipt/outbox, Identity `ServiceActor`, and Payment-connection transaction boundaries. There is no two-phase commit: Ledger's stable idempotency key is used to recover a posted journal after a crash before Payment persistence. Payment does not read Ledger Eloquent models; Ledger returns a typed immutable evidence value. The public payer status API remains unchanged. No Events resolver/order/inbox or ticket code is part of P08.
+
+The additive database shape and typed contract are documented in [data-model.md](data-model.md) and [confirmation-evidence.md](contracts/confirmation-evidence.md). Requirement/code/test results are in [verification-traceability.md](verification-traceability.md). The new schema is not yet applied to the shared database because its migration history/schema has the existing Identity conflict.
+
 ## Post-Design Constitution Check
 
 | Principle | Status after design |

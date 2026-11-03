@@ -26,10 +26,25 @@ return new class extends Migration
              ADD COLUMN IF NOT EXISTS display_sort_order SMALLINT NOT NULL DEFAULT 0"
         );
 
-        DB::connection('payment')->statement(
-            "ALTER TABLE payment.payment_provider_accounts
-             ADD CONSTRAINT IF NOT EXISTS chk_account_lifecycle_status
-             CHECK (account_lifecycle_status IN ('draft','validated','sandbox_testing','evidence_review','approved','active','suspended','retired'))"
+        // PostgreSQL does not support ADD CONSTRAINT IF NOT EXISTS. Check the
+        // named constraint on this exact relation before adding it. This keeps
+        // reruns and upgrades safe without dropping or replacing existing data.
+        DB::connection('payment')->statement(<<<'SQL'
+            DO $migration$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1
+                    FROM pg_constraint
+                    WHERE conname = 'chk_account_lifecycle_status'
+                      AND conrelid = 'payment.payment_provider_accounts'::regclass
+                ) THEN
+                    ALTER TABLE payment.payment_provider_accounts
+                    ADD CONSTRAINT chk_account_lifecycle_status
+                    CHECK (account_lifecycle_status IN ('draft','validated','sandbox_testing','evidence_review','approved','active','suspended','retired'));
+                END IF;
+            END
+            $migration$;
+            SQL
         );
 
         DB::connection('payment')->statement(

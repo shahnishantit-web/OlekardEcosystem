@@ -31,4 +31,9 @@ return [
         ],
     ],
 
+    'events' => [
+        // Identity issues this scoped service token; no usable default is permitted.
+        'payment_service_token' => env('EVENTS_PAYMENT_SERVICE_TOKEN'),
+    ],
+
 ];

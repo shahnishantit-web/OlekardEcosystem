@@ -6,6 +6,7 @@ namespace App\Modules\Ledger\Infrastructure\Models;
 
 use App\Modules\Ledger\Domain\Enums\JournalLineDirection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property string $id
@@ -31,6 +32,11 @@ class JournalLineModel extends Model
     protected $casts = [
         'direction' => JournalLineDirection::class,
     ];
+
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(LedgerAccountModel::class, 'ledger_account_id');
+    }
 
     /** @throws \LogicException if the record already exists (append-only invariant) */
     public function save(array $options = []): bool

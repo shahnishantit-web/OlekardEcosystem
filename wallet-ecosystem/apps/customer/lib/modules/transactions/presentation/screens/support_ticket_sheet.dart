@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/theme/design_tokens.dart';
 import '../../domain/entities/refund_request.dart';
-import '../../domain/repositories/transaction_repository.dart';
 import '../transaction_providers.dart';
 
 /// Bottom sheet for raising a support ticket pre-filled from a payment.
@@ -39,10 +38,6 @@ class _SupportTicketDraftSheetState
   String? _submittedReference;
   String? _submitError;
 
-  // 10 MiB default; replace with E28 config read in production.
-  static const int _maxAttachmentBytes = 10 * 1024 * 1024;
-  static const Set<String> _allowedExtensions = {'pdf', 'png', 'jpg', 'jpeg'};
-
   @override
   void initState() {
     super.initState();
@@ -60,27 +55,6 @@ class _SupportTicketDraftSheetState
     // File picker integration: in production, use file_picker package.
     // For now, the UI shell is in place; picking is an integration concern.
     setState(() => _attachmentError = 'File picker integration required');
-  }
-
-  void _validateAndAddAttachment(String path, int sizeBytes) {
-    final ext = path.split('.').last.toLowerCase();
-    if (!_allowedExtensions.contains(ext)) {
-      setState(() {
-        _attachmentError = 'Unsupported file type. Use PDF, PNG, or JPEG.';
-      });
-      return;
-    }
-    if (sizeBytes > _maxAttachmentBytes) {
-      final maxMb = _maxAttachmentBytes ~/ (1024 * 1024);
-      setState(() {
-        _attachmentError = 'File too large. Maximum attachment size is ${maxMb}MB.';
-      });
-      return;
-    }
-    setState(() {
-      _attachmentPaths.add(path);
-      _attachmentError = null;
-    });
   }
 
   Future<void> _submit() async {
@@ -131,7 +105,7 @@ class _SupportTicketDraftSheetState
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Get Support', style: AppTypography.label),
+            const Text('Get Support', style: AppTypography.label),
             const SizedBox(height: AppSpacing.md),
             // Read-only reference
             InputDecorator(
@@ -171,8 +145,7 @@ class _SupportTicketDraftSheetState
                   title: Text(p.split('/').last, style: AppTypography.caption),
                   trailing: IconButton(
                     icon: const Icon(Icons.close),
-                    onPressed: () =>
-                        setState(() => _attachmentPaths.remove(p)),
+                    onPressed: () => setState(() => _attachmentPaths.remove(p)),
                   ),
                 ),
               ),
@@ -182,8 +155,7 @@ class _SupportTicketDraftSheetState
                 padding: const EdgeInsets.only(top: AppSpacing.xs),
                 child: Text(
                   _attachmentError!,
-                  style: AppTypography.caption
-                      .copyWith(color: AppColors.error),
+                  style: AppTypography.caption.copyWith(color: AppColors.error),
                 ),
               ),
             SizedBox(
@@ -200,8 +172,7 @@ class _SupportTicketDraftSheetState
                 padding: const EdgeInsets.only(top: AppSpacing.sm),
                 child: Text(
                   _submitError!,
-                  style:
-                      AppTypography.caption.copyWith(color: AppColors.error),
+                  style: AppTypography.caption.copyWith(color: AppColors.error),
                 ),
               ),
             const SizedBox(height: AppSpacing.lg),
@@ -239,7 +210,7 @@ class _SuccessView extends StatelessWidget {
         children: [
           const Icon(Icons.check_circle, color: Colors.green, size: 64),
           const SizedBox(height: AppSpacing.md),
-          Text('Ticket submitted', style: AppTypography.label),
+          const Text('Ticket submitted', style: AppTypography.label),
           const SizedBox(height: AppSpacing.sm),
           Semantics(
             label: 'Support reference: $reference',

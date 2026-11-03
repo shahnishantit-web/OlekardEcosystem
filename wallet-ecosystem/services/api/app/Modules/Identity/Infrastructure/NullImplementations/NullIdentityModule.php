@@ -52,6 +52,11 @@ final class NullIdentityModule implements IdentityModuleContract
         throw new ModuleNotImplementedException('Identity', 'findCustomerIdByMobile');
     }
 
+    public function findActiveCustomerActorId(string $actorId): ?string
+    {
+        throw new ModuleNotImplementedException('Identity', 'findActiveCustomerActorId');
+    }
+
     public function verifyTransactionPin(string $actorId, string $pin, bool $requireStepUp = false): bool
     {
         throw new ModuleNotImplementedException('Identity', 'verifyTransactionPin');

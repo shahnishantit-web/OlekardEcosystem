@@ -64,3 +64,15 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# Database bootstrap
+
+For a new PostgreSQL database, provision the configured module schemas before
+running migrations:
+
+    php artisan platform:bootstrap-schemas
+    php artisan migrate --force
+
+The bootstrap command creates only PostgreSQL schemas configured as connection
+search paths. It creates no application tables or migration records and is safe
+to rerun. This includes community_services, required by Community Funeral and
+Events migrations.

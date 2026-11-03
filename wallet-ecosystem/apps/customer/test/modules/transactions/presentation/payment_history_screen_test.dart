@@ -9,7 +9,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 
 import 'package:wallet_customer/core/api/paginated_result.dart';
-import 'package:wallet_customer/modules/transactions/application/payment_history_notifier.dart';
 import 'package:wallet_customer/modules/transactions/domain/entities/payment_history_filter.dart';
 import 'package:wallet_customer/modules/transactions/domain/entities/transaction.dart';
 import 'package:wallet_customer/modules/transactions/infrastructure/payment_cache_store.dart';
@@ -65,8 +64,7 @@ void main() {
 
   testWidgets('SC-01: 3 list tiles render for 3 history items', (tester) async {
     final items = [_makeItem('1'), _makeItem('2'), _makeItem('3')];
-    when(mockRepo.fetchHistory(any))
-        .thenAnswer((_) async => _page(items));
+    when(mockRepo.fetchHistory(any)).thenAnswer((_) async => _page(items));
 
     final container = _container();
     addTearDown(container.dispose);
@@ -79,7 +77,8 @@ void main() {
 
   // ─── Stale banner visible in offline state ────────────────────────────────────
 
-  testWidgets('stale banner visible when offline + cached data', (tester) async {
+  testWidgets('stale banner visible when offline + cached data',
+      (tester) async {
     when(mockRepo.fetchHistory(any)).thenThrow(DioException(
       requestOptions: RequestOptions(),
       type: DioExceptionType.connectionError,
@@ -110,11 +109,12 @@ void main() {
       'last_page': 1,
     });
 
-    when(mockCache.readHistoryPage(any)).thenAnswer((_) async => PaymentCacheEntry(
-          rawJson: cachedJson,
-          cachedAt: DateTime(2026, 10, 1),
-          staleAfterSeconds: 0,
-        ));
+    when(mockCache.readHistoryPage(any))
+        .thenAnswer((_) async => PaymentCacheEntry(
+              rawJson: cachedJson,
+              cachedAt: DateTime(2026, 10, 1),
+              staleAfterSeconds: 0,
+            ));
 
     final container = _container();
     addTearDown(container.dispose);
@@ -123,7 +123,8 @@ void main() {
 
     // Stale banner contains "Last updated" or "cached"
     expect(
-      find.textContaining(RegExp(r'(Last updated|Showing cached)', caseSensitive: false)),
+      find.textContaining(
+          RegExp(r'(Last updated|Showing cached)', caseSensitive: false)),
       findsOneWidget,
     );
     // Stale item tile still visible
@@ -132,11 +133,11 @@ void main() {
 
   // ─── SC-02: filter chip calls applyFilter ────────────────────────────────────
 
-  testWidgets('SC-02: tapping Completed chip calls applyFilter with status=completed',
+  testWidgets(
+      'SC-02: tapping Completed chip calls applyFilter with status=completed',
       (tester) async {
     final initial = [_makeItem('1')];
-    when(mockRepo.fetchHistory(any))
-        .thenAnswer((_) async => _page(initial));
+    when(mockRepo.fetchHistory(any)).thenAnswer((_) async => _page(initial));
 
     final container = _container();
     addTearDown(container.dispose);

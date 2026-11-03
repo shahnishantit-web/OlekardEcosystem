@@ -9,6 +9,9 @@ use App\Modules\Ledger\Application\Services\LedgerBalanceService;
 use App\Modules\Ledger\Application\Services\LedgerPostingService;
 use App\Modules\Ledger\Domain\Contracts\LedgerModuleContract;
 use App\Modules\Ledger\Domain\Enums\JournalEntryType;
+use App\Modules\Ledger\Domain\Enums\JournalStatus;
+use App\Modules\Ledger\Domain\ValueObjects\PostedJournalEvidence;
+use App\Modules\Ledger\Infrastructure\Models\JournalModel;
 
 /**
  * Concrete adapter that fulfils LedgerModuleContract by delegating to domain services.
@@ -75,5 +78,35 @@ final class LedgerService implements LedgerModuleContract
     public function getTransactionHistory(string $transactionReference): array
     {
         return $this->balanceService->getTransactionHistory($transactionReference);
+    }
+
+    public function findPostedJournalEvidence(string $idempotencyKey): ?PostedJournalEvidence
+    {
+        $journal = JournalModel::query()->with(['lines.account'])
+            ->where('idempotency_key', $idempotencyKey)->first();
+        if ($journal === null || $journal->status !== JournalStatus::Posted || $journal->posted_at === null) {
+            return null;
+        }
+
+        $lines = [];
+        foreach ($journal->lines as $line) {
+            if ($line->account === null) return null;
+            $lines[] = [
+                'account_reference' => $line->account->ledger_account_reference,
+                'direction' => $line->direction->value,
+                'amount_minor' => (int) $line->amount,
+                'currency_code' => $line->currency_code,
+            ];
+        }
+
+        return new PostedJournalEvidence(
+            journalId: $journal->id,
+            status: $journal->status->value,
+            entryType: $journal->entry_type->value,
+            transactionReference: (string) $journal->transaction_reference,
+            idempotencyKey: $journal->idempotency_key,
+            currencyCode: $journal->currency_code,
+            lines: $lines,
+        );
     }
 }

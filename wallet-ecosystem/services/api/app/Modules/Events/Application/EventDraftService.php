@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Events\Application;
 
 use App\Modules\Events\Domain\Contracts\EventDraftAuthorizer;
+use App\Modules\Events\Domain\ValueObjects\EventVenueCountryCode;
 use App\Modules\Identity\Domain\Contracts\OrganisationMembershipAuthority;
 use App\Modules\Platform\Domain\Contracts\AuditServiceInterface;
 use App\Modules\Platform\Domain\ValueObjects\AuditEventData;
@@ -32,7 +33,8 @@ final class EventDraftService
     /** @param array<string, mixed> $input @return array<string, mixed> */
     public function create(string $organisationId, string $actorId, array $input): array
     {
-        $this->authorize($actorId, $organisationId);
+        $this->membership->assertActiveMembership($actorId, $organisationId);
+        $this->authorizer->assertCanCreate($actorId, $organisationId);
         $data = $this->validateDraft($input);
         $id = (string) Uuid::uuid7();
         $this->db()->transaction(function () use ($id, $organisationId, $actorId, $data): void {
@@ -40,11 +42,12 @@ final class EventDraftService
                 'id' => $id, 'organisation_id' => $organisationId, 'created_by' => $actorId,
                 'version' => 1, 'created_at' => now(), 'updated_at' => now(),
             ]);
+            $this->recordVersionContributors($id, 1, [$actorId]);
             $this->insertCategories($id, $data['categories']);
             $this->audit($id, $actorId, 'created', 1);
         });
 
-        return $this->get($id, $actorId);
+        return $this->present($id);
     }
 
     /** @param array<string, mixed> $input @return array<string, mixed> */
@@ -53,21 +56,45 @@ final class EventDraftService
         $this->db()->transaction(function () use ($eventId, $actorId, $expectedVersion, $input): void {
             $draft = $this->db()->table('community_services.event_drafts')->where('id', $eventId)->lockForUpdate()->first();
             abort_if($draft === null, 404);
-            $this->authorize($actorId, (string) $draft->organisation_id);
+            $this->membership->assertActiveMembership($actorId, (string) $draft->organisation_id);
+            $this->authorizer->assertCanUpdate($actorId, (string) $draft->organisation_id, $eventId);
             if ((int) $draft->version !== $expectedVersion) {
                 abort(409, 'Event draft has changed; reload before editing.');
             }
+            $contributors = $this->db()->table('community_services.event_draft_version_contributors')
+                ->where('event_id', $eventId)->where('version', $expectedVersion)->pluck('actor_id')->map(static fn ($id): string => (string) $id)->all();
+            $contributors[] = (string) $draft->created_by;
+            $contributors[] = $actorId;
             $data = $this->validateDraft($input);
+            $countryChanged = ($data['venue_country_code'] ?? null) !== $draft->venue_country_code;
+            $formatChanged = $data['event_format'] !== $draft->event_format;
+            if ($draft->currency_locked_at !== null && ($countryChanged || $formatChanged)) {
+                abort(409, 'Event location scope cannot change after the first inventory hold or durable order.');
+            }
             $version = $expectedVersion + 1;
+            $workflowState = $draft->published_version === null ? 'draft' : 'change_pending';
             $this->db()->table('community_services.event_drafts')->where('id', $eventId)->update(
-                $this->fields($data) + ['version' => $version, 'updated_at' => now()],
+                $this->fields($data, preserveCurrency: true) + [
+                    'version' => $version,
+                    'workflow_state' => $workflowState,
+                    'sales_state' => $draft->published_version === null ? 'not_published' : 'paused',
+                    'event_reviewer_id' => null,
+                    'reviewed_version' => null,
+                    'price_approver_id' => null,
+                    'price_approved_version' => null,
+                    'rejection_reason' => null,
+                    'updated_at' => now(),
+                ],
             );
-            $this->db()->table('community_services.event_draft_categories')->where('event_id', $eventId)->delete();
-            $this->insertCategories($eventId, $data['categories']);
+            $this->recordVersionContributors($eventId, $version, $contributors);
+            $this->syncCategories($eventId, $data['categories']);
+            $this->shortenHoldsForEarlierEventStart($eventId, $this->parseEventInstant(
+                $data['starts_at'], (string) $data['timezone'], 'starts_at',
+            ));
             $this->audit($eventId, $actorId, 'updated', $version);
         });
 
-        return $this->get($eventId, $actorId);
+        return $this->present($eventId);
     }
 
     /** @return array<string, mixed> */
@@ -75,20 +102,31 @@ final class EventDraftService
     {
         $draft = $this->db()->table('community_services.event_drafts')->where('id', $eventId)->first();
         abort_if($draft === null, 404);
-        $this->authorize($actorId, (string) $draft->organisation_id);
-        $result = (array) $draft;
-        $result['sponsors'] = json_decode((string) $draft->sponsors, true, 512, JSON_THROW_ON_ERROR);
-        $result['status'] = 'draft';
-        $result['categories'] = $this->db()->table('community_services.event_draft_categories')
-            ->where('event_id', $eventId)->orderBy('name')->get(['id', 'name', 'capacity', 'price_minor'])->toArray();
+        $this->membership->assertActiveMembership($actorId, (string) $draft->organisation_id);
+        $this->authorizer->assertCanRead($actorId, (string) $draft->organisation_id, $eventId);
 
-        return $result;
+        return $this->present($eventId);
     }
 
-    private function authorize(string $actorId, string $organisationId): void
+    /** @return array<string, mixed> */
+    private function present(string $eventId): array
     {
-        $this->membership->assertActiveMembership($actorId, $organisationId);
-        $this->authorizer->assertCanManageDraft($actorId, $organisationId);
+        $draft = $this->db()->table('community_services.event_drafts')->where('id', $eventId)->first();
+        abort_if($draft === null, 404);
+        $result = (array) $draft;
+        $result['sponsors'] = json_decode((string) $draft->sponsors, true, 512, JSON_THROW_ON_ERROR);
+        $result['status'] = $draft->workflow_state ?? 'draft';
+        $result['sales_state'] = $draft->sales_state ?? 'not_published';
+        $result['published_snapshot'] = $draft->published_snapshot === null
+            ? null
+            : json_decode((string) $draft->published_snapshot, true, 512, JSON_THROW_ON_ERROR);
+        $result['categories'] = $this->db()->table('community_services.event_draft_categories')
+            ->where('event_id', $eventId)->orderBy('name')->get([
+                'id', 'name', 'capacity', 'price_minor', 'allocation_type', 'complimentary_quota',
+                'max_per_person',
+            ])->toArray();
+
+        return $result;
     }
 
     /** @param array<string, mixed> $input @return array<string, mixed> */
@@ -96,6 +134,16 @@ final class EventDraftService
     {
         $data = Validator::make($input, [
             'title' => ['required', 'string', 'max:200'],
+            'event_format' => ['required', 'string', 'in:physical,online,hybrid'],
+            'venue_country_code' => [
+                'nullable', 'string', 'size:2', 'regex:/^[A-Z]{2}$/D',
+                'required_if:event_format,physical', 'prohibited_unless:event_format,physical',
+                static function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (is_string($value) && ! EventVenueCountryCode::isValid($value)) {
+                        $fail('The venue country must be a valid ISO 3166-1 alpha-2 code.');
+                    }
+                },
+            ],
             'organiser_name' => ['required', 'string', 'max:200'],
             'sponsors' => ['present', 'array'], 'sponsors.*' => ['required', 'string', 'max:200'],
             'capacity' => ['required', 'integer', 'min:1'],
@@ -103,18 +151,47 @@ final class EventDraftService
             'starts_at' => ['required', 'date'], 'ends_at' => ['required', 'date', 'after:starts_at'],
             'sales_start_at' => ['required', 'date'], 'sales_end_at' => ['required', 'date', 'after:sales_start_at'],
             'max_tickets_per_order' => ['required', 'integer', 'min:1'],
+            'hold_duration_seconds' => ['sometimes', 'nullable', 'integer', 'min:1'],
             'cancellation_policy' => ['required', 'string'], 'transfer_policy' => ['required', 'string'],
             'entry_policy' => ['required', 'string'],
             'categories' => ['required', 'array', 'min:1'],
             'categories.*.name' => ['required', 'string', 'max:120', 'distinct'],
             'categories.*.capacity' => ['required', 'integer', 'min:1'],
-            'categories.*.price_minor' => ['required', 'integer', 'min:1'],
+            'categories.*.allocation_type' => ['sometimes', 'string', 'in:paid,free,complimentary'],
+            'categories.*.price_minor' => ['required', 'integer', 'min:0'],
+            'categories.*.complimentary_quota' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'categories.*.max_per_person' => ['sometimes', 'nullable', 'integer', 'min:1'],
         ])->validate();
         $this->validateSchedule($data);
         $total = 0;
-        foreach ($data['categories'] as $category) {
+        foreach ($data['categories'] as &$category) {
+            $category['allocation_type'] = $category['allocation_type'] ?? 'paid';
+            $category['complimentary_quota'] = $category['complimentary_quota'] ?? null;
+            $category['max_per_person'] = $category['max_per_person'] ?? null;
+            $price = (int) $category['price_minor'];
+            if ($category['allocation_type'] === 'paid' && $price < 1) {
+                throw ValidationException::withMessages(['categories' => 'Paid categories require a positive price.']);
+            }
+            if ($category['allocation_type'] !== 'paid' && $price !== 0) {
+                throw ValidationException::withMessages(['categories' => 'Free and complimentary categories must have zero price.']);
+            }
+            if ($category['allocation_type'] === 'complimentary') {
+                $quota = $category['complimentary_quota'];
+                if (! is_int($quota) || $quota > (int) $category['capacity']) {
+                    throw ValidationException::withMessages(['categories' => 'Complimentary quota must be within category capacity.']);
+                }
+            } elseif ($category['complimentary_quota'] !== null) {
+                throw ValidationException::withMessages(['categories' => 'Only complimentary categories may configure a separate quota.']);
+            }
+            if ($category['allocation_type'] !== 'paid' && (! is_int($category['max_per_person']) || $category['max_per_person'] < 1)) {
+                throw ValidationException::withMessages(['categories' => 'Free allocations require an explicit per-person limit.']);
+            }
+            if ($category['allocation_type'] === 'paid' && $category['max_per_person'] !== null) {
+                throw ValidationException::withMessages(['categories' => 'Per-person free registration limits apply only to free allocations.']);
+            }
             $total += (int) $category['capacity'];
         }
+        unset($category);
         if ($total > (int) $data['capacity']) {
             throw ValidationException::withMessages(['categories' => 'Category capacity exceeds event capacity.']);
         }
@@ -222,11 +299,15 @@ final class EventDraftService
     }
 
     /** @param array<string, mixed> $data @return array<string, mixed> */
-    private function fields(array $data): array
+    private function fields(array $data, bool $preserveCurrency = false): array
     {
         unset($data['categories']);
         // Currency is assigned through the Finance/platform control path, not by an organiser draft.
-        $data['currency_code'] = null;
+        if ($preserveCurrency) {
+            unset($data['currency_code']);
+        } else {
+            $data['currency_code'] = null;
+        }
         $data['sponsors'] = json_encode($data['sponsors'], JSON_THROW_ON_ERROR);
 
         return $data;
@@ -239,7 +320,80 @@ final class EventDraftService
             $this->db()->table('community_services.event_draft_categories')->insert([
                 'id' => (string) Uuid::uuid7(), 'event_id' => $eventId, 'name' => $category['name'],
                 'capacity' => $category['capacity'], 'price_minor' => $category['price_minor'],
+                'allocation_type' => $category['allocation_type'] ?? 'paid',
+                'complimentary_quota' => $category['complimentary_quota'] ?? null,
+                'max_per_person' => $category['max_per_person'] ?? null,
                 'created_at' => now(), 'updated_at' => now(),
+            ]);
+        }
+    }
+
+    /** @param array<int, array<string, mixed>> $categories */
+    private function syncCategories(string $eventId, array $categories): void
+    {
+        $db = $this->db();
+        $existing = $db->table('community_services.event_draft_categories')
+            ->where('event_id', $eventId)->lockForUpdate()->get()->keyBy('name');
+        $retainedIds = [];
+        foreach ($categories as $category) {
+            $prior = $existing->get($category['name']);
+            if ($prior === null) {
+                $this->insertCategories($eventId, [$category]);
+
+                continue;
+            }
+            $activeHolds = $db->table('community_services.event_inventory_holds')
+                ->where('event_id', $eventId)->where('category_id', $prior->id)
+                ->where('status', 'held')->where('expires_at', '>', now())->sum('quantity');
+            if ((int) $category['capacity'] < (int) $prior->issued_quantity + (int) $activeHolds) {
+                throw ValidationException::withMessages([
+                    'categories' => 'Category capacity cannot be lower than issued tickets plus active holds.',
+                ]);
+            }
+            $db->table('community_services.event_draft_categories')->where('id', $prior->id)->update([
+                'capacity' => $category['capacity'], 'price_minor' => $category['price_minor'],
+                'allocation_type' => $category['allocation_type'] ?? 'paid',
+                'complimentary_quota' => $category['complimentary_quota'] ?? null,
+                'max_per_person' => $category['max_per_person'] ?? null, 'updated_at' => now(),
+            ]);
+            $retainedIds[] = $prior->id;
+        }
+
+        foreach ($existing as $prior) {
+            if (in_array($prior->id, $retainedIds, true)) {
+                continue;
+            }
+            $activeHolds = $db->table('community_services.event_inventory_holds')
+                ->where('event_id', $eventId)->where('category_id', $prior->id)
+                ->where('status', 'held')->where('expires_at', '>', now())->exists();
+            abort_if((int) $prior->issued_quantity > 0 || $activeHolds, 422,
+                'A category with issued tickets or active holds cannot be removed.');
+            $db->table('community_services.event_draft_categories')->where('id', $prior->id)->delete();
+        }
+    }
+
+    private function shortenHoldsForEarlierEventStart(string $eventId, DateTimeImmutable $newStart): void
+    {
+        $db = $this->db();
+        $now = now()->toImmutable();
+        $holds = $db->table('community_services.event_inventory_holds')->where('event_id', $eventId)
+            ->where('status', 'held')->where('expires_at', '>', $newStart)->lockForUpdate()->get(['id']);
+        foreach ($holds as $hold) {
+            $db->table('community_services.event_inventory_holds')->where('id', $hold->id)->update([
+                'expires_at' => $newStart,
+                'status' => $newStart <= $now ? 'expired' : 'held',
+                'updated_at' => $now,
+            ]);
+        }
+    }
+
+    /** @param array<int, string> $actorIds */
+    private function recordVersionContributors(string $eventId, int $version, array $actorIds): void
+    {
+        foreach (array_unique($actorIds) as $actorId) {
+            $this->db()->table('community_services.event_draft_version_contributors')->insertOrIgnore([
+                'id' => (string) Uuid::uuid7(), 'event_id' => $eventId,
+                'version' => $version, 'actor_id' => $actorId, 'created_at' => now(),
             ]);
         }
     }

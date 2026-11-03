@@ -22,10 +22,10 @@ class AppNotificationDto {
   factory AppNotificationDto.fromJson(Map<String, dynamic> json) {
     return AppNotificationDto(
       id: json['id'] as String,
-      title: json['title'] as String,
+      title: json['subject'] as String,
       body: json['body'] as String,
-      type: json['type'] as String,
-      isRead: json['is_read'] as bool,
+      type: json['notification_type'] as String,
+      isRead: json['read'] as bool,
       createdAt: DateTime.parse(json['created_at'] as String),
       data: json['data'] as Map<String, dynamic>?,
     );

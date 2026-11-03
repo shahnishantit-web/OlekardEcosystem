@@ -3,11 +3,12 @@ import { axe, toHaveNoViolations } from 'jest-axe';
 import { OrganisationListPage } from '@/src/modules/community/pages/organisation-list';
 import { ServiceEntitlementsPage } from '@/src/modules/community/pages/service-entitlements';
 import { OrderListPage } from '@/src/modules/community/pages/order-list';
+import { EventAuthoringPage } from '@/src/modules/community/pages/event-authoring';
 
 expect.extend(toHaveNoViolations);
 
 jest.mock('@/lib/auth/context', () => ({
-  useAuth: () => ({ authenticatedClient: null }),
+  useAuth: () => ({ authenticatedClient: null, hasPermission: () => false }),
 }));
 
 jest.mock('next/navigation', () => ({
@@ -30,6 +31,12 @@ describe('Community Admin Pages — WCAG 2.2 AA', () => {
 
   it('OrderListPage has no accessibility violations', async () => {
     const { container } = render(<OrderListPage />);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it('EventAuthoringPage has no accessibility violations', async () => {
+    const { container } = render(<EventAuthoringPage />);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });

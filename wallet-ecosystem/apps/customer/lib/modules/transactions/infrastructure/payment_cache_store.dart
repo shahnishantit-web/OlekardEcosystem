@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../../../../core/session/session_event_bus.dart';
 
 const _keyPrefix = 'payment_';
 const _defaultStaleAfterSeconds = 300; // 5 minutes
@@ -17,8 +16,8 @@ class PaymentCacheEntry {
     required this.staleAfterSeconds,
   });
 
-  bool get isStale =>
-      DateTime.now().isAfter(cachedAt.add(Duration(seconds: staleAfterSeconds)));
+  bool get isStale => DateTime.now()
+      .isAfter(cachedAt.add(Duration(seconds: staleAfterSeconds)));
 
   String toStorageString() => jsonEncode({
         'raw': rawJson,

@@ -17,11 +17,15 @@ use App\Modules\Payment\Domain\Events\PaymentConfirmedEvent;
 use App\Modules\Payment\Domain\Events\PaymentFailedEvent;
 use App\Modules\Payment\Infrastructure\Models\PaymentAttemptModel;
 use App\Modules\Payment\Infrastructure\Models\PaymentIntentModel;
+use App\Modules\Ledger\Domain\ValueObjects\PostedJournalEvidence;
 use App\Modules\Platform\Domain\Contracts\AuditServiceInterface;
 use App\Modules\Platform\Domain\Contracts\ConfigurationServiceInterface;
 use App\Modules\Platform\Domain\Contracts\EventPublisherInterface;
 use App\Modules\Wallet\Domain\Contracts\WalletModuleContract;
-use Illuminate\Foundation\Testing\TestCase;
+use App\Modules\Wallet\Domain\Contracts\WalletCaptureContract;
+use App\Modules\Wallet\Domain\ValueObjects\WalletCaptureRequest;
+use App\Modules\Wallet\Domain\ValueObjects\WalletCaptureEvidence;
+use Tests\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 use Ramsey\Uuid\Uuid;
 
@@ -36,8 +40,6 @@ use Ramsey\Uuid\Uuid;
  */
 final class LedgerAcknowledgementTest extends TestCase
 {
-    use \Illuminate\Foundation\Testing\RefreshDatabase;
-
     private PaymentOrchestrationService $service;
 
     /** @var MockObject&PaymentIntentRepositoryInterface */
@@ -55,6 +57,12 @@ final class LedgerAcknowledgementTest extends TestCase
     /** @var MockObject&WalletModuleContract */
     private MockObject $wallet;
 
+    /** @var MockObject&WalletCaptureContract */
+    private MockObject $walletCapture;
+
+    /** @var array<string, array{journal:string,debit:string,credit:string}> */
+    private array $walletCaptureFixtures = [];
+
     /** @var MockObject&LedgerModuleContract */
     private MockObject $ledger;
 
@@ -67,19 +75,53 @@ final class LedgerAcknowledgementTest extends TestCase
         $this->config      = $this->createMock(ConfigurationServiceInterface::class);
         $this->events      = $this->createMock(EventPublisherInterface::class);
         $this->wallet      = $this->createMock(WalletModuleContract::class);
+        $this->walletCapture = $this->createMock(WalletCaptureContract::class);
+        $this->walletCapture->method('captureForPayment')->willReturnCallback(
+            function (WalletCaptureRequest $request): WalletCaptureEvidence {
+                $fixture = $this->walletCaptureFixtures[$request->paymentIntentId] ?? null;
+                if ($fixture === null) {
+                    throw new \RuntimeException('Wallet capture fixture not configured.');
+                }
+                return new WalletCaptureEvidence(
+                    captureId: (string) Uuid::uuid7(),
+                    holdId: $request->holdId,
+                    ownerActorId: $request->ownerActorId,
+                    paymentAttemptId: $request->paymentAttemptId,
+                    paymentIntentId: $request->paymentIntentId,
+                    organisationId: $request->organisationId,
+                    capturedAmountMinor: $request->expectedAmountMinor,
+                    currencyCode: strtoupper($request->expectedCurrencyCode),
+                    ledgerJournalId: $fixture['journal'],
+                    ledgerIdempotencyKey: 'payment:'.$request->paymentIntentId.':ack',
+                    debitAccountReference: $fixture['debit'],
+                    creditAccountReference: $fixture['credit'],
+                    capturedAt: now()->toIso8601String(),
+                );
+            }
+        );
         $this->ledger      = $this->createMock(LedgerModuleContract::class);
 
         $this->service = new PaymentOrchestrationService(
             intentRepository:  $this->intentRepo,
             attemptRepository: $this->attemptRepo,
-            purposeRegistry:   $this->createMock(BusinessPurposeResolverRegistry::class),
+            purposeRegistry:   new BusinessPurposeResolverRegistry(),
             wallet:            $this->wallet,
             ledger:            $this->ledger,
             config:            $this->config,
             audit:             $this->createMock(AuditServiceInterface::class),
             events:            $this->events,
             container:         $this->app,
+            walletCaptureContract: $this->walletCapture,
         );
+    }
+
+    private function walletCaptureFixture(string $intentId, string $journalId, string $debit, string $credit): void
+    {
+        $this->walletCaptureFixtures[$intentId] = [
+            'journal' => $journalId,
+            'debit' => $debit,
+            'credit' => $credit,
+        ];
     }
 
     /**
@@ -93,6 +135,7 @@ final class LedgerAcknowledgementTest extends TestCase
         $attemptId = (string) Uuid::uuid7();
         $walletId  = (string) Uuid::uuid7();
         $journalId = (string) Uuid::uuid7();
+        $this->walletCaptureFixture($intentId, $journalId, 'pocket-account-ref', 'org-credit-account-ref');
 
         $intent = new PaymentIntentModel([
             'id'                => $intentId,
@@ -114,6 +157,8 @@ final class LedgerAcknowledgementTest extends TestCase
             'provider_code'    => 'olekard_wallet',
             'wallet_hold_id'   => (string) Uuid::uuid7(),
             'fee_minor'        => 0,
+            'captured_amount_minor' => 10000,
+            'captured_currency_code' => 'BWP',
         ]);
 
         $freshIntent = new PaymentIntentModel([
@@ -141,16 +186,13 @@ final class LedgerAcknowledgementTest extends TestCase
         ]);
 
         // Journal MUST use payment:{intentId}:ack and have two balanced lines
-        $this->ledger->expects(self::once())->method('postEntry')
-            ->with(self::callback(static function (array $r) use ($intentId): bool {
-                return $r['idempotency_key'] === 'payment:'.$intentId.':ack'
-                    && count($r['lines']) === 2
-                    && $r['lines'][0]['direction'] === 'debit'
-                    && $r['lines'][1]['direction'] === 'credit'
-                    && $r['lines'][0]['amount'] === 10000
-                    && $r['lines'][1]['amount'] === 10000;
-            }))
-            ->willReturn($journalId);
+        $this->ledger->expects(self::never())->method('postEntry');
+        $this->ledger->method('findPostedJournalEvidence')->willReturn(new PostedJournalEvidence(
+            $journalId, 'posted', 'debit', $intentId, 'payment:'.$intentId.':ack', 'BWP', [
+                ['account_reference' => 'pocket-account-ref', 'direction' => 'debit', 'amount_minor' => 10000, 'currency_code' => 'BWP'],
+                ['account_reference' => 'org-credit-account-ref', 'direction' => 'credit', 'amount_minor' => 10000, 'currency_code' => 'BWP'],
+            ],
+        ));
 
         // PaymentConfirmedEvent published AFTER journal is durable
         $this->events->expects(self::once())->method('publish')
@@ -160,6 +202,10 @@ final class LedgerAcknowledgementTest extends TestCase
             'payment_intent_id'  => $intentId,
             'payment_attempt_id' => $attemptId,
             'outcome'            => 'succeeded',
+            'captured_amount_minor' => 10000,
+            'captured_currency_code' => 'BWP',
+            'capture_evidence_verified' => true,
+            'capture_evidence_reference' => (string) Uuid::uuid7(),
             'correlation_id'     => (string) Uuid::uuid7(),
         ]);
     }
@@ -214,6 +260,135 @@ final class LedgerAcknowledgementTest extends TestCase
             'outcome'            => 'succeeded',
             'correlation_id'     => (string) Uuid::uuid7(),
         ]);
+    }
+
+    public function test_missing_capture_evidence_never_uses_expected_amount_as_confirmation(): void
+    {
+        $intentId = (string) Uuid::uuid7();
+        $attemptId = (string) Uuid::uuid7();
+        $intent = new PaymentIntentModel([
+            'id' => $intentId, 'status' => PaymentIntentStatus::Processing,
+            'accounting_status' => PaymentAccountingStatus::PendingLedger,
+            'payer_actor_id' => 'actor-1', 'purpose_type' => 'payment', 'purpose_reference' => 'ref-1',
+            'organisation_id' => 'org-1', 'currency_code' => 'BWP', 'amount_minor' => 10000,
+        ]);
+        $attempt = new PaymentAttemptModel([
+            'id' => $attemptId, 'payment_intent_id' => $intentId,
+            'status' => PaymentAttemptStatus::Processing, 'provider_code' => 'olekard_wallet',
+            'wallet_hold_id' => (string) Uuid::uuid7(),
+        ]);
+        $this->intentRepo->method('findById')->willReturn($intent);
+        $this->attemptRepo->method('findById')->willReturn($attempt);
+        $this->intentRepo->method('save')->willReturnCallback(static fn () => null);
+        $this->ledger->expects(self::never())->method('postEntry');
+        $this->events->expects(self::never())->method('publish');
+
+        $this->service->handleOutcome([
+            'payment_intent_id' => $intentId, 'payment_attempt_id' => $attemptId,
+            'outcome' => 'succeeded', 'correlation_id' => (string) Uuid::uuid7(),
+            'captured_amount_minor' => 10000, // unverified request data must not be trusted
+        ]);
+
+        self::assertNull($attempt->captured_amount_minor);
+        self::assertNull($attempt->captured_currency_code);
+    }
+
+    public function test_verified_capture_mismatch_is_preserved_but_not_confirmed(): void
+    {
+        $intentId = (string) Uuid::uuid7();
+        $attemptId = (string) Uuid::uuid7();
+        $intent = new PaymentIntentModel([
+            'id' => $intentId, 'status' => PaymentIntentStatus::Processing,
+            'accounting_status' => PaymentAccountingStatus::PendingLedger,
+            'payer_actor_id' => 'actor-1', 'purpose_type' => 'payment', 'purpose_reference' => 'ref-1',
+            'organisation_id' => 'org-1', 'currency_code' => 'BWP', 'amount_minor' => 10000,
+        ]);
+        $attempt = new PaymentAttemptModel([
+            'id' => $attemptId, 'payment_intent_id' => $intentId,
+            'status' => PaymentAttemptStatus::Processing, 'provider_code' => 'olekard_wallet',
+            'wallet_hold_id' => (string) Uuid::uuid7(),
+        ]);
+        $this->intentRepo->method('findById')->willReturn($intent);
+        $this->attemptRepo->method('findById')->willReturn($attempt);
+        $this->intentRepo->method('save')->willReturnCallback(static fn () => null);
+        $this->ledger->expects(self::never())->method('postEntry');
+        $this->events->expects(self::never())->method('publish');
+
+        $this->service->handleOutcome([
+            'payment_intent_id' => $intentId, 'payment_attempt_id' => $attemptId,
+            'outcome' => 'succeeded', 'correlation_id' => (string) Uuid::uuid7(),
+            'captured_amount_minor' => 9900, 'captured_currency_code' => 'BWP',
+            'capture_evidence_verified' => true, 'capture_evidence_reference' => (string) Uuid::uuid7(),
+        ]);
+
+        self::assertSame(9900, $attempt->captured_amount_minor);
+        self::assertSame('BWP', $attempt->captured_currency_code);
+    }
+
+    public function test_repair_reuses_ledger_key_after_posted_journal_precedes_payment_persistence(): void
+    {
+        $intentId = (string) Uuid::uuid7();
+        $attemptId = (string) Uuid::uuid7();
+        $walletId = (string) Uuid::uuid7();
+        $journalId = (string) Uuid::uuid7();
+        $correlationId = (string) Uuid::uuid7();
+        $this->walletCaptureFixture($intentId, $journalId, 'pocket', 'credit');
+        $processing = new PaymentIntentModel([
+            'id' => $intentId, 'status' => PaymentIntentStatus::Processing,
+            'accounting_status' => PaymentAccountingStatus::PendingLedger,
+            'payer_actor_id' => 'actor-1', 'purpose_type' => 'paid_event_ticket', 'purpose_reference' => 'order-1',
+            'organisation_id' => 'org-1', 'currency_code' => 'BWP', 'amount_minor' => 2000,
+        ]);
+        $repairIntent = new PaymentIntentModel([
+            'id' => $intentId, 'status' => PaymentIntentStatus::Succeeded,
+            'accounting_status' => PaymentAccountingStatus::PendingLedger,
+            'fulfilment_status' => PaymentFulfilmentStatus::Pending,
+            'payer_actor_id' => 'actor-1', 'purpose_type' => 'paid_event_ticket', 'purpose_reference' => 'order-1',
+            'organisation_id' => 'org-1', 'currency_code' => 'BWP', 'amount_minor' => 2000,
+            'accounting_repair_attempts' => 0,
+        ]);
+        $attempt = new PaymentAttemptModel([
+            'id' => $attemptId, 'payment_intent_id' => $intentId,
+            'status' => PaymentAttemptStatus::Processing, 'provider_code' => 'olekard_wallet',
+            'wallet_hold_id' => (string) Uuid::uuid7(), 'fee_minor' => 0,
+        ]);
+        $this->intentRepo->method('findById')->willReturnOnConsecutiveCalls($processing, $repairIntent, $repairIntent, $repairIntent);
+        $this->attemptRepo->method('findById')->willReturn($attempt);
+        $this->attemptRepo->method('findSucceededForIntent')->willReturn($attempt);
+        $this->intentRepo->method('save')->willReturnCallback(static fn () => null);
+        $this->wallet->method('findPrimaryWalletId')->willReturn($walletId);
+        $this->wallet->method('getPocketLedgerAccountRef')->willReturn('pocket');
+        $this->config->method('getOrDefault')->willReturnMap([
+            ['payment.credit_account_BWP', null, 'credit'],
+            ['payment.excess_capture_tolerance_minor', 0, 0],
+            ['payment.accounting_max_repair_attempts', 5, 5],
+        ]);
+        $this->ledger->expects(self::never())->method('postEntry');
+        $evidenceQueries = 0;
+        $this->ledger->expects(self::exactly(2))->method('findPostedJournalEvidence')
+            ->with('payment:'.$intentId.':ack')
+            ->willReturnCallback(static function () use (&$evidenceQueries, $journalId, $intentId): PostedJournalEvidence {
+                if (++$evidenceQueries === 1) {
+                    throw new \RuntimeException('simulated crash window after Ledger commit');
+                }
+                return new PostedJournalEvidence($journalId, 'posted', 'debit', $intentId, 'payment:'.$intentId.':ack', 'BWP', [
+                    ['account_reference' => 'pocket', 'direction' => 'debit', 'amount_minor' => 2000, 'currency_code' => 'BWP'],
+                    ['account_reference' => 'credit', 'direction' => 'credit', 'amount_minor' => 2000, 'currency_code' => 'BWP'],
+                ]);
+            });
+        $this->events->expects(self::once())->method('publish')->with(self::isInstanceOf(PaymentConfirmedEvent::class));
+
+        $this->service->handleOutcome([
+            'payment_intent_id' => $intentId, 'payment_attempt_id' => $attemptId, 'outcome' => 'succeeded',
+            'captured_amount_minor' => 2000, 'captured_currency_code' => 'BWP',
+            'capture_evidence_verified' => true, 'capture_evidence_reference' => (string) Uuid::uuid7(),
+            'correlation_id' => $correlationId,
+        ]);
+        self::assertNull($attempt->ledger_journal_id);
+
+        $this->service->repairAccountingForIntent($intentId, $correlationId);
+
+        self::assertSame($journalId, $attempt->ledger_journal_id);
     }
 
     /**
@@ -388,6 +563,7 @@ final class LedgerAcknowledgementTest extends TestCase
         $attemptId = (string) Uuid::uuid7();
         $walletId  = (string) Uuid::uuid7();
         $journalId = (string) Uuid::uuid7();
+        $this->walletCaptureFixture($intentId, $journalId, 'pocket-ref', 'org-credit-ref');
 
         $intent = new PaymentIntentModel([
             'id'                => $intentId,
@@ -434,7 +610,13 @@ final class LedgerAcknowledgementTest extends TestCase
             ['payment.credit_account_BWP', null, 'org-credit-ref'],
             ['payment.excess_capture_tolerance_minor', 0, 0],
         ]);
-        $this->ledger->method('postEntry')->willReturn($journalId);
+        $this->ledger->expects(self::never())->method('postEntry');
+        $this->ledger->method('findPostedJournalEvidence')->willReturn(new PostedJournalEvidence(
+            $journalId, 'posted', 'debit', $intentId, 'payment:'.$intentId.':ack', 'BWP', [
+                ['account_reference' => 'pocket-ref', 'direction' => 'debit', 'amount_minor' => 6000, 'currency_code' => 'BWP'],
+                ['account_reference' => 'org-credit-ref', 'direction' => 'credit', 'amount_minor' => 6000, 'currency_code' => 'BWP'],
+            ],
+        ));
 
         // Capture the published event to inspect allocation_reference
         $publishedEvent = null;
@@ -448,6 +630,10 @@ final class LedgerAcknowledgementTest extends TestCase
             'payment_intent_id'  => $intentId,
             'payment_attempt_id' => $attemptId,
             'outcome'            => 'succeeded',
+            'captured_amount_minor' => 6000,
+            'captured_currency_code' => 'BWP',
+            'capture_evidence_verified' => true,
+            'capture_evidence_reference' => (string) Uuid::uuid7(),
             'correlation_id'     => (string) Uuid::uuid7(),
         ]);
 

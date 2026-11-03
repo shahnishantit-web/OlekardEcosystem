@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Identity\Domain\Contracts;
 
+use App\Modules\Identity\Domain\Exceptions\IdentityContactUpdateException;
+
 interface IdentityModuleContract
 {
     /**
@@ -48,7 +50,7 @@ interface IdentityModuleContract
      * Called by E02's ContactChangeService after successful OTP verification.
      * Pass null for a field to leave it unchanged.
      *
-     * @throws \App\Modules\Identity\Domain\Exceptions\IdentityContactUpdateException
+     * @throws IdentityContactUpdateException
      */
     public function updateUserContact(string $userId, ?string $email, ?string $mobile): void;
 
@@ -72,6 +74,12 @@ interface IdentityModuleContract
      * Called by Transfer's RecipientLookupService.
      */
     public function findCustomerIdByMobile(string $mobileNumber): ?string;
+
+    /**
+     * Return the actor ID only when the Identity record is currently an active CUSTOMER.
+     * Missing, inactive, or non-customer actors return null; infrastructure failures propagate.
+     */
+    public function findActiveCustomerActorId(string $actorId): ?string;
 
     // -------------------------------------------------------------------------
     // E08 extensions — Wallet Funding (Agent cash-in PIN verification)

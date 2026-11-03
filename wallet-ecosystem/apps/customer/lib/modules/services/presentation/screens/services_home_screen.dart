@@ -19,16 +19,46 @@ class _ServicesHomeScreenState extends ConsumerState<ServicesHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(serviceCategoriesProvider);
+    final isWide = MediaQuery.sizeOf(context).width >= 600;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Services'),
-        actions: [
-          TextButton(
-            onPressed: () => context.push('/services/funeral'),
-            child: const Text('Funeral Assistance'),
-          ),
-        ],
+        actions: isWide
+            ? [
+                TextButton(
+                  onPressed: () => context.push('/events/free-registration'),
+                  child: const Text('Free Event Registration'),
+                ),
+                TextButton(
+                  onPressed: () => context.push('/events/tickets'),
+                  child: const Text('My Event Tickets'),
+                ),
+                TextButton(
+                  onPressed: () => context.push('/services/funeral'),
+                  child: const Text('Funeral Assistance'),
+                ),
+              ]
+            : [
+                PopupMenuButton<String>(
+                  tooltip: 'Services menu',
+                  onSelected: (destination) => context.push(destination),
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: '/events/free-registration',
+                      child: Text('Free Event Registration'),
+                    ),
+                    PopupMenuItem(
+                      value: '/events/tickets',
+                      child: Text('My Event Tickets'),
+                    ),
+                    PopupMenuItem(
+                      value: '/services/funeral',
+                      child: Text('Funeral Assistance'),
+                    ),
+                  ],
+                ),
+              ],
       ),
       body: categoriesAsync.when(
         loading: () => const Padding(

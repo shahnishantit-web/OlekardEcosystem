@@ -13,7 +13,7 @@ void main() {
   late MockTransactionRepository mockRepo;
   late MockPaymentCacheStore mockCache;
 
-  final _receipt = PaymentReceipt(
+  final receipt = PaymentReceipt(
     intentId: 'intent-1',
     referenceNumber: 'REF-001',
     issuedAt: DateTime.fromMillisecondsSinceEpoch(1730000000000),
@@ -24,7 +24,7 @@ void main() {
     lineItems: [],
   );
 
-  ProviderContainer _container() => ProviderContainer(
+  ProviderContainer createContainer() => ProviderContainer(
         overrides: [
           transactionRepositoryProvider.overrideWithValue(mockRepo),
           paymentCacheStoreProvider.overrideWithValue(mockCache),
@@ -40,11 +40,12 @@ void main() {
   // ─── build() ─────────────────────────────────────────────────────────────────
 
   test('build() fetches receipt → ReceiptReady', () async {
-    when(mockRepo.fetchReceipt('intent-1')).thenAnswer((_) async => _receipt);
+    when(mockRepo.fetchReceipt('intent-1')).thenAnswer((_) async => receipt);
 
-    final container = _container();
+    final container = createContainer();
     addTearDown(container.dispose);
-    final state = await container.read(receiptAccessProvider('intent-1').future);
+    final state =
+        await container.read(receiptAccessProvider('intent-1').future);
 
     expect(state, isA<ReceiptReady>());
     final ready = state as ReceiptReady;
@@ -54,12 +55,13 @@ void main() {
   // ─── SC-07: cross-account 403 → ReceiptAccessDenied ──────────────────────────
 
   test('SC-07: 403 on fetchReceipt → ReceiptAccessDenied', () async {
-    when(mockRepo.fetchReceipt(any))
-        .thenThrow(const AccessDeniedException('Access denied: not your receipt'));
+    when(mockRepo.fetchReceipt(any)).thenThrow(
+        const AccessDeniedException('Access denied: not your receipt'));
 
-    final container = _container();
+    final container = createContainer();
     addTearDown(container.dispose);
-    final state = await container.read(receiptAccessProvider('intent-1').future);
+    final state =
+        await container.read(receiptAccessProvider('intent-1').future);
 
     expect(state, isA<ReceiptAccessDenied>());
     final denied = state as ReceiptAccessDenied;
@@ -69,26 +71,28 @@ void main() {
   test('generic error on fetchReceipt → ReceiptAccessError', () async {
     when(mockRepo.fetchReceipt(any)).thenThrow(Exception('Network error'));
 
-    final container = _container();
+    final container = createContainer();
     addTearDown(container.dispose);
-    final state = await container.read(receiptAccessProvider('intent-1').future);
+    final state =
+        await container.read(receiptAccessProvider('intent-1').future);
 
     expect(state, isA<ReceiptAccessError>());
   });
 
   // ─── SC-06: requestDownload → ReceiptDownloadReady ───────────────────────────
 
-  test('SC-06: requestDownload() → ReceiptDownloadReady with downloadUrl', () async {
-    when(mockRepo.fetchReceipt('intent-1')).thenAnswer((_) async => _receipt);
+  test('SC-06: requestDownload() → ReceiptDownloadReady with downloadUrl',
+      () async {
+    when(mockRepo.fetchReceipt('intent-1')).thenAnswer((_) async => receipt);
     final expiry = DateTime(2026, 10, 27, 12, 0);
-    when(mockRepo.requestDownloadToken('intent-1')).thenAnswer((_) async =>
-        ReceiptDownloadToken(
-          token: 'tok-abc',
-          downloadUrl: 'https://cdn.example.com/receipts/intent-1.pdf',
-          expiresAt: expiry,
-        ));
+    when(mockRepo.requestDownloadToken('intent-1'))
+        .thenAnswer((_) async => ReceiptDownloadToken(
+              token: 'tok-abc',
+              downloadUrl: 'https://cdn.example.com/receipts/intent-1.pdf',
+              expiresAt: expiry,
+            ));
 
-    final container = _container();
+    final container = createContainer();
     addTearDown(container.dispose);
     await container.read(receiptAccessProvider('intent-1').future);
 
@@ -106,15 +110,15 @@ void main() {
   // ─── SC-06: downloadUrl not persisted to cache ────────────────────────────────
 
   test('SC-06: downloadUrl never written to PaymentCacheStore', () async {
-    when(mockRepo.fetchReceipt('intent-1')).thenAnswer((_) async => _receipt);
-    when(mockRepo.requestDownloadToken('intent-1')).thenAnswer((_) async =>
-        ReceiptDownloadToken(
-          token: 'tok-abc',
-          downloadUrl: 'https://cdn.example.com/receipts/intent-1.pdf',
-          expiresAt: DateTime(2099),
-        ));
+    when(mockRepo.fetchReceipt('intent-1')).thenAnswer((_) async => receipt);
+    when(mockRepo.requestDownloadToken('intent-1'))
+        .thenAnswer((_) async => ReceiptDownloadToken(
+              token: 'tok-abc',
+              downloadUrl: 'https://cdn.example.com/receipts/intent-1.pdf',
+              expiresAt: DateTime(2099),
+            ));
 
-    final container = _container();
+    final container = createContainer();
     addTearDown(container.dispose);
     await container.read(receiptAccessProvider('intent-1').future);
     await container
@@ -128,16 +132,17 @@ void main() {
 
   // ─── onDownloadLaunched resets to ReceiptReady ───────────────────────────────
 
-  test('onDownloadLaunched() discards downloadUrl and resets to ReceiptReady', () async {
-    when(mockRepo.fetchReceipt('intent-1')).thenAnswer((_) async => _receipt);
-    when(mockRepo.requestDownloadToken('intent-1')).thenAnswer((_) async =>
-        ReceiptDownloadToken(
-          token: 'tok',
-          downloadUrl: 'https://cdn.example.com/receipt.pdf',
-          expiresAt: DateTime(2099),
-        ));
+  test('onDownloadLaunched() discards downloadUrl and resets to ReceiptReady',
+      () async {
+    when(mockRepo.fetchReceipt('intent-1')).thenAnswer((_) async => receipt);
+    when(mockRepo.requestDownloadToken('intent-1'))
+        .thenAnswer((_) async => ReceiptDownloadToken(
+              token: 'tok',
+              downloadUrl: 'https://cdn.example.com/receipt.pdf',
+              expiresAt: DateTime(2099),
+            ));
 
-    final container = _container();
+    final container = createContainer();
     addTearDown(container.dispose);
     await container.read(receiptAccessProvider('intent-1').future);
     await container
@@ -149,7 +154,9 @@ void main() {
         isA<ReceiptDownloadReady>());
 
     // Simulate widget calling onDownloadLaunched after url_launcher
-    container.read(receiptAccessProvider('intent-1').notifier).onDownloadLaunched();
+    container
+        .read(receiptAccessProvider('intent-1').notifier)
+        .onDownloadLaunched();
 
     final state = container.read(receiptAccessProvider('intent-1')).value;
     expect(state, isA<ReceiptReady>());
@@ -160,12 +167,13 @@ void main() {
 
   // ─── requestDownload error ────────────────────────────────────────────────────
 
-  test('requestDownload failure → ReceiptDownloadError (receipt preserved)', () async {
-    when(mockRepo.fetchReceipt('intent-1')).thenAnswer((_) async => _receipt);
+  test('requestDownload failure → ReceiptDownloadError (receipt preserved)',
+      () async {
+    when(mockRepo.fetchReceipt('intent-1')).thenAnswer((_) async => receipt);
     when(mockRepo.requestDownloadToken(any))
         .thenThrow(Exception('Token service unavailable'));
 
-    final container = _container();
+    final container = createContainer();
     addTearDown(container.dispose);
     await container.read(receiptAccessProvider('intent-1').future);
     await container

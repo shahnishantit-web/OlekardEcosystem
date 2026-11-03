@@ -164,6 +164,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { href: '/notifications/log', label: 'Delivery Log', icon: Inbox, requiredPermission: 'notifications.log.read' },
       { href: '/notifications/rules', label: 'Notification Rules', icon: Settings, requiredPermission: 'notifications.rules.read' },
       { href: '/audit',                   label: 'Audit Events',  icon: FileText },
+      { href: '/community/events', label: 'Events · authoring and review', icon: Calendar },
       { href: '/compliance',              label: 'Compliance',    icon: Shield },
       { href: '/reports',                 label: 'Reports',       icon: BarChart2 },
       { href: '/reports/schedules',       label: 'Report Schedules', icon: Calendar },

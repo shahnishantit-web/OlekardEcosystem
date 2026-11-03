@@ -19,11 +19,11 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<({AuthToken token, Agent agent})> login({
     required String phone,
-    required String pinHash,
+    required String pin,
   }) async {
     final response = await _dio.post<Map<String, dynamic>>(
       '/v1/agent/auth/login',
-      data: LoginRequestDto(phone: phone, pinHash: pinHash).toJson(),
+      data: LoginRequestDto(phone: phone, pin: pin).toJson(),
     );
     final dto = AuthResponseDto.fromJson(response.data!);
     final token = dto.toAuthToken();

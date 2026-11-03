@@ -46,11 +46,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!available || !mounted) return;
     final success = await biometric.authenticate();
     if (success && mounted) {
-      // Biometric success: re-authenticate using stored pin hash
+      // The server verifies the raw PIN. A client-side bcrypt hash cannot be
+      // replayed as authentication evidence; biometric session recovery needs
+      // a separate Identity refresh contract.
       final pinHash =
           await ref.read(secureStorageServiceProvider).getPinHash();
       if (pinHash != null && mounted) {
-        await _submitLogin(pinHash: pinHash);
+        setState(() => _errorMessage = 'Enter your PIN to continue.');
       }
     }
   }
@@ -62,10 +64,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
     final pinHash = PinService.hash(pin);
     await ref.read(secureStorageServiceProvider).savePinHash(pinHash);
-    await _submitLogin(pinHash: pinHash);
+    await _submitLogin(pin: pin);
   }
 
-  Future<void> _submitLogin({required String pinHash}) async {
+  Future<void> _submitLogin({required String pin}) async {
     if (_isLoading) return;
     setState(() {
       _isLoading = true;
@@ -74,7 +76,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       await ref.read(authNotifierProvider.notifier).login(
             phone: _phoneController.text.trim(),
-            pinHash: pinHash,
+            pin: pin,
           );
       if (mounted) context.go('/dashboard');
     } on DioException catch (e) {
