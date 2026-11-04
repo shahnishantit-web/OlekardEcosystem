@@ -27,4 +27,19 @@ describe('QA API response contracts', () => {
     respond({ data: run });
     expect(await triggerQaRun(client, 'api-authorization-testing', 'test-key')).toEqual(run);
   });
+
+  it('sends audited revocation data with authenticated DELETE requests', async () => {
+    respond({ data: null });
+    await client.delete('/v1/events/assignments/assignment-1', {
+      body: { reason_code: 'authority_revoked' }, idempotencyKey: 'revoke-key',
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/v1/events/assignments/assignment-1', expect.objectContaining({
+      method: 'DELETE',
+      body: JSON.stringify({ reason_code: 'authority_revoked' }),
+      headers: expect.any(Headers),
+    }));
+    const headers = (global.fetch as jest.Mock).mock.calls[0]?.[1]?.headers as Headers;
+    expect(headers.get('Idempotency-Key')).toBe('revoke-key');
+  });
 });

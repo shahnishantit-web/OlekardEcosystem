@@ -21,11 +21,15 @@ final class EventPricingBreakdownTest extends TestCase
         self::assertSame('organisation', $pricing->toArray()['organiser_fee_schedule_snapshot']['scope']['type']);
     }
 
-    public function test_missing_fee_schedule_or_tax_matrix_fails_closed(): void
+    public function test_missing_fee_schedule_tax_matrix_or_terms_acceptance_fails_closed(): void
     {
         $base = $this->validSyntheticProductionShape();
         $missingFeeSchedule = $this->copy($base, organiserFeeScheduleSnapshot: null);
         $missingTaxMatrix = $this->copy($base, taxPolicySnapshot: null);
+        $missingTermsAcceptance = $this->copy($base,
+            organiserFeeScheduleSnapshot: $base->organiserFeeScheduleSnapshot,
+            taxPolicySnapshot: $base->taxPolicySnapshot,
+            withoutTermsAcceptance: true);
 
         try {
             $missingFeeSchedule->assertEnvironmentEligible();
@@ -38,6 +42,12 @@ final class EventPricingBreakdownTest extends TestCase
             self::fail('Missing qualified tax matrix must be rejected.');
         } catch (\DomainException $exception) {
             self::assertStringContainsString('explicit organiser fee schedule', $exception->getMessage());
+        }
+        try {
+            $missingTermsAcceptance->assertEnvironmentEligible();
+            self::fail('Missing approved OleKard terms acceptance must be rejected.');
+        } catch (\DomainException $exception) {
+            self::assertStringContainsString('approved, effective OleKard terms version and organiser acceptance snapshot', $exception->getMessage());
         }
     }
 
@@ -77,6 +87,17 @@ final class EventPricingBreakdownTest extends TestCase
         $pricing->assertEnvironmentEligible();
     }
 
+    public function test_reacceptance_is_required_for_a_changed_terms_version_or_document(): void
+    {
+        $terms = $this->termsSnapshot();
+        $terms['accepted_version_id'] = 'previous-terms-version';
+        $pricing = $this->validSyntheticProductionShape(oleKardTermsAcceptanceSnapshot: $terms);
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('accept the current OleKard terms version');
+        $pricing->assertEnvironmentEligible();
+    }
+
     public function test_binary_floating_point_is_rejected_from_tax_snapshot(): void
     {
         $tax = $this->taxSnapshot();
@@ -94,6 +115,7 @@ final class EventPricingBreakdownTest extends TestCase
         array $feeComponents = [],
         ?array $organiserFeeScheduleSnapshot = null,
         ?array $taxPolicySnapshot = null,
+        ?array $oleKardTermsAcceptanceSnapshot = null,
     ): EventPricingBreakdown {
         return new EventPricingBreakdown(
             subtotalMinor: 1000,
@@ -115,6 +137,7 @@ final class EventPricingBreakdownTest extends TestCase
             organiserPlatformFeeMinor: 100,
             organiserFeeScheduleSnapshot: $organiserFeeScheduleSnapshot ?? $this->feeSchedule(),
             taxPolicySnapshot: $taxPolicySnapshot ?? $this->taxSnapshot(),
+            oleKardTermsAcceptanceSnapshot: $oleKardTermsAcceptanceSnapshot ?? $this->termsSnapshot(),
         );
     }
 
@@ -156,12 +179,29 @@ final class EventPricingBreakdownTest extends TestCase
         ];
     }
 
+    /** Synthetic-only terms evidence; never a production approval or contract. */
+    private function termsSnapshot(): array
+    {
+        return [
+            'acceptance_id' => 'synthetic-acceptance-v1',
+            'version_id' => 'synthetic-terms-id-v1', 'accepted_version_id' => 'synthetic-terms-id-v1',
+            'version' => 'synthetic-terms-v1', 'approval_reference' => 'synthetic-terms-approval',
+            'approved_by_actor_id' => 'synthetic-finance-approver', 'approved_at' => '2026-01-01T00:00:00+00:00',
+            'document_hash' => hash('sha256', 'synthetic terms'), 'accepted_document_hash' => hash('sha256', 'synthetic terms'),
+            'acceptance_provenance' => 'synthetic-acceptance-audit',
+            'organisation_id' => 'synthetic-organisation', 'event_id' => 'synthetic-event',
+            'accepted_by_actor_id' => 'synthetic-organiser', 'accepted_at' => '2026-01-01T00:00:00+00:00',
+            'effective_from' => '2026-01-01T00:00:00+00:00', 'effective_until' => '2099-01-01T00:00:00+00:00',
+        ];
+    }
+
     private function copy(
         EventPricingBreakdown $source,
         ?array $organiserFeeScheduleSnapshot = null,
         ?array $taxPolicySnapshot = null,
         ?bool $policyApproved = null,
         ?bool $sellerVerified = null,
+        bool $withoutTermsAcceptance = false,
     ): EventPricingBreakdown {
         return new EventPricingBreakdown(
             $source->subtotalMinor, $source->feesMinor, $source->taxesMinor, $source->totalMinor,
@@ -170,6 +210,7 @@ final class EventPricingBreakdownTest extends TestCase
             $source->policyExpiresAt, $source->policyEvidenceReference, $policyApproved ?? $source->policyApproved,
             $sellerVerified ?? $source->sellerVerified, $source->testOnly, $source->organiserPlatformFeeMinor,
             $organiserFeeScheduleSnapshot, $taxPolicySnapshot,
+            $withoutTermsAcceptance ? null : $source->oleKardTermsAcceptanceSnapshot,
         );
     }
 }

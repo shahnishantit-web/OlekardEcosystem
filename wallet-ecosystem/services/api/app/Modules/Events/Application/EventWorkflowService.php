@@ -7,6 +7,7 @@ namespace App\Modules\Events\Application;
 use App\Modules\Events\Domain\Contracts\ComplimentaryAllocationApprovalContract;
 use App\Modules\Events\Domain\Contracts\EventPublicationReadiness;
 use App\Modules\Events\Domain\Contracts\EventWorkflowAuthorizer;
+use App\Modules\Events\Domain\Contracts\OrganiserVerificationContract;
 use App\Modules\Events\Domain\ValueObjects\ComplimentaryAllocationApprovalEvidence;
 use DateTimeImmutable;
 use Illuminate\Database\Connection;
@@ -20,6 +21,7 @@ final class EventWorkflowService
     public function __construct(
         private readonly EventWorkflowAuthorizer $authorizer,
         private readonly EventPublicationReadiness $readiness,
+        private readonly OrganiserVerificationContract $organiserVerification,
         private readonly ComplimentaryAllocationApprovalContract $complimentaryApproval,
     ) {}
 
@@ -99,11 +101,21 @@ final class EventWorkflowService
             }
 
             $this->applyComplimentaryApprovalSnapshots($event, $categories);
+            $organiserEvidence = $this->organiserVerification->evidenceForEventPublication(
+                (string) $event->organisation_id,
+                (string) $event->id,
+            );
+            $organiserEvidence->assertAppliesTo(
+                (string) $event->organisation_id,
+                (string) $event->id,
+                new DateTimeImmutable('now'),
+            );
             $draft = (array) $event;
             $this->readiness->assertPublishable($draft, $categories);
             $snapshot = $draft;
             $snapshot['sponsors'] = json_decode((string) $event->sponsors, true, 512, JSON_THROW_ON_ERROR);
             $snapshot['categories'] = $categories;
+            $snapshot['organiser_verification_snapshot'] = $organiserEvidence->toSnapshot();
             unset($snapshot['published_snapshot'], $snapshot['rejection_reason']);
 
             return [
@@ -171,6 +183,9 @@ final class EventWorkflowService
         return $this->db()->transaction(function () use ($eventId, $actorId, $expectedVersion, $change): array {
             $event = $this->db()->table('community_services.event_drafts')->where('id', $eventId)->lockForUpdate()->first();
             abort_if($event === null, 404);
+            if (($event->lifecycle_state ?? 'active') !== 'active') {
+                abort(409, 'A cancelled event cannot transition workflow or sales state.');
+            }
             if ((int) $event->version !== $expectedVersion) {
                 abort(409, 'Event version changed; reload before continuing.');
             }

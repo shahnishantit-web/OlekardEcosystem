@@ -23,7 +23,11 @@ final readonly class ComplimentaryAllocationApprovalEvidence
         public DateTimeImmutable $expiresAt,
         public ?DateTimeImmutable $revokedAt,
         public string $provenance,
-    ) {}
+    ) {
+        if ($approvedQuota < 1) {
+            throw new \InvalidArgumentException('Approved complimentary quota must be positive.');
+        }
+    }
 
     public function assertAppliesTo(
         string $organisationId,
@@ -36,10 +40,10 @@ final readonly class ComplimentaryAllocationApprovalEvidence
             || $this->requestedByActorId === '' || $this->approvedByActorId === ''
             || $this->requestedByActorId === $this->approvedByActorId
             || $this->organisationId !== $organisationId || $this->eventId !== $eventId
-            || $this->categoryId !== $categoryId || $this->approvedQuota < $requiredQuota
+            || $this->categoryId !== $categoryId || $this->approvedQuota > $requiredQuota
             || $requiredQuota < 1 || $this->validFrom >= $this->expiresAt
             || $at < $this->validFrom || $at >= $this->expiresAt || $this->revokedAt !== null) {
-            throw new HttpException(403, 'Complimentary allocation approval is invalid or unavailable.');
+            throw new HttpException(403, 'Complimentary allocation approval is invalid, unavailable, or exceeds the category quota.');
         }
     }
 

@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Tests\Feature\Modules\Events;
 
 use App\Modules\Events\Application\AdmissionCredentialVault;
+use App\Modules\Events\Application\ComplimentaryAllocationApprovalService;
 use App\Modules\Events\Application\EventAdmissionService;
 use App\Modules\Events\Application\EventAssignmentManagementService;
+use App\Modules\Events\Application\EventCancellationNotificationListener;
+use App\Modules\Events\Application\EventCancellationService;
 use App\Modules\Events\Application\EventCurrencyAssignmentService;
 use App\Modules\Events\Application\EventDraftService;
 use App\Modules\Events\Application\EventInventoryHoldService;
@@ -18,19 +21,24 @@ use App\Modules\Events\Application\FreeEventRegistrationService;
 use App\Modules\Events\Application\ScopedEventAuthorization;
 use App\Modules\Events\Domain\Contracts\BootstrapApprovalEvidenceVerifier;
 use App\Modules\Events\Domain\Contracts\ComplimentaryAllocationApprovalContract;
+use App\Modules\Events\Domain\Contracts\EventCancellationNotificationDispatcher;
 use App\Modules\Events\Domain\Contracts\EventDraftAuthorizer;
 use App\Modules\Events\Domain\Contracts\EventPricingContract;
 use App\Modules\Events\Domain\Contracts\EventPublicationReadiness;
 use App\Modules\Events\Domain\Contracts\EventsPaymentServiceActorProvider;
 use App\Modules\Events\Domain\Contracts\EventWorkflowAuthorizer;
 use App\Modules\Events\Domain\Contracts\InvitationRecipientVerifier;
+use App\Modules\Events\Domain\Contracts\OrganiserVerificationContract;
 use App\Modules\Events\Domain\Exceptions\EventPricingUnavailable;
 use App\Modules\Events\Domain\Permissions\EventPermissions;
 use App\Modules\Events\Domain\ValueObjects\ComplimentaryAllocationApprovalEvidence;
 use App\Modules\Events\Domain\ValueObjects\EventPricingBreakdown;
 use App\Modules\Events\Domain\ValueObjects\EventPricingRequest;
+use App\Modules\Events\Domain\ValueObjects\OrganiserVerificationEvidence;
+use App\Modules\Events\Infrastructure\DatabaseComplimentaryAllocationApproval;
 use App\Modules\Events\Infrastructure\DenyComplimentaryAllocationApproval;
 use App\Modules\Events\Infrastructure\DenyEventPublicationReadiness;
+use App\Modules\Events\Infrastructure\DenyOrganiserVerification;
 use App\Modules\Events\Infrastructure\PaidEventTicketPurposeResolver;
 use App\Modules\Events\Infrastructure\ScopedEventDraftAuthorizer;
 use App\Modules\Events\Infrastructure\ScopedEventWorkflowAuthorizer;
@@ -38,11 +46,14 @@ use App\Modules\Identity\Domain\Contracts\ActorStepUpVerifierContract;
 use App\Modules\Identity\Domain\Contracts\IdentityModuleContract;
 use App\Modules\Identity\Domain\Contracts\ServiceActor;
 use App\Modules\MultiCurrency\Domain\Contracts\CurrencyDefinitionGuard;
+use App\Modules\Notification\Domain\DTO\CreateNotificationCommand;
 use App\Modules\Payment\Domain\Contracts\PaymentInternalConfirmationContract;
 use App\Modules\Payment\Domain\Contracts\PaymentModuleContract;
 use App\Modules\Payment\Domain\Contracts\PaymentRefundAdmissionEligibilityContract;
 use App\Modules\Payment\Domain\ValueObjects\PaymentConfirmationEvidence;
 use App\Modules\Payment\Domain\ValueObjects\PaymentProviderOption;
+use App\Modules\Platform\Application\Services\OleKardFinancialTermsService;
+use App\Modules\Platform\Domain\Contracts\OleKardTermsAcceptanceQuery;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -97,6 +108,12 @@ final class EventDraftFoundationTest extends IntegrationTestCase
         $categoryId = (string) $event['categories'][0]->id;
         $hold = app(EventInventoryHoldService::class)->createHold($event['id'], $categoryId, $this->actor, 3,
             'order-hold-'.Uuid::uuid7(), (string) Uuid::uuid7());
+        $platformTerms = app(OleKardFinancialTermsService::class);
+        $termsQuery = \Mockery::mock(OleKardTermsAcceptanceQuery::class);
+        $termsQuery->shouldReceive('withPublicationGuard')->times(4)->andReturnUsing(
+            static fn (\Closure $operation): mixed => $platformTerms->withPublicationGuard($operation),
+        );
+        $this->app->instance(OleKardTermsAcceptanceQuery::class, $termsQuery);
         $quotes = app(EventOrderService::class);
         $quote = $quotes->createQuote($event['id'], $this->actor, [$hold['id']], 'order-quote-'.Uuid::uuid7());
         $orderKey = 'order-create-'.Uuid::uuid7();
@@ -446,7 +463,18 @@ final class EventDraftFoundationTest extends IntegrationTestCase
                     $request->currencyPrecision, 'synthetic-verified-seller', 'synthetic-fees-approved-v1',
                     'synthetic-tax-approved-v1', [],
                     [['code' => 'synthetic-tax', 'amount_minor' => 75, 'policy_version' => 'synthetic-tax-approved-v1']],
-                    now()->addMinutes(20)->toImmutable(), 'synthetic-fixture-only', true, true, false, 100, $schedule, $tax);
+                    now()->addMinutes(20)->toImmutable(), 'synthetic-fixture-only', true, true, false, 100, $schedule, $tax,
+                    [
+                        'acceptance_id' => 'synthetic-acceptance-v1',
+                        'version_id' => 'synthetic-terms-id-v1', 'accepted_version_id' => 'synthetic-terms-id-v1',
+                        'version' => 'synthetic-terms-v1', 'approval_reference' => 'synthetic-terms-approval',
+                        'approved_by_actor_id' => 'synthetic-finance-approver', 'approved_at' => now()->subDay()->toIso8601String(),
+                        'document_hash' => hash('sha256', 'synthetic terms'), 'accepted_document_hash' => hash('sha256', 'synthetic terms'),
+                        'acceptance_provenance' => 'synthetic-acceptance-audit',
+                        'organisation_id' => $request->organisationId, 'event_id' => $request->eventId,
+                        'accepted_by_actor_id' => 'synthetic-organiser', 'accepted_at' => now()->subMinute()->toIso8601String(),
+                        'effective_from' => now()->subDay()->toIso8601String(), 'effective_until' => now()->addYear()->toIso8601String(),
+                    ]);
             }
         });
     }
@@ -580,6 +608,89 @@ final class EventDraftFoundationTest extends IntegrationTestCase
         );
     }
 
+    public function test_complimentary_approval_records_scoped_authority_provenance_and_revocation(): void
+    {
+        $this->allowPermissions(['events.event.update', 'events.complimentary.approve']);
+        $event = $this->publishedInventoryEvent(3600);
+        $categoryId = (string) $event['categories'][0]->id;
+        DB::connection('community_services')->table('community_services.event_draft_categories')->where('id', $categoryId)
+            ->update(['allocation_type' => 'complimentary', 'price_minor' => 0, 'complimentary_quota' => 2, 'max_per_person' => 2]);
+        $this->grantScope($this->actor, $this->organisation, $event['id'], 'event', EventPermissions::UPDATE, $event['id']);
+        $this->grantScope(
+            $this->actor, $this->organisation, $this->organisation, 'organisation', EventPermissions::COMPLIMENTARY_APPROVE,
+        );
+        $approver = (string) Uuid::uuid7();
+        $approvalAssignmentId = $this->grantScope(
+            $approver, $this->organisation, $this->organisation, 'organisation', EventPermissions::COMPLIMENTARY_APPROVE,
+        );
+        $service = app(ComplimentaryAllocationApprovalService::class);
+        $request = $service->request(
+            $event['id'], $categoryId, $this->actor, 1, '2026-11-02T00:00:00Z', '2027-02-28T00:00:00Z',
+            1, 'p26-approval-request', (string) Uuid::uuid7(),
+        );
+
+        $this->assertSame('requested', $request['status']);
+        $this->assertHttp(403, fn () => $service->approve($event['id'], $request['approval_id'], $this->actor, 1, null));
+        $approved = $service->approve($event['id'], $request['approval_id'], $approver, 1, (string) Uuid::uuid7());
+        $this->assertSame($approvalAssignmentId, $approved['approval_assignment_id']);
+        $this->assertNotNull($approved['provenance_audit_id']);
+        $this->assertSame($this->actor, $approved['requested_by_actor_id']);
+        $this->assertSame($approver, $approved['approved_by_actor_id']);
+
+        $provider = new DatabaseComplimentaryAllocationApproval;
+        $this->app->instance(ComplimentaryAllocationApprovalContract::class, $provider);
+        $evidence = $provider->approvalEvidence($this->organisation, $event['id'], $categoryId);
+        $this->assertSame($request['approval_id'], $evidence->approvalId);
+        $this->assertSame(1, $evidence->version);
+        $this->assertNotSame($evidence->requestedByActorId, $evidence->approvedByActorId);
+        $this->assertNotSame('', $evidence->provenance);
+        $this->assertSame(1, $evidence->approvedQuota);
+        $this->assertSame($approver, $evidence->approvedByActorId);
+        $this->assertSame($this->organisation, $evidence->organisationId);
+        $this->assertSame($event['id'], $evidence->eventId);
+        $this->assertSame($categoryId, $evidence->categoryId);
+        $this->assertSame($this->actor, $evidence->requestedByActorId);
+        $this->assertNull($evidence->revokedAt);
+        $this->assertLessThan($evidence->expiresAt, $evidence->validFrom);
+        $this->assertLessThanOrEqual(new \DateTimeImmutable('now'), $evidence->validFrom);
+        $this->assertGreaterThan(new \DateTimeImmutable('now'), $evidence->expiresAt);
+        $this->assertSame(2, (int) DB::connection('community_services')->table('community_services.event_draft_categories')
+            ->where('id', $categoryId)->value('complimentary_quota'));
+        $this->allowInvitationRecipientFixture($this->actor);
+        $firstInvitation = app(FreeEventRegistrationService::class)->createInvitation(
+            $event['id'], $categoryId, $this->actor, '2027-02-28T09:00:00+02:00', 1,
+            $this->actor, 'p26-revoked-approval-invite-one', (string) Uuid::uuid7(),
+        );
+        $secondInvitation = app(FreeEventRegistrationService::class)->createInvitation(
+            $event['id'], $categoryId, $this->actor, '2027-02-28T09:00:00+02:00', 1,
+            $this->actor, 'p26-revoked-approval-invite-two', (string) Uuid::uuid7(),
+        );
+        $issued = app(FreeEventRegistrationService::class)->register(
+            $event['id'], $categoryId, $this->actor, $firstInvitation['token'], 'p26-revoked-approval-registration', null,
+        );
+        $revoked = $service->revoke($event['id'], $request['approval_id'], $approver, 'test_revocation', (string) Uuid::uuid7());
+        $this->assertSame($approvalAssignmentId, $revoked['revoked_by_assignment_id']);
+        $this->assertSame('revoked', $revoked['status']);
+        $this->assertHttp(503, fn () => $provider->approvalEvidence($this->organisation, $event['id'], $categoryId));
+        $this->assertSame('valid', DB::connection('community_services')->table('community_services.event_tickets')
+            ->where('id', $issued['ticket_id'])->value('status'), 'Approval revocation preserves committed registrations.');
+        $this->assertSame(2, DB::connection('community_services')->table('community_services.event_invitations')
+            ->where('event_id', $event['id'])->where('status', 'revoked')->count());
+        $this->assertSame(1, DB::connection('community_services')->table('community_services.event_invitations')
+            ->where('id', $firstInvitation['invitation_id'])->value('uses_count'));
+        $this->assertSame(0, DB::connection('community_services')->table('community_services.event_invitations')
+            ->where('id', $secondInvitation['invitation_id'])->value('uses_count'));
+
+        $replacementRequest = $service->request(
+            $event['id'], $categoryId, $this->actor, 1, '2026-11-02T00:00:00Z', '2027-02-28T00:00:00Z',
+            1, 'p26-approval-request-renewed', (string) Uuid::uuid7(),
+        );
+        $service->approve($event['id'], $replacementRequest['approval_id'], $approver, 1, (string) Uuid::uuid7());
+        $this->assertHttp(409, fn () => app(FreeEventRegistrationService::class)->register(
+            $event['id'], $categoryId, $this->actor, $secondInvitation['token'], 'p26-redeem-revoked-approval-invite', null,
+        ));
+    }
+
     public function test_free_invitation_registration_is_atomic_idempotent_and_creates_no_financial_effect(): void
     {
         $event = $this->publishedInventoryEvent(3600);
@@ -589,7 +700,7 @@ final class EventDraftFoundationTest extends IntegrationTestCase
         $this->allowPermissions(['events.event.update']);
         $this->grantScope($this->actor, $this->organisation, $event['id'], 'event', EventPermissions::UPDATE, $event['id']);
         $this->allowInvitationRecipientFixture($this->actor);
-        $this->allowComplimentaryApprovalFixture();
+        $this->allowComplimentaryApprovalFixture(1);
         $paymentIntentCount = DB::connection('payment')->table('payment.payment_intents')
             ->where('organisation_id', $this->organisation)->count();
         $financialCountsBefore = $this->financialEffectCounts();
@@ -600,6 +711,10 @@ final class EventDraftFoundationTest extends IntegrationTestCase
         $invitationSnapshot = json_decode((string) DB::connection('community_services')
             ->table('community_services.event_invitations')->where('id', $invitation['invitation_id'])->value('approval_snapshot'), true, 512, JSON_THROW_ON_ERROR);
         $this->assertSame('test-approval-'.$categoryId, $invitationSnapshot['approval_id']);
+        $secondInvitation = app(FreeEventRegistrationService::class)->createInvitation(
+            $event['id'], $categoryId, $this->actor, '2027-02-28T09:00:00+02:00', 1,
+            $this->actor, 'p26-invite-issue-key-second', (string) Uuid::uuid7(),
+        );
 
         $registrations = app(FreeEventRegistrationService::class);
         $this->assertHttp(409, fn () => $registrations->register(
@@ -617,6 +732,13 @@ final class EventDraftFoundationTest extends IntegrationTestCase
             ->where('id', $invitation['invitation_id'])->value('uses_count'));
         $this->assertSame(1, DB::connection('community_services')->table('community_services.event_tickets')
             ->where('free_registration_id', $first['registration_id'])->count());
+        $this->assertHttp(409, fn () => $registrations->register(
+            $event['id'], $categoryId, $this->actor, $secondInvitation['token'], 'p26-free-reg-approved-quota', null,
+        ));
+        $this->assertSame(0, DB::connection('community_services')->table('community_services.event_invitations')
+            ->where('id', $secondInvitation['invitation_id'])->value('uses_count'));
+        $this->assertSame(1, DB::connection('community_services')->table('community_services.event_free_registrations')
+            ->where('event_id', $event['id'])->where('category_id', $categoryId)->count());
         $registrations->revokeInvitation($invitation['invitation_id'], $this->actor, (string) Uuid::uuid7());
         $this->assertSame('valid', DB::connection('community_services')->table('community_services.event_tickets')
             ->where('id', $first['ticket_id'])->value('status'), 'Revoking an invitation does not revoke an issued entitlement.');
@@ -759,7 +881,7 @@ final class EventDraftFoundationTest extends IntegrationTestCase
 
     public function test_invalid_complimentary_approval_evidence_denies_registration_without_side_effects(): void
     {
-        foreach (['wrong_scope', 'insufficient_quota', 'same_actors', 'expired', 'revoked'] as $case) {
+        foreach (['wrong_scope', 'exceeds_category_quota', 'same_actors', 'expired', 'revoked'] as $case) {
             $event = $this->publishedInventoryEvent(3600);
             $categoryId = (string) $event['categories'][0]->id;
             DB::connection('community_services')->table('community_services.event_draft_categories')->where('id', $categoryId)
@@ -767,7 +889,7 @@ final class EventDraftFoundationTest extends IntegrationTestCase
             $evidence = new ComplimentaryAllocationApprovalEvidence(
                 approvalId: 'test-invalid-'.$case, version: 1,
                 organisationId: $case === 'wrong_scope' ? (string) Uuid::uuid7() : $this->organisation,
-                eventId: $event['id'], categoryId: $categoryId, approvedQuota: $case === 'insufficient_quota' ? 1 : 2,
+                eventId: $event['id'], categoryId: $categoryId, approvedQuota: $case === 'exceeds_category_quota' ? 3 : 2,
                 requestedByActorId: 'test-requester', approvedByActorId: $case === 'same_actors' ? 'test-requester' : 'test-approver',
                 validFrom: new \DateTimeImmutable($case === 'expired' ? '-2 days' : '-1 minute'),
                 expiresAt: new \DateTimeImmutable($case === 'expired' ? '-1 day' : '+1 day'),
@@ -1483,6 +1605,154 @@ final class EventDraftFoundationTest extends IntegrationTestCase
         $this->assertSame(1, (int) $published['published_version']);
     }
 
+    public function test_free_only_publication_fails_closed_without_authoritative_organiser_evidence(): void
+    {
+        $this->allowTestAuthorizer();
+        $this->allowTestWorkflowContracts();
+        $input = $this->input();
+        $input['categories'] = [[
+            'name' => 'Free admission', 'capacity' => 10, 'allocation_type' => 'free',
+            'price_minor' => 0, 'max_per_person' => 1,
+        ]];
+        $draft = app(EventDraftService::class)->create($this->organisation, $this->actor, $input);
+        $reviewer = $this->addMember();
+        $publisher = $this->addMember();
+        $this->app->instance(OrganiserVerificationContract::class, new DenyOrganiserVerification);
+        $workflow = app(EventWorkflowService::class);
+        $workflow->submitForReview($draft['id'], $this->actor, 1);
+        $workflow->approvePublication($draft['id'], $reviewer, 1);
+
+        $this->assertValidationError(fn () => $workflow->publish($draft['id'], $publisher, 1), 'organiser_verification');
+        $current = DB::connection('community_services')->table('community_services.event_drafts')->where('id', $draft['id'])->first();
+        $this->assertSame('approved', $current->workflow_state);
+        $this->assertNull($current->published_version);
+    }
+
+    public function test_effective_cancellation_is_separate_reviewed_idempotent_and_preserves_attendance(): void
+    {
+        $fixture = $this->issueAdmissionTicket();
+        $reviewer = $this->addMember();
+        $this->allowPermissions([
+            EventPermissions::GATE_VALIDATE, EventPermissions::CANCEL_REQUEST, EventPermissions::CANCEL_APPROVE,
+        ]);
+        $this->grantScope($this->actor, $this->organisation, $fixture['gate_id'], 'gate', EventPermissions::GATE_VALIDATE, $fixture['event_id']);
+        $this->grantScope($this->actor, $this->organisation, $fixture['event_id'], 'event', EventPermissions::CANCEL_REQUEST);
+        $this->grantScope($this->actor, $this->organisation, $fixture['event_id'], 'event', EventPermissions::CANCEL_APPROVE);
+        $this->grantScope($reviewer, $this->organisation, $fixture['event_id'], 'event', EventPermissions::CANCEL_APPROVE);
+        $db = DB::connection('community_services');
+
+        $service = app(EventCancellationService::class);
+        $key = 'cancel-'.Uuid::uuid7();
+        $request = $service->request($fixture['event_id'], $this->actor, 1, 'Test cancellation', $key, (string) Uuid::uuid7());
+        $replay = $service->request($fixture['event_id'], $this->actor, 1, 'Test cancellation', $key, (string) Uuid::uuid7());
+        $this->assertSame($request['id'], $replay['id']);
+        $this->assertSame('pending', $request['status']);
+        $this->assertSame('active', $db->table('community_services.event_drafts')->where('id', $fixture['event_id'])->value('lifecycle_state'));
+        $this->assertSame('valid', $db->table('community_services.event_tickets')->where('id', $fixture['ticket_id'])->value('status'));
+        $pendingAdmission = app(EventAdmissionService::class)->validateOnline(
+            $fixture['event_id'], $fixture['gate_id'], $this->actor, $fixture['credential'], (string) Uuid::uuid7(),
+        );
+        $this->assertSame(['status' => 'admitted', 'category' => 'A'], $pendingAdmission,
+            'A pending request must not pause a first admission.');
+        $this->assertHttp(403, fn () => $service->review(
+            $fixture['event_id'], $request['id'], $this->actor, 1, true, null, 'same-person', (string) Uuid::uuid7(),
+        ));
+
+        $effective = $service->review(
+            $fixture['event_id'], $request['id'], $reviewer, 1, true, null, 'approve-'.Uuid::uuid7(), (string) Uuid::uuid7(),
+        );
+        $this->assertSame('effective', $effective['status']);
+        $this->assertSame('cancelled', $db->table('community_services.event_drafts')->where('id', $fixture['event_id'])->value('lifecycle_state'));
+        $this->assertSame('paused', $db->table('community_services.event_drafts')->where('id', $fixture['event_id'])->value('sales_state'));
+        $this->assertSame('revoked', $db->table('community_services.event_tickets')->where('id', $fixture['ticket_id'])->value('status'));
+        $this->assertSame(1, $db->table('community_services.event_attendance')->where('ticket_id', $fixture['ticket_id'])->count());
+        $this->assertSame(1, $db->table('community_services.event_attendance_audit')->where('ticket_id', $fixture['ticket_id'])->count());
+        $this->assertSame('pending_reconciliation', $effective['financial_recovery_state']);
+        $this->assertSame(1, $db->table('community_services.event_cancellation_financial_cases')
+            ->where('cancellation_request_id', $request['id'])->count());
+        $cancelledTicket = app(EventAdmissionService::class)->ticketForPurchaser($fixture['ticket_id'], $this->actor);
+        $this->assertSame('cancelled', $cancelledTicket['status']);
+        $this->assertSame('', $cancelledTicket['credential']);
+        $this->assertSame(1, $db->table('platform.outbox_events')
+            ->where('event_name', 'Events.Cancellation.Effective')->count());
+        $sourceEventId = Uuid::uuid5(Uuid::NAMESPACE_URL, 'event-cancellation:'.$request['id'].':'.$this->actor)->toString();
+        $notifications = \Mockery::mock(EventCancellationNotificationDispatcher::class);
+        $notifications->shouldReceive('dispatch')->twice()->with(\Mockery::on(
+            fn (CreateNotificationCommand $command): bool => $command->sourceEventId === $sourceEventId
+                && $command->sourceEventType === 'Events.Cancellation.Effective'
+                && $command->notificationType === 'events.event_cancelled'
+                && $command->recipientId === $this->actor
+                && $command->correlationId === $request['id'],
+        ));
+        $this->app->instance(EventCancellationNotificationDispatcher::class, $notifications);
+        $listener = app(EventCancellationNotificationListener::class);
+        $eventPayload = [
+            'event_id' => $fixture['event_id'], 'cancellation_request_id' => $request['id'],
+            'correlation_id' => $request['id'],
+        ];
+        $listener->handle($eventPayload);
+        $listener->handle($eventPayload);
+        $this->assertSame(['status' => 'denied', 'category' => 'A'], app(EventAdmissionService::class)->validateOnline(
+            $fixture['event_id'], $fixture['gate_id'], $this->actor, $fixture['credential'], (string) Uuid::uuid7(),
+        ));
+        $this->assertSame(1, $db->table('community_services.event_attendance')->where('ticket_id', $fixture['ticket_id'])->count());
+        $this->assertSame(0, DB::connection('notification')->table('notification.notifications')->count());
+        $this->assertHttp(409, fn () => app(EventWorkflowService::class)->resumeSales($fixture['event_id'], $reviewer, 1));
+    }
+
+    public function test_free_event_cancellation_preserves_registration_and_creates_no_financial_records(): void
+    {
+        $this->allowTestAuthorizer();
+        $input = $this->input();
+        $input['categories'] = [[
+            'name' => 'Free admission', 'capacity' => 5, 'allocation_type' => 'free',
+            'price_minor' => 0, 'max_per_person' => 1,
+        ]];
+        $event = app(EventDraftService::class)->create($this->organisation, $this->actor, $input);
+        $db = DB::connection('community_services');
+        $categoryId = (string) $db->table('community_services.event_draft_categories')
+            ->where('event_id', $event['id'])->value('id');
+        // Development-only published fixture; this bypasses no production route or gate.
+        $db->table('community_services.event_drafts')->where('id', $event['id'])->update([
+            'workflow_state' => 'published', 'published_version' => 1, 'sales_state' => 'active',
+        ]);
+        $this->allowPermissions([EventPermissions::CANCEL_REQUEST, EventPermissions::CANCEL_APPROVE]);
+        $reviewer = $this->addMember();
+        $this->grantScope($this->actor, $this->organisation, $event['id'], 'event', EventPermissions::CANCEL_REQUEST);
+        $this->grantScope($this->actor, $this->organisation, $event['id'], 'event', EventPermissions::CANCEL_APPROVE);
+        $this->grantScope($reviewer, $this->organisation, $event['id'], 'event', EventPermissions::CANCEL_APPROVE);
+        $before = $this->financialEffectCounts();
+
+        $cancellations = app(EventCancellationService::class);
+        $request = $cancellations->request(
+            $event['id'], $this->actor, 1, 'Free event cancellation test', 'free-cancel-'.Uuid::uuid7(), (string) Uuid::uuid7(),
+        );
+        $registrations = app(FreeEventRegistrationService::class);
+        $registration = $registrations->register(
+            $event['id'], $categoryId, $this->actor, null, 'free-register-'.Uuid::uuid7(), (string) Uuid::uuid7(),
+        );
+        $this->assertSame('pending', $request['status']);
+        $this->assertSame('free', $registration['source']);
+        $this->assertSame($registration['registration_id'], $db->table('community_services.event_tickets')
+            ->where('id', $registration['ticket_id'])->value('free_registration_id'));
+        $this->assertSame('active', $db->table('community_services.event_drafts')->where('id', $event['id'])->value('lifecycle_state'));
+
+        $effective = $cancellations->review(
+            $event['id'], $request['id'], $reviewer, 1, true, null, 'free-approve-'.Uuid::uuid7(), (string) Uuid::uuid7(),
+        );
+        $this->assertSame('effective', $effective['status']);
+        $this->assertSame(1, $db->table('community_services.event_free_registrations')
+            ->where('event_id', $event['id'])->where('status', 'registered')->count());
+        $this->assertSame(1, $db->table('community_services.event_tickets')
+            ->where('free_registration_id', $registration['registration_id'])->where('status', 'revoked')->count());
+        $this->assertSame(0, $db->table('community_services.event_cancellation_financial_cases')
+            ->where('cancellation_request_id', $request['id'])->count());
+        $this->assertSame($before, $this->financialEffectCounts());
+        $this->assertHttp(409, fn () => $registrations->register(
+            $event['id'], $categoryId, (string) Uuid::uuid7(), null, 'after-cancel-'.Uuid::uuid7(), (string) Uuid::uuid7(),
+        ));
+    }
+
     public function test_paid_publication_still_requires_finance_price_approval(): void
     {
         $this->allowTestAuthorizer();
@@ -2086,6 +2356,11 @@ final class EventDraftFoundationTest extends IntegrationTestCase
         ], $report);
         $this->assertStringNotContainsString($fixture['ticket_id'], json_encode($report, JSON_THROW_ON_ERROR));
         $this->assertStringNotContainsString($this->actor, json_encode($report, JSON_THROW_ON_ERROR));
+        DB::connection('community_services')->table('community_services.event_tickets')
+            ->where('id', $fixture['ticket_id'])->update(['status' => 'revoked']);
+        $revoked = app(EventAdmissionService::class)->ticketForPurchaser($fixture['ticket_id'], $this->actor);
+        $this->assertSame('revoked', $revoked['status']);
+        $this->assertSame('', $revoked['credential']);
     }
 
     public function test_ticket_credential_replacement_requires_identity_step_up_and_invalidates_old_secret(): void
@@ -2262,13 +2537,15 @@ final class EventDraftFoundationTest extends IntegrationTestCase
         ];
     }
 
-    private function allowComplimentaryApprovalFixture(): void
+    private function allowComplimentaryApprovalFixture(?int $approvedQuota = null): void
     {
-        $this->app->instance(ComplimentaryAllocationApprovalContract::class, new class implements ComplimentaryAllocationApprovalContract
+        $this->app->instance(ComplimentaryAllocationApprovalContract::class, new class($approvedQuota) implements ComplimentaryAllocationApprovalContract
         {
+            public function __construct(private readonly ?int $approvedQuota) {}
+
             public function approvalEvidence(string $organisationId, string $eventId, string $categoryId): ComplimentaryAllocationApprovalEvidence
             {
-                $quota = (int) DB::connection('community_services')->table('community_services.event_draft_categories')
+                $quota = $this->approvedQuota ?? (int) DB::connection('community_services')->table('community_services.event_draft_categories')
                     ->where('id', $categoryId)->where('event_id', $eventId)->value('complimentary_quota');
 
                 return new ComplimentaryAllocationApprovalEvidence(
@@ -2330,6 +2607,23 @@ final class EventDraftFoundationTest extends IntegrationTestCase
                 if (($event['currency_code'] ?? null) !== 'BWP' || $categories === []) {
                     throw ValidationException::withMessages(['currency_code' => 'Test event must have a supported currency.']);
                 }
+            }
+        });
+        $this->app->instance(OrganiserVerificationContract::class, new class implements OrganiserVerificationContract
+        {
+            public function evidenceForEventPublication(string $organisationId, string $eventId): OrganiserVerificationEvidence
+            {
+                return new OrganiserVerificationEvidence(
+                    organisationId: $organisationId,
+                    eventId: $eventId,
+                    verificationId: 'test-organiser-verification',
+                    version: 1,
+                    organisationIdentityEvidenceReference: 'fixture://organisation-identity',
+                    representativeAuthorityEvidenceReference: 'fixture://authorised-representative',
+                    eventOrganisingAuthorityEvidenceReference: 'fixture://event-organising-authority',
+                    verifiedAt: new \DateTimeImmutable('-1 minute'),
+                    validUntil: new \DateTimeImmutable('+1 day'),
+                );
             }
         });
     }

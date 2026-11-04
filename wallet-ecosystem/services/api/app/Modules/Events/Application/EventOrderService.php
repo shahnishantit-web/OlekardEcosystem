@@ -14,6 +14,7 @@ use App\Modules\Payment\Domain\PaymentContextIdentifiers;
 use App\Modules\Payment\Domain\ValueObjects\OptionsQuery;
 use App\Modules\Payment\Domain\ValueObjects\PaymentIntentRequest;
 use App\Modules\Platform\Domain\Contracts\ConfigurationServiceInterface;
+use App\Modules\Platform\Domain\Contracts\OleKardTermsAcceptanceQuery;
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -28,6 +29,7 @@ final class EventOrderService
         private readonly AdmissionCredentialVault $credentials,
         private readonly PaymentModuleContract $payments,
         private readonly ConfigurationServiceInterface $configuration,
+        private readonly OleKardTermsAcceptanceQuery $termsAcceptance,
     ) {}
 
     private function db(): Connection
@@ -48,7 +50,7 @@ final class EventOrderService
         sort($holdIds);
         $requestHash = hash('sha256', json_encode([$eventId, $purchaserId, $holdIds], JSON_THROW_ON_ERROR));
 
-        return $this->db()->transaction(function () use ($eventId, $purchaserId, $holdIds, $idempotencyKey, $requestHash): array {
+        return $this->termsAcceptance->withPublicationGuard(fn (): array => $this->db()->transaction(function () use ($eventId, $purchaserId, $holdIds, $idempotencyKey, $requestHash): array {
             $event = $this->lockedCurrentEvent($eventId);
             $existing = $this->db()->table('community_services.event_order_quotes')
                 ->where('event_id', $eventId)->where('purchaser_actor_id', $purchaserId)->where('idempotency_key', $idempotencyKey)
@@ -90,7 +92,7 @@ final class EventOrderService
             $this->db()->table('community_services.event_order_quotes')->insert($row);
 
             return $this->quoteShape((object) $row);
-        }, 3);
+        }, 3));
     }
 
     /** Creating an order represents explicit confirmation of the displayed quote. */
@@ -101,7 +103,7 @@ final class EventOrderService
         }
         $requestHash = hash('sha256', json_encode([$eventId, $purchaserId, $quoteId], JSON_THROW_ON_ERROR));
 
-        return $this->db()->transaction(function () use ($eventId, $purchaserId, $quoteId, $idempotencyKey, $requestHash): array {
+        return $this->termsAcceptance->withPublicationGuard(fn (): array => $this->db()->transaction(function () use ($eventId, $purchaserId, $quoteId, $idempotencyKey, $requestHash): array {
             $event = $this->lockedCurrentEvent($eventId);
             $existing = $this->db()->table('community_services.event_orders')->where('event_id', $eventId)
                 ->where('purchaser_actor_id', $purchaserId)->where('idempotency_key', $idempotencyKey)->lockForUpdate()->first();
@@ -166,50 +168,49 @@ final class EventOrderService
             ]);
 
             return $this->orderShape((object) $order);
-        }, 3);
+        }, 3));
     }
 
     /** Payment is created only for a durable, complete order; retries use one stable key. */
     public function createPaymentIntent(string $orderId, string $purchaserId, string $correlationId): array
     {
-        $order = $this->db()->table('community_services.event_orders')->where('id', $orderId)->first();
-        abort_if($order === null || $order->purchaser_actor_id !== $purchaserId, 404, 'Order was not found.');
-        abort_unless($order->order_state === 'awaiting_payment' && $order->currency_code !== '', 409, 'Order is not payable.');
-        abort_unless($this->holdsCurrentForOrder($orderId), 409, 'Order inventory hold expired; payment initiation is blocked.');
-        $event = $this->db()->table('community_services.event_drafts')->where('id', $order->event_id)->first();
-        abort_unless($event !== null && $event->organisation_id === $order->organisation_id
-            && ($event->event_format ?? null) === 'physical' && $event->venue_country_code !== null, 409,
-            'An approved physical venue country is required for checkout eligibility.');
-        $options = $this->payments->getAvailableOptions(new OptionsQuery(
-            purposeType: PaymentContextIdentifiers::PURPOSE_PAID_EVENT_TICKET,
-            purposeReference: $orderId, currencyCode: (string) $order->currency_code,
-            amountMinor: (int) $order->total_minor, organisationId: (string) $order->organisation_id,
-            actorId: $purchaserId, countryCode: (string) $event->venue_country_code,
-            moduleKey: PaymentContextIdentifiers::MODULE_EVENTS,
-        ));
-        abort_if($options === [], 409, 'No payment method is eligible for this customer and event order.');
-        $result = $this->payments->createPaymentIntent(new PaymentIntentRequest(
-            purposeType: 'paid_event_ticket', purposeReference: $orderId,
-            organisationId: (string) $order->organisation_id, payerActorId: $purchaserId,
-            currencyCode: (string) $order->currency_code, idempotencyKey: 'event-order:'.$orderId,
-            correlationId: $correlationId, metadata: ['event_order_id' => $orderId],
-        ));
-        abort_unless((int) $result['amount_minor'] === (int) $order->total_minor
-            && $result['currency_code'] === $order->currency_code, 409, 'Payment obligation does not match the immutable order.');
-        $this->db()->transaction(function () use ($orderId, $result): void {
-            $current = $this->db()->table('community_services.event_orders')->where('id', $orderId)->lockForUpdate()->first();
-            if ($current === null) {
-                throw new \DomainException('Event order disappeared before payment intent persistence.');
-            }
-            if ($current->payment_intent_id !== null && $current->payment_intent_id !== $result['payment_intent_id']) {
+        return $this->termsAcceptance->withPublicationGuard(fn (): array => $this->db()->transaction(function () use ($orderId, $purchaserId, $correlationId): array {
+            $orderReference = $this->db()->table('community_services.event_orders')->where('id', $orderId)->first(['event_id']);
+            abort_if($orderReference === null, 404, 'Order was not found.');
+            $event = $this->lockedCurrentEvent((string) $orderReference->event_id);
+            $order = $this->db()->table('community_services.event_orders')->where('id', $orderId)->lockForUpdate()->first();
+            abort_if($order === null || $order->purchaser_actor_id !== $purchaserId, 404, 'Order was not found.');
+            abort_unless($event->organisation_id === $order->organisation_id
+                && ($event->event_format ?? null) === 'physical' && $event->venue_country_code !== null, 409,
+                'An approved physical venue country is required for checkout eligibility.');
+            abort_unless($order->order_state === 'awaiting_payment' && $order->currency_code !== '', 409, 'Order is not payable.');
+            abort_unless($this->holdsCurrentForOrder($orderId), 409, 'Order inventory hold expired; payment initiation is blocked.');
+            $this->assertOrderTermsStillCurrent($order);
+            $options = $this->payments->getAvailableOptions(new OptionsQuery(
+                purposeType: PaymentContextIdentifiers::PURPOSE_PAID_EVENT_TICKET,
+                purposeReference: $orderId, currencyCode: (string) $order->currency_code,
+                amountMinor: (int) $order->total_minor, organisationId: (string) $order->organisation_id,
+                actorId: $purchaserId, countryCode: (string) $event->venue_country_code,
+                moduleKey: PaymentContextIdentifiers::MODULE_EVENTS,
+            ));
+            abort_if($options === [], 409, 'No payment method is eligible for this customer and event order.');
+            $result = $this->payments->createPaymentIntent(new PaymentIntentRequest(
+                purposeType: 'paid_event_ticket', purposeReference: $orderId,
+                organisationId: (string) $order->organisation_id, payerActorId: $purchaserId,
+                currencyCode: (string) $order->currency_code, idempotencyKey: 'event-order:'.$orderId,
+                correlationId: $correlationId, metadata: ['event_order_id' => $orderId],
+            ));
+            abort_unless((int) $result['amount_minor'] === (int) $order->total_minor
+                && $result['currency_code'] === $order->currency_code, 409, 'Payment obligation does not match the immutable order.');
+            if ($order->payment_intent_id !== null && $order->payment_intent_id !== $result['payment_intent_id']) {
                 throw new \DomainException('Payment intent changed for an immutable event order.');
             }
             $this->db()->table('community_services.event_orders')->where('id', $orderId)->update([
                 'payment_intent_id' => $result['payment_intent_id'], 'payment_state' => 'intent_created', 'updated_at' => now(),
             ]);
-        }, 3);
 
-        return $result;
+            return $result;
+        }, 3));
     }
 
     /** @return array<string,mixed> */
@@ -269,6 +270,33 @@ final class EventOrderService
         abort_unless($price->currencyCode === $request->currencyCode
             && $price->currencyPrecision === $request->currencyPrecision, 409, 'Pricing currency snapshot does not match the event assignment.');
         abort_unless($price->policyExpiresAt > now(), 409, 'Pricing policy evidence has expired.');
+        if (! $price->testOnly) {
+            $terms = $price->oleKardTermsAcceptanceSnapshot;
+            abort_unless($terms !== null
+                && ($terms['organisation_id'] ?? null) === $request->organisationId
+                && ($terms['event_id'] ?? null) === $request->eventId, 409,
+                'Current OleKard terms acceptance must match the authoritative organisation and event.');
+            try {
+                $termsStart = new \DateTimeImmutable((string) $terms['effective_from']);
+                $termsEnd = new \DateTimeImmutable((string) $terms['effective_until']);
+                $acceptedAt = new \DateTimeImmutable((string) $terms['accepted_at']);
+            } catch (\Throwable) {
+                abort(409, 'OleKard terms effective dates and acceptance time are invalid.');
+            }
+            abort_unless($termsStart <= now()->toImmutable() && $termsEnd > now()->toImmutable()
+                && $acceptedAt <= now()->toImmutable(), 409,
+                'Current OleKard terms acceptance is outside its effective period.');
+            $authoritative = $this->termsAcceptance->currentAcceptanceSnapshot($request->organisationId, $request->eventId);
+            abort_unless($authoritative !== null, 409, 'No current, authoritative organiser acceptance of OleKard terms is available.');
+            foreach (['acceptance_id', 'version_id', 'accepted_version_id', 'version', 'approval_reference',
+                'approved_by_actor_id', 'approved_at', 'document_hash', 'accepted_document_hash',
+                'acceptance_provenance', 'organisation_id', 'event_id', 'accepted_by_actor_id',
+                'accepted_at', 'effective_from', 'effective_until'] as $field) {
+                abort_unless(isset($terms[$field], $authoritative[$field])
+                    && hash_equals((string) $authoritative[$field], (string) $terms[$field]), 409,
+                    'Pricing terms snapshot does not match the authoritative current acceptance.');
+            }
+        }
 
         return $price;
     }
@@ -303,11 +331,29 @@ final class EventOrderService
             'Pricing policy is outside its approved effective period.');
     }
 
+    private function assertOrderTermsStillCurrent(object $order): void
+    {
+        $pricing = json_decode((string) $order->pricing_snapshot, true, 512, JSON_THROW_ON_ERROR);
+        if (($pricing['test_only'] ?? false) === true) {
+            abort_unless(app()->environment('testing'), 409, 'Test-only pricing cannot initiate a payment outside tests.');
+
+            return;
+        }
+        $terms = $pricing['olekard_terms_acceptance_snapshot'] ?? null;
+        $current = $this->termsAcceptance->currentAcceptanceSnapshot((string) $order->organisation_id, (string) $order->event_id);
+        abort_unless(is_array($terms) && $current !== null
+            && ($terms['version_id'] ?? null) === ($current['version_id'] ?? null)
+            && isset($terms['document_hash'], $current['document_hash'])
+            && hash_equals((string) $current['document_hash'], (string) $terms['document_hash']), 409,
+            'Current OleKard terms acceptance changed; no new payment may be initiated for this order.');
+    }
+
     private function lockedCurrentEvent(string $eventId): object
     {
         $event = $this->db()->table('community_services.event_drafts')->where('id', $eventId)->lockForUpdate()->first();
         abort_if($event === null, 404, 'Event was not found.');
         abort_unless($event->workflow_state === 'published' && $event->sales_state === 'active'
+            && ($event->lifecycle_state ?? 'active') === 'active'
             && (int) $event->published_version === (int) $event->version, 409, 'Event is not in its current approved sales state.');
         abort_unless(($event->event_format ?? 'physical') === 'physical' && preg_match('/^[A-Z]{2}$/D', (string) $event->venue_country_code) === 1,
             409, 'Paid event orders require one approved physical venue country.');

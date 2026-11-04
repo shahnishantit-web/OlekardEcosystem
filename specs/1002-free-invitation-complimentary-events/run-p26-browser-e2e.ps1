@@ -5,7 +5,8 @@ param(
     [switch]$NativeCustomerLogin,
     [switch]$NativeEventJourney,
     [switch]$NativeOnly,
-    [switch]$EventsFoundationRegression
+    [switch]$EventsFoundationRegression,
+    [string]$EventsTestFilter
 )
 
 $ErrorActionPreference = 'Stop'
@@ -84,6 +85,7 @@ function Invoke-IsolatedArtisan([string[]]$ArtisanArgs, [string]$PrivatePem, [st
         AUDIT_HMAC_KEY='p26-e2e-only-audit-key-not-production'; DB_CONNECTION='platform'
         IDENTITY_IP_HMAC_SECRET=$identityIpSecret
         DB_HOST=$postgres; DB_PORT='5432'; DB_DATABASE=$databaseName; DB_USERNAME='wallet_app'; DB_PASSWORD=$DbPassword
+        P26_DISPOSABLE_DATABASE=$databaseName
         CACHE_STORE='array'; QUEUE_CONNECTION='sync'; SESSION_DRIVER='array'; REDIS_CLIENT='predis'
         REDIS_HOST=$redis; REDIS_PORT='6379'; REDIS_PREFIX=$redisPrefix; REDIS_IDENTITY_DB='4'
         CORS_ALLOWED_ORIGINS="http://127.0.0.1:$adminPort,http://127.0.0.1:$customerPort,http://127.0.0.1:$agentPort"
@@ -96,13 +98,18 @@ function Invoke-IsolatedArtisan([string[]]$ArtisanArgs, [string]$PrivatePem, [st
         P26_E2E_CUSTOMER_PIN=$Pin; P26_E2E_OPERATOR_PIN=$Pin
     }
     foreach ($key in $envValues.Keys) { $args += @('--env', "$key=$($envValues[$key])") }
-    $args += @($apiImage, 'php', 'artisan') + $ArtisanArgs
+    if ($ArtisanArgs[0] -eq '__run_php') {
+        $args += @($apiImage, 'php') + $ArtisanArgs[1..($ArtisanArgs.Length - 1)]
+    } else {
+        $args += @($apiImage, 'php', 'artisan') + $ArtisanArgs
+    }
     $previousErrorAction = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
     try { $output = & docker @args 2>&1 } finally { $ErrorActionPreference = $previousErrorAction }
     if ($LASTEXITCODE -ne 0) {
         $safeFailure = (@($output | Select-Object -Last 30) -join "`n") -replace 'password=[^\s]+', 'password=[redacted]' -replace '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}', '[email]' -replace '\+?[0-9]{8,15}', '[phone]' -replace '\b[A-Za-z0-9_-]{40,}\b', '[opaque-secret]'
-        throw "Isolated API command failed: php artisan $($ArtisanArgs -join ' '): $safeFailure"
+        $commandLabel = if ($ArtisanArgs[0] -eq '__run_php') { 'php ' + ($ArtisanArgs[1..($ArtisanArgs.Length - 1)] -join ' ') } else { 'php artisan ' + ($ArtisanArgs -join ' ') }
+        throw "Isolated API command failed: $commandLabel`: $safeFailure"
     }
     return $output
 }
@@ -234,8 +241,18 @@ try {
     Write-P26TestSummary 'Identity MFA' $mfaTestOutput
 
     if ($EventsFoundationRegression) {
-        $eventsTestOutput = Invoke-IsolatedArtisan @('test', '--no-coverage', '--colors=never', '--display-warnings', 'tests/Feature/Modules/Events/EventDraftFoundationTest.php') $privatePem $appKey $dbPassword $adminPassword $pin $totpSecret
+        $eventsTestArgs = @('test', '--no-coverage', '--colors=never', '--display-warnings')
+        if (-not [string]::IsNullOrWhiteSpace($EventsTestFilter)) { $eventsTestArgs += @('--filter', $EventsTestFilter) }
+        $eventsTestArgs += @(
+            'tests/Feature/Modules/Events/EventDraftFoundationTest.php',
+            'tests/Feature/Modules/Events/OleKardFinancialTermsWorkflowTest.php'
+        )
+        $eventsTestOutput = Invoke-IsolatedArtisan $eventsTestArgs $privatePem $appKey $dbPassword $adminPassword $pin $totpSecret
         Write-P26TestSummary 'Events foundation' $eventsTestOutput
+        $eventsUnitOutput = Invoke-IsolatedArtisan @('test', '--no-coverage', '--colors=never', '--display-warnings', 'tests/Unit/Modules/Events') $privatePem $appKey $dbPassword $adminPassword $pin $totpSecret
+        Write-P26TestSummary 'Events unit contracts' $eventsUnitOutput
+        $cancellationRaceOutput = Invoke-IsolatedArtisan @('__run_php', 'tests/Concurrency/P26FreeRegistrationPostgresTest.php') $privatePem $appKey $dbPassword $adminPassword $pin $totpSecret
+        Write-Output "P26 separate-session PostgreSQL race harness: $(($cancellationRaceOutput | Where-Object { $_ -match '"status":"passed"' } | Select-Object -Last 1))"
         $success = $true
         return
     }

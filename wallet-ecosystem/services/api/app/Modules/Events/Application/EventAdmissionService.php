@@ -83,16 +83,16 @@ final class EventAdmissionService
     {
         return $this->db()->table('community_services.event_tickets as t')
             ->join('community_services.event_drafts as e', 'e.id', '=', 't.event_id')
-            ->where('t.owner_actor_id', $actorId)->where('t.status', 'valid')
+            ->where('t.owner_actor_id', $actorId)->whereIn('t.status', ['valid', 'revoked'])
             ->orderBy('e.starts_at')->orderBy('t.created_at')->get([
-                't.id', 't.event_id', 'e.title as event_title', 't.category_name', 't.status', 't.credential_encrypted',
+                't.id', 't.event_id', 'e.title as event_title', 't.category_name', 't.status', 't.cancellation_request_id', 't.credential_encrypted',
             ])->map(fn (object $ticket): array => [
                 'ticket_id' => (string) $ticket->id,
                 'event_id' => (string) $ticket->event_id,
                 'event_title' => (string) $ticket->event_title,
                 'category' => (string) $ticket->category_name,
-                'status' => $this->ticketStatus((string) $ticket->id),
-                'credential' => $this->credentials->recoverForDisplay((string) $ticket->credential_encrypted),
+                'status' => $this->ticketStatus((string) $ticket->id, (string) $ticket->status, $ticket->cancellation_request_id),
+                'credential' => $ticket->status === 'revoked' ? '' : $this->credentials->recoverForDisplay((string) $ticket->credential_encrypted),
             ])->all();
     }
 
@@ -102,15 +102,15 @@ final class EventAdmissionService
         $ticket = $this->db()->table('community_services.event_tickets as t')
             ->join('community_services.event_drafts as e', 'e.id', '=', 't.event_id')
             ->where('t.id', $ticketId)->where('t.owner_actor_id', $actorId)
-            ->first(['t.id', 't.event_id', 'e.title as event_title', 't.category_name', 't.status', 't.credential_encrypted']);
+            ->first(['t.id', 't.event_id', 'e.title as event_title', 't.category_name', 't.status', 't.cancellation_request_id', 't.credential_encrypted']);
         abort_if($ticket === null, 404, 'Ticket was not found.');
-        abort_unless($ticket->status === 'valid', 404, 'Ticket was not found.');
+        abort_unless(in_array($ticket->status, ['valid', 'revoked'], true), 404, 'Ticket was not found.');
 
         return [
             'ticket_id' => (string) $ticket->id, 'event_id' => (string) $ticket->event_id,
             'event_title' => (string) $ticket->event_title, 'category' => (string) $ticket->category_name,
-            'status' => $this->ticketStatus((string) $ticket->id),
-            'credential' => $this->credentials->recoverForDisplay((string) $ticket->credential_encrypted),
+            'status' => $this->ticketStatus((string) $ticket->id, (string) $ticket->status, $ticket->cancellation_request_id),
+            'credential' => $ticket->status === 'revoked' ? '' : $this->credentials->recoverForDisplay((string) $ticket->credential_encrypted),
         ];
     }
 
@@ -259,14 +259,18 @@ final class EventAdmissionService
 
     private function eventNotAdmissionEligible(Connection $db, string $eventId): bool
     {
-        $event = $db->table('community_services.event_drafts')->where('id', $eventId)->first(['workflow_state', 'version', 'published_version']);
+        $event = $db->table('community_services.event_drafts')->where('id', $eventId)->first(['workflow_state', 'version', 'published_version', 'lifecycle_state']);
 
         return $event === null || $event->workflow_state !== 'published'
+            || ($event->lifecycle_state ?? 'active') !== 'active'
             || (int) $event->published_version !== (int) $event->version;
     }
 
-    private function ticketStatus(string $ticketId): string
+    private function ticketStatus(string $ticketId, string $recordStatus, ?string $cancellationRequestId): string
     {
+        if ($recordStatus === 'revoked') {
+            return $cancellationRequestId === null ? 'revoked' : 'cancelled';
+        }
         $attended = $this->db()->table('community_services.event_attendance')->where('ticket_id', $ticketId)->exists();
 
         return $attended ? 'admitted' : 'valid';

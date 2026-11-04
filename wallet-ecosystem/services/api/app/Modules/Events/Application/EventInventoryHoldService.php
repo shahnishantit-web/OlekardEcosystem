@@ -57,6 +57,7 @@ final class EventInventoryHoldService
                 }
 
                 if ($event->workflow_state !== 'published' || $event->sales_state !== 'active'
+                    || ($event->lifecycle_state ?? 'active') !== 'active'
                     || (int) $event->published_version !== (int) $event->version) {
                     abort(409, 'Inventory can be held only for the active, current published event version.');
                 }

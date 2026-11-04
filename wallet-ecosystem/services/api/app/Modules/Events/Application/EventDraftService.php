@@ -56,6 +56,7 @@ final class EventDraftService
         $this->db()->transaction(function () use ($eventId, $actorId, $expectedVersion, $input): void {
             $draft = $this->db()->table('community_services.event_drafts')->where('id', $eventId)->lockForUpdate()->first();
             abort_if($draft === null, 404);
+            abort_unless(($draft->lifecycle_state ?? 'active') === 'active', 409, 'A cancelled event cannot be edited.');
             $this->membership->assertActiveMembership($actorId, (string) $draft->organisation_id);
             $this->authorizer->assertCanUpdate($actorId, (string) $draft->organisation_id, $eventId);
             if ((int) $draft->version !== $expectedVersion) {

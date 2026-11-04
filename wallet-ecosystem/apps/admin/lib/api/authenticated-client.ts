@@ -6,6 +6,7 @@ import type { ApiResponse } from '@/lib/api/client';
 interface RequestOptions {
     idempotencyKey?: string;
     signal?: AbortSignal;
+    body?: unknown;
     /** Explicit domain failures rendered by the caller; other 503s remain global. */
     domainErrorCodes?: readonly string[];
 }
@@ -80,6 +81,6 @@ export class AuthenticatedApiClient {
         return this.request<T>('PATCH', path, body, options);
     }
     async delete(path: string, options?: RequestOptions): Promise<void> {
-        await this.request<null>('DELETE', path, undefined, options);
+        await this.request<null>('DELETE', path, options?.body, options);
     }
 }

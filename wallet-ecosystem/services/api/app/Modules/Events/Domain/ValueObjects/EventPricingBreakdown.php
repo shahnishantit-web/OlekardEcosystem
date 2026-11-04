@@ -11,6 +11,7 @@ final readonly class EventPricingBreakdown
      * @param  list<array{code:string,amount_minor:int,policy_version:string}>  $taxComponents
      * @param  array<string,mixed>|null  $organiserFeeScheduleSnapshot
      * @param  array<string,mixed>|null  $taxPolicySnapshot
+     * @param  array<string,mixed>|null  $oleKardTermsAcceptanceSnapshot
      */
     public function __construct(
         public int $subtotalMinor,
@@ -32,6 +33,7 @@ final readonly class EventPricingBreakdown
         public ?int $organiserPlatformFeeMinor = null,
         public ?array $organiserFeeScheduleSnapshot = null,
         public ?array $taxPolicySnapshot = null,
+        public ?array $oleKardTermsAcceptanceSnapshot = null,
     ) {
         if ($subtotalMinor < 1 || $feesMinor < 0 || $taxesMinor < 0
             || $totalMinor !== $subtotalMinor + $feesMinor + $taxesMinor
@@ -65,6 +67,7 @@ final readonly class EventPricingBreakdown
             'organiser_platform_fee_minor' => $this->organiserPlatformFeeMinor,
             'organiser_fee_schedule_snapshot' => $this->organiserFeeScheduleSnapshot,
             'tax_policy_snapshot' => $this->taxPolicySnapshot,
+            'olekard_terms_acceptance_snapshot' => $this->oleKardTermsAcceptanceSnapshot,
             'policy_expires_at' => $this->policyExpiresAt->format(DATE_ATOM),
             'policy_evidence_reference' => $this->policyEvidenceReference,
             'policy_approved' => $this->policyApproved,
@@ -97,6 +100,26 @@ final readonly class EventPricingBreakdown
         if ($this->organiserPlatformFeeMinor === null || $this->organiserFeeScheduleSnapshot === null
             || $this->taxPolicySnapshot === null) {
             throw new \DomainException('Production pricing requires explicit organiser fee schedule and approved tax snapshots.');
+        }
+        $terms = $this->oleKardTermsAcceptanceSnapshot;
+        $requiredTerms = ['acceptance_id', 'version_id', 'accepted_version_id', 'version', 'approval_reference',
+            'approved_by_actor_id', 'approved_at', 'document_hash', 'accepted_document_hash', 'acceptance_provenance',
+            'organisation_id', 'event_id', 'accepted_by_actor_id', 'accepted_at', 'effective_from', 'effective_until'];
+        if ($terms === null || array_diff($requiredTerms, array_keys($terms)) !== []) {
+            throw new \DomainException('Production pricing requires an approved, effective OleKard terms version and organiser acceptance snapshot.');
+        }
+        foreach ($requiredTerms as $key) {
+            if (! is_string($terms[$key]) || trim($terms[$key]) === '') {
+                throw new \DomainException('OleKard terms approval and acceptance evidence must be complete.');
+            }
+        }
+        $documentHash = $terms['document_hash'] ?? null;
+        if (! is_string($documentHash) || preg_match('/^[a-f0-9]{64}$/D', $documentHash) !== 1) {
+            throw new \DomainException('OleKard terms must carry the hash of their immutable accepted content.');
+        }
+        if ($terms['version_id'] !== $terms['accepted_version_id']
+            || ! hash_equals($documentHash, (string) $terms['accepted_document_hash'])) {
+            throw new \DomainException('Organiser must accept the current OleKard terms version and exact content before paid capabilities continue.');
         }
         if ($this->feesMinor !== 0 || $this->feeComponents !== []) {
             throw new \DomainException('Customer-payable booking fees are unavailable without a separately approved policy.');

@@ -8,6 +8,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:wallet_customer/modules/events/presentation/screens/customer_event_tickets_screen.dart';
 
 class _TicketsAdapter implements HttpClientAdapter {
+  _TicketsAdapter({this.status = 'admitted', String? credential})
+      : credential = credential ?? List.filled(43, 'A').join();
+
+  final String status;
+  final String credential;
+
   @override
   Future<ResponseBody> fetch(
     RequestOptions options,
@@ -22,8 +28,8 @@ class _TicketsAdapter implements HttpClientAdapter {
               'event_id': 'event-1',
               'event_title': 'Test Event',
               'category': 'General',
-              'status': 'admitted',
-              'credential': 'A' * 43,
+              'status': status,
+              'credential': credential,
             },
           ],
         }),
@@ -53,5 +59,37 @@ void main() {
     expect(find.text('Entry recorded'), findsOneWidget);
     expect(find.text('Replace ticket credential'), findsNothing);
     expect(find.text('A' * 43), findsOneWidget);
+  });
+
+  testWidgets('cancellation is visible and never displays the credential',
+      (tester) async {
+    final dio = Dio(BaseOptions(baseUrl: 'http://localhost'))
+      ..httpClientAdapter =
+          _TicketsAdapter(status: 'cancelled', credential: '');
+    await tester.pumpWidget(ProviderScope(
+      overrides: [eventTicketsApiProvider.overrideWithValue(dio)],
+      child: const MaterialApp(home: CustomerEventTicketsScreen()),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('This event was cancelled. This ticket cannot be used.'),
+        findsOneWidget);
+    expect(find.text('Replace ticket credential'), findsNothing);
+    expect(find.text('A' * 43), findsNothing);
+  });
+
+  testWidgets('revoked ticket is unavailable and never displays a credential',
+      (tester) async {
+    final dio = Dio(BaseOptions(baseUrl: 'http://localhost'))
+      ..httpClientAdapter = _TicketsAdapter(status: 'revoked', credential: '');
+    await tester.pumpWidget(ProviderScope(
+      overrides: [eventTicketsApiProvider.overrideWithValue(dio)],
+      child: const MaterialApp(home: CustomerEventTicketsScreen()),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('This ticket is no longer valid.'), findsOneWidget);
+    expect(find.text('Replace ticket credential'), findsNothing);
+    expect(find.text('A' * 43), findsNothing);
   });
 }

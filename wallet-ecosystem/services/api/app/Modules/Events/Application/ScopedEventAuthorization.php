@@ -54,6 +54,23 @@ final class ScopedEventAuthorization
         abort_unless($assignment !== null, 403, 'An active assignment to this event is required.');
     }
 
+    /** Serializes organisation authority use against grant/revocation in the same transaction. */
+    public function lockOrganisationAssignment(string $actorId, string $organisationId, string $permission): object
+    {
+        $this->assertPermission($actorId, $permission);
+        $db = DB::connection('community_services');
+        if ($db->transactionLevel() < 1) {
+            throw new \LogicException('Organisation assignment locking must share the protected write transaction.');
+        }
+        $assignment = $db->table('community_services.event_authority_assignments')
+            ->where('scope_type', 'organisation')->where('scope_id', $organisationId)
+            ->where('organisation_id', $organisationId)->where('actor_id', $actorId)
+            ->where('permission_slug', $permission)->whereNull('revoked_at')->lockForUpdate()->first();
+        abort_unless($assignment !== null, 403, 'An active organisation-scoped assignment is required.');
+
+        return $assignment;
+    }
+
     public function assertGate(string $actorId, string $organisationId, string $eventId, string $gateId, string $permission): void
     {
         $this->assertPermission($actorId, $permission);

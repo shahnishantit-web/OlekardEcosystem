@@ -30,6 +30,8 @@ final class EventPermissions
 
     public const CANCEL_APPROVE = 'events.event.cancel.approve';
 
+    public const COMPLIMENTARY_APPROVE = 'events.complimentary.approve';
+
     public const GATE_ASSIGNMENT_MANAGE = 'events.gate.assignment.manage';
 
     public const GATE_VALIDATE = 'events.gate.validate';
@@ -57,6 +59,7 @@ final class EventPermissions
             self::CREATE, self::READ, self::UPDATE, self::SUBMIT, self::REVIEW,
             self::PRICE_APPROVE, self::CURRENCY_ASSIGN, self::PUBLISH, self::SALES_PAUSE, self::SALES_RESUME,
             self::CANCEL_REQUEST, self::CANCEL_APPROVE, self::GATE_ASSIGNMENT_MANAGE,
+            self::COMPLIMENTARY_APPROVE,
             self::GATE_VALIDATE, self::ATTENDANCE_READ, self::REFUND_REQUEST,
             self::REFUND_EXCEPTION_REVIEW, self::PAYOUT_REQUEST,
         ];

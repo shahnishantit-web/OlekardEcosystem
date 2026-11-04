@@ -56,14 +56,26 @@ class _EventGateScanScreenState extends ConsumerState<EventGateScanScreen> {
         data: {'credential': value},
       );
       final data = response.data?['data'] as Map<String, dynamic>?;
+      final returnedStatus = data?['status'] as String?;
+      const knownStatuses = {'admitted', 'already_admitted', 'denied'};
       if (mounted) {
         setState(() {
-          _status = data?['status'] as String?;
-          _category = data?['category'] as String?;
+          _status = knownStatuses.contains(returnedStatus)
+              ? returnedStatus
+              : 'unknown';
+          _category =
+              _status == 'unknown' ? null : data?['category'] as String?;
         });
       }
-    } on DioException {
-      if (mounted) setState(() => _status = 'denied');
+    } on DioException catch (exception) {
+      if (!mounted) return;
+      final responseStatus = exception.response?.statusCode;
+      // A received client-error response is a definitive rejection. A lost,
+      // timed-out, or server-error response may follow a committed admission.
+      // Never present that ambiguous outcome as either admitted or denied.
+      const definitiveRejections = {400, 401, 403, 404, 422};
+      setState(() => _status =
+          definitiveRejections.contains(responseStatus) ? 'denied' : 'unknown');
     } finally {
       if (mounted) {
         setState(() {
@@ -125,8 +137,15 @@ class _EventGateScanScreenState extends ConsumerState<EventGateScanScreen> {
                 ? 'Admit attendee'
                 : _status == 'already_admitted'
                     ? 'Already admitted'
-                    : 'Admission denied'),
-            subtitle: _category == null ? null : Text('Category: $_category'),
+                    : _status == 'unknown'
+                        ? 'Admission not confirmed'
+                        : 'Admission denied'),
+            subtitle: _status == 'unknown'
+                ? const Text(
+                    'Reconnect and scan again to check the result. Do not admit until confirmed.')
+                : _category == null
+                    ? null
+                    : Text('Category: $_category'),
           )),
         TextButton(onPressed: () => context.pop(), child: const Text('Close')),
       ]),

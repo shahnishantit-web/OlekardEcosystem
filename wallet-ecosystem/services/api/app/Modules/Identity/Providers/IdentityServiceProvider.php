@@ -7,6 +7,7 @@ namespace App\Modules\Identity\Providers;
 use App\Modules\Identity\Application\IdentityModule;
 use App\Modules\Identity\Application\Services\AdminRoleService;
 use App\Modules\Identity\Application\Services\AdminUserService;
+use App\Modules\Identity\Application\Services\ReviewedOrganisationMembershipService;
 use App\Modules\Identity\Domain\Contracts\ActorStepUpVerifierContract;
 use App\Modules\Identity\Domain\Contracts\AdminEmailVerificationMailContract;
 use App\Modules\Identity\Domain\Contracts\AdminPasswordResetMailContract;
@@ -18,6 +19,8 @@ use App\Modules\Identity\Domain\Contracts\DeviceSecurityEventRepositoryInterface
 use App\Modules\Identity\Domain\Contracts\DeviceTrustHistoryRepositoryInterface;
 use App\Modules\Identity\Domain\Contracts\IdentityModuleContract;
 use App\Modules\Identity\Domain\Contracts\JwksProviderContract;
+use App\Modules\Identity\Domain\Contracts\OrganisationMembershipAuthority;
+use App\Modules\Identity\Domain\Contracts\OrganiserRepresentativeVerifier;
 use App\Modules\Identity\Domain\Contracts\OtpChallengeRepositoryInterface;
 use App\Modules\Identity\Domain\Contracts\OtpDeliveryContract;
 use App\Modules\Identity\Domain\Contracts\OtpServiceContract;
@@ -57,6 +60,7 @@ use App\Modules\Identity\Infrastructure\Http\Middleware\RequirePermissionMiddlew
 use App\Modules\Identity\Infrastructure\Jwks\LocalJwksProvider;
 use App\Modules\Identity\Infrastructure\Listeners\HandleNewDeviceDetectedListener;
 use App\Modules\Identity\Infrastructure\Listeners\HandleSessionCreatedListener;
+use App\Modules\Identity\Infrastructure\NullImplementations\DenyOrganiserRepresentativeVerifier;
 use App\Modules\Identity\Infrastructure\Repositories\EloquentCredentialRepository;
 use App\Modules\Identity\Infrastructure\Repositories\EloquentDeviceRepository;
 use App\Modules\Identity\Infrastructure\Repositories\EloquentDeviceSecurityEventRepository;
@@ -80,6 +84,7 @@ use App\Modules\Platform\Infrastructure\Security\SecretProviderInterface;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -87,7 +92,8 @@ final class IdentityServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->bind(\App\Modules\Identity\Domain\Contracts\OrganisationMembershipAuthority::class, \App\Modules\Identity\Application\Services\ReviewedOrganisationMembershipService::class);
+        $this->app->bind(OrganiserRepresentativeVerifier::class, DenyOrganiserRepresentativeVerifier::class);
+        $this->app->bind(OrganisationMembershipAuthority::class, ReviewedOrganisationMembershipService::class);
         // Cross-module contract: concrete IdentityModule wired in Phase 14 (T140)
         $this->app->singleton(IdentityModuleContract::class, IdentityModule::class);
         $this->app->singleton(ActorStepUpVerifierContract::class, IdentityModule::class);
@@ -192,8 +198,8 @@ final class IdentityServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(base_path('routes/modules/identity.php'));
 
         // T131: Register E03 event listeners
-        $this->app['events']->listen(NewDeviceDetectedEvent::class, HandleNewDeviceDetectedListener::class);
-        $this->app['events']->listen(SessionCreatedEvent::class, HandleSessionCreatedListener::class);
+        Event::listen(NewDeviceDetectedEvent::class, HandleNewDeviceDetectedListener::class);
+        Event::listen(SessionCreatedEvent::class, HandleSessionCreatedListener::class);
 
         /** @var Router $router */
         $router = $this->app->make(Router::class);

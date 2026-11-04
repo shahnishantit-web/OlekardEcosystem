@@ -77,7 +77,6 @@ final class FreeEventRegistrationService
             }
 
             $approvalSnapshot = $this->complimentaryApprovalSnapshot($event, $category);
-
             $secret = $this->credentials->create();
             $id = (string) Uuid::uuid7();
             $this->db()->table('community_services.event_invitations')->insert([
@@ -144,10 +143,6 @@ final class FreeEventRegistrationService
             $db = $this->db();
             $event = $db->table('community_services.event_drafts')->where('id', $eventId)->lockForUpdate()->first();
             abort_if($event === null, 404, 'Event was not found.');
-            abort_unless($event->workflow_state === 'published'
-                && (int) $event->published_version === (int) $event->version, 409,
-                'Registration is available only for the current published event.');
-            abort_unless($event->sales_state === 'active', 409, 'Free registration is not open.');
             $category = $db->table('community_services.event_draft_categories')
                 ->where('id', $categoryId)->where('event_id', $eventId)->lockForUpdate()->first();
             abort_if($category === null, 404, 'Event allocation was not found.');
@@ -162,7 +157,23 @@ final class FreeEventRegistrationService
                 return $this->registrationResult((string) $existing->id);
             }
 
+            abort_unless($event->workflow_state === 'published'
+                && (int) $event->published_version === (int) $event->version
+                && ($event->lifecycle_state ?? 'active') === 'active', 409,
+                'Registration is available only for the current published event.');
+            abort_unless($event->sales_state === 'active', 409, 'Free registration is not open.');
+
             $approvalSnapshot = $this->complimentaryApprovalSnapshot($event, $category);
+            if ($category->allocation_type === 'complimentary' && $approvalSnapshot !== null) {
+                $approvalUseCount = (int) $db->table('community_services.event_free_registrations')
+                    ->where('event_id', $eventId)
+                    ->where('category_id', $categoryId)
+                    ->where('status', 'registered')
+                    ->whereRaw("approval_snapshot->>'approval_id' = ?", [(string) $approvalSnapshot['approval_id']])
+                    ->count();
+                abort_if($approvalUseCount >= (int) $approvalSnapshot['approved_quota'], 409,
+                    'This complimentary approval allocation has reached its approved quota.');
+            }
 
             $invitation = null;
             if ($tokenHash !== null) {

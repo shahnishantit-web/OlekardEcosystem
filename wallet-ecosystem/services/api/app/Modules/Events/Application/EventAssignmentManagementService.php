@@ -45,8 +45,8 @@ final class EventAssignmentManagementService
         string $reasonCode,
         string $correlationId,
     ): array {
-        if ($permission !== EventPermissions::CREATE) {
-            throw ValidationException::withMessages(['permission_slug' => 'Only event creation can be assigned at organisation scope.']);
+        if (! in_array($permission, [EventPermissions::CREATE, EventPermissions::COMPLIMENTARY_APPROVE], true)) {
+            throw ValidationException::withMessages(['permission_slug' => 'Only event creation and complimentary approval authority can be assigned at organisation scope.']);
         }
 
         return $this->grant('organisation', $organisationId, $organisationId, null, null, $targetActorId, $permission, $actorId, $reasonCode, $correlationId);

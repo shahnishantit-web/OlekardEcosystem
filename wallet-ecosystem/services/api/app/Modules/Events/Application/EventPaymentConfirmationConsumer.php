@@ -93,6 +93,8 @@ final class EventPaymentConfirmationConsumer
 
         $result = ['ack' => false, 'order' => (string) $expected->id];
         $db->transaction(function () use ($db, $expected, $payload, $payloadHash, $eventId, $evidence, &$result): void {
+            // Events lifecycle lock first: cancellation and payment confirmation use one lock order.
+            $event = $db->table('community_services.event_drafts')->where('id', $expected->event_id)->lockForUpdate()->first();
             $order = $db->table('community_services.event_orders')->where('id', $expected->id)->lockForUpdate()->first();
             if ($order === null) {
                 throw new \RuntimeException('Confirmed event order disappeared before issuance.');
@@ -131,9 +133,9 @@ final class EventPaymentConfirmationConsumer
 
                 return;
             }
-            $event = $db->table('community_services.event_drafts')->where('id', $order->event_id)->lockForUpdate()->first();
             $lines = $db->table('community_services.event_order_lines')->where('order_id', $order->id)->orderBy('id')->lockForUpdate()->get();
-            $eligible = $event !== null && $event->workflow_state === 'published' && $event->sales_state === 'active'
+            $eligible = $event !== null && ($event->lifecycle_state ?? 'active') === 'active'
+                && $event->workflow_state === 'published' && $event->sales_state === 'active'
                 && (int) $event->published_version === (int) $event->version
                 && $order->order_state === 'awaiting_payment';
             foreach ($lines as $line) {

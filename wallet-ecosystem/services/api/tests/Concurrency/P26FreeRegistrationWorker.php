@@ -2,11 +2,15 @@
 
 declare(strict_types=1);
 
+use App\Modules\Events\Application\EventAdmissionService;
+use App\Modules\Events\Application\EventCancellationService;
 use App\Modules\Events\Application\FreeEventRegistrationService;
 use App\Modules\Events\Domain\Contracts\ComplimentaryAllocationApprovalContract;
-use App\Modules\Events\Domain\Permissions\EventPermissions;
+use App\Modules\Events\Domain\Contracts\InvitationRecipientVerifier;
 use App\Modules\Events\Domain\ValueObjects\ComplimentaryAllocationApprovalEvidence;
+use App\Modules\Identity\Domain\Contracts\ActorStepUpVerifierContract;
 use App\Modules\Identity\Domain\Contracts\IdentityModuleContract;
+use App\Modules\Payment\Domain\Contracts\PaymentRefundAdmissionEligibilityContract;
 use App\Modules\Platform\Domain\Contracts\AuditServiceInterface;
 use App\Modules\Platform\Domain\ValueObjects\AuditEventData;
 use Illuminate\Contracts\Console\Kernel;
@@ -27,10 +31,21 @@ $app->instance(ComplimentaryAllocationApprovalContract::class, new class impleme
     }
 });
 $identity = Mockery::mock(IdentityModuleContract::class);
-$identity->shouldReceive('hasPermission')->withArgs(static fn (string $actorId, string $permission): bool => $permission === EventPermissions::UPDATE)->andReturn(true);
+$identity->shouldReceive('hasPermission')->andReturn(true);
 $app->instance(IdentityModuleContract::class, $identity);
+$app->instance(InvitationRecipientVerifier::class, new class implements InvitationRecipientVerifier
+{
+    public function assertActiveCustomerActor(string $actorId): void {}
+});
+$stepUp = Mockery::mock(ActorStepUpVerifierContract::class);
+$stepUp->shouldReceive('verifyStepUpForActor')->andReturn(true);
+$app->instance(ActorStepUpVerifierContract::class, $stepUp);
+$refunds = Mockery::mock(PaymentRefundAdmissionEligibilityContract::class);
+$refunds->shouldReceive('hasAdmissionBlockingRefund')->andReturn(false);
+$app->instance(PaymentRefundAdmissionEligibilityContract::class, $refunds);
 
-[$script, $eventId, $categoryId, $actorId, $key, $token, $barrier, $workerId, $operation, $invitationId] = $argv;
+[$script, $eventId, $categoryId, $actorId, $key, $token, $barrier, $workerId, $operation, $invitationId,
+    $cancellationId, $gateId, $credential] = array_pad($argv, 13, '-');
 $db = DB::connection('community_services');
 if ($db->getDriverName() !== 'pgsql') {
     fwrite(STDERR, 'P26 concurrency verification requires PostgreSQL.');
@@ -56,6 +71,14 @@ try {
             $eventId, $categoryId, $actorId, $token === '-' ? null : $token, $key, $workerId,
         );
         echo json_encode(['outcome' => 'registered', 'registration_id' => $result['registration_id'], 'ticket_id' => $result['ticket_id'], 'pid' => $pid], JSON_THROW_ON_ERROR);
+    } elseif ($operation === 'cancel') {
+        $result = app(EventCancellationService::class)->review(
+            $eventId, $cancellationId, $actorId, 1, true, null, $key, $workerId,
+        );
+        echo json_encode(['outcome' => 'cancelled', 'status' => $result['status'], 'pid' => $pid], JSON_THROW_ON_ERROR);
+    } elseif ($operation === 'admit') {
+        $result = app(EventAdmissionService::class)->validateOnline($eventId, $gateId, $actorId, $credential, $workerId);
+        echo json_encode(['outcome' => $result['status'], 'pid' => $pid], JSON_THROW_ON_ERROR);
     } else {
         throw new InvalidArgumentException('Unknown P26 worker operation.');
     }

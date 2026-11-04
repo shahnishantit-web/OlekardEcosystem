@@ -109,6 +109,8 @@ class _CustomerEventTicketsScreenState
   Widget _ticketCard(Map<String, dynamic> ticket) {
     final credential = ticket['credential'] as String;
     final admitted = ticket['status'] == 'admitted';
+    final cancelled = ticket['status'] == 'cancelled';
+    final revoked = ticket['status'] == 'revoked';
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
@@ -121,13 +123,24 @@ class _CustomerEventTicketsScreenState
             const SizedBox(height: 4),
             Text(ticket['category'] as String),
             const SizedBox(height: 12),
-            QrImageView(data: credential, size: 220),
-            SelectableText(credential,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.labelSmall),
-            const SizedBox(height: 8),
-            Text(admitted ? 'Entry recorded' : 'Ready for entry'),
-            if (!admitted)
+            if (cancelled) ...[
+              const Icon(Icons.event_busy, size: 48),
+              const SizedBox(height: 8),
+              const Text(
+                  'This event was cancelled. This ticket cannot be used.'),
+            ] else if (revoked) ...[
+              const Icon(Icons.block, size: 48),
+              const SizedBox(height: 8),
+              const Text('This ticket is no longer valid.'),
+            ] else ...[
+              QrImageView(data: credential, size: 220),
+              SelectableText(credential,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.labelSmall),
+              const SizedBox(height: 8),
+              Text(admitted ? 'Entry recorded' : 'Ready for entry'),
+            ],
+            if (!admitted && !cancelled && !revoked)
               TextButton.icon(
                 onPressed: () =>
                     _replaceCredential(ticket['ticket_id'] as String),
