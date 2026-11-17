@@ -104,13 +104,17 @@ class AuthInterceptor extends Interceptor {
         }
 
         final refreshResponse = await _dio.post(
-          '/v1/customer/auth/refresh',
+          '/v1/auth/token/refresh',
           data: {'refresh_token': refreshToken},
           options: Options(headers: {}),
         );
 
-        final newAccessToken = refreshResponse.data['access_token'] as String;
+        final refreshData =
+            refreshResponse.data['data'] as Map<String, dynamic>;
+        final newAccessToken = refreshData['access_token'] as String;
         await _storage.writeAccessToken(newAccessToken);
+        await _storage
+            .writeRefreshToken(refreshData['refresh_token'] as String);
 
         for (final c in _refreshQueue) {
           c.complete();

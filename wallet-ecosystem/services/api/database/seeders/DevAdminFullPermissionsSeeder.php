@@ -26,12 +26,19 @@ final class DevAdminFullPermissionsSeeder extends Seeder
             throw new \RuntimeException('The local ADMIN account admin@olekard.local must exist first.');
         }
         // Register explicit route policies missing from older local snapshots.
-        // Never invent a wildcard or bypass authorization.
+        // Never invent a wildcard or bypass authorization. Profile routes use
+        // their own middleware alias, so include it in the same policy sync.
+        $permissionMiddlewarePrefixes = [
+            'identity.require-permission:',
+            'profile.permission:',
+        ];
         $slugs = [];
         foreach (app('router')->getRoutes() as $route) {
             foreach ($route->gatherMiddleware() as $middleware) {
-                if (str_starts_with($middleware, 'identity.require-permission:')) {
-                    $slugs[] = substr($middleware, strlen('identity.require-permission:'));
+                foreach ($permissionMiddlewarePrefixes as $prefix) {
+                    if (str_starts_with($middleware, $prefix)) {
+                        $slugs[] = substr($middleware, strlen($prefix));
+                    }
                 }
             }
         }

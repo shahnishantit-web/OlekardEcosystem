@@ -14,7 +14,7 @@ abstract interface class AuthRepository {
 
   Future<Customer> completeRegistration({
     required String registrationToken,
-    required String pinHash,
+    required String pin,
     String? email,
   });
 
@@ -32,17 +32,17 @@ abstract interface class AuthRepository {
 
   Future<String> refreshToken(String refreshToken);
 
-  Future<String> initiatePinReset(String phone);
+  Future<String?> initiatePinReset(String phone);
 
   Future<void> completePinReset({
-    required String otpReference,
-    required String otpCode,
-    required String newPinHash,
+    required String challengeId,
+    required String otp,
+    required String newPin,
   });
 
   Future<void> changePin({
-    required String currentPinHash,
-    required String newPinHash,
+    required String currentPin,
+    required String newPin,
   });
 
   Future<void> registerPushToken({

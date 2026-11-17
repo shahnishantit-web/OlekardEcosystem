@@ -1,10 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/api/api_client.dart';
-import '../../../../core/di/providers.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../modules/auth/presentation/auth_providers.dart';
+import '../../../payment/application/customer_money_service.dart';
 import '../../../../shared/widgets/pin_pad_widget.dart';
 
 class StepUpPinScreen extends ConsumerStatefulWidget {
@@ -38,7 +37,7 @@ class _StepUpPinScreenState extends ConsumerState<StepUpPinScreen> {
               const CircularProgressIndicator()
             else
               PinPadWidget(
-                                onCompleted: _onPin,
+                onCompleted: _onPin,
               ),
           ],
         ),
@@ -49,20 +48,16 @@ class _StepUpPinScreenState extends ConsumerState<StepUpPinScreen> {
   Future<void> _onPin(String pin) async {
     setState(() => _isLoading = true);
     try {
-      final pinHash = await ref.read(pinServiceProvider).hashPin(pin);
-      final dio = ref.read(apiClientProvider).dio;
-      final res = await dio.post(
-        '/v1/customer/auth/step-up',
-        data: {'pin_hash': pinHash},
-      );
-      final stepUpToken = res.data['step_up_token'] as String;
+      final stepUpToken =
+          await ref.read(customerMoneyServiceProvider).verifyStepUp(pin);
       // Store for AuthInterceptor to pick up on retry
       AuthInterceptor.pendingStepUpToken = stepUpToken;
       if (mounted) context.pop();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Verification failed — please try again')),
+          const SnackBar(
+              content: Text('Verification failed — please try again')),
         );
         setState(() => _isLoading = false);
       }

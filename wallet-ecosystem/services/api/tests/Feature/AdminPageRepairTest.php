@@ -38,6 +38,8 @@ final class AdminPageRepairTest extends TestCase
     {
         Route::get('/v1/test/admin-permission', fn () => null)
             ->middleware('identity.require-permission:qa.repair_regression.read');
+        Route::get('/v1/test/profile-permission', fn () => null)
+            ->middleware('profile.permission:profile.read');
         $this->seed(DevAdminFullPermissionsSeeder::class);
         $this->seed(DevAdminFullPermissionsSeeder::class);
         $db = DB::connection('identity');
@@ -46,6 +48,10 @@ final class AdminPageRepairTest extends TestCase
         $this->assertNotEmpty($permission->display_name);
         $role = $db->table('identity.roles')->where('slug', 'admin')->value('id');
         $this->assertSame(1, $db->table('identity.role_permissions')->where('role_id', $role)->where('permission_id', $permission->id)->count());
+
+        $profilePermission = $db->table('identity.permissions')->where('slug', 'profile.read')->first();
+        $this->assertNotNull($profilePermission);
+        $this->assertSame(1, $db->table('identity.role_permissions')->where('role_id', $role)->where('permission_id', $profilePermission->id)->count());
     }
 
     public function test_full_admin_seeder_does_not_run_in_production(): void

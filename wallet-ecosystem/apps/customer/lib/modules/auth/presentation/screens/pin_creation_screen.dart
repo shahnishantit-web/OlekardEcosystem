@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../auth_providers.dart';
 import '../../../../core/theme/design_tokens.dart';
@@ -41,7 +41,7 @@ class _PinCreationScreenState extends ConsumerState<PinCreationScreen> {
               const Center(child: CircularProgressIndicator())
             else
               PinPadWidget(
-                                onCompleted: _onPinEntered,
+                onCompleted: _onPinEntered,
               ),
           ],
         ),
@@ -54,15 +54,14 @@ class _PinCreationScreenState extends ConsumerState<PinCreationScreen> {
       setState(() => _firstPin = pin);
     } else {
       if (_firstPin == pin) {
-        // Never log the PIN — only pass to service for hashing
-        final pinHash = await ref.read(pinServiceProvider).hashPin(pin);
         if (mounted) {
-          await ref.read(authProvider.notifier).setPin(pinHash);
+          await ref.read(authProvider.notifier).setPin(pin);
         }
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('PINs do not match — please try again')),
+            const SnackBar(
+                content: Text('PINs do not match — please try again')),
           );
           setState(() => _firstPin = null);
         }

@@ -19,6 +19,7 @@ final class ReviewedOrganisationMembershipTest extends IdentityTestCase
 
     private string $maker;
     private string $reviewer;
+    private string $approver;
     private string $target;
     private ReviewedOrganisationMembershipService $service;
 
@@ -27,11 +28,12 @@ final class ReviewedOrganisationMembershipTest extends IdentityTestCase
         parent::setUp();
         $this->maker = $this->user('ADMIN');
         $this->reviewer = $this->user('ADMIN');
+        $this->approver = $this->user('ADMIN');
         $this->target = $this->user('CUSTOMER');
         $identity = Mockery::mock(IdentityModuleContract::class);
         $identity->shouldReceive('hasPermission')->andReturnUsing(
-            fn (string $actorId, string $permission): bool => in_array($actorId, [$this->maker, $this->reviewer], true)
-                && in_array($permission, ['organisation.registry.request', 'organisation.registry.review', 'organisation.registry.revoke'], true),
+            fn (string $actorId, string $permission): bool => in_array($actorId, [$this->maker, $this->reviewer, $this->approver], true)
+                && in_array($permission, ['organisation.registry.request', 'organisation.registry.review', 'organisation.registry.approve', 'organisation.registry.read', 'organisation.registry.revoke'], true),
         );
         $this->service = new ReviewedOrganisationMembershipService($identity);
     }
@@ -40,8 +42,9 @@ final class ReviewedOrganisationMembershipTest extends IdentityTestCase
     {
         $org = $this->service->requestOrganisation('test-registry-'.Uuid::uuid7(), 'Test community', 'restricted-evidence-1', $this->maker);
         $this->assertDenied($org['id']);
-        $this->assertHttp(403, fn () => $this->service->reviewOrganisation($org['id'], 'active', $this->maker));
-        $this->service->reviewOrganisation($org['id'], 'active', $this->reviewer);
+        $this->assertHttp(403, fn () => $this->service->reviewOrganisation($org['id'], 'pending_approval', $this->maker));
+        $this->service->reviewOrganisation($org['id'], 'pending_approval', $this->reviewer, 'Documents checked');
+        $this->service->approveOrganisation($org['id'], 'active', null, $this->approver);
         $membership = $this->service->requestMembership($org['id'], $this->target, 'restricted-evidence-2', $this->maker);
         $this->assertDenied($org['id']);
         $this->assertHttp(403, fn () => $this->service->reviewMembership($membership['id'], 'active', $this->maker));
@@ -60,7 +63,8 @@ final class ReviewedOrganisationMembershipTest extends IdentityTestCase
     public function test_cross_organisation_inactive_user_and_suspended_org_fail_closed(): void
     {
         $org = $this->service->requestOrganisation('test-registry-'.Uuid::uuid7(), 'Test community', 'restricted-evidence', $this->maker);
-        $this->service->reviewOrganisation($org['id'], 'active', $this->reviewer);
+        $this->service->reviewOrganisation($org['id'], 'pending_approval', $this->reviewer);
+        $this->service->approveOrganisation($org['id'], 'active', null, $this->approver);
         $membership = $this->service->requestMembership($org['id'], $this->target, 'restricted-evidence', $this->maker);
         $this->service->reviewMembership($membership['id'], 'active', $this->reviewer);
         $this->assertHttp(403, fn () => $this->service->assertActiveMembership($this->target, (string) Uuid::uuid7()));
@@ -74,7 +78,8 @@ final class ReviewedOrganisationMembershipTest extends IdentityTestCase
     public function test_regrant_requires_new_review_and_customer_cannot_request(): void
     {
         $org = $this->service->requestOrganisation('test-registry-'.Uuid::uuid7(), 'Test community', 'restricted-evidence', $this->maker);
-        $this->service->reviewOrganisation($org['id'], 'active', $this->reviewer);
+        $this->service->reviewOrganisation($org['id'], 'pending_approval', $this->reviewer);
+        $this->service->approveOrganisation($org['id'], 'active', null, $this->approver);
         $this->assertHttp(403, fn () => $this->service->requestMembership($org['id'], $this->target, 'evidence', $this->target));
         $membership = $this->service->requestMembership($org['id'], $this->target, 'evidence', $this->maker);
         $this->service->reviewMembership($membership['id'], 'active', $this->reviewer);

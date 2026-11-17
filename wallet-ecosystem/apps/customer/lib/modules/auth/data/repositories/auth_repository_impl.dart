@@ -67,14 +67,16 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Customer> completeRegistration({
     required String registrationToken,
-    required String pinHash,
+    required String pin,
     String? email,
   }) async {
     try {
       final res = await _dio.post(
         '/v1/customer/auth/register/complete',
         data: {
-          'pin_hash': pinHash,
+          // The API currently names this field pin_hash but expects the raw
+          // PIN and hashes it server-side in CredentialService.
+          'pin_hash': pin,
           if (email != null) 'email': email,
         },
         options:
@@ -83,7 +85,6 @@ class AuthRepositoryImpl implements AuthRepository {
       final dto = AuthResponseDto.fromJson(res.data as Map<String, dynamic>);
       await _storage.writeAccessToken(dto.accessToken);
       await _storage.writeRefreshToken(dto.refreshToken);
-      await _storage.writePinHash(pinHash);
       return dto.toCustomer();
     } on DioException catch (e) {
       _handleDioError(e);
@@ -131,7 +132,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> logout() async {
     try {
-      await _dio.post('/v1/customer/auth/logout');
+      await _dio.post('/v1/auth/logout');
     } catch (_) {
       // Always clear local storage regardless of network result
     } finally {
@@ -142,18 +143,23 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<String> refreshToken(String refreshToken) async {
     final res = await _dio.post(
-      '/v1/customer/auth/refresh',
+      '/v1/auth/token/refresh',
       data: {'refresh_token': refreshToken},
     );
-    return res.data['access_token'] as String;
+    final data = res.data['data'] as Map<String, dynamic>;
+    final accessToken = data['access_token'] as String;
+    await _storage.writeAccessToken(accessToken);
+    await _storage.writeRefreshToken(data['refresh_token'] as String);
+    return accessToken;
   }
 
   @override
-  Future<String> initiatePinReset(String phone) async {
+  Future<String?> initiatePinReset(String phone) async {
     try {
       final res = await _dio
-          .post('/v1/customer/auth/reset-pin/initiate', data: {'phone': phone});
-      return res.data['otp_reference'] as String;
+          .post('/v1/auth/pin/reset/initiate', data: {'mobile_number': phone});
+      final data = res.data['data'] as Map<String, dynamic>;
+      return data['challenge_id'] as String?;
     } on DioException catch (e) {
       _handleDioError(e);
     }
@@ -161,15 +167,15 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> completePinReset({
-    required String otpReference,
-    required String otpCode,
-    required String newPinHash,
+    required String challengeId,
+    required String otp,
+    required String newPin,
   }) async {
     try {
-      await _dio.post('/v1/customer/auth/reset-pin/complete', data: {
-        'otp_reference': otpReference,
-        'otp_code': otpCode,
-        'new_pin_hash': newPinHash,
+      await _dio.post('/v1/auth/pin/reset/complete', data: {
+        'challenge_id': challengeId,
+        'otp': otp,
+        'new_pin': newPin,
       });
     } on DioException catch (e) {
       _handleDioError(e);
@@ -178,13 +184,13 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> changePin({
-    required String currentPinHash,
-    required String newPinHash,
+    required String currentPin,
+    required String newPin,
   }) async {
     try {
-      await _dio.post('/v1/customer/auth/change-pin', data: {
-        'current_pin_hash': currentPinHash,
-        'new_pin_hash': newPinHash,
+      await _dio.post('/v1/auth/pin/change', data: {
+        'current_pin': currentPin,
+        'new_pin': newPin,
       });
     } on DioException catch (e) {
       _handleDioError(e);

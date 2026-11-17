@@ -158,15 +158,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
     // firstName and lastName are captured via the registration token flow
   }
 
-  Future<void> setPin(String pinHash) async {
+  Future<void> setPin(String pin) async {
     final regToken = state.registrationToken;
     if (regToken == null) return;
 
     try {
+      final localPinHash = await _pinService.hashPin(pin);
       final customer = await _repo.completeRegistration(
         registrationToken: regToken,
-        pinHash: pinHash,
+        pin: pin,
       );
+      const storage = SecureStorageService();
+      await storage.writePinHash(localPinHash);
       state = state.copyWith(
         status: AuthStateEnum.authenticated,
         customer: customer,

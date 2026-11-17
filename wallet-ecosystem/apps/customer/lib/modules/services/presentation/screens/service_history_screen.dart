@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services_providers.dart';
 import '../../../../core/theme/design_tokens.dart';
@@ -10,35 +10,12 @@ class ServiceHistoryScreen extends ConsumerStatefulWidget {
   const ServiceHistoryScreen({super.key});
 
   @override
-  ConsumerState<ServiceHistoryScreen> createState() => _ServiceHistoryScreenState();
+  ConsumerState<ServiceHistoryScreen> createState() =>
+      _ServiceHistoryScreenState();
 }
 
 class _ServiceHistoryScreenState extends ConsumerState<ServiceHistoryScreen> {
   int _page = 1;
-  final bool _isLoadingMore = false;
-  final _scrollController = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200 &&
-        !_isLoadingMore) {
-      final current = ref.read(servicePaymentHistoryProvider(_page));
-      current.whenData((r) {
-        if (r.hasNextPage) setState(() => _page++);
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,31 +34,58 @@ class _ServiceHistoryScreenState extends ConsumerState<ServiceHistoryScreen> {
         ),
         data: (result) => result.data.isEmpty
             ? const Center(child: Text('No payment history yet.'))
-            : ListView.separated(
-                controller: _scrollController,
-                itemCount: result.data.length + (result.hasNextPage ? 1 : 0),
-                separatorBuilder: (_, __) => const Divider(height: 1),
-                itemBuilder: (context, i) {
-                  if (i >= result.data.length) {
-                    return const Padding(
-                      padding: EdgeInsets.all(AppSpacing.md),
-                      child: Center(child: CircularProgressIndicator()),
-                    );
-                  }
-                  final p = result.data[i];
-                  return ListTile(
-                    leading: const CircleAvatar(child: Icon(Icons.receipt_long)),
-                    title: Text(p.providerName, style: AppTypography.label),
-                    subtitle: Text(
-                      p.createdAt.toLocal().toString().substring(0, 16),
-                      style: AppTypography.caption,
+            : Column(
+                children: [
+                  Expanded(
+                    child: ListView.separated(
+                      itemCount: result.data.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (context, i) {
+                        final payment = result.data[i];
+                        return ListTile(
+                          leading: const CircleAvatar(
+                              child: Icon(Icons.receipt_long)),
+                          title: Text(payment.providerName,
+                              style: AppTypography.label),
+                          subtitle: Text(
+                            payment.createdAt
+                                .toLocal()
+                                .toString()
+                                .substring(0, 16),
+                            style: AppTypography.caption,
+                          ),
+                          trailing: AmountDisplay(
+                            amountMinorUnits: payment.amountMinorUnits,
+                            currencyCode: payment.currencyCode,
+                          ),
+                        );
+                      },
                     ),
-                    trailing: AmountDisplay(
-                      amountMinorUnits: p.amountMinorUnits,
-                      currencyCode: p.currencyCode,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          tooltip: 'Previous page',
+                          onPressed:
+                              _page > 1 ? () => setState(() => _page--) : null,
+                          icon: const Icon(Icons.chevron_left),
+                        ),
+                        Text('Page $_page'),
+                        IconButton(
+                          tooltip: 'Next page',
+                          onPressed: result.hasNextPage
+                              ? () => setState(() => _page++)
+                              : null,
+                          icon: const Icon(Icons.chevron_right),
+                        ),
+                      ],
                     ),
-                  );
-                },
+                  ),
+                ],
               ),
       ),
     );

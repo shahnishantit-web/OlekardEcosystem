@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../config/app_features.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseBackgroundHandler(RemoteMessage message) async {
@@ -20,6 +21,8 @@ class PushNotificationService {
   );
 
   static Future<void> initialize() async {
+    if (!AppFeatures.enableFirebase) return;
+
     FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundHandler);
 
     await _localNotifications.initialize(
@@ -54,6 +57,8 @@ class PushNotificationService {
   }
 
   static Future<String?> getToken() async {
+    if (!AppFeatures.enableFirebase) return null;
+
     final currentToken = _registrationToken;
     if (currentToken != null) return currentToken;
 

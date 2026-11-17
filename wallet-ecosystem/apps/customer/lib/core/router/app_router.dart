@@ -25,7 +25,7 @@ import '../../modules/profile/presentation/screens/profile_screen.dart';
 import '../../modules/profile/presentation/screens/edit_profile_screen.dart';
 import '../../modules/security_settings/presentation/screens/security_settings_screen.dart';
 import '../../modules/security_settings/presentation/screens/change_pin_screen.dart';
-import '../../modules/security_settings/presentation/screens/device_management_screen.dart';
+import '../../modules/device/presentation/screens/device_list_screen.dart';
 import '../../modules/support/presentation/screens/support_home_screen.dart';
 import '../../modules/support/presentation/screens/new_inquiry_screen.dart';
 import '../../modules/support/presentation/screens/ticket_detail_screen.dart';
@@ -82,7 +82,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           builder: (_, __) => const OtpVerificationScreen()),
       GoRoute(
           path: '/forgot-pin/new-pin',
-          builder: (_, __) => const PinResetScreen()),
+          builder: (_, state) => PinResetScreen(
+                challengeId: state.extra as String?,
+              )),
       GoRoute(
           path: '/step-up-pin', builder: (_, __) => const StepUpPinScreen()),
       // Full-screen financial routes (outside shell)
@@ -180,7 +182,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/security/devices',
-            builder: (_, __) => const DeviceManagementScreen(),
+            builder: (_, __) => const DeviceListScreen(),
           ),
           GoRoute(
               path: '/support', builder: (_, __) => const SupportHomeScreen()),

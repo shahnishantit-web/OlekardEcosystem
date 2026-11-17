@@ -66,13 +66,13 @@ final class ReviewedOrganisationMembershipService implements OrganisationMembers
         return ['id' => $id, 'status' => 'pending_review'];
     }
 
-    public function reviewOrganisation(string $id, string $decision, string $actorId): void
+    public function reviewOrganisation(string $id, string $decision, string $actorId, ?string $comments = null): void
     {
         $this->requireAdmin($actorId, 'organisation.registry.review');
-        if (! in_array($decision, ['active', 'rejected'], true)) {
-            throw ValidationException::withMessages(['decision' => 'Choose active or rejected.']);
+        if (! in_array($decision, ['pending_approval', 'rejected'], true)) {
+            throw ValidationException::withMessages(['decision' => 'Choose approve for final approval or reject.']);
         }
-        $this->db()->transaction(function () use ($id, $decision, $actorId): void {
+        $this->db()->transaction(function () use ($id, $decision, $comments, $actorId): void {
             $org = $this->db()->table('identity.organisations')->where('id', $id)->lockForUpdate()->first();
             if ($org === null || $org->status !== 'pending_review') {
                 abort(409, 'Organisation is not pending review.');
@@ -81,9 +81,62 @@ final class ReviewedOrganisationMembershipService implements OrganisationMembers
                 abort(403, 'A separate reviewer is required.');
             }
             $this->db()->table('identity.organisations')->where('id', $id)->update([
-                'status' => $decision, 'reviewed_by' => $actorId, 'updated_at' => now(),
+                'status' => $decision, 'reviewed_by' => $actorId, 'reviewer_comments' => $comments, 'updated_at' => now(),
             ]);
             $this->event('organisation', $id, 'reviewed', $actorId, 'pending_review', $decision);
+        });
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function organisationQueue(string $actorId, string $stage): array
+    {
+        $permission = $stage === 'approval' ? 'organisation.registry.approve' : ($stage === 'mine' ? 'organisation.registry.request' : 'organisation.registry.review');
+        $this->requireAdmin($actorId, $permission);
+        $query = $this->db()->table('identity.organisations as organisation')
+            ->leftJoin('identity.users as creator', 'creator.id', '=', 'organisation.requested_by')
+            ->leftJoin('identity.users as reviewer', 'reviewer.id', '=', 'organisation.reviewed_by')
+            ->select('organisation.*', 'creator.email as creator_email', 'reviewer.email as reviewer_email');
+        if ($stage === 'approval') $query->where('organisation.status', 'pending_approval');
+        elseif ($stage === 'review') $query->where('organisation.status', 'pending_review');
+        else $query->where('organisation.requested_by', $actorId);
+        return $query->orderByDesc('organisation.created_at')->get()->map(fn ($row) => (array) $row)->all();
+    }
+
+    /** @return array<string, mixed> */
+    public function organisationDetails(string $id, string $actorId): array
+    {
+        $this->requireAdmin($actorId, 'organisation.registry.read');
+        $row = $this->db()->table('identity.organisations as organisation')
+            ->leftJoin('identity.users as creator', 'creator.id', '=', 'organisation.requested_by')
+            ->leftJoin('identity.users as reviewer', 'reviewer.id', '=', 'organisation.reviewed_by')
+            ->leftJoin('identity.users as approver', 'approver.id', '=', 'organisation.approved_by')
+            ->where('organisation.id', $id)
+            ->first(['organisation.*', 'creator.email as creator_email', 'reviewer.email as reviewer_email', 'approver.email as approver_email']);
+        abort_if($row === null, 404, 'Organisation request not found.');
+        $ownsRequest = $row->requested_by === $actorId;
+        $canReview = $this->identity->hasPermission($actorId, 'organisation.registry.review');
+        $canApprove = $this->identity->hasPermission($actorId, 'organisation.registry.approve');
+        $canManage = $this->identity->hasPermission($actorId, 'organisation.registry.revoke');
+        $mayView = $ownsRequest
+            || ($row->status === 'pending_review' && $canReview)
+            || ($row->status === 'pending_approval' && $canApprove)
+            || $canManage;
+        abort_unless($mayView, 403, 'You cannot view this organisation request.');
+        return (array) $row;
+    }
+
+    public function approveOrganisation(string $id, string $decision, ?string $comments, string $actorId): void
+    {
+        $this->requireAdmin($actorId, 'organisation.registry.approve');
+        if (! in_array($decision, ['active', 'rejected'], true)) throw ValidationException::withMessages(['decision' => 'Choose approve or reject.']);
+        $this->db()->transaction(function () use ($id, $decision, $comments, $actorId): void {
+            $org = $this->db()->table('identity.organisations')->where('id', $id)->lockForUpdate()->first();
+            if ($org === null || $org->status !== 'pending_approval') abort(409, 'Organisation is not pending approval.');
+            if ($org->requested_by === $actorId || $org->reviewed_by === $actorId) abort(403, 'A separate approver is required.');
+            $this->db()->table('identity.organisations')->where('id', $id)->update([
+                'status' => $decision, 'approved_by' => $actorId, 'approver_comments' => $comments, 'updated_at' => now(),
+            ]);
+            $this->event('organisation', $id, 'approved', $actorId, 'pending_approval', $decision);
         });
     }
 

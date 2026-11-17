@@ -25,10 +25,30 @@ final class OrganisationRegistryController extends Controller
         )], 201);
     }
 
+    public function index(Request $request): JsonResponse
+    {
+        $actor = $this->actor($request);
+        $stage = $request->query('stage', 'review');
+        abort_unless(in_array($stage, ['mine', 'review', 'approval'], true), 422, 'Invalid organisation queue stage.');
+        return response()->json(['data' => $this->registry->organisationQueue($actor, $stage)]);
+    }
+
+    public function show(Request $request, string $id): JsonResponse
+    {
+        return response()->json(['data' => $this->registry->organisationDetails($id, $this->actor($request))]);
+    }
+
     public function reviewOrganisation(Request $request, string $id): JsonResponse
     {
-        $data = $request->validate(['decision' => ['required', 'in:active,rejected']]);
-        $this->registry->reviewOrganisation($id, $data['decision'], $this->actor($request));
+        $data = $request->validate(['decision' => ['required', 'in:pending_approval,rejected'], 'comments' => ['nullable', 'string', 'max:2000']]);
+        $this->registry->reviewOrganisation($id, $data['decision'], $this->actor($request), $data['comments'] ?? null);
+        return response()->json(['data' => ['id' => $id, 'status' => $data['decision']]]);
+    }
+
+    public function approveOrganisation(Request $request, string $id): JsonResponse
+    {
+        $data = $request->validate(['decision' => ['required', 'in:active,rejected'], 'comments' => ['nullable', 'string', 'max:2000']]);
+        $this->registry->approveOrganisation($id, $data['decision'], $data['comments'] ?? null, $this->actor($request));
         return response()->json(['data' => ['id' => $id, 'status' => $data['decision']]]);
     }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../domain/entities/service_provider.dart';
 import '../services_providers.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../shared/widgets/error_view.dart';
@@ -27,10 +28,6 @@ class _ServicesHomeScreenState extends ConsumerState<ServicesHomeScreen> {
         actions: isWide
             ? [
                 TextButton(
-                  onPressed: () => context.push('/events/free-registration'),
-                  child: const Text('Free Event Registration'),
-                ),
-                TextButton(
                   onPressed: () => context.push('/events/tickets'),
                   child: const Text('My Event Tickets'),
                 ),
@@ -44,10 +41,6 @@ class _ServicesHomeScreenState extends ConsumerState<ServicesHomeScreen> {
                   tooltip: 'Services menu',
                   onSelected: (destination) => context.push(destination),
                   itemBuilder: (context) => const [
-                    PopupMenuItem(
-                      value: '/events/free-registration',
-                      child: Text('Free Event Registration'),
-                    ),
                     PopupMenuItem(
                       value: '/events/tickets',
                       child: Text('My Event Tickets'),
@@ -70,7 +63,16 @@ class _ServicesHomeScreenState extends ConsumerState<ServicesHomeScreen> {
           onRetry: () => ref.invalidate(serviceCategoriesProvider),
         ),
         data: (categories) {
-          final filtered = categories.where((category) => category.name.toLowerCase().contains(_query.toLowerCase())).toList();
+          final query = _query.trim().toLowerCase();
+          final filtered = categories
+              .where((category) => category.name.toLowerCase().contains(query))
+              .toList();
+          final showFreeEventRegistration = query.isEmpty ||
+              'free event registration'.contains(query) ||
+              'events'.contains(query) ||
+              'event registration'.contains(query) ||
+              'registration'.contains(query);
+
           return Column(
             children: [
               Padding(
@@ -80,45 +82,23 @@ class _ServicesHomeScreenState extends ConsumerState<ServicesHomeScreen> {
                     hintText: 'Search services...',
                     prefixIcon: Icon(Icons.search),
                   ),
-                  onChanged: (query) {
-                    setState(() => _query = query);
-                  },
+                  onChanged: (query) => setState(() => _query = query),
                 ),
               ),
               Expanded(
-                child: filtered.isEmpty ? const Center(child: Text('No services found.')) : GridView.count(
-                  crossAxisCount: 2,
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  mainAxisSpacing: AppSpacing.md,
-                  crossAxisSpacing: AppSpacing.md,
-                  children: filtered
-                      .map((cat) => InkWell(
-                            onTap: () => context.push('/services/${cat.id}'),
-                            borderRadius: BorderRadius.circular(12),
-                            child: Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(AppSpacing.md),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.grid_view, size: 32, color: AppColors.primary),
-                                    const SizedBox(height: AppSpacing.sm),
-                                    Text(
-                                      cat.name,
-                                      style: AppTypography.label,
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    Text(
-                                      '${cat.providerCount} providers',
-                                      style: AppTypography.caption.copyWith(color: Colors.grey),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ))
-                      .toList(),
-                ),
+                child: filtered.isEmpty && !showFreeEventRegistration
+                    ? const Center(child: Text('No services found.'))
+                    : GridView.count(
+                        crossAxisCount: 2,
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        mainAxisSpacing: AppSpacing.md,
+                        crossAxisSpacing: AppSpacing.md,
+                        children: [
+                          if (showFreeEventRegistration)
+                            _buildFreeEventRegistrationCard(),
+                          ...filtered.map(_buildCategoryCard),
+                        ],
+                      ),
               ),
             ],
           );
@@ -126,4 +106,58 @@ class _ServicesHomeScreenState extends ConsumerState<ServicesHomeScreen> {
       ),
     );
   }
+
+  Widget _buildFreeEventRegistrationCard() => InkWell(
+        onTap: () => context.push('/events/free-registration'),
+        borderRadius: BorderRadius.circular(12),
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.event_available,
+                    size: 32, color: AppColors.primary),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Free Event Registration',
+                  style: AppTypography.label,
+                  textAlign: TextAlign.center,
+                ),
+                Text(
+                  'Register for an event at no charge',
+                  style: AppTypography.caption.copyWith(color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+  Widget _buildCategoryCard(ServiceCategory category) => InkWell(
+        onTap: () => context.push('/services/${category.id}'),
+        borderRadius: BorderRadius.circular(12),
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.grid_view, size: 32, color: AppColors.primary),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  category.name,
+                  style: AppTypography.label,
+                  textAlign: TextAlign.center,
+                ),
+                Text(
+                  '${category.providerCount} providers',
+                  style: AppTypography.caption.copyWith(color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
 }

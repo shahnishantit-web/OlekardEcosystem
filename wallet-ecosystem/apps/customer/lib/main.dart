@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/semantics.dart';
 import 'package:shared_payment/shared_payment.dart';
+import 'core/config/app_features.dart';
 import 'core/di/providers.dart';
 import 'core/notifications/deep_link_handler.dart';
 import 'core/notifications/push_notification_service.dart';
@@ -17,7 +18,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   const enableWebSemanticsForP26E2e =
       bool.fromEnvironment('P26_E2E_ENABLE_WEB_SEMANTICS');
-  if (!kIsWeb) {
+  if (!kIsWeb && AppFeatures.enableFirebase) {
     await Firebase.initializeApp();
     await PushNotificationService.initialize();
   }
@@ -53,7 +54,7 @@ class _CustomerAppState extends ConsumerState<CustomerApp> {
     super.initState();
     _lifecycleObserver = AppLifecycleObserver(ref);
     WidgetsBinding.instance.addObserver(_lifecycleObserver);
-    if (!kIsWeb) {
+    if (!kIsWeb && AppFeatures.enableFirebase) {
       _handleInitialNotification();
       _listenForegroundMessages();
     }
@@ -86,10 +87,10 @@ class _CustomerAppState extends ConsumerState<CustomerApp> {
       }
     });
   }
-
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
+
     return MaterialApp.router(
       title: 'OleKard Wallet',
       theme: AppTheme.light,

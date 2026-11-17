@@ -29,7 +29,7 @@ final class DevCustomerAppSeeder extends Seeder
         $roleId = $identity->table('identity.roles')->where('slug', 'customer')->whereNull('deleted_at')->value('id');
         if (! $roleId) throw new \RuntimeException('The customer role is required.');
         // Explicit consumer permissions only. Ownership remains enforced by each API.
-        $permissions = ['wallet.read', 'transaction.read', 'transaction.receipt.read',
+        $permissions = ['wallet.read', 'wallet.balance.read', 'transaction.read', 'transaction.receipt.read',
             'transfer.initiate', 'transfer.read', 'funding.initiate', 'funding.read',
             'withdrawal.initiate', 'withdrawal.read', 'service.list', 'service.pay',
             'payment.intents.read', 'payment.intents.manage'];

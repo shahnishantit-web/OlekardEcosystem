@@ -1,10 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/security/screenshot_guard.dart';
-import '../../../../core/security/pin_service.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../shared/widgets/pin_pad_widget.dart';
+
 enum _Step { current, newPin, confirm }
 
 class ChangePinScreen extends ConsumerStatefulWidget {
@@ -16,8 +16,8 @@ class ChangePinScreen extends ConsumerStatefulWidget {
 
 class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
   _Step _step = _Step.current;
-  String? _currentPinHash;
-  String? _newPinHash;
+  String? _currentPin;
+  String? _newPin;
   bool _isLoading = false;
   String? _error;
   final _guard = ScreenshotGuard();
@@ -49,15 +49,17 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
         child: Column(
           children: [
             const SizedBox(height: AppSpacing.xl),
-            Text(title, style: AppTypography.headline, textAlign: TextAlign.center),
+            Text(title,
+                style: AppTypography.headline, textAlign: TextAlign.center),
             const SizedBox(height: AppSpacing.sm),
-            Text(subtitle, style: AppTypography.body, textAlign: TextAlign.center),
+            Text(subtitle,
+                style: AppTypography.body, textAlign: TextAlign.center),
             const SizedBox(height: AppSpacing.xl),
             if (_isLoading)
               const Center(child: CircularProgressIndicator())
             else
               PinPadWidget(
-                                onCompleted: _handlePin,
+                onCompleted: _handlePin,
               ),
             if (_error != null) ...[
               const SizedBox(height: AppSpacing.md),
@@ -70,15 +72,25 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
   }
 
   Future<void> _handlePin(String pin) async {
-    final hashed = await PinService.hash(pin);
     switch (_step) {
       case _Step.current:
-        setState(() { _currentPinHash = hashed; _step = _Step.newPin; });
+        setState(() {
+          _currentPin = pin;
+          _error = null;
+          _step = _Step.newPin;
+        });
       case _Step.newPin:
-        setState(() { _newPinHash = hashed; _step = _Step.confirm; });
+        setState(() {
+          _newPin = pin;
+          _error = null;
+          _step = _Step.confirm;
+        });
       case _Step.confirm:
-        if (hashed != _newPinHash) {
-          setState(() { _error = 'PINs do not match. Please try again.'; _step = _Step.newPin; });
+        if (pin != _newPin) {
+          setState(() {
+            _error = 'PINs do not match. Please try again.';
+            _step = _Step.newPin;
+          });
           return;
         }
         await _submitChange();
@@ -86,12 +98,15 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
   }
 
   Future<void> _submitChange() async {
-    setState(() { _isLoading = true; _error = null; });
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
     try {
       final dio = ref.read(apiClientProvider).dio;
-      await dio.post('/v1/customer/auth/change-pin', data: {
-        'current_pin_hash': _currentPinHash,
-        'new_pin_hash': _newPinHash,
+      await dio.post('/v1/auth/pin/change', data: {
+        'current_pin': _currentPin,
+        'new_pin': _newPin,
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -100,9 +115,16 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
         Navigator.of(context).pop();
       }
     } catch (e) {
-      setState(() { _error = e.toString(); _step = _Step.current; });
+      if (mounted) {
+        setState(() {
+          _currentPin = null;
+          _newPin = null;
+          _error = e.toString();
+          _step = _Step.current;
+        });
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 }

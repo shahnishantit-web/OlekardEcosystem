@@ -50,10 +50,10 @@ class _Repository extends Fake implements AuthRepository {
   @override
   Future<Customer> completeRegistration(
       {required String registrationToken,
-      required String pinHash,
+      required String pin,
       String? email}) async {
     lastRegistrationToken = registrationToken;
-    lastPinHash = pinHash;
+    lastPinHash = pin;
     return customer;
   }
 
@@ -128,7 +128,7 @@ void main() {
         phone: '+26771000001', firstName: 'Test', lastName: 'Customer');
     await notifier.verifyOtp('123456');
     await notifier.completeRegistration('Test', 'Customer');
-    await notifier.setPin('registration-pin-hash');
+    await notifier.setPin('735291');
     expect(states.map((s) => s.status), [
       AuthStateEnum.unauthenticated,
       AuthStateEnum.registering,
@@ -139,7 +139,7 @@ void main() {
     ]);
     expect(repository.lastOtp, '123456');
     expect(repository.lastRegistrationToken, 'registration-token');
-    expect(repository.lastPinHash, 'registration-pin-hash');
+    expect(repository.lastPinHash, '735291');
     expect(container.read(authProvider).customer, repository.customer);
   });
 

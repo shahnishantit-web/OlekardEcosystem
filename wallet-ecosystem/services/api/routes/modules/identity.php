@@ -28,8 +28,11 @@ Route::prefix('v1')->group(static function (): void {
         ->middleware(['identity.auth', 'identity.require-actor-type:admin', 'idempotency:require-identity'])
         ->group(static function (): void {
             $controller = \App\Modules\Identity\Infrastructure\Http\Controllers\OrganisationRegistryController::class;
+            Route::get('/', [$controller, 'index'])->middleware('identity.require-permission:organisation.registry.read');
+            Route::get('{id}', [$controller, 'show'])->middleware('identity.require-permission:organisation.registry.read');
             Route::post('/', [$controller, 'requestOrganisation'])->middleware('identity.require-permission:organisation.registry.request');
             Route::post('{id}/review', [$controller, 'reviewOrganisation'])->middleware('identity.require-permission:organisation.registry.review');
+            Route::post('{id}/approve', [$controller, 'approveOrganisation'])->middleware('identity.require-permission:organisation.registry.approve');
             Route::post('{id}/suspend', [$controller, 'suspendOrganisation'])->middleware('identity.require-permission:organisation.registry.revoke');
             Route::post('{id}/memberships', [$controller, 'requestMembership'])->middleware('identity.require-permission:organisation.registry.request');
             Route::post('memberships/{id}/review', [$controller, 'reviewMembership'])->middleware('identity.require-permission:organisation.registry.review');

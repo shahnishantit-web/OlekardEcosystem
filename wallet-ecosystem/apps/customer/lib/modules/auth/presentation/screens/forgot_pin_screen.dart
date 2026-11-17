@@ -47,8 +47,9 @@ class _ForgotPinScreenState extends ConsumerState<ForgotPinScreen> {
                   labelText: 'Phone Number',
                   hintText: '+254712345678',
                 ),
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Phone number required' : null,
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Phone number required'
+                    : null,
               ),
               const SizedBox(height: AppSpacing.xl),
               PrimaryButton(
@@ -67,10 +68,12 @@ class _ForgotPinScreenState extends ConsumerState<ForgotPinScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     try {
-      await ref
+      final challengeId = await ref
           .read(authRepositoryProvider)
           .initiatePinReset(_phoneController.text.trim());
-      if (mounted) context.push('/forgot-pin/new-pin');
+      if (mounted) {
+        context.push('/forgot-pin/new-pin', extra: challengeId);
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

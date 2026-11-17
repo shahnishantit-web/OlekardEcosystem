@@ -14,7 +14,7 @@ final class OrganisationRegistryPermissionSeeder extends Seeder
     public function run(): void
     {
         $db = DB::connection('identity');
-        foreach (['organisation.registry.request', 'organisation.registry.review', 'organisation.registry.revoke'] as $slug) {
+        foreach (['organisation.registry.read', 'organisation.registry.request', 'organisation.registry.review', 'organisation.registry.approve', 'organisation.registry.revoke'] as $slug) {
             $db->table('identity.permissions')->insertOrIgnore([
                 'id' => (string) Str::uuid7(), 'slug' => $slug,
                 'display_name' => Str::headline(str_replace('.', ' ', $slug)),
