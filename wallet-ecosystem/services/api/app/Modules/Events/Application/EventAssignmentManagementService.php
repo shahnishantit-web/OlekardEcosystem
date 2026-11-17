@@ -52,6 +52,55 @@ final class EventAssignmentManagementService
         return $this->grant('organisation', $organisationId, $organisationId, null, null, $targetActorId, $permission, $actorId, $reasonCode, $correlationId);
     }
 
+    /** @return list<array{id: string, display_name: string, email: ?string, mobile_number: ?string}> */
+    public function listOrganisationMembers(string $organisationId, string $actorId): array
+    {
+        $this->membership->assertActiveMembership($actorId, $organisationId);
+        abort_unless($this->identity->hasPermission($actorId, EventPermissions::ASSIGNMENT_GRANT), 403, 'Assignment administration permission is required.');
+        $users = DB::connection('identity')->table('identity.organisation_memberships as membership')
+            ->join('identity.users as user', 'user.id', '=', 'membership.user_id')
+            ->where('membership.organisation_id', $organisationId)->where('membership.status', 'active')
+            ->where('user.status', 'active')->orderBy('user.email')->get(['user.id', 'user.email', 'user.mobile_number']);
+        return $this->presentActorOptions($users->all());
+    }
+
+    /** @return list<array{id: string, display_name: string, email: ?string, mobile_number: ?string}> */
+    public function listInvitationCustomers(string $eventId, string $actorId, ?string $search = null): array
+    {
+        $event = $this->event($eventId);
+        $organisationId = (string) $event->organisation_id;
+        $this->membership->assertActiveMembership($actorId, $organisationId);
+        $this->authorization->assertEvent($actorId, $organisationId, $eventId, EventPermissions::UPDATE);
+        $query = DB::connection('identity')->table('identity.users')->where('actor_type', 'CUSTOMER')->where('status', 'active');
+        $search = trim((string) $search);
+        if ($search !== '') {
+            $query->where(static function ($builder) use ($search): void {
+                $builder->where('email', 'ilike', '%'.$search.'%')->orWhere('mobile_number', 'ilike', '%'.$search.'%');
+            });
+        }
+        $users = $query->orderBy('email')->limit(100)->get(['id', 'email', 'mobile_number']);
+        return $this->presentActorOptions($users->all());
+    }
+
+    /** @param array<int, object> $users @return list<array{id: string, display_name: string, email: ?string, mobile_number: ?string}> */
+    private function presentActorOptions(array $users): array
+    {
+        if ($users === []) return [];
+        $ids = array_map(static fn (object $user): string => (string) $user->id, $users);
+        $profiles = DB::connection('profile')->table('profile.user_profiles')->whereIn('user_id', $ids)
+            ->get(['user_id', 'first_name', 'last_name'])->keyBy('user_id');
+        return array_map(static function (object $user) use ($profiles): array {
+            $profile = $profiles->get((string) $user->id);
+            $name = trim(implode(' ', array_filter([$profile?->first_name, $profile?->last_name])));
+            return [
+                'id' => (string) $user->id,
+                'display_name' => $name !== '' ? $name : (string) ($user->email ?: $user->mobile_number ?: 'Unnamed user'),
+                'email' => $user->email === null ? null : (string) $user->email,
+                'mobile_number' => $user->mobile_number === null ? null : (string) $user->mobile_number,
+            ];
+        }, $users);
+    }
+
     /** @return array<string, mixed> */
     public function grantEventAssignment(
         string $eventId,

@@ -122,48 +122,141 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     unawaited(showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
         _pinEntrySheetContext = ctx;
         return Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(ctx).viewInsets.bottom,
-            top: AppSpacing.lg,
-            left: AppSpacing.lg,
-            right: AppSpacing.lg,
           ),
-          child: Consumer(builder: (context, ref, _) {
-            final isVerifying =
-                ref.watch(authProvider).status == AuthStateEnum.verifyingPin;
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Enter your PIN', style: AppTypography.title),
-                const SizedBox(height: AppSpacing.lg),
-                PinPadWidget(
-                  enabled: !isVerifying,
-                  onCompleted: (pin) {
-                    if (!isVerifying) {
-                      unawaited(
-                          ref.read(authProvider.notifier).verifyLogin(pin));
-                    }
-                  },
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 460),
+              child: Container(
+                margin: const EdgeInsets.all(AppSpacing.md),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.md,
+                  AppSpacing.xl,
+                  AppSpacing.xl,
                 ),
-                if (isVerifying) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  Semantics(
-                    label: 'Verifying PIN',
-                    child: const CircularProgressIndicator(),
-                  ),
-                ],
-                const SizedBox(height: AppSpacing.lg),
-              ],
-            );
-          }),
+                decoration: BoxDecoration(
+                  color: Theme.of(ctx).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.18),
+                      blurRadius: 28,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Consumer(builder: (context, ref, _) {
+                  final authState = ref.watch(authProvider);
+                  final isVerifying =
+                      authState.status == AuthStateEnum.verifyingPin;
+                  final theme = Theme.of(context);
+
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.outlineVariant,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
+                      CircleAvatar(
+                        radius: 28,
+                        backgroundColor: theme.colorScheme.primaryContainer,
+                        child: Icon(
+                          Icons.lock_outline_rounded,
+                          size: 28,
+                          color: theme.colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        'Enter your PIN',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        'Enter your 6-digit PIN to securely access your wallet.',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        _maskedPhone(_phoneController.text.trim()),
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
+                      PinPadWidget(
+                        enabled: !isVerifying,
+                        onCompleted: (pin) {
+                          if (!isVerifying) {
+                            unawaited(ref
+                                .read(authProvider.notifier)
+                                .verifyLogin(pin));
+                          }
+                        },
+                      ),
+                      if (authState.error != null && !isVerifying) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          authState.error!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: theme.colorScheme.error),
+                        ),
+                      ],
+                      if (isVerifying) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        const LinearProgressIndicator(),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          'Verifying securely…',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: AppSpacing.md),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                          context.push('/forgot-pin');
+                        },
+                        child: const Text('Forgot PIN?'),
+                      ),
+                    ],
+                  );
+                }),
+              ),
+            ),
+          ),
         );
       },
     ).whenComplete(() {
       _pinEntrySheetOpen = false;
       _pinEntrySheetContext = null;
     }));
+  }
+
+  String _maskedPhone(String phone) {
+    if (phone.length < 7) return phone;
+    return '${phone.substring(0, phone.length - 4).replaceAll(RegExp(r'\d(?=.{4})'), '•')} ${phone.substring(phone.length - 4)}';
   }
 }

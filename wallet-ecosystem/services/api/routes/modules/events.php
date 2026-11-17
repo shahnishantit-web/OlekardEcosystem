@@ -10,9 +10,14 @@ use App\Modules\Events\Infrastructure\Http\Controllers\EventCancellationControll
 use App\Modules\Events\Infrastructure\Http\Controllers\ComplimentaryApprovalController;
 use App\Modules\Events\Infrastructure\Http\Controllers\EventOrderController;
 use App\Modules\Events\Infrastructure\Http\Controllers\FreeEventRegistrationController;
+use App\Modules\Events\Infrastructure\Http\Controllers\CustomerEventCatalogueController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1/events')->middleware(['identity.auth'])->group(static function (): void {
+    Route::get('customer/catalogue', [CustomerEventCatalogueController::class, 'index']);
+    Route::get('organisations/{organisationId}/drafts', [EventAuthoringController::class, 'index']);
+    Route::get('organisations/{organisationId}/members', [EventAssignmentController::class, 'organisationMembers']);
+    Route::get('{eventId}/invitation-customers', [EventAssignmentController::class, 'invitationCustomers']);
     Route::get('tickets', [EventAdmissionController::class, 'tickets']);
     Route::get('tickets/{ticketId}', [EventAdmissionController::class, 'ticket']);
     Route::post('tickets/{ticketId}/replace-credential', [EventAdmissionController::class, 'replaceCredential'])

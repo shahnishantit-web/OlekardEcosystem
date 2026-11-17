@@ -26,6 +26,11 @@ final class EventAuthoringController extends Controller
         )], 201);
     }
 
+    public function index(Request $request, string $organisationId): JsonResponse
+    {
+        return response()->json(['data' => $this->drafts->listForOrganisation($organisationId, $this->actor($request))]);
+    }
+
     public function show(Request $request, string $eventId): JsonResponse
     {
         return response()->json(['data' => $this->drafts->get($eventId, $this->actor($request))]);

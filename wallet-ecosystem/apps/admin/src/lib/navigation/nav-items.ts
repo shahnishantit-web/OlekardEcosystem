@@ -166,6 +166,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { href: '/notifications/rules', label: 'Notification Rules', icon: Settings, requiredPermission: 'notifications.rules.read' },
       { href: '/audit',                   label: 'Audit Events',  icon: FileText },
       { href: '/organisations/onboarding', label: 'Organisation Onboarding', icon: Building2 },
+      { href: '/organisations/memberships', label: 'Organisation Memberships', icon: Building2 },
       { href: '/community/events', label: 'Events · authoring and review', icon: Calendar },
       { href: '/compliance',              label: 'Compliance',    icon: Shield },
       { href: '/reports',                 label: 'Reports',       icon: BarChart2 },

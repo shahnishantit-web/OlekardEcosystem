@@ -35,6 +35,7 @@ import '../../modules/support/presentation/screens/dispute_detail_screen.dart';
 import '../../modules/payment/presentation/money_flow_screen.dart';
 import '../../modules/events/presentation/screens/customer_event_tickets_screen.dart';
 import '../../modules/events/presentation/screens/free_event_registration_screen.dart';
+import '../../modules/events/presentation/screens/customer_event_catalogue_screen.dart';
 import '../../modules/payment/application/customer_money_service.dart';
 import '../../modules/security_settings/presentation/screens/step_up_pin_screen.dart';
 import '../shell/main_shell.dart';
@@ -141,6 +142,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
               path: '/services',
               builder: (_, __) => const ServicesHomeScreen()),
+          GoRoute(
+            path: '/events/catalogue',
+            builder: (_, __) => const CustomerEventCatalogueScreen(),
+          ),
           GoRoute(
             path: '/events/tickets',
             builder: (_, __) => const CustomerEventTicketsScreen(),

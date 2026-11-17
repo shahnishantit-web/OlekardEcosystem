@@ -90,13 +90,19 @@ final class ReviewedOrganisationMembershipService implements OrganisationMembers
     /** @return list<array<string, mixed>> */
     public function organisationQueue(string $actorId, string $stage): array
     {
-        $permission = $stage === 'approval' ? 'organisation.registry.approve' : ($stage === 'mine' ? 'organisation.registry.request' : 'organisation.registry.review');
+        $permission = match ($stage) {
+            'approval' => 'organisation.registry.approve',
+            'mine' => 'organisation.registry.request',
+            'active' => 'organisation.registry.read',
+            default => 'organisation.registry.review',
+        };
         $this->requireAdmin($actorId, $permission);
         $query = $this->db()->table('identity.organisations as organisation')
             ->leftJoin('identity.users as creator', 'creator.id', '=', 'organisation.requested_by')
             ->leftJoin('identity.users as reviewer', 'reviewer.id', '=', 'organisation.reviewed_by')
             ->select('organisation.*', 'creator.email as creator_email', 'reviewer.email as reviewer_email');
-        if ($stage === 'approval') $query->where('organisation.status', 'pending_approval');
+        if ($stage === 'active') $query->where('organisation.status', 'active');
+        elseif ($stage === 'approval') $query->where('organisation.status', 'pending_approval');
         elseif ($stage === 'review') $query->where('organisation.status', 'pending_review');
         else $query->where('organisation.requested_by', $actorId);
         return $query->orderByDesc('organisation.created_at')->get()->map(fn ($row) => (array) $row)->all();
@@ -190,6 +196,27 @@ final class ReviewedOrganisationMembershipService implements OrganisationMembers
             }
             throw $exception;
         }
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function membershipQueue(string $actorId, string $stage): array
+    {
+        $this->requireAdmin($actorId, $stage === 'review' ? 'organisation.registry.review' : 'organisation.registry.request');
+        $query = $this->db()->table('identity.organisation_memberships as membership')
+            ->join('identity.organisations as organisation', 'organisation.id', '=', 'membership.organisation_id')
+            ->join('identity.users as target', 'target.id', '=', 'membership.user_id')
+            ->leftJoin('identity.users as requester', 'requester.id', '=', 'membership.requested_by')
+            ->leftJoin('identity.users as reviewer', 'reviewer.id', '=', 'membership.reviewed_by')
+            ->select(
+                'membership.id', 'membership.organisation_id', 'membership.user_id', 'membership.status',
+                'membership.evidence_reference', 'membership.requested_by', 'membership.reviewed_by',
+                'membership.created_at', 'membership.updated_at', 'organisation.display_name as organisation_name',
+                'organisation.registry_reference', 'target.email as user_email', 'requester.email as requester_email',
+                'reviewer.email as reviewer_email',
+            );
+        if ($stage === 'review') $query->where('membership.status', 'pending_review');
+        else $query->where('membership.requested_by', $actorId);
+        return $query->orderByDesc('membership.created_at')->get()->map(fn ($row) => (array) $row)->all();
     }
 
     public function reviewMembership(string $id, string $decision, string $actorId): void

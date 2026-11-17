@@ -8,6 +8,7 @@ use App\Modules\Identity\Application\Services\ReviewedOrganisationMembershipServ
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Validation\ValidationException;
 
 final class OrganisationRegistryController extends Controller
 {
@@ -29,7 +30,7 @@ final class OrganisationRegistryController extends Controller
     {
         $actor = $this->actor($request);
         $stage = $request->query('stage', 'review');
-        abort_unless(in_array($stage, ['mine', 'review', 'approval'], true), 422, 'Invalid organisation queue stage.');
+        abort_unless(in_array($stage, ['mine', 'review', 'approval', 'active'], true), 422, 'Invalid organisation queue stage.');
         return response()->json(['data' => $this->registry->organisationQueue($actor, $stage)]);
     }
 
@@ -61,12 +62,23 @@ final class OrganisationRegistryController extends Controller
     public function requestMembership(Request $request, string $id): JsonResponse
     {
         $data = $request->validate([
-            'user_id' => ['required', 'uuid'],
+            'user_id' => ['nullable', 'uuid', 'required_without:user_email'],
+            'user_email' => ['nullable', 'email', 'max:255', 'required_without:user_id'],
             'evidence_reference' => ['required', 'string', 'max:255'],
         ]);
+        $userId = $data['user_id'] ?? \Illuminate\Support\Facades\DB::connection('identity')
+            ->table('identity.users')->where('email', $data['user_email'])->where('status', 'active')->value('id');
+        if ($userId === null) throw ValidationException::withMessages(['user_email' => 'No active user was found for this email address.']);
         return response()->json(['data' => $this->registry->requestMembership(
-            $id, $data['user_id'], $data['evidence_reference'], $this->actor($request),
+            $id, (string) $userId, $data['evidence_reference'], $this->actor($request),
         )], 201);
+    }
+
+    public function indexMemberships(Request $request): JsonResponse
+    {
+        $stage = $request->query('stage', 'review');
+        abort_unless(in_array($stage, ['mine', 'review'], true), 422, 'Invalid membership queue stage.');
+        return response()->json(['data' => $this->registry->membershipQueue($this->actor($request), $stage)]);
     }
 
     public function reviewMembership(Request $request, string $id): JsonResponse

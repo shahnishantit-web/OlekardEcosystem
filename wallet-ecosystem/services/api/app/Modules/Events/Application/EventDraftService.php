@@ -36,6 +36,10 @@ final class EventDraftService
         $this->membership->assertActiveMembership($actorId, $organisationId);
         $this->authorizer->assertCanCreate($actorId, $organisationId);
         $data = $this->validateDraft($input);
+        $start = $this->parseEventInstant($data['starts_at'], (string) $data['timezone'], 'starts_at');
+        if ($start <= new DateTimeImmutable('now', new DateTimeZone('UTC'))) {
+            throw ValidationException::withMessages(['starts_at' => 'The event start must be in the future. Events cannot be created for past dates or times.']);
+        }
         $id = (string) Uuid::uuid7();
         $this->db()->transaction(function () use ($id, $organisationId, $actorId, $data): void {
             $this->db()->table('community_services.event_drafts')->insert($this->fields($data) + [
@@ -107,6 +111,20 @@ final class EventDraftService
         $this->authorizer->assertCanRead($actorId, (string) $draft->organisation_id, $eventId);
 
         return $this->present($eventId);
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function listForOrganisation(string $organisationId, string $actorId): array
+    {
+        $this->membership->assertActiveMembership($actorId, $organisationId);
+        $rows = $this->db()->table('community_services.event_drafts')->where('organisation_id', $organisationId)
+            ->orderByDesc('updated_at')->get(['id']);
+        $events = [];
+        foreach ($rows as $row) {
+            $this->authorizer->assertCanRead($actorId, $organisationId, (string) $row->id);
+            $events[] = $this->present((string) $row->id);
+        }
+        return $events;
     }
 
     /** @return array<string, mixed> */

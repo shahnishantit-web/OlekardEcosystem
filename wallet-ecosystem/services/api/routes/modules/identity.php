@@ -29,6 +29,7 @@ Route::prefix('v1')->group(static function (): void {
         ->group(static function (): void {
             $controller = \App\Modules\Identity\Infrastructure\Http\Controllers\OrganisationRegistryController::class;
             Route::get('/', [$controller, 'index'])->middleware('identity.require-permission:organisation.registry.read');
+            Route::get('memberships', [$controller, 'indexMemberships'])->middleware('identity.require-permission:organisation.registry.read');
             Route::get('{id}', [$controller, 'show'])->middleware('identity.require-permission:organisation.registry.read');
             Route::post('/', [$controller, 'requestOrganisation'])->middleware('identity.require-permission:organisation.registry.request');
             Route::post('{id}/review', [$controller, 'reviewOrganisation'])->middleware('identity.require-permission:organisation.registry.review');

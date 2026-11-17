@@ -28,6 +28,17 @@ final class EventAssignmentController extends Controller
         )], 201);
     }
 
+    public function organisationMembers(Request $request, string $organisationId): JsonResponse
+    {
+        return response()->json(['data' => $this->assignments->listOrganisationMembers($organisationId, $this->actor($request))]);
+    }
+
+    public function invitationCustomers(Request $request, string $eventId): JsonResponse
+    {
+        $data = $request->validate(['search' => ['nullable', 'string', 'max:120']]);
+        return response()->json(['data' => $this->assignments->listInvitationCustomers($eventId, $this->actor($request), $data['search'] ?? null)]);
+    }
+
     public function storeEvent(Request $request, string $eventId): JsonResponse
     {
         $data = $request->validate([

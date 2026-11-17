@@ -108,7 +108,7 @@ class _ServicesHomeScreenState extends ConsumerState<ServicesHomeScreen> {
   }
 
   Widget _buildFreeEventRegistrationCard() => InkWell(
-        onTap: () => context.push('/events/free-registration'),
+        onTap: () => context.push('/events/catalogue'),
         borderRadius: BorderRadius.circular(12),
         child: Card(
           child: Padding(
