@@ -84,7 +84,7 @@ final class EventAdmissionService
         return $this->db()->table('community_services.event_tickets as t')
             ->join('community_services.event_drafts as e', 'e.id', '=', 't.event_id')
             ->where('t.owner_actor_id', $actorId)->whereIn('t.status', ['valid', 'revoked'])
-            ->orderBy('e.starts_at')->orderBy('t.created_at')->get([
+            ->orderByDesc('t.issued_at')->orderByDesc('t.created_at')->orderByDesc('t.id')->get([
                 't.id', 't.event_id', 'e.title as event_title', 't.category_name', 't.status', 't.cancellation_request_id', 't.credential_encrypted',
             ])->map(fn (object $ticket): array => [
                 'ticket_id' => (string) $ticket->id,

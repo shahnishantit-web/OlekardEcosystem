@@ -168,6 +168,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { href: '/organisations/onboarding', label: 'Organisation Onboarding', icon: Building2 },
       { href: '/organisations/memberships', label: 'Organisation Memberships', icon: Building2 },
       { href: '/community/events', label: 'Events · authoring and review', icon: Calendar },
+      { href: '/community/funeral-assistance', label: 'Funeral Assistance', icon: Users },
       { href: '/compliance',              label: 'Compliance',    icon: Shield },
       { href: '/reports',                 label: 'Reports',       icon: BarChart2 },
       { href: '/reports/schedules',       label: 'Report Schedules', icon: Calendar },

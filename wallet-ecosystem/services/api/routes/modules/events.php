@@ -11,6 +11,7 @@ use App\Modules\Events\Infrastructure\Http\Controllers\ComplimentaryApprovalCont
 use App\Modules\Events\Infrastructure\Http\Controllers\EventOrderController;
 use App\Modules\Events\Infrastructure\Http\Controllers\FreeEventRegistrationController;
 use App\Modules\Events\Infrastructure\Http\Controllers\CustomerEventCatalogueController;
+use App\Modules\Events\Infrastructure\Http\Controllers\EventInventoryHoldController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1/events')->middleware(['identity.auth'])->group(static function (): void {
@@ -32,6 +33,7 @@ Route::prefix('v1/events')->middleware(['identity.auth'])->group(static function
 });
 
 Route::prefix('v1/events')->middleware(['identity.auth', 'idempotency:require-identity'])->group(static function (): void {
+    Route::post('{eventId}/inventory-holds', [EventInventoryHoldController::class, 'store']);
     Route::post('{eventId}/free-registrations', [FreeEventRegistrationController::class, 'register']);
     Route::post('{eventId}/invitations', [FreeEventRegistrationController::class, 'createInvitation']);
     Route::delete('invitations/{invitationId}', [FreeEventRegistrationController::class, 'revokeInvitation']);

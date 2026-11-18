@@ -17,8 +17,11 @@ final class OutboxDispatcherJob implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly ?string $eventName = null,
+        private readonly ?string $aggregateId = null,
+        private readonly bool $forceRetry = false,
+    ) {
         $this->onQueue('outbox');
     }
 
@@ -28,9 +31,13 @@ final class OutboxDispatcherJob implements ShouldQueue
             /** @var OutboxEventModel[] $rows */
             $rows = OutboxEventModel::query()
                 ->whereIn('status', ['pending', 'failed'])
-                ->where(function ($q) {
-                    $q->whereNull('next_attempt_at')
-                      ->orWhere('next_attempt_at', '<=', now());
+                ->when($this->eventName !== null, fn ($query) => $query->where('event_name', $this->eventName))
+                ->when($this->aggregateId !== null, fn ($query) => $query->where('aggregate_id', $this->aggregateId))
+                ->when(! $this->forceRetry, function ($query): void {
+                    $query->where(function ($q): void {
+                        $q->whereNull('next_attempt_at')
+                            ->orWhere('next_attempt_at', '<=', now());
+                    });
                 })
                 ->orderBy('created_at')
                 ->limit(100)
@@ -43,7 +50,7 @@ final class OutboxDispatcherJob implements ShouldQueue
                 OutboxEventModel::query()
                     ->whereIn('id', $ids)
                     ->update([
-                        'status'                => 'processing',
+                        'status' => 'processing',
                         'processing_started_at' => now(),
                     ]);
             }
@@ -56,17 +63,17 @@ final class OutboxDispatcherJob implements ShouldQueue
                 $bus->dispatch($event);
 
                 $event->update([
-                    'status'       => 'delivered',
+                    'status' => 'delivered',
                     'delivered_at' => now(),
                 ]);
             } catch (\Throwable $e) {
-                $attempts    = $event->attempts + 1;
+                $attempts = $event->attempts + 1;
                 $maxAttempts = $event->max_attempts ?? 5;
-                $backoff     = (int) min(3600, 60 * (2 ** ($attempts - 1)));
+                $backoff = (int) min(3600, 60 * (2 ** ($attempts - 1)));
 
                 if ($attempts >= $maxAttempts) {
                     $event->update([
-                        'status'   => 'dead_letter',
+                        'status' => 'dead_letter',
                         'attempts' => $attempts,
                     ]);
 
@@ -79,24 +86,24 @@ final class OutboxDispatcherJob implements ShouldQueue
                         resourceId: $event->id,
                         metadata: [
                             'event_name' => $event->event_name,
-                            'attempts'   => $attempts,
+                            'attempts' => $attempts,
                             'last_error' => $e->getMessage(),
                         ],
                     ));
                 } else {
                     $event->update([
-                        'status'          => 'failed',
-                        'attempts'        => $attempts,
+                        'status' => 'failed',
+                        'attempts' => $attempts,
                         'next_attempt_at' => now()->addSeconds($backoff),
                     ]);
                 }
 
                 Log::error('outbox.dispatch_failed', [
-                    'event_id'       => $event->id,
-                    'event_name'     => $event->event_name,
-                    'attempt'        => $attempts,
+                    'event_id' => $event->id,
+                    'event_name' => $event->event_name,
+                    'attempt' => $attempts,
                     'correlation_id' => $event->correlation_id,
-                    'error'          => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ]);
             }
         }

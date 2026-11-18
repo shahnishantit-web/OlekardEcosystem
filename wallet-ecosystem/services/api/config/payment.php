@@ -32,6 +32,8 @@ return [
         'default_outcome'       => env('PAYMENT_MOCK_BANK_OUTCOME', 'confirmed'),
         'artificial_delay_ms'   => (int) env('PAYMENT_MOCK_BANK_DELAY_MS', 0),
         'failure_rate'          => (float) env('PAYMENT_MOCK_BANK_FAILURE_RATE', 0.0),
+        'callback_secret'       => env('PAYMENT_MOCK_BANK_CALLBACK_SECRET', 'mock-test-secret'),
+        'local_event_ledger_enabled' => (bool) env('PAYMENT_MOCK_BANK_LOCAL_EVENT_LEDGER_ENABLED', false),
     ],
 
     /*

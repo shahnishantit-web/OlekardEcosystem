@@ -25,6 +25,8 @@ use App\Modules\Events\Infrastructure\DenyEventPricingContract;
 use App\Modules\Events\Infrastructure\DenyEventPublicationReadiness;
 use App\Modules\Events\Infrastructure\DenyOrganiserVerification;
 use App\Modules\Events\Infrastructure\IdentityInvitationRecipientVerifier;
+use App\Modules\Events\Infrastructure\LocalDemoEventPricingContract;
+use App\Modules\Events\Infrastructure\LocalDemoEventsPaymentServiceActorProvider;
 use App\Modules\Events\Infrastructure\NotificationServiceCancellationDispatcher;
 use App\Modules\Events\Infrastructure\PaidEventTicketPurposeResolver;
 use App\Modules\Events\Infrastructure\ScopedEventDraftAuthorizer;
@@ -45,9 +47,21 @@ final class EventsServiceProvider extends ServiceProvider
         $this->app->bind(OrganiserVerificationContract::class, DenyOrganiserVerification::class);
         $this->app->bind(BootstrapApprovalEvidenceVerifier::class, DenyBootstrapApprovalEvidenceVerifier::class);
         $this->app->bind(ComplimentaryAllocationApprovalContract::class, DatabaseComplimentaryAllocationApproval::class);
-        $this->app->bind(EventPricingContract::class, DenyEventPricingContract::class);
+        $this->app->bind(EventPricingContract::class, static function (): EventPricingContract {
+            if (app()->environment('local') && config('events.local_demo_pricing_enabled') === true) {
+                return new LocalDemoEventPricingContract();
+            }
+
+            return new DenyEventPricingContract();
+        });
         $this->app->bind(InvitationRecipientVerifier::class, IdentityInvitationRecipientVerifier::class);
-        $this->app->bind(EventsPaymentServiceActorProvider::class, ConfiguredEventsPaymentServiceActorProvider::class);
+        $this->app->bind(EventsPaymentServiceActorProvider::class, static function (): EventsPaymentServiceActorProvider {
+            if (app()->environment('local') && config('events.local_demo_payment_fulfilment_enabled') === true) {
+                return new LocalDemoEventsPaymentServiceActorProvider();
+            }
+
+            return app(ConfiguredEventsPaymentServiceActorProvider::class);
+        });
     }
 
     public function boot(): void

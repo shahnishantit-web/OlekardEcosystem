@@ -199,9 +199,17 @@ final class ReviewedOrganisationMembershipService implements OrganisationMembers
     }
 
     /** @return list<array<string, mixed>> */
-    public function membershipQueue(string $actorId, string $stage): array
+    public function membershipQueue(string $actorId, string $stage, ?string $organisationId = null): array
     {
-        $this->requireAdmin($actorId, $stage === 'review' ? 'organisation.registry.review' : 'organisation.registry.request');
+        $permission = match ($stage) {
+            'review' => 'organisation.registry.review',
+            'directory' => 'organisation.registry.read',
+            default => 'organisation.registry.request',
+        };
+        $this->requireAdmin($actorId, $permission);
+        if ($stage === 'directory' && $organisationId === null) {
+            throw ValidationException::withMessages(['organisation_id' => 'Choose an organisation to view its members.']);
+        }
         $query = $this->db()->table('identity.organisation_memberships as membership')
             ->join('identity.organisations as organisation', 'organisation.id', '=', 'membership.organisation_id')
             ->join('identity.users as target', 'target.id', '=', 'membership.user_id')
@@ -212,9 +220,12 @@ final class ReviewedOrganisationMembershipService implements OrganisationMembers
                 'membership.evidence_reference', 'membership.requested_by', 'membership.reviewed_by',
                 'membership.created_at', 'membership.updated_at', 'organisation.display_name as organisation_name',
                 'organisation.registry_reference', 'target.email as user_email', 'requester.email as requester_email',
-                'reviewer.email as reviewer_email',
+                'target.mobile_number as user_mobile_number', 'target.status as user_status',
+                'target.actor_type as user_actor_type', 'reviewer.email as reviewer_email',
             );
         if ($stage === 'review') $query->where('membership.status', 'pending_review');
+        elseif ($stage === 'directory') $query->where('membership.organisation_id', $organisationId)
+            ->where('membership.status', 'active')->where('organisation.status', 'active');
         else $query->where('membership.requested_by', $actorId);
         return $query->orderByDesc('membership.created_at')->get()->map(fn ($row) => (array) $row)->all();
     }

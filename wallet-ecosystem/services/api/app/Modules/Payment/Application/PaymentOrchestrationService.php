@@ -498,11 +498,29 @@ final class PaymentOrchestrationService implements PaymentOutcomeProcessor
                     && $newAttemptStatus === PaymentAttemptStatus::Succeeded
                     && ($incomingProviderRef === null || $incomingProviderRef === $attempt->provider_reference_id)
                 ) {
+                    // A verified callback replay may be the first delivery that
+                    // includes normalized capture facts. Persist those facts only
+                    // when they exactly match the intent; never infer them from
+                    // the expected amount or overwrite conflicting evidence.
+                    $replayAmount = $request['captured_amount_minor'] ?? null;
+                    $replayCurrency = $request['captured_currency_code'] ?? null;
+                    $replayReference = $request['capture_evidence_reference'] ?? null;
+                    if (($request['capture_evidence_verified'] ?? false) === true
+                        && $attempt->captured_amount_minor === null
+                        && is_int($replayAmount) && $replayAmount === $intent->amount_minor
+                        && is_string($replayCurrency) && $replayCurrency === $intent->currency_code
+                        && is_string($replayReference) && Uuid::isValid($replayReference)) {
+                        $attempt->captured_amount_minor = $replayAmount;
+                        $attempt->captured_currency_code = $replayCurrency;
+                        $attempt->capture_evidence_reference = $replayReference;
+                        $this->attemptRepository->save($attempt);
+                    }
+
                     // Wallet attempts are marked succeeded before committed capture
                     // and ledger acknowledgement. Retry only that pending accounting
                     // work; posted accounting and external attempts remain no-ops.
                     if ($intent->accounting_status === PaymentAccountingStatus::PendingLedger
-                        && $attempt->wallet_hold_id !== null) {
+                        && ($attempt->wallet_hold_id !== null || $this->canPostLocalMockBankEvent($intent, $attempt))) {
                         // The synchronous Wallet adapter persists its successful hold
                         // in T2 before handleOutcome() is invoked. Promote the intent
                         // from processing exactly once here so authoritative evidence
@@ -977,32 +995,49 @@ final class PaymentOrchestrationService implements PaymentOutcomeProcessor
         PaymentAttemptModel $attempt,
         string $correlationId
     ): void {
-        // AD-09 guard: wallet holds only — bank/external payments remain pending_ledger until AD-09 resolved
-        if ($attempt->wallet_hold_id === null) {
+        if ($attempt->wallet_hold_id !== null) {
+            $walletCapture = ($this->walletCaptureContract ?? app(WalletCaptureContract::class))
+                ->captureForPayment(new WalletCaptureRequest(
+                    holdId: $attempt->wallet_hold_id,
+                    paymentAttemptId: $attempt->id,
+                    paymentIntentId: $intent->id,
+                    ownerActorId: $intent->payer_actor_id,
+                    expectedAmountMinor: $intent->amount_minor,
+                    expectedCurrencyCode: $intent->currency_code,
+                    organisationId: $intent->organisation_id,
+                    correlationId: $correlationId,
+                ));
+            $capture = [
+                'amount_minor' => $walletCapture->capturedAmountMinor,
+                'currency_code' => $walletCapture->currencyCode,
+                'capture_reference' => $walletCapture->captureId,
+                'ledger_journal_id' => $walletCapture->ledgerJournalId,
+                'idempotency_key' => $walletCapture->ledgerIdempotencyKey,
+                'debit_account_reference' => $walletCapture->debitAccountReference,
+                'credit_account_reference' => $walletCapture->creditAccountReference,
+                'payment_intent_id' => $walletCapture->paymentIntentId,
+                'organisation_id' => $walletCapture->organisationId,
+                'payment_attempt_id' => $walletCapture->paymentAttemptId,
+                'owner_actor_id' => $walletCapture->ownerActorId,
+            ];
+        } elseif ($this->canPostLocalMockBankEvent($intent, $attempt)) {
+            // Local mock-bank receipts are synthetic test evidence, not external
+            // bank settlement. Keep them segregated in clearing/suspense accounts.
+            $capture = $this->postLocalMockBankEventLedger($intent, $attempt, $correlationId);
+        } else {
             Log::info('payment.ledger_ack_skipped', [
                 'payment_intent_id' => $intent->id,
                 'payment_attempt_id' => $attempt->id,
-                'reason' => 'no_wallet_hold_ad09_pending',
+                'reason' => 'external_capture_requires_ad09_and_reconciliation_evidence',
                 'correlation_id' => $correlationId,
             ]);
 
             return;
         }
 
-        $walletCapture = ($this->walletCaptureContract ?? app(WalletCaptureContract::class))
-            ->captureForPayment(new WalletCaptureRequest(
-                holdId: $attempt->wallet_hold_id,
-                paymentAttemptId: $attempt->id,
-                paymentIntentId: $intent->id,
-                ownerActorId: $intent->payer_actor_id,
-                expectedAmountMinor: $intent->amount_minor,
-                expectedCurrencyCode: $intent->currency_code,
-                organisationId: $intent->organisation_id,
-                correlationId: $correlationId,
-            ));
-        $attempt->captured_amount_minor = $walletCapture->capturedAmountMinor;
-        $attempt->captured_currency_code = $walletCapture->currencyCode;
-        $attempt->capture_evidence_reference = $walletCapture->captureId;
+        $attempt->captured_amount_minor = $capture['amount_minor'];
+        $attempt->captured_currency_code = $capture['currency_code'];
+        $attempt->capture_evidence_reference = $capture['capture_reference'];
 
         // Missing or contradictory capture evidence remains unresolved. Never post
         // from the expected obligation amount or an unverified customer request.
@@ -1020,16 +1055,16 @@ final class PaymentOrchestrationService implements PaymentOutcomeProcessor
             return;
         }
 
-        $debitAccountRef = $walletCapture->debitAccountReference;
-        $creditAccountRef = $walletCapture->creditAccountReference;
+        $debitAccountRef = $capture['debit_account_reference'];
+        $creditAccountRef = $capture['credit_account_reference'];
         $idempotencyKey = 'payment:'.$intent->id.':ack';
-        $journalId = $walletCapture->ledgerJournalId;
-        if ($walletCapture->ledgerIdempotencyKey !== $idempotencyKey
-            || $walletCapture->paymentIntentId !== $intent->id
-            || $walletCapture->organisationId !== $intent->organisation_id
-            || $walletCapture->paymentAttemptId !== $attempt->id
-            || $walletCapture->ownerActorId !== $intent->payer_actor_id) {
-            throw new \RuntimeException('Wallet committed-capture evidence does not match the Payment attempt.');
+        $journalId = $capture['ledger_journal_id'];
+        if ($capture['idempotency_key'] !== $idempotencyKey
+            || $capture['payment_intent_id'] !== $intent->id
+            || $capture['organisation_id'] !== $intent->organisation_id
+            || $capture['payment_attempt_id'] !== $attempt->id
+            || $capture['owner_actor_id'] !== $intent->payer_actor_id) {
+            throw new \RuntimeException('Committed capture evidence does not match the Payment attempt.');
         }
         $evidence = $this->ledger->findPostedJournalEvidence($idempotencyKey);
         if ($evidence === null || ! app(LedgerPaymentEvidenceVerifier::class)->matches(
@@ -1106,6 +1141,85 @@ final class PaymentOrchestrationService implements PaymentOutcomeProcessor
             'journal_id' => $journalId,
             'correlation_id' => $correlationId,
         ]);
+    }
+
+    private function canPostLocalMockBankEvent(PaymentIntentModel $intent, PaymentAttemptModel $attempt): bool
+    {
+        return app()->environment('local')
+            && config('payment.mock_bank.local_event_ledger_enabled') === true
+            && $intent->purpose_type === 'paid_event_ticket'
+            && $attempt->provider_code === 'mock_bank'
+            && $attempt->status === PaymentAttemptStatus::Succeeded
+            && $attempt->captured_amount_minor === $intent->amount_minor
+            && $attempt->captured_currency_code === $intent->currency_code
+            && is_string($attempt->capture_evidence_reference)
+            && Uuid::isValid($attempt->capture_evidence_reference);
+    }
+
+    /** @return array<string, mixed> */
+    private function postLocalMockBankEventLedger(
+        PaymentIntentModel $intent,
+        PaymentAttemptModel $attempt,
+        string $correlationId,
+    ): array {
+        DevelopmentPaymentGuard::check();
+        if (! $this->canPostLocalMockBankEvent($intent, $attempt)) {
+            throw new \DomainException('Verified local mock-bank event capture is required.');
+        }
+        $account = PaymentProviderAccountModel::with('provider')->find($attempt->provider_account_id);
+        if ($account === null || $account->provider === null || $account->provider->code !== 'mock_bank'
+            || ! $account->provider->isMock()) {
+            throw new \DomainException('A test-only mock-bank provider account is required.');
+        }
+
+        $currency = strtoupper($intent->currency_code);
+        $amount = (int) $attempt->captured_amount_minor;
+        $debitAccountRef = (string) Uuid::uuid5(
+            Uuid::NAMESPACE_URL,
+            'olekard.local/mock-bank/provider-clearing/'.$account->id.'/'.$currency,
+        );
+        $creditAccountRef = (string) Uuid::uuid5(
+            Uuid::NAMESPACE_URL,
+            'olekard.local/mock-bank/event-proceeds-suspense/'.$intent->organisation_id.'/'.$currency,
+        );
+
+        // The simulator does not represent a settled bank balance or organiser
+        // payout. Its two explicit accounts keep the demo journal segregated.
+        $this->ledger->registerAccount(
+            $debitAccountRef, 'asset', $currency, $account->id, 'system_float',
+        );
+        $this->ledger->registerAccount(
+            $creditAccountRef, 'liability', $currency, $intent->organisation_id, 'system_suspense',
+        );
+
+        $idempotencyKey = 'payment:'.$intent->id.':ack';
+        $journalId = $this->ledger->postEntry([
+            'idempotency_key' => $idempotencyKey,
+            'entry_type' => 'debit',
+            'currency_code' => $currency,
+            'transaction_reference' => $intent->id,
+            'correlation_id' => $correlationId,
+            'actor_id' => $intent->payer_actor_id,
+            'description' => 'Local mock-bank paid event receipt; provider clearing debit and proceeds suspense credit.',
+            'lines' => [
+                ['ledger_account_reference' => $debitAccountRef, 'direction' => 'debit', 'amount' => $amount],
+                ['ledger_account_reference' => $creditAccountRef, 'direction' => 'credit', 'amount' => $amount],
+            ],
+        ]);
+
+        return [
+            'amount_minor' => $amount,
+            'currency_code' => $currency,
+            'capture_reference' => $attempt->capture_evidence_reference,
+            'ledger_journal_id' => $journalId,
+            'idempotency_key' => $idempotencyKey,
+            'debit_account_reference' => $debitAccountRef,
+            'credit_account_reference' => $creditAccountRef,
+            'payment_intent_id' => $intent->id,
+            'organisation_id' => $intent->organisation_id,
+            'payment_attempt_id' => $attempt->id,
+            'owner_actor_id' => $intent->payer_actor_id,
+        ];
     }
 
     /** @return array{id: string, status: string, accounting_status: ?string, fulfilment_status: ?string, amount_minor: int, currency_code: string, expires_at: string, quote?: array<string, mixed>} */

@@ -120,12 +120,12 @@ class _ServicesHomeScreenState extends ConsumerState<ServicesHomeScreen> {
                     size: 32, color: AppColors.primary),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'Free Event Registration',
+                  'Events',
                   style: AppTypography.label,
                   textAlign: TextAlign.center,
                 ),
                 Text(
-                  'Register for an event at no charge',
+                  'Browse events, register free, or buy tickets',
                   style: AppTypography.caption.copyWith(color: Colors.grey),
                   textAlign: TextAlign.center,
                 ),

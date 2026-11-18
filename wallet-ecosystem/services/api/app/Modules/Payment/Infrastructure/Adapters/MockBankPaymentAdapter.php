@@ -14,6 +14,7 @@ use App\Modules\Payment\Domain\ValueObjects\PaymentInitiateRequest;
 use App\Modules\Payment\Domain\ValueObjects\PaymentRefundRequest;
 use App\Modules\Payment\Domain\ValueObjects\PaymentRefundResult;
 use App\Modules\Payment\Domain\ValueObjects\PaymentStatusResult;
+use App\Modules\Payment\Domain\ValueObjects\RefundStatusResult;
 use App\Modules\Platform\Domain\Contracts\AuditServiceInterface;
 use App\Modules\Platform\Domain\Contracts\ConfigurationServiceInterface;
 use App\Modules\Platform\Domain\Enums\ProviderCapabilityEnum;
@@ -91,7 +92,10 @@ final class MockBankPaymentAdapter extends AbstractBankPaymentAdapter
             'currency'     => $request->currencyCode,
         ]);
 
-        $redirectUrl = 'http://localhost/mock-bank/checkout?ref='.$request->paymentAttemptId.'&test=1';
+        $redirectUrl = url('/mock-bank/checkout?'.http_build_query([
+            'ref' => $request->paymentAttemptId,
+            'test' => 1,
+        ]));
 
         return new PaymentAttemptResult(
             status:          PaymentAttemptStatus::AwaitingAction,
@@ -172,6 +176,17 @@ final class MockBankPaymentAdapter extends AbstractBankPaymentAdapter
             status:               PaymentRefundStatus::Succeeded,
             providerRefundReference: $mockRefundRef,
         );
+    }
+
+    /**
+     * Keep mock refunds unresolved until a local mock callback confirms them.
+     * The simulator does not have an independent refund-status API.
+     */
+    public function queryRefundStatus(string $refundId, string $providerSubmittedRef): RefundStatusResult
+    {
+        DevelopmentPaymentGuard::check();
+
+        return new RefundStatusResult('pending', $providerSubmittedRef, 'mock_bank');
     }
 
     /**

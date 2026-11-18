@@ -6,7 +6,14 @@ use App\Modules\CommunityFuneral\Http\Controllers\FuneralAssistanceController;
 use App\Modules\CommunityFuneral\Http\Middleware\FuneralReadinessGate;
 use Illuminate\Support\Facades\Route;
 
+Route::get('api/v1/community/funeral/readiness', [FuneralAssistanceController::class, 'readiness'])
+    ->middleware('identity.auth');
+
 Route::prefix('api/v1/community/funeral')->middleware(['identity.auth', FuneralReadinessGate::class])->group(function (): void {
+    Route::get('/organisations', [FuneralAssistanceController::class, 'organisations']);
+    Route::get('/communities', [FuneralAssistanceController::class, 'communities']);
+    Route::get('/communities/{communityId}/workspace', [FuneralAssistanceController::class, 'workspace']);
+    Route::get('/communities/{communityId}/directory', [FuneralAssistanceController::class, 'directory']);
     Route::post('/communities', [FuneralAssistanceController::class, 'createCommunity'])
         ->middleware(['identity.require-permission:community.funeral.manage', 'idempotency:require-identity']);
     Route::post('/communities/{communityId}/staff', [FuneralAssistanceController::class, 'addStaff'])

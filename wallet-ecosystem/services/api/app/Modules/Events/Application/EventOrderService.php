@@ -209,6 +209,22 @@ final class EventOrderService
                 'payment_intent_id' => $result['payment_intent_id'], 'payment_state' => 'intent_created', 'updated_at' => now(),
             ]);
 
+            $result['available_payment_options'] = array_map(static fn ($option): array => [
+                'provider_code' => $option->providerCode,
+                'provider_account_id' => $option->providerAccountId,
+                'display_name' => $option->displayName,
+                'display_label' => $option->displayLabel ?? $option->displayName,
+                'display_description' => $option->displayDescription,
+                'display_icon_key' => $option->displayIconKey,
+                'display_badge' => $option->displayBadge,
+                'payment_method' => $option->paymentMethod,
+                'checkout_flow' => $option->checkoutFlow,
+                'eligible_instrument_types' => $option->eligibleInstrumentTypes,
+                'fee_disclosure' => $option->feeDisclosure,
+                'supported_next_action' => $option->supportedNextAction,
+                'is_default' => $option->isDefault,
+            ], $options);
+
             return $result;
         }, 3));
     }
@@ -335,7 +351,10 @@ final class EventOrderService
     {
         $pricing = json_decode((string) $order->pricing_snapshot, true, 512, JSON_THROW_ON_ERROR);
         if (($pricing['test_only'] ?? false) === true) {
-            abort_unless(app()->environment('testing'), 409, 'Test-only pricing cannot initiate a payment outside tests.');
+            $localDemoEnabled = app()->environment('local')
+                && config('events.local_demo_pricing_enabled') === true;
+            abort_unless(app()->environment('testing') || $localDemoEnabled,
+                409, 'Test-only pricing cannot initiate payment outside tests or explicitly enabled local demo mode.');
 
             return;
         }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Payment\Infrastructure\Adapters;
 
 use App\Modules\Payment\Infrastructure\Models\PaymentProviderAccountModel;
+use App\Modules\Payment\Domain\ValueObjects\SecretReference;
 use App\Modules\Platform\Domain\Contracts\Providers\ProviderWebhookContract;
 use App\Modules\Platform\Domain\Enums\ProviderStatus;
 use App\Modules\Platform\Domain\Exceptions\ProviderException;
@@ -29,6 +30,9 @@ final class AccountMockWebhookParser implements ProviderWebhookContract
     {
         DevelopmentPaymentGuard::check();
         $reference = $this->account->callback_secret_reference;
+        if ($reference instanceof SecretReference) {
+            $reference = $reference->keyName;
+        }
         if (! is_string($reference) || $reference === '') {
             throw new ProviderException('Payment callback secret reference is missing.');
         }

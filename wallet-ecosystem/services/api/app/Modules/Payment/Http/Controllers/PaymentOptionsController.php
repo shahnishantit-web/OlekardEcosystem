@@ -58,6 +58,7 @@ final class PaymentOptionsController extends Controller
 
         $serialized = array_map(static fn ($option) => [
             'provider_code'             => $option->providerCode,
+            'provider_account_id'       => $option->providerAccountId,
             'display_name'              => $option->displayName,
             'display_label'             => $option->displayLabel ?? $option->displayName,
             'display_description'       => $option->displayDescription,

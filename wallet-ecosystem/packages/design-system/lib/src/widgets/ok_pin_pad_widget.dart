@@ -121,6 +121,12 @@ class _OkPinPadWidgetState extends State<OkPinPadWidget> {
               cursorColor: Colors.transparent,
               decoration: const InputDecoration(
                 counterText: '',
+                // Do not inherit the app-wide filled input style here. This
+                // TextField sits over the visible PIN cells to receive input;
+                // an inherited fill paints over and hides those cells.
+                filled: false,
+                fillColor: Colors.transparent,
+                isCollapsed: true,
                 border: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 enabledBorder: InputBorder.none,

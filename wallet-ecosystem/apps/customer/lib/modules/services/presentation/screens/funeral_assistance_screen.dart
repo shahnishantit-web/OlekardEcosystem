@@ -32,22 +32,19 @@ class FuneralObligationItem {
       );
 
   bool get isPayable => status == 'unpaid' && fulfilmentStatus == 'pending';
-  bool get isFulfilled => fulfilmentStatus == 'fulfilled' || status == 'confirmed';
+  bool get isFulfilled =>
+      fulfilmentStatus == 'fulfilled' || status == 'confirmed';
 }
 
 final funeralObligationsProvider =
     FutureProvider.autoDispose<List<FuneralObligationItem>>((ref) async {
   final dio = ref.watch(apiClientProvider).dio;
-  try {
-    final response = await dio.get('/api/v1/community/funeral/my/obligations');
-    final data = response.data['data'] as List<dynamic>? ?? [];
-    return data
-        .map((item) => FuneralObligationItem.fromJson(item as Map<String, dynamic>))
-        .toList();
-  } catch (e) {
-    // If the readiness gate is closed (503) or no network, return empty list
-    return [];
-  }
+  final response = await dio.get('/api/v1/community/funeral/my/obligations');
+  final data = response.data['data'] as List<dynamic>? ?? [];
+  return data
+      .map((item) =>
+          FuneralObligationItem.fromJson(item as Map<String, dynamic>))
+      .toList();
 });
 
 class FuneralAssistanceScreen extends ConsumerWidget {
@@ -67,7 +64,8 @@ class FuneralAssistanceScreen extends ConsumerWidget {
             Card(
               elevation: 0,
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               child: const Padding(
                 padding: EdgeInsets.all(16),
                 child: Row(
@@ -80,7 +78,8 @@ class FuneralAssistanceScreen extends ConsumerWidget {
                         children: [
                           Text(
                             'Community Support',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16),
                           ),
                           SizedBox(height: 4),
                           Text(
@@ -105,21 +104,48 @@ class FuneralAssistanceScreen extends ConsumerWidget {
               error: (err, _) => Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
-                  child: Text('Unable to load obligations: $err'),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.info_outline,
+                          size: 48, color: Colors.orange),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Funeral assistance is currently unavailable',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w600),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'The service is not enabled yet. Your household and contribution status will appear here when it is ready.',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      OutlinedButton.icon(
+                        onPressed: () =>
+                            ref.invalidate(funeralObligationsProvider),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Try again'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               data: (obligations) {
                 if (obligations.isEmpty) {
                   return const Center(
                     child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 40, horizontal: 16),
+                      padding:
+                          EdgeInsets.symmetric(vertical: 40, horizontal: 16),
                       child: Column(
                         children: [
-                          Icon(Icons.check_circle_outline, size: 48, color: Colors.grey),
+                          Icon(Icons.check_circle_outline,
+                              size: 48, color: Colors.grey),
                           SizedBox(height: 16),
                           Text(
                             'No Outstanding Contributions',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.w600),
                           ),
                           SizedBox(height: 8),
                           Text(
@@ -134,7 +160,9 @@ class FuneralAssistanceScreen extends ConsumerWidget {
                 }
 
                 return Column(
-                  children: obligations.map((item) => _ObligationCard(item: item)).toList(),
+                  children: obligations
+                      .map((item) => _ObligationCard(item: item))
+                      .toList(),
                 );
               },
             ),
@@ -145,13 +173,13 @@ class FuneralAssistanceScreen extends ConsumerWidget {
   }
 }
 
-class _ObligationCard extends StatelessWidget {
+class _ObligationCard extends ConsumerWidget {
   final FuneralObligationItem item;
 
   const _ObligationCard({required this.item});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final amountFormatted =
         '${item.currencyCode} ${(item.amountMinor / 100).toStringAsFixed(2)}';
 
@@ -170,7 +198,8 @@ class _ObligationCard extends StatelessWidget {
                   'Funeral Collection',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                _StatusChip(status: item.status, fulfilment: item.fulfilmentStatus),
+                _StatusChip(
+                    status: item.status, fulfilment: item.fulfilmentStatus),
               ],
             ),
             const SizedBox(height: 12),
@@ -190,15 +219,18 @@ class _ObligationCard extends StatelessWidget {
                 child: FilledButton.icon(
                   icon: const Icon(Icons.payment),
                   label: Text('Contribute $amountFormatted'),
-                  onPressed: () {
-                    showPaymentCheckout(
+                  onPressed: () async {
+                    final result = await showPaymentCheckout(
                       context: context,
                       purposeType: 'funeral_contribution',
                       purposeReference: item.id,
                       currencyCode: item.currencyCode,
                       estimatedAmountMinor: item.amountMinor,
-                      returnRoute: '/services/funeral-assistance',
+                      returnRoute: '/services/funeral',
                     );
+                    if (context.mounted && result?.succeeded == true) {
+                      ref.invalidate(funeralObligationsProvider);
+                    }
                   },
                 ),
               )
@@ -251,7 +283,9 @@ class _StatusChip extends StatelessWidget {
     }
 
     return Chip(
-      label: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: fg)),
+      label: Text(label,
+          style:
+              TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: fg)),
       backgroundColor: bg,
       padding: EdgeInsets.zero,
       visualDensity: VisualDensity.compact,

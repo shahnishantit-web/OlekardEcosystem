@@ -77,8 +77,9 @@ final class OrganisationRegistryController extends Controller
     public function indexMemberships(Request $request): JsonResponse
     {
         $stage = $request->query('stage', 'review');
-        abort_unless(in_array($stage, ['mine', 'review'], true), 422, 'Invalid membership queue stage.');
-        return response()->json(['data' => $this->registry->membershipQueue($this->actor($request), $stage)]);
+        abort_unless(in_array($stage, ['mine', 'review', 'directory'], true), 422, 'Invalid membership queue stage.');
+        $data = $request->validate(['organisation_id' => ['required_if:stage,directory', 'nullable', 'uuid']]);
+        return response()->json(['data' => $this->registry->membershipQueue($this->actor($request), $stage, $data['organisation_id'] ?? null)]);
     }
 
     public function reviewMembership(Request $request, string $id): JsonResponse

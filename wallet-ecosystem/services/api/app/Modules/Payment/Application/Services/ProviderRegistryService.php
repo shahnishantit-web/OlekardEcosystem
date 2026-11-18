@@ -96,6 +96,7 @@ final class ProviderRegistryService
                 displayOrder:         $consumerOption?->display_order ?? 0,
                 restrictions:         $consumerOption?->country_restrictions ?? [],
                 supportedNextAction:  $consumerOption !== null ? 'redirect' : null,
+                providerAccountId:    (string) $account->id,
             );
         }
 

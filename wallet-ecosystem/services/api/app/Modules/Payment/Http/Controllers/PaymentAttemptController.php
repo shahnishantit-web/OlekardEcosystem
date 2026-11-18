@@ -45,7 +45,9 @@ final class PaymentAttemptController extends Controller
             return response()->json(['error' => 'Payment intent not found'], 404);
         }
 
-        $hasAdminPermission = $user->can('payment:admin') || $user->can('payment.intents.admin');
+        $permissions = $request->attributes->get('identity.permissions', []);
+        $hasAdminPermission = is_array($permissions)
+            && (in_array('payment:admin', $permissions, true) || in_array('payment.intents.admin', $permissions, true));
         if ($intent->payer_actor_id !== $user->id && ! $hasAdminPermission) {
             return response()->json(['error' => 'Access denied'], 403);
         }

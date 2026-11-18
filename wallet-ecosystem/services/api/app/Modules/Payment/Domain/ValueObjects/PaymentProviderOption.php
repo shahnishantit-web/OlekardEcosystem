@@ -33,6 +33,7 @@ final readonly class PaymentProviderOption
         public ?array  $feeDisclosure = null,
         public ?array  $restrictions = null,
         public ?string $supportedNextAction = null,
+        public ?string $providerAccountId = null,
     ) {
     }
 }

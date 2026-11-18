@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/di/providers.dart';
+import 'customer_event_checkout_screen.dart';
 
 class CustomerEventCatalogueScreen extends ConsumerStatefulWidget {
   const CustomerEventCatalogueScreen({super.key});
@@ -52,7 +53,7 @@ class _CustomerEventCatalogueScreenState
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Free Event Registration')),
+        appBar: AppBar(title: const Text('Events')),
         body: _loading
             ? const Center(child: CircularProgressIndicator())
             : _error != null
@@ -187,21 +188,38 @@ class _CustomerEventDetailsScreenState
             _DetailLine(
                 label: 'Format', value: event['event_format'].toString()),
           const SizedBox(height: 24),
-          Text('Free tickets', style: Theme.of(context).textTheme.titleMedium),
+          Text('Tickets', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           ...categories.map((category) {
             final categoryId = category['id'].toString();
             final isBusy = _busyCategoryId == categoryId;
+            final isPaid = category['allocation_type'] == 'paid' &&
+                (category['price_minor'] as num? ?? 0) > 0;
             return Card(
               child: ListTile(
-                title: Text(category['name']?.toString() ?? 'Free ticket'),
-                subtitle: Text(
-                    'Free  •  Up to ${category['max_per_person'] ?? 1} per customer'),
+                title: Text(category['name']?.toString() ?? 'Ticket'),
+                subtitle: Text(isPaid
+                    ? '${_formatMoney((category['price_minor'] as num).toInt(), event['currency_code']?.toString() ?? 'BWP', (event['currency_precision'] as num?)?.toInt() ?? 2)} per ticket'
+                    : 'Free  •  Up to ${category['max_per_person'] ?? 1} per customer'),
                 trailing: FilledButton(
                   onPressed: _busyCategoryId == null
-                      ? () => _register(category)
+                      ? isPaid
+                          ? () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => EventCheckoutScreen(
+                                    event: event,
+                                    category: category,
+                                    dio: widget.dio,
+                                  ),
+                                ),
+                              )
+                          : () => _register(category)
                       : null,
-                  child: Text(isBusy ? 'Registering…' : 'Register'),
+                  child: Text(isBusy
+                      ? 'Registering…'
+                      : isPaid
+                          ? 'Buy ticket'
+                          : 'Register free'),
                 ),
               ),
             );
@@ -235,4 +253,12 @@ String _formatDate(DateTime value) {
   final hour = local.hour.toString().padLeft(2, '0');
   final minute = local.minute.toString().padLeft(2, '0');
   return '${local.year}-$month-$day  $hour:$minute';
+}
+
+String _formatMoney(int minor, String currencyCode, int precision) {
+  var divisor = 1;
+  for (var index = 0; index < precision; index++) {
+    divisor *= 10;
+  }
+  return '$currencyCode ${(minor / divisor).toStringAsFixed(precision)}';
 }

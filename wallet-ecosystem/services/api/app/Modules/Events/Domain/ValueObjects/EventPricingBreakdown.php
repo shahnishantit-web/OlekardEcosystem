@@ -88,8 +88,10 @@ final readonly class EventPricingBreakdown
     public function assertEnvironmentEligible(): void
     {
         if ($this->testOnly) {
-            if (! app()->environment('testing')) {
-                throw new \DomainException('Test-only Events pricing is unavailable outside the test environment.');
+            $localDemoEnabled = app()->environment('local')
+                && config('events.local_demo_pricing_enabled') === true;
+            if (! app()->environment('testing') && ! $localDemoEnabled) {
+                throw new \DomainException('Test-only Events pricing is unavailable outside testing or explicitly enabled local demo mode.');
             }
 
             return;
