@@ -5,7 +5,9 @@ import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { Dialog } from '@/components/ui/Dialog';
 import { useAuth } from '@/lib/auth/context';
+import { Ban, Pencil, Trash2 } from 'lucide-react';
 
 type Organisation = {
   id: string; registry_reference: string; display_name: string; status: string;
@@ -22,6 +24,11 @@ export function OrganisationOnboardingPage() {
   const [displayName, setDisplayName] = useState('');
   const [evidenceReference, setEvidenceReference] = useState('');
   const [queue, setQueue] = useState<Organisation[]>([]);
+  const [organisationDirectory, setOrganisationDirectory] = useState<Organisation[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingOrganisation, setDeletingOrganisation] = useState<Organisation | null>(null);
+  const [editRegistryReference, setEditRegistryReference] = useState('');
+  const [editDisplayName, setEditDisplayName] = useState('');
   const [selected, setSelected] = useState<Organisation | null>(null);
   const [queueView, setQueueView] = useState<Stage | null>(null);
   const [comments, setComments] = useState('');
@@ -44,6 +51,15 @@ export function OrganisationOnboardingPage() {
     } catch (cause) { setError(readError(cause)); }
   }, [authenticatedClient, stage]);
   useEffect(() => { void loadQueue(); }, [loadQueue]);
+
+  const loadOrganisationDirectory = useCallback(async () => {
+    if (!authenticatedClient || !canRead) return;
+    try {
+      const response = await authenticatedClient.get<Organisation[]>('/v1/identity/organisations?stage=all');
+      setOrganisationDirectory(response.data);
+    } catch (cause) { setError(readError(cause)); }
+  }, [authenticatedClient, canRead]);
+  useEffect(() => { void loadOrganisationDirectory(); }, [loadOrganisationDirectory]);
 
   async function openRequest(id: string) {
     if (!authenticatedClient) return;
@@ -83,6 +99,56 @@ export function OrganisationOnboardingPage() {
     } catch (cause) { setError(readError(cause)); } finally { setBusy(false); }
   }
 
+  function beginEdit(org: Organisation) {
+    setEditingId(org.id);
+    setEditRegistryReference(org.registry_reference);
+    setEditDisplayName(org.display_name);
+    setError('');
+  }
+
+  async function saveEdit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!authenticatedClient || editingId === null) return;
+    setBusy(true); setError(''); setNotice('');
+    try {
+      await authenticatedClient.put(`/v1/identity/organisations/${encodeURIComponent(editingId)}`, {
+        registry_reference: editRegistryReference.trim(), display_name: editDisplayName.trim(),
+      }, { idempotencyKey: crypto.randomUUID() });
+      setNotice('Organisation details updated.');
+      setEditingId(null);
+      await loadOrganisationDirectory();
+      await loadQueue();
+    } catch (cause) { setError(readError(cause)); }
+    finally { setBusy(false); }
+  }
+
+  async function deactivateOrganisation(org: Organisation) {
+    if (!authenticatedClient) return;
+    setBusy(true); setError(''); setNotice('');
+    try {
+      await authenticatedClient.post(`/v1/identity/organisations/${encodeURIComponent(org.id)}/suspend`, {}, { idempotencyKey: crypto.randomUUID() });
+      setNotice(`${org.display_name} is now inactive.`);
+      await loadOrganisationDirectory();
+      await loadQueue();
+    } catch (cause) { setError(readError(cause)); }
+    finally { setBusy(false); }
+  }
+
+  async function deleteOrganisation() {
+    if (!authenticatedClient || !deletingOrganisation) return;
+    const org = deletingOrganisation;
+    setBusy(true); setError(''); setNotice('');
+    try {
+      await authenticatedClient.post(`/v1/identity/organisations/${encodeURIComponent(org.id)}/delete`, {}, { idempotencyKey: crypto.randomUUID() });
+      setNotice(`${org.display_name} was deleted from active organisation listings.`);
+      if (editingId === org.id) setEditingId(null);
+      setDeletingOrganisation(null);
+      await loadOrganisationDirectory();
+      await loadQueue();
+    } catch (cause) { setError(readError(cause)); }
+    finally { setBusy(false); }
+  }
+
   return <PageContainer>
     <PageHeader title="Organisation Onboarding" />
     <p className="mb-6 max-w-3xl text-sm text-text-secondary">Organisations move through creator submission, independent reviewer assessment, then separate approver decision. Each role sees its own queue and the complete submitted record.</p>
@@ -111,7 +177,7 @@ export function OrganisationOnboardingPage() {
     {selected && <Card className="p-5">
       <div className="mb-4 flex items-center justify-between"><h2 className="text-base font-semibold">Organisation details</h2><Button type="button" variant="secondary" onClick={() => setSelected(null)}>Close</Button></div>
       <dl className="mb-6 grid gap-3 sm:grid-cols-2">{[
-        ['Request ID', selected.id], ['Organisation name', selected.display_name], ['Registry reference', selected.registry_reference], ['Status', selected.status.replaceAll('_', ' ')], ['Evidence reference', selected.evidence_reference], ['Creator', selected.creator_email ?? selected.requested_by], ['Submitted', new Date(selected.created_at).toLocaleString()], ['Reviewer', selected.reviewer_email ?? selected.reviewed_by ?? 'Not reviewed'], ['Reviewer comments', selected.reviewer_comments || 'No reviewer comments'], ['Approver', selected.approver_email ?? selected.approved_by ?? 'Not approved'], ['Approver comments', selected.approver_comments || 'No approver comments'],
+        ['Request ID', selected.id], ['Organisation name', selected.display_name], ['Registry reference', selected.registry_reference], ['Status', selected.status.replaceAll('_', ' ')], ['Evidence reference', selected.evidence_reference], ['Creator', selected.creator_email ?? selected.requested_by], ['Submitted', new Date(selected.created_at).toLocaleString()], ['Reviewer', selected.reviewer_email ?? selected.reviewed_by ?? 'Not reviewed'], ['Reviewer comments', displayComment(selected.reviewer_comments, 'No reviewer comments')], ['Approver', selected.approver_email ?? selected.approved_by ?? 'Not approved'], ['Approver comments', displayComment(selected.approver_comments, 'No approver comments')],
       ].map(([label,value]) => <div key={label}><dt className="text-xs font-medium text-text-secondary">{label}</dt><dd className="break-words text-sm">{value}</dd></div>)}</dl>
       {((canReview && selected.status === 'pending_review') || (canApprove && selected.status === 'pending_approval')) && <form onSubmit={(event) => void processRequest(event)} className="grid max-w-2xl gap-4 border-t border-border pt-4">
         <h3 className="font-semibold">{selected.status === 'pending_review' ? 'Reviewer decision' : 'Approver decision'}</h3>
@@ -122,6 +188,43 @@ export function OrganisationOnboardingPage() {
         <Button type="submit" disabled={busy}>{decision === 'reject' ? 'Submit rejection' : selected.status === 'pending_review' ? 'Approve review and send onward' : 'Approve and activate'}</Button>
       </form>}
     </Card>}
+    <Card className="mb-6 overflow-x-auto p-5">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div><h2 className="text-base font-semibold">Organisation directory</h2><p className="mt-1 text-sm text-text-secondary">View and maintain organisation records across all statuses.</p></div>
+        {canRead && <Button type="button" variant="secondary" onClick={() => void loadOrganisationDirectory()}>Refresh list</Button>}
+      </div>
+      {!canRead ? <p className="text-sm text-text-secondary">You need organisation registry read permission to view the organisation directory.</p>
+        : organisationDirectory.length === 0 ? <p className="text-sm text-text-secondary">No organisation records found.</p>
+          : <table className="w-full min-w-[1000px] border-collapse text-left text-sm">
+            <thead><tr className="border-b border-border"><th className="p-2">Organisation</th><th className="p-2">Registry reference</th><th className="p-2">Submitted by</th><th className="p-2">Status</th><th className="p-2">Updated</th><th className="p-2">Actions</th></tr></thead>
+            <tbody>{organisationDirectory.map(org => <tr key={org.id} className="border-b border-border align-top">
+              <td className="p-2">{org.display_name}</td><td className="p-2">{org.registry_reference}</td><td className="p-2">{org.creator_email ?? org.requested_by}</td><td className="p-2 capitalize">{org.status.replaceAll('_', ' ')}</td><td className="p-2">{new Date(org.updated_at).toLocaleString()}</td>
+              <td className="whitespace-nowrap p-2"><div className="inline-flex min-w-max flex-nowrap items-center gap-2">
+                {canRequest && org.status !== 'deleted' && <Button type="button" variant="secondary" title="Edit" aria-label={`Edit ${org.display_name}`} className="w-10 px-0" disabled={busy} onClick={() => beginEdit(org)}><Pencil className="h-4 w-4" aria-hidden="true" /></Button>}
+                {hasPermission('organisation.registry.revoke') && org.status === 'active' && <Button type="button" variant="secondary" title="Deactivate" aria-label={`Deactivate ${org.display_name}`} className="w-10 px-0" disabled={busy} onClick={() => void deactivateOrganisation(org)}><Ban className="h-4 w-4" aria-hidden="true" /></Button>}
+                {hasPermission('organisation.registry.revoke') && org.status !== 'deleted' && <Button type="button" variant="secondary" title="Delete" aria-label={`Delete ${org.display_name}`} className="w-10 px-0" disabled={busy} onClick={() => setDeletingOrganisation(org)}><Trash2 className="h-4 w-4" aria-hidden="true" /></Button>}
+                {org.status === 'suspended' && <span className="self-center text-xs text-text-secondary">Inactive</span>}
+                {org.status === 'deleted' && <span className="self-center text-xs text-text-secondary">Deleted</span>}
+              </div>
+              </td>
+            </tr>)}</tbody>
+          </table>}
+      {!hasPermission('organisation.registry.request') && canRead && <p className="mt-3 text-xs text-text-secondary">Edit requires organisation registry request permission.</p>}
+      {!hasPermission('organisation.registry.revoke') && canRead && <p className="mt-1 text-xs text-text-secondary">Deactivate and delete require organisation registry revoke permission.</p>}
+    </Card>
+    <Dialog open={editingId !== null} showCloseButton={false} onClose={() => { if (!busy) setEditingId(null); }} overlayClassName="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl" labelledBy="organisation-edit-title">
+      <h2 id="organisation-edit-title" className="mb-4 text-lg font-semibold">Edit organisation</h2>
+      <form onSubmit={event => void saveEdit(event)} className="grid gap-4">
+        <label className="grid gap-1 text-sm">Organisation name<input required maxLength={200} value={editDisplayName} onChange={event => setEditDisplayName(event.target.value)} className="rounded border border-border px-3 py-2" /></label>
+        <label className="grid gap-1 text-sm">Registry reference<input required maxLength={120} value={editRegistryReference} onChange={event => setEditRegistryReference(event.target.value)} className="rounded border border-border px-3 py-2" /></label>
+        <div className="flex justify-end gap-2"><Button type="button" variant="secondary" disabled={busy} onClick={() => setEditingId(null)}>Cancel</Button><Button type="submit" disabled={busy}>Save changes</Button></div>
+      </form>
+    </Dialog>
+    <Dialog open={deletingOrganisation !== null} showCloseButton={false} onClose={() => { if (!busy) setDeletingOrganisation(null); }} overlayClassName="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl" labelledBy="organisation-delete-title">
+      <h2 id="organisation-delete-title" className="mb-3 text-lg font-semibold">Delete organisation?</h2>
+      <p className="mb-6 text-sm text-text-secondary">{deletingOrganisation?.display_name} will be removed from active organisation listings. Existing membership and event records will be retained.</p>
+      <div className="flex justify-end gap-2"><Button type="button" variant="secondary" disabled={busy} onClick={() => setDeletingOrganisation(null)}>Cancel</Button><Button type="button" variant="danger" disabled={busy} onClick={() => void deleteOrganisation()}>Delete organisation</Button></div>
+    </Dialog>
     {!canRead && <Card className="p-5"><p role="alert" className="text-sm">You do not have permission to view organisation requests.</p></Card>}
   </PageContainer>;
 }
@@ -129,4 +232,9 @@ export function OrganisationOnboardingPage() {
 function readError(cause: unknown): string {
   const error = cause as { response?: { data?: { message?: string; error?: { message?: string } } }; message?: string };
   return error.response?.data?.error?.message ?? error.response?.data?.message ?? error.message ?? 'The organisation request could not be completed.';
+}
+
+function displayComment(value: string | null | undefined, emptyLabel: string): string {
+  const comment = value?.trim() ?? '';
+  return comment.length > 0 ? comment : emptyLabel;
 }

@@ -93,7 +93,7 @@ final class ReviewedOrganisationMembershipService implements OrganisationMembers
         $permission = match ($stage) {
             'approval' => 'organisation.registry.approve',
             'mine' => 'organisation.registry.request',
-            'active' => 'organisation.registry.read',
+            'active', 'all' => 'organisation.registry.read',
             default => 'organisation.registry.review',
         };
         $this->requireAdmin($actorId, $permission);
@@ -104,8 +104,42 @@ final class ReviewedOrganisationMembershipService implements OrganisationMembers
         if ($stage === 'active') $query->where('organisation.status', 'active');
         elseif ($stage === 'approval') $query->where('organisation.status', 'pending_approval');
         elseif ($stage === 'review') $query->where('organisation.status', 'pending_review');
-        else $query->where('organisation.requested_by', $actorId);
+        elseif ($stage === 'mine') $query->where('organisation.requested_by', $actorId);
         return $query->orderByDesc('organisation.created_at')->get()->map(fn ($row) => (array) $row)->all();
+    }
+
+    /** @return array<string, mixed> */
+    public function updateOrganisation(string $id, string $reference, string $name, string $actorId): array
+    {
+        $this->requireAdmin($actorId, 'organisation.registry.request');
+        try {
+            $this->db()->transaction(function () use ($id, $reference, $name, $actorId): void {
+                $org = $this->db()->table('identity.organisations')->where('id', $id)->lockForUpdate()->first();
+                if ($org === null || $org->status === 'deleted') abort(404, 'Organisation not found.');
+                if ($this->db()->table('identity.organisations')->where('registry_reference', $reference)->where('id', '<>', $id)->exists()) {
+                    abort(409, 'Organisation registry reference already exists.');
+                }
+                $this->db()->table('identity.organisations')->where('id', $id)->update([
+                    'registry_reference' => $reference, 'display_name' => $name, 'updated_at' => now(),
+                ]);
+                $this->event('organisation', $id, 'updated', $actorId, $org->status, $org->status);
+            });
+        } catch (QueryException $exception) {
+            if ($exception->getCode() === '23505') abort(409, 'Organisation registry reference already exists.');
+            throw $exception;
+        }
+        return ['id' => $id, 'status' => 'updated'];
+    }
+
+    public function deleteOrganisation(string $id, string $actorId): void
+    {
+        $this->requireAdmin($actorId, 'organisation.registry.revoke');
+        $this->db()->transaction(function () use ($id, $actorId): void {
+            $org = $this->db()->table('identity.organisations')->where('id', $id)->lockForUpdate()->first();
+            if ($org === null || $org->status === 'deleted') abort(404, 'Organisation not found.');
+            $this->db()->table('identity.organisations')->where('id', $id)->update(['status' => 'deleted', 'updated_at' => now()]);
+            $this->event('organisation', $id, 'deleted', $actorId, (string) $org->status, 'deleted');
+        });
     }
 
     /** @return array<string, mixed> */

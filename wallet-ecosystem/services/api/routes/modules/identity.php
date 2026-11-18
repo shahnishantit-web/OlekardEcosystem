@@ -34,6 +34,8 @@ Route::prefix('v1')->group(static function (): void {
             Route::get('memberships', [$controller, 'indexMemberships']);
             Route::get('{id}', [$controller, 'show'])->middleware('identity.require-permission:organisation.registry.read');
             Route::post('/', [$controller, 'requestOrganisation'])->middleware('identity.require-permission:organisation.registry.request');
+            Route::put('{id}', [$controller, 'updateOrganisation'])->middleware('identity.require-permission:organisation.registry.request');
+            Route::post('{id}/delete', [$controller, 'deleteOrganisation'])->middleware('identity.require-permission:organisation.registry.revoke');
             Route::post('{id}/review', [$controller, 'reviewOrganisation'])->middleware('identity.require-permission:organisation.registry.review');
             Route::post('{id}/approve', [$controller, 'approveOrganisation'])->middleware('identity.require-permission:organisation.registry.approve');
             Route::post('{id}/suspend', [$controller, 'suspendOrganisation'])->middleware('identity.require-permission:organisation.registry.revoke');

@@ -26,11 +26,28 @@ final class OrganisationRegistryController extends Controller
         )], 201);
     }
 
+    public function updateOrganisation(Request $request, string $id): JsonResponse
+    {
+        $data = $request->validate([
+            'registry_reference' => ['required', 'string', 'max:120'],
+            'display_name' => ['required', 'string', 'max:200'],
+        ]);
+        return response()->json(['data' => $this->registry->updateOrganisation(
+            $id, $data['registry_reference'], $data['display_name'], $this->actor($request),
+        )]);
+    }
+
+    public function deleteOrganisation(Request $request, string $id): JsonResponse
+    {
+        $this->registry->deleteOrganisation($id, $this->actor($request));
+        return response()->json(['data' => ['id' => $id, 'status' => 'deleted']]);
+    }
+
     public function index(Request $request): JsonResponse
     {
         $actor = $this->actor($request);
         $stage = $request->query('stage', 'review');
-        abort_unless(in_array($stage, ['mine', 'review', 'approval', 'active'], true), 422, 'Invalid organisation queue stage.');
+        abort_unless(in_array($stage, ['mine', 'review', 'approval', 'active', 'all'], true), 422, 'Invalid organisation queue stage.');
         return response()->json(['data' => $this->registry->organisationQueue($actor, $stage)]);
     }
 
