@@ -43,7 +43,7 @@ class NotificationsScreen extends ConsumerWidget {
                   return ListTile(
                     leading: Icon(
                       n.isRead ? Icons.notifications_none : Icons.notifications,
-                      color: n.isRead ? Colors.grey : AppColors.primary,
+                      color: n.isRead ? AppColors.textSecondary : AppColors.primary,
                     ),
                     title: Text(n.title, style: AppTypography.label),
                     subtitle: Text(n.body, maxLines: 2, overflow: TextOverflow.ellipsis),

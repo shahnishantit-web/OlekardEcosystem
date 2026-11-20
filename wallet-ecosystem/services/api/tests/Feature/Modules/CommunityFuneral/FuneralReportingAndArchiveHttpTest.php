@@ -57,13 +57,20 @@ final class FuneralReportingAndArchiveHttpTest extends IntegrationTestCase
         $latePayment = $this->mockConfirmedPayment($obligationId, $customer->id);
         $service->recordPaymentConfirmation($latePayment);
 
+        $this->withActorToken($manager);
+        $history = $this->getJson("$url/collections/$collectionId/transactions")->assertOk();
+        $this->assertSame('late_review', $history->json('data.0.status'));
+        $this->assertSame($obligationId, $history->json('data.0.obligation_id'));
+        $export = $this->get("$url/collections/$collectionId/transactions/export")->assertOk();
+        $this->assertStringContainsString('late_review', $export->getContent());
+
         // Fetch aggregate report as reporter
         $this->withActorToken($manager);
         $repRes = $this->getJson("$url/collections/$collectionId/aggregate-report")->assertOk();
         $data = $repRes->json('data');
 
         // Verify aggregate metrics are present
-        $this->assertSame(2000, $data['confirmed_gross_minor']);
+        $this->assertSame(0, $data['confirmed_gross_minor']);
         $this->assertSame(2000, $data['late_review_gross_minor']);
         $this->assertSame(0, $data['net_support_minor']);
         $this->assertGreaterThan(0, $data['unresolved_liability_count']);
@@ -147,7 +154,7 @@ final class FuneralReportingAndArchiveHttpTest extends IntegrationTestCase
 
         $this->withActorToken($manager, ['Idempotency-Key' => (string) Uuid::uuid7()]);
         $coll = $this->postJson("$url/communities/$communityId/collections", [
-            'beneficiary_id' => $beneficiary->id, 'evidence_reference' => 'evidence-coll',
+            'beneficiary_id' => $beneficiary->id, 'target_household_id' => $householdId, 'evidence_reference' => 'evidence-coll',
         ])->assertCreated();
         $collectionId = $coll->json('data.id');
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../device_list_providers.dart';
 import '../../data/services/device_attribute_collector.dart';
+import '../../../../core/theme/design_tokens.dart';
 
 class RegisterDeviceScreen extends ConsumerStatefulWidget {
   const RegisterDeviceScreen({super.key});
@@ -74,7 +75,7 @@ class _RegisterDeviceScreenState extends ConsumerState<RegisterDeviceScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.mark_email_read_outlined, size: 48, color: Colors.green),
+              const Icon(Icons.mark_email_read_outlined, size: 48, color: AppColors.success),
               const SizedBox(height: 16),
               Text(
                 'Almost done!',
@@ -152,7 +153,10 @@ class _RegisterDeviceScreenState extends ConsumerState<RegisterDeviceScreen> {
                       const SizedBox(height: 12),
                       Text(
                         _error!,
-                        style: const TextStyle(color: Colors.red, fontSize: 13),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.error,
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                     const SizedBox(height: 24),

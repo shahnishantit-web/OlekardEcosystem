@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
 import '../security/secure_storage_service.dart';
+import '../session/session_event_bus.dart';
 
 class ApiClient {
   late final Dio _dio;
@@ -62,6 +63,14 @@ class AuthInterceptor extends Interceptor {
     ErrorInterceptorHandler handler,
   ) async {
     final statusCode = err.response?.statusCode;
+    final path = err.requestOptions.path;
+    final isAuthEndpoint = path.contains('/customer/auth/') ||
+        path.contains('/auth/token/refresh') ||
+        path.contains('/auth/logout');
+    if (statusCode == 401 && isAuthEndpoint) {
+      handler.next(err);
+      return;
+    }
 
     // Step-up authentication challenge
     if (statusCode == 403) {
@@ -75,15 +84,16 @@ class AuthInterceptor extends Interceptor {
     }
 
     // 401 — token refresh
-    final isLoginRequest =
-        RegExp(r'/auth/login(?:/verify)?/?$').hasMatch(err.requestOptions.path);
-    if (statusCode == 401 &&
-        !isLoginRequest &&
-        !err.requestOptions.path.contains('/auth/refresh')) {
+    if (statusCode == 401 && !isAuthEndpoint) {
       if (_isRefreshing) {
         final completer = Completer<void>();
         _refreshQueue.add(completer);
-        await completer.future;
+        try {
+          await completer.future;
+        } catch (_) {
+          handler.next(err);
+          return;
+        }
         err.requestOptions.headers['Authorization'] =
             'Bearer ${await _storage.readAccessToken()}';
         try {
@@ -99,6 +109,7 @@ class AuthInterceptor extends Interceptor {
       try {
         final refreshToken = await _storage.readRefreshToken();
         if (refreshToken == null) {
+          await _expireSession();
           handler.next(err);
           return;
         }
@@ -129,6 +140,7 @@ class AuthInterceptor extends Interceptor {
           c.completeError('refresh_failed');
         }
         _refreshQueue.clear();
+        await _expireSession();
         handler.next(err);
       } finally {
         _isRefreshing = false;
@@ -137,6 +149,12 @@ class AuthInterceptor extends Interceptor {
     }
 
     handler.next(err);
+  }
+
+  Future<void> _expireSession() async {
+    await _storage.deleteAll();
+    SessionEventBus.instance.fireLogout();
+    SessionEventBus.instance.fireSessionExpired();
   }
 }
 
@@ -159,9 +177,15 @@ class RetryInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     final retryCount = err.requestOptions.extra['retry_count'] as int? ?? 0;
+    final responseError = err.response?.data;
+    final isFuneralReadinessGate = responseError is Map &&
+        responseError['error'] is Map &&
+        responseError['error']['code'] ==
+            'FUNERAL_ASSISTANCE_PREREQUISITES_UNRESOLVED';
 
     if (err.response?.statusCode != null &&
         !err.requestOptions.path.contains('/auth/') &&
+        !isFuneralReadinessGate &&
         err.response!.statusCode! >= 500 &&
         retryCount < maxRetries) {
       err.requestOptions.extra['retry_count'] = retryCount + 1;

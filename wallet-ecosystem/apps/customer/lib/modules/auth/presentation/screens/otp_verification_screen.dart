@@ -89,7 +89,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
               Text(
                 'Resend in :${_secondsLeft.toString().padLeft(2, '0')}',
                 textAlign: TextAlign.center,
-                style: AppTypography.label.copyWith(color: Colors.grey),
+                style: Theme.of(context).textTheme.bodySmall,
               ),
           ],
         ),

@@ -11,6 +11,7 @@ import '../../transactions/presentation/transaction_providers.dart';
 import '../../../core/connectivity/connectivity_service.dart';
 import '../../../shared/widgets/pin_pad_widget.dart';
 import '../../../core/security/screenshot_guard.dart';
+import '../../../core/theme/design_tokens.dart';
 
 enum _MoneyStep { form, review, pin, status }
 
@@ -215,7 +216,7 @@ class _MoneyFlowScreenState extends ConsumerState<MoneyFlowScreen> {
                   ? Icons.error_outline
                   : Icons.schedule,
           size: 64,
-          color: completed ? Colors.green : null),
+          color: completed ? AppColors.success : null),
       const SizedBox(height: 16),
       Text(
           completed

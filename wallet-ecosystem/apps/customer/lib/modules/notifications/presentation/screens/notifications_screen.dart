@@ -132,7 +132,7 @@ class _NotificationTile extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             notification.createdAt.toLocal().toString().substring(0, 16),
-            style: AppTypography.caption.copyWith(color: Colors.grey),
+            style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
       ),

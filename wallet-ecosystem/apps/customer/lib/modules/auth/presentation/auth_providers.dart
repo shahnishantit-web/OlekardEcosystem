@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart'
     show StateNotifier, StateNotifierProvider;
@@ -77,9 +79,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final BiometricService _biometric;
   final Ref _ref;
   bool _loginVerificationInProgress = false;
+  late final StreamSubscription<void> _sessionExpiredSubscription;
 
   AuthNotifier(this._repo, this._pinService, this._biometric, this._ref)
-      : super(const AuthState(status: AuthStateEnum.unauthenticated));
+      : super(const AuthState(status: AuthStateEnum.unauthenticated)) {
+    _sessionExpiredSubscription =
+        SessionEventBus.instance.onSessionExpired.listen((_) {
+      _loginVerificationInProgress = false;
+      state = const AuthState(
+        status: AuthStateEnum.unauthenticated,
+        error: 'Your session has expired. Please sign in again.',
+      );
+      _ref.invalidateSelf();
+    });
+  }
+
+  @override
+  void dispose() {
+    unawaited(_sessionExpiredSubscription.cancel());
+    super.dispose();
+  }
 
   Future<void> checkAuthState() async {
     const storage = SecureStorageService();

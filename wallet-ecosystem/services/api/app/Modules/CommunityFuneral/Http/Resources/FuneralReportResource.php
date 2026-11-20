@@ -17,6 +17,7 @@ final class FuneralReportResource extends JsonResource
         return [
             'collection_id' => $data['collection_id'] ?? null,
             'confirmed_gross_minor' => (int) ($data['confirmed_gross_minor'] ?? 0),
+            'confirmed_contribution_count' => (int) ($data['confirmed_contribution_count'] ?? 0),
             'fee_total_minor' => (int) ($data['fee_total_minor'] ?? 0),
             'confirmed_refunds_minor' => (int) ($data['confirmed_refunds_minor'] ?? 0),
             'net_support_minor' => (int) ($data['net_support_minor'] ?? 0),
@@ -28,6 +29,7 @@ final class FuneralReportResource extends JsonResource
             'payout_liability_open' => (int) ($data['payout_liability_open'] ?? 0),
             'settlement_status' => $data['settlement_status'] ?? 'unresolved',
             'payout_status' => $data['payout_status'] ?? 'blocked',
+            'disbursement' => $data['disbursement'] ?? null,
         ];
     }
 }

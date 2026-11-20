@@ -21,6 +21,10 @@ final class ConfigurationValueModel extends Model
 
     protected $table = 'platform.configuration_values';
 
+    public $incrementing = false;
+
+    protected $keyType = 'string';
+
     public $timestamps = false;
 
     protected $fillable = [

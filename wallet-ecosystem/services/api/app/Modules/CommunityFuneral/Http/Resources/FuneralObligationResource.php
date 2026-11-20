@@ -17,6 +17,10 @@ final class FuneralObligationResource extends JsonResource
         return [
             'id' => $data['id'] ?? null,
             'collection_id' => $data['collection_id'] ?? null,
+            'organisation_id' => $data['organisation_id'] ?? null,
+            'organisation_name' => $data['organisation_name'] ?? 'Organisation',
+            'community_name' => $data['community_name'] ?? 'Community',
+            'collection_purpose' => $data['collection_purpose'] ?? 'Community funeral assistance contribution',
             'amount_minor' => (int) ($data['amount_minor'] ?? 2000),
             'currency_code' => $data['currency_code'] ?? 'BWP',
             'status' => $data['status'] ?? 'unpaid',

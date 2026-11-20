@@ -8,7 +8,10 @@ use App\Modules\CommunityFuneral\Application\FuneralAssistanceService;
 use App\Modules\CommunityFuneral\Application\FuneralObligationResolver;
 use App\Modules\CommunityFuneral\Application\Jobs\DispatchFuneralPrivateNotice;
 use App\Modules\CommunityFuneral\Domain\Contracts\OrganisationMembershipVerifier;
+use App\Modules\Ledger\Domain\Contracts\LedgerModuleContract;
+use App\Modules\Ledger\Domain\ValueObjects\PostedJournalEvidence;
 use App\Modules\Payment\Infrastructure\Models\PayoutBeneficiaryModel;
+use App\Modules\Wallet\Domain\Contracts\WalletModuleContract;
 use App\Modules\Notification\Application\Services\NotificationTemplateService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -62,10 +65,17 @@ final class FuneralAssistanceFlowTest extends IntegrationTestCase
             ->where('correlation_id', $audit->id)->first();
         $this->assertNotNull($platformAudit);
         $this->assertSame('community_funeral.collection_activated', $platformAudit->action);
-        $notices = DB::connection('community_services')->table('community_services.funeral_private_notices')->get();
+        $notices = DB::connection('community_services')->table('community_services.funeral_private_notices as notice')
+            ->join('community_services.funeral_snapshot_households as snapshot_household', 'snapshot_household.id', '=', 'notice.snapshot_household_id')
+            ->join('community_services.funeral_eligibility_snapshots as snapshot', 'snapshot.id', '=', 'snapshot_household.snapshot_id')
+            ->where('snapshot.collection_id', $context['collection_id'])
+            ->select('notice.*')->get();
         $this->assertCount(1, $notices);
         $this->assertSame($context['customer_id'], $notices[0]->recipient_actor_id);
         $this->assertSame('delivered', $notices[0]->status);
+        $notification = DB::connection('notification')->table('notification.notifications')->where('id', $notices[0]->id)->first();
+        $this->assertSame('/services/funeral?collection_id='.$context['collection_id'], $notification->deep_link);
+        $this->assertStringContainsString('BWP 20.00', $notification->body);
         $this->assertSame([], $service->obligationsForActor($outsider->id));
         $inbox = DB::connection('notification')->table('notification.notifications')
             ->where('source_event_id', $notices[0]->id)->first();
@@ -132,7 +142,7 @@ final class FuneralAssistanceFlowTest extends IntegrationTestCase
         $this->assertSame('late_review', $this->obligation($context['collection_id'])->status);
         $this->assertSame('held_for_review', $this->obligation($context['collection_id'])->fulfilment_status);
         $report = $service->aggregateReport($context['collection_id'], $context['manager_id']);
-        $this->assertSame(2000, $report['confirmed_gross_minor']);
+        $this->assertSame(0, $report['confirmed_gross_minor']);
         $this->assertSame(2000, $report['late_review_gross_minor']);
         $this->assertSame(0, $report['net_support_minor']);
         $this->assertGreaterThan(0, $report['unresolved_liability_count']);
@@ -153,6 +163,123 @@ final class FuneralAssistanceFlowTest extends IntegrationTestCase
         $service->approveCarryForward($context['collection_id'], $context['reviewer_id']);
         $service->archiveCollection($context['collection_id'], $context['manager_id']);
         $this->assertSame('archived', DB::connection('community_services')->table('community_services.funeral_collections')->where('id', $context['collection_id'])->value('status'));
+    }
+
+    public function test_local_wallet_disbursement_requires_independent_approval_and_posts_receipt(): void
+    {
+        [$service, $context] = $this->approvedCollection();
+        config(['payment.mock_bank.local_funeral_ledger_enabled' => true]);
+        $walletId = (string) Uuid::uuid7();
+        $collection = DB::connection('community_services')->table('community_services.funeral_collections')->where('id', $context['collection_id'])->first();
+        $beneficiary = PayoutBeneficiaryModel::query()->findOrFail($collection->beneficiary_id);
+        $beneficiary->account_type = 'wallet';
+        $beneficiary->account_number = $walletId;
+        $beneficiary->save();
+
+        $service->activateCollection($context['collection_id'], $context['reviewer_id']);
+        $obligation = $this->obligation($context['collection_id']);
+        DB::connection('community_services')->table('community_services.funeral_payment_receipts')->insert([
+            'id' => (string) Uuid::uuid7(), 'obligation_id' => $obligation->id, 'payment_intent_id' => (string) Uuid::uuid7(),
+            'gross_amount_minor' => 2000, 'fee_amount_minor' => 0, 'currency_code' => 'BWP', 'domain_status' => 'confirmed',
+            'correlation_id' => 'PAYOUT-TEST-RECEIPT', 'confirmed_at' => now(), 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $service->closeCollection($context['collection_id'], $context['manager_id']);
+
+        $journalId = (string) Uuid::uuid7();
+        $idempotencyKey = null;
+        $ledger = \Mockery::mock(LedgerModuleContract::class);
+        $ledger->shouldReceive('getBalance')->once()->andReturn(2000);
+        $ledger->shouldReceive('postEntry')->once()->andReturnUsing(function (array $entry) use (&$idempotencyKey, $journalId): string {
+            $idempotencyKey = $entry['idempotency_key'];
+            return $journalId;
+        });
+        $ledger->shouldReceive('findPostedJournalEvidence')->once()->andReturnUsing(function (string $key) use (&$idempotencyKey, $journalId): PostedJournalEvidence {
+            $this->assertSame($idempotencyKey, $key);
+            return new PostedJournalEvidence($journalId, 'posted', 'debit', 'disbursement-ref', $key, 'BWP', []);
+        });
+        $this->app->instance(LedgerModuleContract::class, $ledger);
+        $wallet = \Mockery::mock(WalletModuleContract::class);
+        $wallet->shouldReceive('isActive')->once()->with($walletId)->andReturn(true);
+        $wallet->shouldReceive('pocketExists')->once()->with($walletId, 'BWP')->andReturn(true);
+        $wallet->shouldReceive('getPocketLedgerAccountRef')->once()->with($walletId, 'BWP')->andReturn('wallet-pocket-ledger-ref');
+        $this->app->instance(WalletModuleContract::class, $wallet);
+        $this->app->forgetInstance(FuneralAssistanceService::class);
+        $service = app(FuneralAssistanceService::class);
+
+        $requested = $service->requestDisbursement($context['collection_id'], $context['manager_id']);
+        $this->assertSame('awaiting_approval', $requested['status']);
+        $this->assertSame(2000, (int) $requested['amount_minor']);
+        try {
+            $service->approveDisbursement($context['collection_id'], $context['manager_id']);
+            $this->fail('The requester must not approve their own payout.');
+        } catch (ValidationException) {
+            $this->assertSame('awaiting_approval', DB::connection('community_services')->table('community_services.funeral_disbursements')->where('collection_id', $context['collection_id'])->value('status'));
+        }
+        $paid = $service->approveDisbursement($context['collection_id'], $context['reviewer_id']);
+        $this->assertSame('paid', $paid['status']);
+        $this->assertSame($journalId, $paid['ledger_journal_id']);
+        $this->assertNotEmpty($paid['receipt_reference']);
+        $this->assertSame('paid', $service->aggregateReport($context['collection_id'], $context['manager_id'])['payout_status']);
+        $this->assertSame(1, DB::connection('community_services')->table('community_services.funeral_audit_events')
+            ->where('resource_id', $paid['id'])->where('action', 'disbursement.paid')->count());
+        $this->assertSame(0, DB::connection('community_services')->table('community_services.funeral_audit_events')
+            ->where('resource_id', $paid['id'])->where('action', 'disbursement.failed')->count());
+    }
+
+    public function test_transaction_history_classifies_failed_cancelled_full_partial_and_reversed_payments(): void
+    {
+        [$service, $context] = $this->approvedCollection();
+        $service->activateCollection($context['collection_id'], $context['reviewer_id']);
+        $obligation = $this->obligation($context['collection_id']);
+        $expected = [];
+
+        foreach (['failed', 'cancelled', 'refunded', 'partially_refunded', 'reversed'] as $state) {
+            if (in_array($state, ['failed', 'cancelled'], true)) {
+                $intentId = (string) Uuid::uuid7();
+                DB::connection('community_services')->table('payment.payment_intents')->insert([
+                    'id' => $intentId, 'reference' => 'FUNERAL-'.strtoupper(substr(str_replace('-', '', $intentId), -8)),
+                    'purpose_type' => 'funeral_contribution', 'purpose_reference' => $obligation->id,
+                    'organisation_id' => $context['organisation_id'], 'payer_actor_id' => $context['customer_id'],
+                    'currency_code' => 'BWP', 'amount_minor' => 2000, 'status' => $state,
+                    'idempotency_key' => 'history-'.$intentId, 'correlation_id' => (string) Uuid::uuid7(), 'metadata' => '{}',
+                    'expires_at' => now()->addHour(), 'created_at' => now(), 'updated_at' => now(),
+                ]);
+                $expected[$intentId] = $state;
+                continue;
+            }
+            $event = $this->confirmedPayment($obligation->id, $context['organisation_id'], $context['customer_id']);
+            $intentId = (string) $event['payment_intent_id'];
+            $attemptId = (string) $event['payment_attempt_id'];
+            DB::connection('community_services')->table('community_services.funeral_payment_receipts')->insert([
+                'id' => (string) Uuid::uuid7(), 'obligation_id' => $obligation->id, 'payment_intent_id' => $intentId,
+                'gross_amount_minor' => 2000, 'fee_amount_minor' => 0, 'currency_code' => 'BWP', 'domain_status' => 'confirmed',
+                'correlation_id' => 'HISTORY-'.$state, 'confirmed_at' => now(), 'created_at' => now(), 'updated_at' => now(),
+            ]);
+            if ($state === 'refunded' || $state === 'partially_refunded') {
+                DB::connection('payment')->table('payment.payment_intents')->where('id', $intentId)->update(['status' => $state]);
+                DB::connection('payment')->table('payment.payment_refunds')->insert([
+                    'id' => (string) Uuid::uuid7(), 'payment_intent_id' => $intentId, 'payment_attempt_id' => $attemptId,
+                    'amount_minor' => $state === 'refunded' ? 2000 : 500, 'status' => 'succeeded',
+                    'idempotency_key' => 'funeral-history-'.$intentId, 'requested_by' => $context['manager_id'],
+                    'requested_at' => now(), 'confirmed_at' => now(), 'created_at' => now(), 'updated_at' => now(),
+                ]);
+            }
+            if ($state === 'reversed') {
+                DB::connection('payment')->table('payment.payment_dispute_cases')->insert([
+                    'id' => (string) Uuid::uuid7(), 'payment_attempt_id' => $attemptId,
+                    'provider_code' => 'reversal-test', 'provider_dispute_reference' => 'REV-'.$intentId,
+                    'case_type' => 'reversal', 'status' => 'closed_reversed', 'disputed_amount_minor' => 2000,
+                    'currency_code' => 'BWP', 'correlation_id' => 'REV-'.$intentId, 'created_at' => now(), 'updated_at' => now(),
+                ]);
+            }
+            $expected[$intentId] = $state;
+        }
+
+        $rows = $service->transactionHistory($context['collection_id'], $context['manager_id']);
+        $actual = collect($rows)->keyBy('payment_intent_id');
+        foreach ($expected as $intentId => $state) {
+            $this->assertSame($state, $actual->get($intentId)['status'] ?? null, "Payment intent $intentId should be classified as $state. History: ".json_encode($rows));
+        }
     }
 
     public function test_unaccounted_or_mismatched_payment_event_cannot_fulfil(): void
@@ -193,7 +320,7 @@ final class FuneralAssistanceFlowTest extends IntegrationTestCase
         $service->reviewHousehold($household['id'], 'eligible', null, $reviewer->id);
         $rep = $service->addRepresentative($household['id'], $customer->id, 'restricted-evidence-test-only', $manager->id);
         $service->verifyRepresentative($household['id'], $rep['id'], $reviewer->id);
-        $collection = $service->createCollection($community['id'], $beneficiary->id, 'restricted-request-test-only', $manager->id);
+        $collection = $service->createCollection($community['id'], $beneficiary->id, $household['id'], 'restricted-request-test-only', $manager->id);
         $service->approveCollection($collection['id'], $reviewer->id);
 
         return [$service, ['collection_id' => $collection['id'], 'community_id' => $community['id'],

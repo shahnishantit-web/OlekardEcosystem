@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/device.dart';
 import '../device_list_providers.dart';
+import '../../../../core/theme/design_tokens.dart';
 
 class BlockDeviceConfirmationScreen extends ConsumerStatefulWidget {
   final Device device;
@@ -64,7 +65,7 @@ class _BlockDeviceConfirmationScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.block, size: 48, color: Colors.red),
+                  const Icon(Icons.block, size: 48, color: AppColors.error),
                   const SizedBox(height: 16),
                   Text(
                     'Block "${widget.device.deviceName}"?',
@@ -95,7 +96,7 @@ class _BlockDeviceConfirmationScreenState
                     child: FilledButton.icon(
                       onPressed: _confirmBlock,
                       style: FilledButton.styleFrom(
-                        backgroundColor: Colors.red,
+                        backgroundColor: AppColors.error,
                       ),
                       icon: const Icon(Icons.block),
                       label: const Text('Confirm Block'),

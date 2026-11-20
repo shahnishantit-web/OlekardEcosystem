@@ -36,19 +36,19 @@ class SplashScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.account_balance_wallet, size: 64, color: Colors.white),
+            Icon(Icons.account_balance_wallet, size: 64, color: AppColors.onPrimary),
             SizedBox(height: AppSpacing.md),
             Text(
               'OleKard Wallet',
               style: TextStyle(
-                color: Colors.white,
+                color: AppColors.onPrimary,
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
               ),
             ),
             SizedBox(height: AppSpacing.lg),
             CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.onPrimary),
             ),
           ],
         ),

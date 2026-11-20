@@ -204,7 +204,7 @@ class _RefundRequestFormState extends ConsumerState<_RefundRequestForm> {
                     width: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: AppColors.onPrimary,
                     ),
                   )
                 : const Text('Request Refund'),

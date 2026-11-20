@@ -10,7 +10,6 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { useAuth } from '@/lib/auth/context';
 import { useReconciliationExceptions } from '../hooks/useReconciliationExceptions';
-import { CurrencyAmount } from '../components/CurrencyAmount';
 import type { ReconciliationExceptionStatus } from '@/lib/api/payment';
 
 const STATUS_OPTIONS: ReconciliationExceptionStatus[] = ['open', 'investigating', 'escalated', 'resolved'];

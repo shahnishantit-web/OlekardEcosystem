@@ -34,9 +34,10 @@ export function ApiOperationEditor({ initial = {}, onChange }: Props) {
     <div className="space-y-4 rounded-lg border border-gray-200 p-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Operation Type</label>
+          <label htmlFor="operation-type" className="block text-sm font-medium text-gray-700 mb-1">Operation Type</label>
           <select
             value={form.operation_type ?? ''}
+            id="operation-type"
             onChange={e => update({ operation_type: e.target.value })}
             className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
           >
@@ -48,9 +49,10 @@ export function ApiOperationEditor({ initial = {}, onChange }: Props) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">HTTP Method</label>
+          <label htmlFor="http-method" className="block text-sm font-medium text-gray-700 mb-1">HTTP Method</label>
           <select
             value={form.http_method ?? ''}
+            id="http-method"
             onChange={e => update({ http_method: e.target.value as typeof HTTP_METHODS[number] })}
             className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
           >
@@ -63,7 +65,7 @@ export function ApiOperationEditor({ initial = {}, onChange }: Props) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="base-url" className="block text-sm font-medium text-gray-700 mb-1">
           Base URL
           {urlError && (
             <span className="ml-2 text-xs text-red-600">{urlError}</span>
@@ -72,6 +74,7 @@ export function ApiOperationEditor({ initial = {}, onChange }: Props) {
         <div className="flex items-center gap-2">
           <input
             type="url"
+            id="base-url"
             value={form.base_url ?? ''}
             onChange={e => { update({ base_url: e.target.value }); validateUrl(e.target.value); }}
             onBlur={e => validateUrl(e.target.value)}
@@ -85,9 +88,10 @@ export function ApiOperationEditor({ initial = {}, onChange }: Props) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Endpoint Path</label>
+        <label htmlFor="endpoint-path" className="block text-sm font-medium text-gray-700 mb-1">Endpoint Path</label>
         <input
           type="text"
+          id="endpoint-path"
           value={form.endpoint_path ?? ''}
           onChange={e => update({ endpoint_path: e.target.value })}
           placeholder="/v1/payments/initiate"
@@ -96,11 +100,12 @@ export function ApiOperationEditor({ initial = {}, onChange }: Props) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="timeout-ms" className="block text-sm font-medium text-gray-700 mb-1">
           Timeout (ms) — max 120,000
         </label>
         <input
           type="number"
+          id="timeout-ms"
           min={100}
           max={120000}
           value={form.timeout_ms ?? 30000}

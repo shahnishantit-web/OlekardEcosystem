@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/device.dart';
 import '../device_list_providers.dart';
 import '../widgets/device_status_badge.dart';
+import '../../../../core/theme/design_tokens.dart';
 
 class NewDeviceNotificationScreen extends ConsumerStatefulWidget {
   final Device device;
@@ -56,7 +57,7 @@ class _NewDeviceNotificationScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.devices_other, size: 48, color: Colors.orange),
+                  const Icon(Icons.devices_other, size: 48, color: AppColors.warning),
                   const SizedBox(height: 16),
                   Text(
                     'New device detected',
@@ -97,11 +98,11 @@ class _NewDeviceNotificationScreenState
                           const SizedBox(height: 8),
                           Text(
                             'Platform: ${device.platform}',
-                            style: const TextStyle(fontSize: 13, color: Colors.grey),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 13),
                           ),
                           Text(
                             'Registered: ${device.createdAt.day}/${device.createdAt.month}/${device.createdAt.year}',
-                            style: const TextStyle(fontSize: 13, color: Colors.grey),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 13),
                           ),
                         ],
                       ),
@@ -121,10 +122,10 @@ class _NewDeviceNotificationScreenState
                     label: 'Deny this device and block it',
                     child: OutlinedButton.icon(
                       onPressed: () => _acknowledge(approved: false),
-                      icon: const Icon(Icons.block, color: Colors.red),
+                      icon: const Icon(Icons.block, color: AppColors.error),
                       label: const Text(
                         "No, block this device",
-                        style: TextStyle(color: Colors.red),
+                        style: TextStyle(color: Theme.of(context).colorScheme.error),
                       ),
                     ),
                   ),

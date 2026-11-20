@@ -35,7 +35,7 @@ class TransactionListTile extends StatelessWidget {
         ),
         subtitle: Text(
           DateFormat.yMMMd().format(tx.createdAt),
-          style: AppTypography.caption.copyWith(color: Colors.grey),
+          style: Theme.of(context).textTheme.bodySmall,
         ),
         trailing: FittedBox(
           fit: BoxFit.scaleDown,
@@ -84,12 +84,12 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (status) {
-      PaymentStatus.pending => ('Pending', Colors.orange),
-      PaymentStatus.processing => ('Processing', Colors.blue),
+      PaymentStatus.pending => ('Pending', AppColors.warning),
+      PaymentStatus.processing => ('Processing', AppColors.info),
       PaymentStatus.completed => ('Completed', AppColors.success),
       PaymentStatus.failed => ('Failed', AppColors.error),
-      PaymentStatus.reversed => ('Reversed', Colors.grey),
-      PaymentStatus.cancelled => ('Cancelled', Colors.grey),
+      PaymentStatus.reversed => ('Reversed', AppColors.textSecondary),
+      PaymentStatus.cancelled => ('Cancelled', AppColors.textSecondary),
     };
 
     return Container(

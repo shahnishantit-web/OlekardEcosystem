@@ -208,7 +208,7 @@ class _SuccessView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.check_circle, color: Colors.green, size: 64),
+          const Icon(Icons.check_circle, color: AppColors.success, size: 64),
           const SizedBox(height: AppSpacing.md),
           const Text('Ticket submitted', style: AppTypography.label),
           const SizedBox(height: AppSpacing.sm),

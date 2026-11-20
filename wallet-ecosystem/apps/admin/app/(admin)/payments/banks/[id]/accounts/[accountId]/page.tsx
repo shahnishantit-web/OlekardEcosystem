@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { BankStatusBadge } from '../../../../components/BankStatusBadge';
 import { SecretReferenceField } from '../../../../components/SecretReferenceField';
 import { LifecyclePanel } from '../../../../components/LifecyclePanel';
 import type { AccountLifecycleStatus } from '@/lib/api/payments/banks';

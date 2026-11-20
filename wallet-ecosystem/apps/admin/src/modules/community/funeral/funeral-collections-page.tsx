@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@/lib/auth/context';
 
 export interface FuneralCollection {
@@ -42,10 +42,9 @@ const STATUS_COLORS: Record<FuneralCollection['status'], string> = {
 
 export function FuneralCollectionsPage() {
   const { authenticatedClient: client } = useAuth();
-  const [collections, setCollections] = useState<FuneralCollection[]>([]);
+  const [collections] = useState<FuneralCollection[]>([]);
   const [selectedCollection, setSelectedCollection] = useState<FuneralCollection | null>(null);
   const [report, setReport] = useState<AggregateReport | null>(null);
-  const [loading, setLoading] = useState(false);
   const [actioning, setActioning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [carryForwardRef, setCarryForwardRef] = useState('');

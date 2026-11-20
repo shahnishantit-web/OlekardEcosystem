@@ -160,7 +160,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/services/funeral',
-            builder: (_, __) => const FuneralAssistanceScreen(),
+            builder: (_, state) => FuneralAssistanceScreen(
+              collectionId: state.uri.queryParameters['collection_id'],
+            ),
           ),
           GoRoute(
             path: '/services/:categoryId',

@@ -29,7 +29,7 @@ class SecuritySettingsScreen extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Text(
               'Keep your account secure by using a strong PIN and managing devices that have access to your account.',
-              style: AppTypography.caption.copyWith(color: Colors.grey),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
         ],

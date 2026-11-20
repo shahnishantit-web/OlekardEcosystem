@@ -170,7 +170,7 @@ final class DevPaidEventSeeder extends Seeder
             'sort_order' => 10,
             'bank_lifecycle_status' => 'active',
             'supported_countries' => json_encode(['BW'], JSON_THROW_ON_ERROR),
-            'description' => 'Local paid event checkout simulator. No live bank connection.',
+            'description' => 'Local paid event and funeral contribution checkout simulator. No live bank connection.',
             'metadata_version' => 1,
             'updated_at' => $now,
             'created_at' => $provider?->created_at ?? $now,
@@ -189,9 +189,9 @@ final class DevPaidEventSeeder extends Seeder
             'enabled_organisations' => json_encode([], JSON_THROW_ON_ERROR),
             // Leave module scope unrestricted because attempt-time account resolution
             // has no trusted module field; purpose scope still limits this account
-            // to paid_event_ticket.
+            // to explicitly enabled payment purposes.
             'enabled_modules' => json_encode([], JSON_THROW_ON_ERROR),
-            'enabled_purpose_types' => json_encode(['paid_event_ticket'], JSON_THROW_ON_ERROR),
+            'enabled_purpose_types' => json_encode(['paid_event_ticket', 'funeral_contribution'], JSON_THROW_ON_ERROR),
             'country_restrictions' => json_encode([], JSON_THROW_ON_ERROR),
             'capability_flags' => json_encode(['supports_refund' => true], JSON_THROW_ON_ERROR),
             'fee_rule_ids' => json_encode([], JSON_THROW_ON_ERROR),
@@ -214,7 +214,7 @@ final class DevPaidEventSeeder extends Seeder
                 'id' => $this->id('mock-bank-consumer-option'),
                 'display_label' => 'Development demo bank',
                 'display_order' => 1,
-                'supported_purpose_types' => json_encode(['paid_event_ticket'], JSON_THROW_ON_ERROR),
+                'supported_purpose_types' => json_encode(['paid_event_ticket', 'funeral_contribution'], JSON_THROW_ON_ERROR),
                 'country_restrictions' => json_encode([], JSON_THROW_ON_ERROR),
                 'is_active' => true,
                 'created_at' => $now,

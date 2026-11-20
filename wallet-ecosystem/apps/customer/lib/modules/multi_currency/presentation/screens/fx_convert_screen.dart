@@ -84,7 +84,9 @@ class _FxConvertScreenState extends ConsumerState<FxConvertScreen> {
             ],
             if (_error != null) ...[
               const SizedBox(height: 12),
-              Text(_error!, style: const TextStyle(color: Colors.red)),
+              Text(_error!, style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.error,
+              )),
             ],
           ],
         ),
@@ -191,7 +193,7 @@ class _Row extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.grey)),
+          Text(label, style: Theme.of(context).textTheme.bodySmall),
           Text(value,  style: const TextStyle(fontWeight: FontWeight.w500)),
         ],
       ),

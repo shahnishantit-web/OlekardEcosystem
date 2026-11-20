@@ -23,7 +23,7 @@ class PaymentStatusRow extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: AppTypography.caption.copyWith(color: Colors.grey),
+                style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),

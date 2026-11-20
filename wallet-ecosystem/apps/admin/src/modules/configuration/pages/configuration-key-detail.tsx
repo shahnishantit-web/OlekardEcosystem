@@ -21,6 +21,26 @@ interface Props {
   configKey: string;
 }
 
+const FUNERAL_AVAILABILITY_KEY = 'community_funeral.http_enabled';
+
+function readBooleanValue(value: unknown): boolean {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'true') return true;
+    if (normalized === 'false') return false;
+    try {
+      return readBooleanValue(JSON.parse(value) as unknown);
+    } catch {
+      return false;
+    }
+  }
+  if (typeof value === 'object' && value !== null && 'value' in value) {
+    return readBooleanValue((value as { value: unknown }).value);
+  }
+  return false;
+}
+
 function eventVariant(eventType: string): 'neutral' | 'success' | 'warning' | 'error' | 'info' {
   switch (eventType) {
     case 'activated': return 'success';
@@ -46,6 +66,8 @@ export function ConfigurationKeyDetailPage({ configKey }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const [proposedValue, setProposedValue] = useState('');
+  const [funeralAvailabilityEnabled, setFuneralAvailabilityEnabled] = useState(false);
+  const [funeralCurrentEnabled, setFuneralCurrentEnabled] = useState(false);
   const [showDiff, setShowDiff] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState<{ status: ChangeRequestStatus; id: string } | null>(null);
@@ -62,6 +84,11 @@ export function ConfigurationKeyDetailPage({ configKey }: Props) {
         client.getKeyVersions(configKey, { per_page: 20 }),
       ]);
       setKeyDetail(keyRes.data);
+      if (configKey === FUNERAL_AVAILABILITY_KEY) {
+        const enabled = readBooleanValue(keyRes.data.current_value);
+        setFuneralAvailabilityEnabled(enabled);
+        setFuneralCurrentEnabled(enabled);
+      }
       setVersions(versionsRes.data.data);
     } catch {
       setError('Failed to load configuration key details.');
@@ -74,13 +101,15 @@ export function ConfigurationKeyDetailPage({ configKey }: Props) {
     if (canRead) void fetchData();
   }, [canRead, fetchData]);
 
-  const handleConfirmSubmit = useCallback(async () => {
+  const handleConfirmSubmit = useCallback(async (booleanOverride?: boolean) => {
     if (!authenticatedClient || !keyDetail) return;
     setSubmitting(true);
     setFormError(null);
     try {
-      let parsedValue: unknown = proposedValue;
-      if (keyDetail.value_type === 'number') {
+      let parsedValue: unknown = booleanOverride ?? proposedValue;
+      if (booleanOverride !== undefined) {
+        parsedValue = booleanOverride;
+      } else if (keyDetail.value_type === 'number') {
         const n = Number(proposedValue);
         if (isNaN(n)) {
           setFormError('Please enter a valid number.');
@@ -139,6 +168,7 @@ export function ConfigurationKeyDetailPage({ configKey }: Props) {
   if (!keyDetail) return null;
 
   const hasPendingChange = !!keyDetail.pending_change_request_id;
+  const isFuneralAvailability = keyDetail.config_key === FUNERAL_AVAILABILITY_KEY;
 
   return (
     <main aria-labelledby={headingId}>
@@ -158,7 +188,7 @@ export function ConfigurationKeyDetailPage({ configKey }: Props) {
       </div>
 
       {/* Current value */}
-      <Card className="mb-6">
+      {!isFuneralAvailability && <Card className="mb-6">
         <h2 className="mb-2 text-sm font-semibold text-muted-foreground">Current Value</h2>
         <pre className="overflow-auto rounded bg-muted p-3 text-xs">
           {keyDetail.current_value != null
@@ -179,7 +209,7 @@ export function ConfigurationKeyDetailPage({ configKey }: Props) {
             </Button>
           </div>
         )}
-      </Card>
+      </Card>}
 
       {/* Submit result banner */}
       {submitResult && (
@@ -202,7 +232,64 @@ export function ConfigurationKeyDetailPage({ configKey }: Props) {
       )}
 
       {/* Edit form — only when canWrite */}
-      {canWrite && (
+      {isFuneralAvailability ? (
+        <Card className="mb-6 max-w-2xl p-6">
+          <h2 className="text-lg font-semibold">Funeral Assistance availability</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Enable or disable Funeral Assistance setup and customer obligations in this environment.
+            Production remains locked until release approval.
+          </p>
+          <div className="mt-6 flex items-center justify-between gap-4 rounded-lg border p-4">
+            <div>
+              <p className="font-medium">Feature status</p>
+              <p className="text-sm text-muted-foreground">
+                {funeralAvailabilityEnabled ? 'Enabled' : 'Disabled'}
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-label="Enable Funeral Assistance"
+              aria-checked={funeralAvailabilityEnabled}
+              disabled={!canWrite || hasPendingChange || submitting}
+              onClick={() => setFuneralAvailabilityEnabled((enabled) => !enabled)}
+              className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${funeralAvailabilityEnabled ? 'bg-primary' : 'bg-muted-foreground/40'}`}
+            >
+              <span
+                className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${funeralAvailabilityEnabled ? 'translate-x-6' : 'translate-x-1'}`}
+              />
+            </button>
+          </div>
+          {formError && <p role="alert" className="mt-3 text-sm text-error">{formError}</p>}
+          {hasPendingChange && (
+            <p role="status" className="mt-3 text-sm text-muted-foreground">
+              A change is awaiting approval.{' '}
+              <button
+                type="button"
+                className="underline"
+                onClick={() => router.push(`/configuration/approvals/${keyDetail.pending_change_request_id}`)}
+              >
+                View approval
+              </button>
+            </p>
+          )}
+          {canWrite && !hasPendingChange && (
+            <Button
+              className="mt-4"
+              onClick={() => void handleConfirmSubmit(funeralAvailabilityEnabled)}
+              disabled={submitting || funeralAvailabilityEnabled === funeralCurrentEnabled}
+            >
+              {submitting ? 'Applying…' : 'Apply changes'}
+            </Button>
+          )}
+          {!canWrite && (
+            <p className="mt-3 text-sm text-muted-foreground">You have read-only access to this setting.</p>
+          )}
+          <p className="mt-3 text-xs text-muted-foreground">
+            Applying a change submits it for independent configuration approval.
+          </p>
+        </Card>
+      ) : canWrite && (
         <Card className="mb-6 p-4">
           <h2 className="mb-3 text-sm font-semibold">Edit Configuration Value</h2>
           {hasPendingChange ? (
@@ -251,7 +338,7 @@ export function ConfigurationKeyDetailPage({ configKey }: Props) {
       )}
 
       {/* Diff preview panel */}
-      {showDiff && (
+      {!isFuneralAvailability && showDiff && (
         <Card className="mb-6 p-4" aria-label="Change preview">
           <h2 className="mb-3 text-sm font-semibold">Change Preview</h2>
           <div className="grid gap-4 md:grid-cols-2">
@@ -280,7 +367,7 @@ export function ConfigurationKeyDetailPage({ configKey }: Props) {
       )}
 
       {/* Version history */}
-      <Card>
+      {!isFuneralAvailability && <Card>
         <h2 className="mb-3 text-sm font-semibold">Version History</h2>
         {versions.length === 0 ? (
           <p className="py-4 text-center text-sm text-muted-foreground">No version history.</p>
@@ -322,7 +409,7 @@ export function ConfigurationKeyDetailPage({ configKey }: Props) {
             </tbody>
           </Table>
         )}
-      </Card>
+      </Card>}
     </main>
   );
 }

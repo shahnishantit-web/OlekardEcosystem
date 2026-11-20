@@ -153,6 +153,18 @@ final class EventDraftService
     {
         $data = Validator::make($input, [
             'title' => ['required', 'string', 'max:200'],
+            'image_url' => [
+                'nullable', 'string', 'url', 'max:2048',
+                static function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! is_string($value)) {
+                        return;
+                    }
+                    $scheme = strtolower((string) parse_url($value, PHP_URL_SCHEME));
+                    if (! in_array($scheme, ['http', 'https'], true)) {
+                        $fail('The event image URL must use HTTP or HTTPS.');
+                    }
+                },
+            ],
             'event_format' => ['required', 'string', 'in:physical,online,hybrid'],
             'venue_country_code' => [
                 'nullable', 'string', 'size:2', 'regex:/^[A-Z]{2}$/D',

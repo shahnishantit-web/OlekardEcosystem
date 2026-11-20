@@ -292,27 +292,27 @@ export function CampaignDetailPage({ campaignId }: { campaignId: string }) {
           <form onSubmit={(e) => void submitSettle(e)} className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-text-primary mb-1">Method *</label>
-                <input type="text" required placeholder="e.g. OleKard Wallet" value={settleForm.method}
+                <label htmlFor="settlement-method" className="block text-xs font-medium text-text-primary mb-1">Method *</label>
+                <input id="settlement-method" type="text" required placeholder="e.g. OleKard Wallet" value={settleForm.method}
                   onChange={(e) => setSettleForm((f) => ({ ...f, method: e.target.value }))}
                   className="w-full rounded border border-border px-2 py-1 text-sm bg-surface text-text-primary" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-text-primary mb-1">Reference *</label>
-                <input type="text" required value={settleForm.reference}
+                <label htmlFor="settlement-reference" className="block text-xs font-medium text-text-primary mb-1">Reference *</label>
+                <input id="settlement-reference" type="text" required value={settleForm.reference}
                   onChange={(e) => setSettleForm((f) => ({ ...f, reference: e.target.value }))}
                   className="w-full rounded border border-border px-2 py-1 text-sm bg-surface text-text-primary" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-text-primary mb-1">Amount (minor units) *</label>
-                <input type="number" required min={1} value={settleForm.amount_minor}
+                <label htmlFor="settlement-amount" className="block text-xs font-medium text-text-primary mb-1">Amount (minor units) *</label>
+                <input id="settlement-amount" type="number" required min={1} value={settleForm.amount_minor}
                   onChange={(e) => setSettleForm((f) => ({ ...f, amount_minor: parseInt(e.target.value, 10) }))}
                   className="w-full rounded border border-border px-2 py-1 text-sm bg-surface text-text-primary" />
                 <p className="text-xs text-text-secondary">Max: BWP {totalBwp}</p>
               </div>
               <div>
-                <label className="block text-xs font-medium text-text-primary mb-1">Notes</label>
-                <input type="text" value={settleForm.notes}
+                <label htmlFor="settlement-notes" className="block text-xs font-medium text-text-primary mb-1">Notes</label>
+                <input id="settlement-notes" type="text" value={settleForm.notes}
                   onChange={(e) => setSettleForm((f) => ({ ...f, notes: e.target.value }))}
                   className="w-full rounded border border-border px-2 py-1 text-sm bg-surface text-text-primary" />
               </div>

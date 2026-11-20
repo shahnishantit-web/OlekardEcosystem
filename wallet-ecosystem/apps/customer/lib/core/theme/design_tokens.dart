@@ -5,15 +5,15 @@ import 'package:flutter/material.dart';
 // Source of truth is OkTokens in packages/design-system.
 
 abstract final class AppColors {
-  static const primary     = OkTokens.colorGreenPrimary;
-  static const primaryDark = OkTokens.colorGreenDark;
-  static const primaryLight = OkTokens.colorGreenLight;
-  static const secondary   = OkTokens.colorGreenAccent;
-  static const surface     = OkTokens.colorGreenSurface;
-  static const background  = OkTokens.colorGreenBackground;
-  // Accessible foreground: dark text on Consumer Green primary passes 5.45:1 (FR-027)
-  static const onPrimary   = OkTokens.colorForegroundOnPrimary;
-  static const onSurface   = OkTokens.colorNeutralWhite;
+  static const primary     = OkTokens.colorMBluePrimary;
+  static const primaryDark = OkTokens.colorMBlueDark;
+  static const primaryLight = OkTokens.colorMBlueLight;
+  static const secondary   = OkTokens.colorMBlueAccent;
+  static const surface     = OkTokens.colorMBlueSurface;
+  static const background  = OkTokens.colorMBlueBackground;
+  // Consumer blue primary uses the design system's white foreground token.
+  static const onPrimary   = OkTokens.colorNeutralWhite;
+  static const onSurface   = textPrimary;
   static const outline     = OkTokens.colorNeutralBorder;
 
   static const error        = OkTokens.colorStatusError;
@@ -27,8 +27,8 @@ abstract final class AppColors {
   // Offline indicator — amber matches the warning semantic token (#F59E0B)
   static const offlineAmber = OkTokens.colorStatusWarning;
 
-  static const textPrimary   = OkTokens.colorNeutralWhite;
-  static const textSecondary = OkTokens.colorNeutralSecondary;
+  static const textPrimary   = OkTokens.colorMNeutralWhite;
+  static const textSecondary = OkTokens.colorMNeutralSecondary;
 }
 
 abstract final class AppTypography {

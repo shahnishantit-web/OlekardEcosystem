@@ -25,10 +25,10 @@ class DomainDeepLinkTile extends StatelessWidget {
           button: false,
           label: 'Domain link unavailable',
           child: ListTile(
-            leading: Icon(Icons.link_off, color: Colors.grey.shade400),
+            leading: Icon(Icons.link_off, color: AppColors.textSecondary),
             title: Text(
               'Unavailable',
-              style: AppTypography.label.copyWith(color: Colors.grey),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
             enabled: false,
           ),

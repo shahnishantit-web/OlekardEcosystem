@@ -14,6 +14,7 @@ abstract final class AppTheme {
           onSecondary:      AppColors.onPrimary,
           surface:          AppColors.surface,
           onSurface:        AppColors.onSurface,
+          onSurfaceVariant: AppColors.textSecondary,
           error:            AppColors.error,
           onError:          AppColors.onPrimary,
           outline:          AppColors.outline,
@@ -28,13 +29,31 @@ abstract final class AppTheme {
             color: AppColors.textPrimary,
           ),
         ),
-        textTheme: TextTheme(
-          headlineMedium: AppTypography.headline.copyWith(color: AppColors.textPrimary),
-          titleMedium:    AppTypography.title.copyWith(color: AppColors.textPrimary),
-          bodyMedium:     AppTypography.body.copyWith(color: AppColors.textPrimary),
-          labelMedium:    AppTypography.label.copyWith(color: AppColors.textPrimary),
-          bodySmall:      AppTypography.caption.copyWith(color: AppColors.textSecondary),
-        ),
+        textTheme: Typography.material2021().black
+            .apply(
+              bodyColor: AppColors.textPrimary,
+              displayColor: AppColors.textPrimary,
+            )
+            .copyWith(
+              headlineMedium: AppTypography.headline.copyWith(
+                color: AppColors.textPrimary,
+              ),
+              titleMedium: AppTypography.title.copyWith(
+                color: AppColors.textPrimary,
+              ),
+              bodyMedium: AppTypography.body.copyWith(
+                color: AppColors.textPrimary,
+              ),
+              labelMedium: AppTypography.label.copyWith(
+                color: AppColors.textPrimary,
+              ),
+              bodySmall: AppTypography.caption.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              labelSmall: AppTypography.caption.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
         inputDecorationTheme: InputDecorationTheme(
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
@@ -55,6 +74,13 @@ abstract final class AppTheme {
             vertical: AppSpacing.sm,
           ),
           hintStyle: const TextStyle(color: AppColors.textSecondary),
+          labelStyle: AppTypography.label.copyWith(
+            color: AppColors.textSecondary,
+          ),
+          floatingLabelStyle: AppTypography.label.copyWith(
+            color: AppColors.primary,
+          ),
+          prefixIconColor: AppColors.textSecondary,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(

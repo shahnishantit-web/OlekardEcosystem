@@ -31,7 +31,9 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: const Text('Remove'),
           ),
         ],
@@ -51,7 +53,8 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to remove device. Please try again.')),
+          const SnackBar(
+              content: Text('Failed to remove device. Please try again.')),
         );
       }
     } finally {
@@ -72,7 +75,8 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to trust device. Please try again.')),
+          const SnackBar(
+              content: Text('Failed to trust device. Please try again.')),
         );
       }
     } finally {
@@ -116,10 +120,10 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
         ),
         data: (result) {
           if (result.devices.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
                 'No registered devices.',
-                style: TextStyle(color: Colors.grey),
+                style: Theme.of(context).textTheme.bodySmall,
               ),
             );
           }

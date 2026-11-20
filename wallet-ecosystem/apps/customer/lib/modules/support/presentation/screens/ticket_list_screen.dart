@@ -32,7 +32,7 @@ class TicketListScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.inbox_outlined, size: 64, color: Colors.grey),
+                    Icon(Icons.inbox_outlined, size: 64, color: Theme.of(context).colorScheme.onSurfaceVariant),
                     const SizedBox(height: AppSpacing.md),
                     const Text('No tickets yet.'),
                     const SizedBox(height: AppSpacing.md),
@@ -63,10 +63,10 @@ class _TicketTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusColor = switch (ticket.status) {
-      TicketStatus.open => Colors.blue,
-      TicketStatus.inProgress => Colors.orange,
-      TicketStatus.resolved => Colors.green,
-      TicketStatus.closed => Colors.grey,
+      TicketStatus.open => AppColors.info,
+      TicketStatus.inProgress => AppColors.warning,
+      TicketStatus.resolved => AppColors.success,
+      TicketStatus.closed => AppColors.textSecondary,
     };
 
     return ListTile(

@@ -1,6 +1,5 @@
 'use client';
 
-import type { Metadata } from 'next';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -43,9 +42,10 @@ export default function NewBankPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Bank Code</label>
+          <label htmlFor="bank-code" className="block text-sm font-medium text-gray-700 mb-1">Bank Code</label>
           <input
             type="text"
+            id="bank-code"
             value={form.code}
             onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
             placeholder="FNBZ"
@@ -55,9 +55,10 @@ export default function NewBankPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
+          <label htmlFor="bank-display-name" className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
           <input
             type="text"
+            id="bank-display-name"
             value={form.display_name}
             onChange={e => setForm(f => ({ ...f, display_name: e.target.value }))}
             placeholder="FNB Botswana"
@@ -67,9 +68,10 @@ export default function NewBankPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <label htmlFor="bank-description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
           <textarea
             value={form.description}
+            id="bank-description"
             onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
             rows={3}
             className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
@@ -77,9 +79,10 @@ export default function NewBankPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Environment</label>
+          <label htmlFor="bank-environment" className="block text-sm font-medium text-gray-700 mb-1">Environment</label>
           <select
             value={form.environment}
+            id="bank-environment"
             onChange={e => setForm(f => ({ ...f, environment: e.target.value }))}
             className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
           >

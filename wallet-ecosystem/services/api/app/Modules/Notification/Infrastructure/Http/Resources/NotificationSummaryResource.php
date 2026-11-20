@@ -18,8 +18,13 @@ class NotificationSummaryResource extends JsonResource
                 ? $this->category->value
                 : $this->category,
             'subject'           => $this->subject,
+            'title'             => $this->subject,
             'body'              => $this->body,
+            'notification_type' => $this->notification_type,
+            'type'              => $this->notification_type,
             'read'              => $this->read_at !== null,
+            'is_read'           => $this->read_at !== null,
+            'deep_link'         => $this->deep_link,
             'created_at'        => $this->created_at?->toIso8601String(),
         ];
     }

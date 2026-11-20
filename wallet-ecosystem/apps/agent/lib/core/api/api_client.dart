@@ -4,6 +4,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
+import '../security/secure_storage_service.dart';
+import '../session/session_event_bus.dart';
 
 const String _apiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
@@ -49,6 +51,7 @@ class AuthInterceptor extends Interceptor {
   // In-memory token cache populated by AuthRepositoryImpl on login/refresh.
   static String? _cachedAccessToken;
   static String? _cachedRefreshToken;
+  static bool _sessionExpired = false;
 
   static void updateCachedTokens({
     required String accessToken,
@@ -56,6 +59,7 @@ class AuthInterceptor extends Interceptor {
   }) {
     _cachedAccessToken = accessToken;
     _cachedRefreshToken = refreshToken;
+    _sessionExpired = false;
   }
 
   static void clearCachedTokens() {
@@ -79,6 +83,14 @@ class AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     if (err.response?.statusCode == 401) {
+      final path = err.requestOptions.path;
+      final isAuthEndpoint = path.contains('/agent/auth/') ||
+          path.contains('/auth/refresh') ||
+          path.contains('/auth/logout');
+      if (isAuthEndpoint) {
+        handler.next(err);
+        return;
+      }
       await _handle401(err, handler);
       return;
     }
@@ -98,7 +110,12 @@ class AuthInterceptor extends Interceptor {
     ErrorInterceptorHandler handler,
   ) async {
     if (_isRefreshing) {
-      await (_refreshCompleter?.future ?? Future<void>.value());
+      try {
+        await (_refreshCompleter?.future ?? Future<void>.value());
+      } catch (_) {
+        handler.next(err);
+        return;
+      }
       _retryRequest(err, handler);
       return;
     }
@@ -113,10 +130,12 @@ class AuthInterceptor extends Interceptor {
         _retryRequest(err, handler);
       } else {
         _refreshCompleter!.completeError('refresh_failed');
+        await _expireSession();
         handler.next(err);
       }
     } catch (_) {
       _refreshCompleter!.completeError('refresh_failed');
+      await _expireSession();
       handler.next(err);
     } finally {
       _isRefreshing = false;
@@ -131,9 +150,9 @@ class AuthInterceptor extends Interceptor {
       opts.headers['Authorization'] = 'Bearer $token';
     }
     _dio.fetch(opts).then(
-      (r) => handler.resolve(r),
-      onError: (e) => handler.next(e as DioException),
-    );
+          (r) => handler.resolve(r),
+          onError: (e) => handler.next(e as DioException),
+        );
   }
 
   Future<bool> _refreshToken() async {
@@ -154,6 +173,15 @@ class AuthInterceptor extends Interceptor {
       return false;
     }
   }
+
+  static Future<void> _expireSession() async {
+    if (_sessionExpired) return;
+    _sessionExpired = true;
+    await SecureStorageService().clearAuthTokens();
+    clearCachedTokens();
+    SessionEventBus.instance.fireLogout();
+    SessionEventBus.instance.fireSessionExpired();
+  }
 }
 
 class RetryInterceptor extends Interceptor {
@@ -165,8 +193,7 @@ class RetryInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     final statusCode = err.response?.statusCode;
-    final retryCount =
-        (err.requestOptions.extra['retry_count'] as int?) ?? 0;
+    final retryCount = (err.requestOptions.extra['retry_count'] as int?) ?? 0;
 
     final isServerError = statusCode != null && statusCode >= 500;
     final shouldRetry = isServerError && retryCount < _maxRetries;

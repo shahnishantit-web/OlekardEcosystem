@@ -36,10 +36,10 @@ class DisputeListScreen extends ConsumerWidget {
                 itemBuilder: (context, i) {
                   final d = result.data[i];
                   final statusColor = switch (d.status) {
-                    DisputeStatus.open => Colors.blue,
-                    DisputeStatus.underReview => Colors.orange,
-                    DisputeStatus.resolved => Colors.green,
-                    DisputeStatus.closed => Colors.grey,
+                    DisputeStatus.open => AppColors.info,
+                    DisputeStatus.underReview => AppColors.warning,
+                    DisputeStatus.resolved => AppColors.success,
+                    DisputeStatus.closed => AppColors.textSecondary,
                   };
                   return ListTile(
                     leading: const Icon(Icons.report_problem_outlined),

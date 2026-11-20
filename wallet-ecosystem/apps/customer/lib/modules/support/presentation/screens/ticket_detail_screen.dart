@@ -107,7 +107,7 @@ class _MessageBubble extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
           decoration: BoxDecoration(
             color: message.isFromSupport
-                ? Colors.grey.shade200
+                ? Theme.of(context).colorScheme.surfaceContainerHighest
                 : AppColors.primary.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(12),
           ),
@@ -118,7 +118,7 @@ class _MessageBubble extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 message.createdAt.toLocal().toString().substring(0, 16),
-                style: AppTypography.caption.copyWith(color: Colors.grey),
+                style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
           ),

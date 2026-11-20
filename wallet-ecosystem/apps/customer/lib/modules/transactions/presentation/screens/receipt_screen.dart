@@ -83,7 +83,7 @@ class _ReceiptScreenState extends ConsumerState<ReceiptScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.lock_outlined, size: 64, color: Colors.red),
+                const Icon(Icons.lock_outlined, size: 64, color: AppColors.error),
                 const SizedBox(height: AppSpacing.md),
                 const Text('Access Denied', style: AppTypography.label),
                 const SizedBox(height: AppSpacing.sm),
@@ -198,7 +198,9 @@ class _ReceiptContent extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           Text(
             errorMessage!,
-            style: AppTypography.caption.copyWith(color: Colors.red),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.error,
+            ),
           ),
         ],
         const SizedBox(height: AppSpacing.lg),
@@ -232,7 +234,7 @@ class _Row extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label,
-                style: AppTypography.caption.copyWith(color: Colors.grey)),
+                style: Theme.of(context).textTheme.bodySmall),
             Flexible(
               child: Text(value,
                   style: AppTypography.label, textAlign: TextAlign.end),

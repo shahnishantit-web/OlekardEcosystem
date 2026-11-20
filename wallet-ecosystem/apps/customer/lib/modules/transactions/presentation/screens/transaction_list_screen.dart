@@ -7,6 +7,7 @@ import '../../application/payment_history_notifier.dart';
 import '../../domain/entities/payment_history_filter.dart';
 import '../widgets/history_filter_bar.dart';
 import '../../../../../core/theme/design_tokens.dart';
+import '../../../../../core/theme/ok_theme_extension.dart';
 import '../../../../../shared/widgets/error_view.dart';
 import '../../../../../shared/widgets/loading_shimmer.dart';
 import '../../../../../shared/widgets/transaction_list_tile.dart';
@@ -20,8 +21,7 @@ class TransactionListScreen extends ConsumerStatefulWidget {
       _TransactionListScreenState();
 }
 
-class _TransactionListScreenState
-    extends ConsumerState<TransactionListScreen> {
+class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
   final _scrollController = ScrollController();
 
   @override
@@ -140,8 +140,7 @@ class _TransactionListScreenState
         child: Column(
           children: [
             _FilterBar(state.filter),
-            if (state.isStale)
-              _StaleBanner(staleAt: state.cachedAt),
+            if (state.isStale) _StaleBanner(staleAt: state.cachedAt),
             Expanded(
               child: _ItemList(
                 items: state.items,
@@ -184,7 +183,7 @@ class _StaleBanner extends StatelessWidget {
       liveRegion: true,
       child: Container(
         width: double.infinity,
-        color: Colors.orange.shade100,
+        color: Theme.of(context).extension<OkThemeExtension>()!.warningBg,
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
           vertical: AppSpacing.xs,

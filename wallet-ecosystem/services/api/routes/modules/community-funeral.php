@@ -42,12 +42,20 @@ Route::prefix('api/v1/community/funeral')->middleware(['identity.auth', FuneralR
         ->middleware(['identity.require-permission:community.funeral.manage', 'idempotency:require-identity']);
     Route::get('/collections/{collectionId}/aggregate-report', [FuneralAssistanceController::class, 'report'])
         ->middleware('identity.require-permission:community.funeral.report');
+    Route::get('/collections/{collectionId}/transactions', [FuneralAssistanceController::class, 'transactions'])
+        ->middleware('identity.require-permission:community.funeral.report');
+    Route::get('/collections/{collectionId}/transactions/export', [FuneralAssistanceController::class, 'exportTransactions'])
+        ->middleware('identity.require-permission:community.funeral.report');
     Route::post('/collections/{collectionId}/carry-forward', [FuneralAssistanceController::class, 'requestCarryForward'])
         ->middleware(['identity.require-permission:community.funeral.manage', 'idempotency:require-identity']);
     Route::post('/collections/{collectionId}/carry-forward/approve', [FuneralAssistanceController::class, 'approveCarryForward'])
         ->middleware(['identity.require-permission:community.funeral.review', 'idempotency:require-identity']);
     Route::post('/collections/{collectionId}/archive', [FuneralAssistanceController::class, 'archive'])
         ->middleware(['identity.require-permission:community.funeral.manage', 'idempotency:require-identity']);
-    Route::post('/collections/{collectionId}/payout-request', [FuneralAssistanceController::class, 'payoutBlocked'])
+    Route::post('/collections/{collectionId}/payout-request', [FuneralAssistanceController::class, 'requestDisbursement'])
         ->middleware(['identity.require-permission:community.funeral.payout.request', 'idempotency:require-identity']);
+    Route::post('/collections/{collectionId}/payout/approve', [FuneralAssistanceController::class, 'approveDisbursement'])
+        ->middleware(['identity.require-permission:community.funeral.payout.approve', 'idempotency:require-identity']);
+    Route::post('/collections/{collectionId}/payout/reject', [FuneralAssistanceController::class, 'rejectDisbursement'])
+        ->middleware(['identity.require-permission:community.funeral.payout.approve', 'idempotency:require-identity']);
 });

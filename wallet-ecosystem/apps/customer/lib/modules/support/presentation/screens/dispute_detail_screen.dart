@@ -25,10 +25,10 @@ class DisputeDetailScreen extends ConsumerWidget {
         error: (e, _) => ErrorView(message: e.toString()),
         data: (dispute) {
           final statusColor = switch (dispute.status) {
-            DisputeStatus.open => Colors.blue,
-            DisputeStatus.underReview => Colors.orange,
-            DisputeStatus.resolved => Colors.green,
-            DisputeStatus.closed => Colors.grey,
+            DisputeStatus.open => AppColors.info,
+            DisputeStatus.underReview => AppColors.warning,
+            DisputeStatus.resolved => AppColors.success,
+            DisputeStatus.closed => AppColors.textSecondary,
           };
 
           return SingleChildScrollView(
@@ -71,7 +71,7 @@ class DisputeDetailScreen extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
+                    color: AppColors.surface,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(dispute.reason, style: AppTypography.body),

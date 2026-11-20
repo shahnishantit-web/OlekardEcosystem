@@ -18,6 +18,7 @@ final class CommunityFuneralPermissionSeeder extends Seeder
             'community.funeral.household.read',
             'community.funeral.report',
             'community.funeral.payout.request',
+            'community.funeral.payout.approve',
         ];
         $identity = DB::connection('identity');
         foreach ($permissions as $slug) {

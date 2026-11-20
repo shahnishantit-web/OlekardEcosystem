@@ -49,7 +49,7 @@ class DeviceListTile extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             _relativeTime(device.lastSeenAt),
-            style: const TextStyle(fontSize: 11, color: Colors.grey),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 11),
           ),
         ],
       ),
@@ -69,7 +69,9 @@ class DeviceListTile extends StatelessWidget {
               label: 'Remove ${device.deviceName}',
               child: TextButton(
                 onPressed: onRemove,
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                ),
                 child: const Text('Remove'),
               ),
             ),

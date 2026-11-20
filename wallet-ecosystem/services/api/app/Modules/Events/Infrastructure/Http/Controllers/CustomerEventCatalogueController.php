@@ -32,7 +32,8 @@ final class CustomerEventCatalogueController extends Controller
                 })
                 ->get(['id', 'name', 'capacity', 'price_minor', 'max_per_person', 'allocation_type']);
             return [
-                'id' => $event->id, 'title' => $event->title, 'organiser_name' => $event->organiser_name,
+                'id' => $event->id, 'title' => $event->title, 'image_url' => $event->image_url,
+                'organiser_name' => $event->organiser_name,
                 'starts_at' => $event->starts_at, 'ends_at' => $event->ends_at, 'timezone' => $event->timezone,
                 'event_format' => $event->event_format, 'venue_country_code' => $event->venue_country_code,
                 'currency_code' => $event->currency_code,

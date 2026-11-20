@@ -120,8 +120,9 @@ export function CampaignCreatePage() {
           <h2 className="text-sm font-semibold text-text-primary mb-3">Campaign Details</h2>
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Organisation ID *</label>
+              <label htmlFor="campaign-organisation-id" className="block text-sm font-medium text-text-primary mb-1">Organisation ID *</label>
               <input
+                id="campaign-organisation-id"
                 type="text"
                 required
                 value={form.organisation_id}
@@ -131,10 +132,11 @@ export function CampaignCreatePage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
+              <label htmlFor="campaign-title" className="block text-sm font-medium text-text-primary mb-1">
                 {serviceType === 'funeral' ? 'Bereaved Household / Collection Title *' : 'Event Title *'}
               </label>
               <input
+                id="campaign-title"
                 type="text"
                 required
                 maxLength={255}
@@ -145,8 +147,9 @@ export function CampaignCreatePage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Description</label>
+              <label htmlFor="campaign-description" className="block text-sm font-medium text-text-primary mb-1">Description</label>
               <textarea
+                id="campaign-description"
                 rows={3}
                 value={form.description}
                 onChange={(e) => setF('description', e.target.value)}
@@ -162,8 +165,9 @@ export function CampaignCreatePage() {
             <h2 className="text-sm font-semibold text-text-primary mb-3">Funeral Collection Settings</h2>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">Contribution Amount (minor units)</label>
+                <label htmlFor="contribution-amount" className="block text-sm font-medium text-text-primary mb-1">Contribution Amount (minor units)</label>
                 <input
+                  id="contribution-amount"
                   type="number"
                   min={1}
                   value={form.contribution_amount_minor}
@@ -173,8 +177,9 @@ export function CampaignCreatePage() {
                 <p className="text-xs text-text-secondary mt-1">P20 = 2000. Standard community contribution.</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">Bereaved Household Name</label>
+                <label htmlFor="bereaved-household-name" className="block text-sm font-medium text-text-primary mb-1">Bereaved Household Name</label>
                 <input
+                  id="bereaved-household-name"
                   type="text"
                   value={form.metadata['bereaved_household'] ?? ''}
                   onChange={(e) => setMeta('bereaved_household', e.target.value)}
@@ -183,8 +188,9 @@ export function CampaignCreatePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">Funeral Date</label>
+                <label htmlFor="funeral-date" className="block text-sm font-medium text-text-primary mb-1">Funeral Date</label>
                 <input
+                  id="funeral-date"
                   type="date"
                   value={form.metadata['funeral_date'] ?? ''}
                   onChange={(e) => setMeta('funeral_date', e.target.value)}
@@ -202,8 +208,9 @@ export function CampaignCreatePage() {
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-text-primary mb-1">Event Start *</label>
+                  <label htmlFor="event-start" className="block text-sm font-medium text-text-primary mb-1">Event Start *</label>
                   <input
+                    id="event-start"
                     type="datetime-local"
                     value={form.starts_at}
                     onChange={(e) => setF('starts_at', e.target.value)}
@@ -211,8 +218,9 @@ export function CampaignCreatePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-text-primary mb-1">Event End</label>
+                  <label htmlFor="event-end" className="block text-sm font-medium text-text-primary mb-1">Event End</label>
                   <input
+                    id="event-end"
                     type="datetime-local"
                     value={form.ends_at}
                     onChange={(e) => setF('ends_at', e.target.value)}
@@ -221,8 +229,9 @@ export function CampaignCreatePage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">Venue</label>
+                <label htmlFor="event-venue" className="block text-sm font-medium text-text-primary mb-1">Venue</label>
                 <input
+                  id="event-venue"
                   type="text"
                   value={form.metadata['venue'] ?? ''}
                   onChange={(e) => setMeta('venue', e.target.value)}
@@ -231,8 +240,9 @@ export function CampaignCreatePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">Sponsor (optional)</label>
+                <label htmlFor="event-sponsor" className="block text-sm font-medium text-text-primary mb-1">Sponsor (optional)</label>
                 <input
+                  id="event-sponsor"
                   type="text"
                   value={form.metadata['sponsor'] ?? ''}
                   onChange={(e) => setMeta('sponsor', e.target.value)}
@@ -241,8 +251,9 @@ export function CampaignCreatePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">Total Capacity</label>
+                <label htmlFor="event-capacity" className="block text-sm font-medium text-text-primary mb-1">Total Capacity</label>
                 <input
+                  id="event-capacity"
                   type="number"
                   min={0}
                   value={form.capacity}
@@ -254,7 +265,7 @@ export function CampaignCreatePage() {
               {/* Ticket types */}
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <label className="text-sm font-medium text-text-primary">Ticket Types</label>
+                  <p className="text-sm font-medium text-text-primary">Ticket Types</p>
                   <Button type="button" variant="secondary" size="sm" onClick={addTicketType}>+ Add Type</Button>
                 </div>
                 <div className="space-y-2">

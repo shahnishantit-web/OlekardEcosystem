@@ -6,10 +6,13 @@ class SessionEventBus {
 
   final _logoutController = StreamController<void>.broadcast();
   final _accountSwitchController = StreamController<void>.broadcast();
+  final _sessionExpiredController = StreamController<void>.broadcast();
 
   Stream<void> get onLogout => _logoutController.stream;
   Stream<void> get onAccountSwitch => _accountSwitchController.stream;
+  Stream<void> get onSessionExpired => _sessionExpiredController.stream;
 
   void fireLogout() => _logoutController.add(null);
   void fireAccountSwitch() => _accountSwitchController.add(null);
+  void fireSessionExpired() => _sessionExpiredController.add(null);
 }

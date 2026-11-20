@@ -18,6 +18,8 @@ final class CreateCollectionRequest extends FormRequest
     {
         return [
             'beneficiary_id' => ['required', 'uuid'],
+            'target_household_id' => ['required', 'uuid'],
+            'purpose' => ['sometimes', 'required', 'string', 'min:5', 'max:500'],
             'evidence_reference' => ['nullable', 'string', 'max:500'],
         ];
     }

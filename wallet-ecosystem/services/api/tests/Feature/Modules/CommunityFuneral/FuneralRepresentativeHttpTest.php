@@ -132,7 +132,7 @@ final class FuneralRepresentativeHttpTest extends IntegrationTestCase
         // Create and activate collection
         $this->withActorToken($manager, ['Idempotency-Key' => (string) Uuid::uuid7()]);
         $coll = $this->postJson("$url/communities/$communityId/collections", [
-            'beneficiary_id' => $beneficiary->id, 'evidence_reference' => 'restricted-coll-evidence',
+            'beneficiary_id' => $beneficiary->id, 'target_household_id' => $householdId, 'evidence_reference' => 'restricted-coll-evidence',
         ])->assertCreated();
         $collectionId = $coll->json('data.id');
 

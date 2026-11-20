@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card } from '@/components/ui/Card';
@@ -12,6 +12,7 @@ type EventDraft = {
   organisation_id: string;
   version: number;
   title: string;
+  image_url: string | null;
   status: string;
   sales_state: string;
   lifecycle_state?: string;
@@ -37,7 +38,7 @@ type EventCategory = { id?: string; name: string; capacity: number; price_minor:
 type OrganisationOption = { id: string; display_name: string; registry_reference: string; status: string };
 type ActorOption = { id: string; display_name: string; email: string | null; mobile_number: string | null };
 type EventForm = {
-  title: string; event_format: 'physical' | 'online' | 'hybrid'; venue_country_code: string;
+  title: string; image_url: string; event_format: 'physical' | 'online' | 'hybrid'; venue_country_code: string;
   organiser_name: string; sponsors: string; capacity: string; timezone: string; starts_at: string;
   ends_at: string; sales_start_at: string; sales_end_at: string; max_tickets_per_order: string;
   cancellation_policy: string; transfer_policy: string; entry_policy: string; categories: Array<{
@@ -47,7 +48,7 @@ type EventForm = {
 };
 
 const emptyEventForm: EventForm = {
-  title: '', event_format: 'physical', venue_country_code: '', organiser_name: '', sponsors: '', capacity: '',
+  title: '', image_url: '', event_format: 'physical', venue_country_code: '', organiser_name: '', sponsors: '', capacity: '',
   timezone: 'Africa/Gaborone', starts_at: '', ends_at: '', sales_start_at: '', sales_end_at: '',
   max_tickets_per_order: '', cancellation_policy: '', transfer_policy: '', entry_policy: '', categories: [],
 };
@@ -169,7 +170,7 @@ export function EventAuthoringPage() {
     setEventId(value.id);
     setOrganisationId(value.organisation_id);
     setEventForm({
-      title: value.title, event_format: value.event_format ?? 'physical', venue_country_code: value.venue_country_code ?? '',
+      title: value.title, image_url: value.image_url ?? '', event_format: value.event_format ?? 'physical', venue_country_code: value.venue_country_code ?? '',
       organiser_name: value.organiser_name, sponsors: (value.sponsors ?? []).join(', '), capacity: String(value.capacity),
       timezone: value.timezone, starts_at: toLocalDateTime(value.starts_at, value.timezone), ends_at: toLocalDateTime(value.ends_at, value.timezone),
       sales_start_at: toLocalDateTime(value.sales_start_at, value.timezone), sales_end_at: toLocalDateTime(value.sales_end_at, value.timezone),
@@ -578,7 +579,8 @@ export function EventAuthoringPage() {
 
 function buildEventPayload(form: EventForm): Record<string, unknown> {
   const payload: Record<string, unknown> = {
-    title: form.title.trim(), event_format: form.event_format, organiser_name: form.organiser_name.trim(),
+    title: form.title.trim(), image_url: form.image_url.trim() || null,
+    event_format: form.event_format, organiser_name: form.organiser_name.trim(),
     sponsors: form.sponsors.split(',').map(name => name.trim()).filter(Boolean), capacity: Number(form.capacity),
     timezone: form.timezone.trim(), starts_at: toZonedIso(form.starts_at, form.timezone), ends_at: toZonedIso(form.ends_at, form.timezone),
     sales_start_at: toZonedIso(form.sales_start_at, form.timezone), sales_end_at: toZonedIso(form.sales_end_at, form.timezone),
@@ -651,6 +653,7 @@ function EventDraftFields({ value, onChange }: { value: EventForm; onChange: <K 
   return <div className="grid gap-4">
     <div className="grid gap-3 md:grid-cols-2">
       <label className="flex flex-col gap-1 text-sm">Event name<input required maxLength={200} value={value.title} onChange={e => onChange('title', e.target.value)} className="rounded border border-border px-3 py-2" /></label>
+      <label className="flex flex-col gap-1 text-sm">Event image URL<input type="url" maxLength={2048} placeholder="https://example.com/event-image.jpg" value={value.image_url} onChange={e => onChange('image_url', e.target.value)} className="rounded border border-border px-3 py-2" /><span className="text-xs text-text-secondary">Optional. If the image cannot be loaded, customers see the default event image.</span></label>
       <label className="flex flex-col gap-1 text-sm">Organiser name<input required maxLength={200} value={value.organiser_name} onChange={e => onChange('organiser_name', e.target.value)} className="rounded border border-border px-3 py-2" /></label>
       <label className="flex flex-col gap-1 text-sm">Event format<select value={value.event_format} onChange={e => onChange('event_format', e.target.value as EventForm['event_format'])} className="rounded border border-border px-3 py-2"><option value="physical">Physical</option><option value="online">Online</option><option value="hybrid">Hybrid</option></select></label>
       {value.event_format === 'physical' && <label className="flex flex-col gap-1 text-sm">Venue country code<input required maxLength={2} placeholder="BW" value={value.venue_country_code} onChange={e => onChange('venue_country_code', e.target.value.toUpperCase())} className="rounded border border-border px-3 py-2" /></label>}

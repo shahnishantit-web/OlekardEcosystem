@@ -46,6 +46,7 @@ final class NotificationModel extends Model
         'recipient_id',
         'subject',
         'body',
+        'deep_link',
         'status',
         'rule_channels',
         'read_at',

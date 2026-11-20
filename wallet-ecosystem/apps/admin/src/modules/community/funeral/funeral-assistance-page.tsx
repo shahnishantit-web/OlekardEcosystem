@@ -27,25 +27,30 @@ type Household = {
 };
 type Collection = {
   id: string; status: 'under_review' | 'approved' | 'active' | 'closed' | 'archived';
-  beneficiary_id: string; beneficiary_name: string; evidence_reference: string | null;
+  beneficiary_id: string; beneficiary_name: string; target_household_id: string | null; target_household_reference: string | null; evidence_reference: string | null; purpose: string;
   amount_minor: number; currency_code: string; terms_version: string;
   obligation_count: number; unpaid_count: number; fulfilled_count: number;
   net_support_minor: number | null; unresolved_liability_count: number | null;
   carry_forward_reference: string | null; carry_forward_requested_by: string | null;
   carry_forward_approved_by: string | null; payout_status: string | null; settlement_status: string | null;
+  disbursement: Disbursement | null;
 };
+type Disbursement = { id: string; destination_type: string; amount_minor: number; currency_code: string; status: string; requested_by: string; requested_at: string; approved_by: string | null; approved_at: string | null; rejected_by: string | null; rejection_reason: string | null; provider_reference: string | null; receipt_reference: string | null; ledger_journal_id: string | null; paid_at: string | null };
 type MemberOption = { actor_id: string; email: string | null; mobile_number: string | null; actor_type: string };
 type BeneficiaryOption = { id: string; account_holder_name: string; account_type: string; bank_name: string | null; currency_code: string };
 type Workspace = { community: Community; staff: Staff[]; households: Household[]; collections: Collection[] };
 type Directory = { members: MemberOption[]; beneficiaries: BeneficiaryOption[] };
 type Report = {
-  collection_id: string; confirmed_gross_minor: number; fee_total_minor: number;
+  collection_id: string; confirmed_gross_minor: number; confirmed_contribution_count: number; fee_total_minor: number;
   confirmed_refunds_minor: number; net_support_minor: number; late_review_gross_minor: number;
   unresolved_liability_count: number; pending_payment_count: number; pending_refund_count: number;
-  late_review_count: number; payout_liability_open: number; settlement_status: string; payout_status: string;
+  late_review_count: number; payout_liability_open: number; settlement_status: string; payout_status: string; disbursement: Disbursement | null;
 };
+type Transaction = { obligation_id: string; payment_intent_id: string; reference: string; amount_minor: number; fee_minor: number; currency_code: string; status: string; review_reason: string | null; occurred_at: string };
 
-const API = '/v1/community/funeral';
+// Funeral routes are registered under api/v1 in the Laravel API. In local
+// Admin configuration NEXT_PUBLIC_API_URL points at the API origin directly.
+const API = '/api/v1/community/funeral';
 const formatMoney = (minor: number, currency = 'BWP') =>
   `${currency} ${(minor / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const personLabel = (person: { email: string | null; mobile_number: string | null }) =>
@@ -55,6 +60,8 @@ export function FuneralAssistancePage() {
   const { authenticatedClient, hasPermission, user } = useAuth();
   const canManage = hasPermission('community.funeral.manage');
   const canReview = hasPermission('community.funeral.review');
+  const canRequestPayout = hasPermission('community.funeral.payout.request');
+  const canApprovePayout = hasPermission('community.funeral.payout.approve');
   const canReport = hasPermission('community.funeral.report');
   const [tab, setTab] = useState<Tab>('overview');
   const [readiness, setReadiness] = useState<Readiness | null>(null);
@@ -64,6 +71,7 @@ export function FuneralAssistancePage() {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [directory, setDirectory] = useState<Directory>({ members: [], beneficiaries: [] });
   const [report, setReport] = useState<Report | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,6 +88,8 @@ export function FuneralAssistancePage() {
   const [representativeActorId, setRepresentativeActorId] = useState('');
   const [representativeEvidence, setRepresentativeEvidence] = useState('');
   const [beneficiaryId, setBeneficiaryId] = useState('');
+  const [targetHouseholdId, setTargetHouseholdId] = useState('');
+  const [collectionPurpose, setCollectionPurpose] = useState('');
   const [collectionEvidence, setCollectionEvidence] = useState('');
   const [carryForwardReference, setCarryForwardReference] = useState('');
 
@@ -182,17 +192,29 @@ export function FuneralAssistancePage() {
     event.preventDefault();
     if (!selectedId) return;
     await mutate(`${API}/communities/${selectedId}/collections`, 'post', {
-      beneficiary_id: beneficiaryId, evidence_reference: collectionEvidence.trim(),
-    }, 'Collection submitted for independent review.', () => setCollectionEvidence(''));
+      beneficiary_id: beneficiaryId, target_household_id: targetHouseholdId, purpose: collectionPurpose.trim(), evidence_reference: collectionEvidence.trim(),
+    }, 'Collection submitted for independent review.', () => { setCollectionPurpose(''); setCollectionEvidence(''); setTargetHouseholdId(''); });
   };
   const loadReport = async (collectionId: string) => {
     if (!authenticatedClient) return;
     setBusy(true); setError(null);
     try {
-      const response = await authenticatedClient.get<Report>(`${API}/collections/${collectionId}/aggregate-report`);
+      const [response, transactionResponse] = await Promise.all([
+        authenticatedClient.get<Report>(`${API}/collections/${collectionId}/aggregate-report`),
+        authenticatedClient.get<Transaction[]>(`${API}/collections/${collectionId}/transactions`),
+      ]);
       setReport(response.data);
+      setTransactions(transactionResponse.data ?? []);
     } catch (cause) { setError(messageFor(cause, 'Unable to load the collection report.')); }
     finally { setBusy(false); }
+  };
+  const exportTransactions = async (collectionId: string) => {
+    if (!authenticatedClient) return;
+    try {
+      const blob = await authenticatedClient.getBlob(`${API}/collections/${collectionId}/transactions/export`);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a'); link.href = url; link.download = `funeral-collection-${collectionId}-transactions.csv`; link.click(); URL.revokeObjectURL(url);
+    } catch (cause) { setError(messageFor(cause, 'Unable to export collection transactions.')); }
   };
 
   const selectClass = 'w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary';
@@ -219,6 +241,7 @@ export function FuneralAssistancePage() {
                   <h2 className="font-semibold text-text-primary">Readiness prerequisites are still closed</h2>
                   <p className="mt-1 text-sm text-text-secondary">{readiness.message ?? 'The funeral API cannot accept setup or payment actions yet.'} The forms below become active when the API readiness gate is released. Beneficiary disbursement remains separately blocked until payout and finance approval are enabled.</p>
                   <div className="mt-3 flex flex-wrap gap-3 text-sm">
+                    <Link className="text-ok-primary underline" href="/configuration/operational_policy/community_funeral.http_enabled">Manage availability in Configuration</Link>
                     <Link className="text-ok-primary underline" href="/organisations/onboarding">Organisation onboarding</Link>
                     <Link className="text-ok-primary underline" href="/organisations/memberships">Organisation memberships</Link>
                   </div>
@@ -281,7 +304,7 @@ export function FuneralAssistancePage() {
                   <li><b>2. Verify:</b> add households, independently review eligibility, verify household representatives.</li>
                   <li><b>3. Open collection:</b> select a verified beneficiary, submit evidence, review and activate.</li>
                   <li><b>4. Customer payment:</b> the verified representative pays the household obligation in the customer app.</li>
-                  <li><b>5. Close and reconcile:</b> review payment liabilities and carry-forward; payout is not currently enabled.</li>
+                  <li><b>5. Close and reconcile:</b> review payment liabilities, then submit any eligible beneficiary payout for independent approval.</li>
                 </ol>
               </Card>
             </div>
@@ -346,25 +369,28 @@ export function FuneralAssistancePage() {
               <Card>
                 <h2 className="text-lg font-semibold">Create a funeral collection</h2>
                 <p className="mb-3 mt-1 text-sm text-text-secondary">Select a verified payout beneficiary by its account holder name. The contribution uses the configured policy amount and currency.</p>
-                <form className="grid gap-3 lg:grid-cols-[1fr_1.3fr_auto]" onSubmit={(event) => void createCollection(event)}>
+                <form className="grid gap-3 lg:grid-cols-[1fr_1fr_1.4fr_1fr_auto]" onSubmit={(event) => void createCollection(event)}>
                   <select className={selectClass} value={beneficiaryId} onChange={(event) => setBeneficiaryId(event.target.value)} required disabled={!readiness?.enabled || !canManage}><option value="">Choose verified beneficiary</option>{verifiedBeneficiaryOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+                  <select className={selectClass} value={targetHouseholdId} onChange={(event) => setTargetHouseholdId(event.target.value)} required disabled={!readiness?.enabled || !canManage}><option value="">Choose bereaved household</option>{workspace.households.filter((household) => household.status === 'eligible').map((household) => <option key={household.id} value={household.id}>{household.private_reference}</option>)}</select>
+                  <input className={inputClass} maxLength={500} minLength={5} value={collectionPurpose} onChange={(event) => setCollectionPurpose(event.target.value)} placeholder="Purpose of this collection" required disabled={!readiness?.enabled || !canManage} />
                   <input className={inputClass} maxLength={500} value={collectionEvidence} onChange={(event) => setCollectionEvidence(event.target.value)} placeholder="Collection and beneficiary evidence reference" required disabled={!readiness?.enabled || !canManage} />
-                  <Button variant="primary" disabled={busy || !readiness?.enabled || !canManage || !beneficiaryId || !collectionEvidence.trim()}>Submit for review</Button>
+                  <Button variant="primary" disabled={busy || !readiness?.enabled || !canManage || !beneficiaryId || collectionPurpose.trim().length < 5 || !collectionEvidence.trim()}>Submit for review</Button>
                 </form>
-                {directory.beneficiaries.length === 0 && <p className="mt-2 text-sm text-amber-800">No verified payout beneficiary is registered for this organisation. Add and verify one in Payout Beneficiaries before creating a collection.</p>}
+                {directory.beneficiaries.length === 0 && <p className="mt-2 text-sm text-amber-800">No verified payout destination is registered for this organisation. Add and verify one before creating a collection.</p>}
               </Card>
               <Card className="mt-4">
                 <h2 className="font-semibold">Collection register</h2>
                 <div className="mt-3 space-y-3">{workspace.collections.map((collection) => (
                   <div key={collection.id} className="rounded-xl border border-border p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div><div className="font-semibold text-text-primary">{collection.beneficiary_name}</div><div className="mt-1 text-sm text-text-secondary">{formatMoney(collection.amount_minor, collection.currency_code)} · {collection.obligation_count} household obligations · {collection.fulfilled_count} paid</div><div className="mt-1 text-xs text-text-secondary">Terms {collection.terms_version} · {collection.evidence_reference ?? 'No evidence reference'}</div></div>
+                      <div><div className="font-semibold text-text-primary">Bereaved household: {collection.target_household_reference ?? 'Legacy collection (not linked)'}</div><div className="mt-1 text-sm text-text-secondary">Payout destination: {collection.beneficiary_name} · {collection.purpose} · {formatMoney(collection.amount_minor, collection.currency_code)} · {collection.obligation_count} household obligations · {collection.fulfilled_count} paid</div><div className="mt-1 text-xs text-text-secondary">Terms {collection.terms_version} · {collection.evidence_reference ?? 'No evidence reference'}</div></div>
                       <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold capitalize text-text-primary">{collection.status.replaceAll('_', ' ')}</span>
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {collection.status === 'under_review' && canReview && <Button variant="secondary" disabled={busy || !readiness?.enabled} onClick={() => void mutate(`${API}/collections/${collection.id}/review`, 'post', {}, 'Collection independently approved.')}>Approve collection</Button>}
                       {collection.status === 'approved' && canReview && <Button variant="primary" disabled={busy || !readiness?.enabled} onClick={() => void mutate(`${API}/collections/${collection.id}/activate`, 'post', {}, 'Collection activated; eligibility snapshot and household obligations created.')}>Activate and notify households</Button>}
                       {collection.status === 'active' && canManage && <Button variant="secondary" disabled={busy || !readiness?.enabled} onClick={() => void mutate(`${API}/collections/${collection.id}/close`, 'post', {}, 'Collection closed. Review its reconciliation report.')}>Close collection</Button>}
+                      {canReport && <Button variant="secondary" disabled={busy || !readiness?.enabled} onClick={() => { setTab('finance'); void loadReport(collection.id); }}>View contribution history</Button>}
                       {(collection.status === 'closed' || collection.status === 'archived') && canReport && <Button variant="secondary" disabled={busy || !readiness?.enabled} onClick={() => { setTab('finance'); void loadReport(collection.id); }}>Open reconciliation</Button>}
                       {collection.status === 'under_review' && canManage && <label className="sr-only" htmlFor={`beneficiary-${collection.id}`}>Change beneficiary for {collection.beneficiary_name}</label>}
                       {collection.status === 'under_review' && canManage && <><select id={`beneficiary-${collection.id}`} className={`${selectClass} w-auto`} value={beneficiaryId} onChange={(event) => setBeneficiaryId(event.target.value)} disabled={!readiness?.enabled}><option value="">Change beneficiary…</option>{verifiedBeneficiaryOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><Button variant="secondary" disabled={busy || !readiness?.enabled || !beneficiaryId} onClick={() => void mutate(`${API}/collections/${collection.id}/beneficiary`, 'patch', { beneficiary_id: beneficiaryId }, 'Beneficiary changed; collection returned to independent review.')}>Save beneficiary</Button></>}
@@ -378,14 +404,14 @@ export function FuneralAssistancePage() {
           {tab === 'finance' && <>
             <Card>
               <h2 className="text-lg font-semibold">Reconciliation and disbursement</h2>
-              <p className="mb-3 mt-1 text-sm text-text-secondary">Select a closed collection to review confirmed contributions, refunds, late payments, and unresolved liabilities.</p>
-              <div className="flex flex-wrap gap-2">{workspace?.collections.filter((collection) => collection.status === 'closed' || collection.status === 'archived').map((collection) => <Button key={collection.id} variant="secondary" disabled={busy || !readiness?.enabled || !canReport} onClick={() => void loadReport(collection.id)}>{collection.beneficiary_name} · {collection.status}</Button>)}</div>
-              {workspace && !workspace.collections.some((collection) => collection.status === 'closed' || collection.status === 'archived') && <p className="py-4 text-sm text-text-secondary">No closed collection is ready for reconciliation.</p>}
+              <p className="mb-3 mt-1 text-sm text-text-secondary">Select any collection to review contribution attempts and, once closed, its reconciliation totals.</p>
+              <div className="flex flex-wrap gap-2">{workspace?.collections.map((collection) => <Button key={collection.id} variant="secondary" disabled={busy || !readiness?.enabled || !canReport} onClick={() => void loadReport(collection.id)}>{collection.target_household_reference ?? collection.beneficiary_name} · {collection.status}</Button>)}</div>
+              {workspace && workspace.collections.length === 0 && <p className="py-4 text-sm text-text-secondary">No collections are available for reconciliation.</p>}
             </Card>
             {report && <>
               <div className="my-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {[
-                  ['Confirmed gross', formatMoney(report.confirmed_gross_minor)], ['Fees', formatMoney(report.fee_total_minor)],
+                  ['Confirmed gross', formatMoney(report.confirmed_gross_minor)], ['Successful contributions', report.confirmed_contribution_count], ['Fees', formatMoney(report.fee_total_minor)],
                   ['Refunds', formatMoney(report.confirmed_refunds_minor)], ['Net support', formatMoney(report.net_support_minor)],
                 ].map(([label, amount]) => <Card key={label}><p className="text-sm text-text-secondary">{label}</p><p className="mt-1 text-xl font-semibold text-text-primary">{amount}</p></Card>)}
               </div>
@@ -399,6 +425,38 @@ export function FuneralAssistancePage() {
                 </dl>
                 <p className="mt-4 text-sm text-text-secondary">Settlement: <b className="capitalize text-text-primary">{report.settlement_status.replaceAll('_', ' ')}</b> · Payout: <b className="capitalize text-text-primary">{report.payout_status.replaceAll('_', ' ')}</b></p>
               </Card>
+              {(() => {
+                const selectedCollection = workspace?.collections.find((collection) => collection.id === report.collection_id);
+                const payout = report.disbursement ?? selectedCollection?.disbursement ?? null;
+                const requestPayout = () => void mutate(`${API}/collections/${report.collection_id}/payout-request`, 'post', {}, 'Disbursement submitted for independent approval.', () => { void loadReport(report.collection_id); });
+                const approvePayout = () => void mutate(`${API}/collections/${report.collection_id}/payout/approve`, 'post', {}, 'Disbursement approved and settled to the beneficiary ledger destination.', () => { void loadReport(report.collection_id); });
+                const rejectPayout = () => {
+                  const reason = window.prompt('Reason for rejecting this payout request:')?.trim();
+                  if (reason) void mutate(`${API}/collections/${report.collection_id}/payout/reject`, 'post', { reason }, 'Disbursement request rejected.', () => { void loadReport(report.collection_id); });
+                };
+                return <Card className="mt-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div><h3 className="font-semibold">Beneficiary disbursement</h3><p className="mt-1 text-sm text-text-secondary">Bank payouts use the local mock-bank ledger only. Wallet payouts credit the verified wallet. No external bank transfer is sent by this demo flow.</p></div>
+                    {(!payout || ['rejected', 'failed'].includes(payout.status)) && <Button variant="secondary" disabled={busy || !canRequestPayout || selectedCollection?.status !== 'closed' || report.net_support_minor <= 0 || report.pending_payment_count > 0 || report.pending_refund_count > 0 || report.late_review_count > 0} title={selectedCollection?.status !== 'closed' ? 'Close the collection before requesting payout.' : !canRequestPayout ? 'Your account cannot request beneficiary payout.' : undefined} onClick={requestPayout}>{payout ? 'Resubmit' : 'Request'} {formatMoney(report.net_support_minor)} payout</Button>}
+                  </div>
+                  {payout && <div className="mt-3 rounded-lg border border-border p-3 text-sm">
+                    <p><b>{formatMoney(payout.amount_minor, payout.currency_code)}</b> · {payout.destination_type.replaceAll('_', ' ')} · <span className="capitalize">{payout.status.replaceAll('_', ' ')}</span></p>
+                    {payout.receipt_reference && <p className="mt-1">Receipt: <span className="font-mono">{payout.receipt_reference}</span>{payout.provider_reference ? ` · Provider: ${payout.provider_reference}` : ''}</p>}
+                    {payout.ledger_journal_id && <p className="mt-1">Ledger journal: <span className="font-mono">{payout.ledger_journal_id}</span></p>}
+                    {payout.paid_at && <p className="mt-1">Settled: {new Date(payout.paid_at).toLocaleString()}</p>}
+                    {payout.rejection_reason && <p className="mt-1 text-error">Rejected: {payout.rejection_reason}</p>}
+                    {payout.status === 'awaiting_approval' && <div className="mt-3 flex flex-wrap gap-2">
+                      {canApprovePayout && payout.requested_by !== user?.id && <><Button disabled={busy} onClick={approvePayout}>Approve and settle</Button><Button variant="secondary" disabled={busy} onClick={rejectPayout}>Reject request</Button></>}
+                      {payout.requested_by === user?.id && <p className="text-text-secondary">A different authorised reviewer must approve this request.</p>}
+                    </div>}
+                    {payout.status === 'processing' && payout.approved_by === user?.id && canApprovePayout && <Button className="mt-3" disabled={busy} onClick={approvePayout}>Retry payout settlement</Button>}
+                  </div>}
+                </Card>;
+              })()}
+              <Card className="mt-4">
+                <div className="flex flex-wrap items-center justify-between gap-3"><h3 className="font-semibold">Contribution transaction history</h3><Button variant="secondary" disabled={busy || !canReport} onClick={() => void exportTransactions(report.collection_id)}>Export CSV</Button></div>
+                <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead><tr className="border-b text-text-secondary"><th className="py-2 pr-3">Date</th><th className="py-2 pr-3">Reference</th><th className="py-2 pr-3">Amount</th><th className="py-2 pr-3">Fee</th><th className="py-2">Status</th></tr></thead><tbody>{transactions.map((tx) => <tr key={tx.payment_intent_id} className="border-b border-border"><td className="py-2 pr-3">{new Date(tx.occurred_at).toLocaleString()}</td><td className="py-2 pr-3 font-mono text-xs">{tx.reference}</td><td className="py-2 pr-3">{formatMoney(tx.amount_minor, tx.currency_code)}</td><td className="py-2 pr-3">{formatMoney(tx.fee_minor, tx.currency_code)}</td><td className="py-2 capitalize">{tx.status.replaceAll('_', ' ')}{tx.review_reason ? ` · ${tx.review_reason.replaceAll('_', ' ')}` : ''}</td></tr>)}</tbody></table>{transactions.length === 0 && <p className="py-4 text-sm text-text-secondary">No payment attempts recorded.</p>}</div>
+              </Card>
             </>}
             {workspace?.collections.filter((collection) => collection.status === 'closed').map((collection) => <Card key={`carry-${collection.id}`} className="mt-4">
               <h3 className="font-semibold">{collection.beneficiary_name}: unresolved liability handling</h3>
@@ -407,12 +465,6 @@ export function FuneralAssistancePage() {
               {canReview && collection.carry_forward_reference && collection.carry_forward_approved_by == null && collection.carry_forward_requested_by !== user?.id && <Button className="mt-3" variant="secondary" disabled={busy || !readiness?.enabled} onClick={() => void mutate(`${API}/collections/${collection.id}/carry-forward/approve`, 'post', {}, 'Carry-forward approved by an independent reviewer.')}>Approve carry-forward</Button>}
               {canManage && <Button className="mt-3" variant="secondary" disabled={busy || !readiness?.enabled || (collection.unresolved_liability_count ?? 1) > 0 && collection.carry_forward_approved_by == null} onClick={() => void mutate(`${API}/collections/${collection.id}/archive`, 'post', {}, 'Collection archived after liability review.')}>Archive collection</Button>}
             </Card>)}
-            <Card className="mt-4 border-amber-300 bg-amber-50">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div><h3 className="font-semibold text-amber-950">Beneficiary disbursement is blocked</h3><p className="mt-1 max-w-3xl text-sm text-amber-900">Customer contribution fulfilment confirms the payment was collected and posted to the ledger; it does not mean the bereaved beneficiary has been paid. The shared payout contract and finance approvals are not released. No transfer can be initiated from this screen yet.</p></div>
-                <Button variant="secondary" disabled title="Payout endpoint returns PAYOUT_PREREQUISITES_UNRESOLVED">Request disbursement · unavailable</Button>
-              </div>
-            </Card>
           </>}
         </>
       )}

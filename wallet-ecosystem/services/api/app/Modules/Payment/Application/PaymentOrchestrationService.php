@@ -1024,6 +1024,10 @@ final class PaymentOrchestrationService implements PaymentOutcomeProcessor
             // Local mock-bank receipts are synthetic test evidence, not external
             // bank settlement. Keep them segregated in clearing/suspense accounts.
             $capture = $this->postLocalMockBankEventLedger($intent, $attempt, $correlationId);
+        } elseif ($this->canPostLocalMockBankFuneralContribution($intent, $attempt)) {
+            // Local mock-bank funeral contributions are synthetic test evidence,
+            // segregated from event proceeds and real bank settlement.
+            $capture = $this->postLocalMockBankFuneralLedger($intent, $attempt, $correlationId);
         } else {
             Log::info('payment.ledger_ack_skipped', [
                 'payment_intent_id' => $intent->id,
@@ -1201,6 +1205,83 @@ final class PaymentOrchestrationService implements PaymentOutcomeProcessor
             'correlation_id' => $correlationId,
             'actor_id' => $intent->payer_actor_id,
             'description' => 'Local mock-bank paid event receipt; provider clearing debit and proceeds suspense credit.',
+            'lines' => [
+                ['ledger_account_reference' => $debitAccountRef, 'direction' => 'debit', 'amount' => $amount],
+                ['ledger_account_reference' => $creditAccountRef, 'direction' => 'credit', 'amount' => $amount],
+            ],
+        ]);
+
+        return [
+            'amount_minor' => $amount,
+            'currency_code' => $currency,
+            'capture_reference' => $attempt->capture_evidence_reference,
+            'ledger_journal_id' => $journalId,
+            'idempotency_key' => $idempotencyKey,
+            'debit_account_reference' => $debitAccountRef,
+            'credit_account_reference' => $creditAccountRef,
+            'payment_intent_id' => $intent->id,
+            'organisation_id' => $intent->organisation_id,
+            'payment_attempt_id' => $attempt->id,
+            'owner_actor_id' => $intent->payer_actor_id,
+        ];
+    }
+
+    private function canPostLocalMockBankFuneralContribution(PaymentIntentModel $intent, PaymentAttemptModel $attempt): bool
+    {
+        return app()->environment('local')
+            && config('payment.mock_bank.local_funeral_ledger_enabled') === true
+            && $intent->purpose_type === 'funeral_contribution'
+            && $attempt->provider_code === 'mock_bank'
+            && $attempt->status === PaymentAttemptStatus::Succeeded
+            && $attempt->captured_amount_minor === $intent->amount_minor
+            && $attempt->captured_currency_code === $intent->currency_code
+            && is_string($attempt->capture_evidence_reference)
+            && Uuid::isValid($attempt->capture_evidence_reference);
+    }
+
+    /** @return array<string, mixed> */
+    private function postLocalMockBankFuneralLedger(
+        PaymentIntentModel $intent,
+        PaymentAttemptModel $attempt,
+        string $correlationId,
+    ): array {
+        DevelopmentPaymentGuard::check();
+        if (! $this->canPostLocalMockBankFuneralContribution($intent, $attempt)) {
+            throw new \DomainException('Verified local mock-bank funeral contribution capture is required.');
+        }
+        $account = PaymentProviderAccountModel::with('provider')->find($attempt->provider_account_id);
+        if ($account === null || $account->provider === null || $account->provider->code !== 'mock_bank'
+            || ! $account->provider->isMock()) {
+            throw new \DomainException('A test-only mock-bank provider account is required.');
+        }
+
+        $currency = strtoupper($intent->currency_code);
+        $amount = (int) $attempt->captured_amount_minor;
+        $debitAccountRef = (string) Uuid::uuid5(
+            Uuid::NAMESPACE_URL,
+            'olekard.local/mock-bank/provider-clearing/'.$account->id.'/'.$currency,
+        );
+        $creditAccountRef = (string) Uuid::uuid5(
+            Uuid::NAMESPACE_URL,
+            'olekard.local/mock-bank/funeral-contribution-suspense/'.$intent->organisation_id.'/'.$currency,
+        );
+
+        $this->ledger->registerAccount(
+            $debitAccountRef, 'asset', $currency, $account->id, 'system_float',
+        );
+        $this->ledger->registerAccount(
+            $creditAccountRef, 'liability', $currency, $intent->organisation_id, 'system_suspense',
+        );
+
+        $idempotencyKey = 'payment:'.$intent->id.':ack';
+        $journalId = $this->ledger->postEntry([
+            'idempotency_key' => $idempotencyKey,
+            'entry_type' => 'debit',
+            'currency_code' => $currency,
+            'transaction_reference' => $intent->id,
+            'correlation_id' => $correlationId,
+            'actor_id' => $intent->payer_actor_id,
+            'description' => 'Local mock-bank funeral contribution receipt; provider clearing debit and collection suspense credit.',
             'lines' => [
                 ['ledger_account_reference' => $debitAccountRef, 'direction' => 'debit', 'amount' => $amount],
                 ['ledger_account_reference' => $creditAccountRef, 'direction' => 'credit', 'amount' => $amount],

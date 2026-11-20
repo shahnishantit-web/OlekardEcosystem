@@ -45,12 +45,19 @@ class OkThemeExtension extends ThemeExtension<OkThemeExtension> {
   final Color navActive;
 
   factory OkThemeExtension.consumer() => const OkThemeExtension(
-        primary:       OkTokens.colorGreenPrimary,
-        primaryDark:   OkTokens.colorGreenDark,
-        primaryLight:  OkTokens.colorGreenLight,
-        accent:        OkTokens.colorGreenAccent,
-        appBackground: OkTokens.colorGreenBackground,
-        appSurface:    OkTokens.colorGreenSurface,
+        //primary:       OkTokens.colorGreenPrimary,
+        //primaryDark:   OkTokens.colorGreenDark,
+        //primaryLight:  OkTokens.colorGreenLight,
+        //accent:        OkTokens.colorGreenAccent,
+        //appBackground: OkTokens.colorGreenBackground,
+        //appSurface:    OkTokens.colorGreenSurface,
+
+        primary:       OkTokens.colorMBluePrimary,
+        primaryDark:   OkTokens.colorMBlueDark,
+        primaryLight:  OkTokens.colorMBlueLight,
+        accent:        OkTokens.colorMBlueAccent,
+        appBackground: OkTokens.colorMBlueBackground,
+        appSurface:    OkTokens.colorMBlueSurface,
         successBg:     OkTokens.colorStatusSuccessBg,
         successFg:     OkTokens.colorStatusSuccess,
         successBorder: OkTokens.colorStatusSuccessBorder,

@@ -137,7 +137,7 @@ class _TransactionDetailScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.check_circle, color: Colors.green, size: 64),
+            const Icon(Icons.check_circle, color: AppColors.success, size: 64),
             const SizedBox(height: AppSpacing.md),
             const Text('Refund requested', style: AppTypography.label),
             const SizedBox(height: AppSpacing.md),
@@ -247,7 +247,7 @@ class _Row extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label,
-                style: AppTypography.caption.copyWith(color: Colors.grey)),
+                style: Theme.of(context).textTheme.bodySmall),
             Flexible(
               child: Text(value,
                   style: AppTypography.label, textAlign: TextAlign.end),

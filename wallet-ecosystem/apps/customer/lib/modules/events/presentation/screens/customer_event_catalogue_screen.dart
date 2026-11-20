@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/di/providers.dart';
+import '../widgets/event_image.dart';
 import 'customer_event_checkout_screen.dart';
 
 class CustomerEventCatalogueScreen extends ConsumerStatefulWidget {
@@ -102,7 +103,13 @@ class _EventRow extends StatelessWidget {
     final start = DateTime.tryParse(event['starts_at']?.toString() ?? '');
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      leading: const CircleAvatar(child: Icon(Icons.event_outlined)),
+      leading: EventImage(
+        imageUrl: event['image_url']?.toString(),
+        eventId: event['id']?.toString(),
+        label: 'Image for ${event['title']?.toString() ?? 'event'}',
+        width: 72,
+        height: 72,
+      ),
       title: Text(event['title']?.toString() ?? 'Event'),
       subtitle: Padding(
         padding: const EdgeInsets.only(top: 4),
@@ -172,7 +179,14 @@ class _CustomerEventDetailsScreenState
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const Icon(Icons.event_available, size: 48),
+          EventImage(
+            imageUrl: event['image_url']?.toString(),
+            eventId: event['id']?.toString(),
+            label: 'Image for ${event['title']?.toString() ?? 'event'}',
+            width: double.infinity,
+            height: 220,
+            iconSize: 64,
+          ),
           const SizedBox(height: 16),
           Text(event['title']?.toString() ?? 'Event',
               style: Theme.of(context).textTheme.headlineSmall),

@@ -113,6 +113,17 @@ abstract final class OkTokens {
   static const Color colorNeutralSecondary = Color(0xFFB8C4D0);
   static const Color colorNeutralBorder    = Color(0xFF294052);
 
+  // ── Named Mordern blue & white comman Tokens ───────────────────────────────────────
+
+  //static const Color colorMNeutralWhite     = Color(0xFFFFFFFF);
+  //static const Color colorMNeutralSecondary = Color(0xFF64748B);
+  //static const Color colorMNeutralBorder    = Color(0xFFE2E8F0);
+
+  static const Color colorMNeutralWhite     = Color(0xFF0F172A);
+  static const Color colorMNeutralSecondary = Color.fromARGB(255, 74, 75, 75);
+  static const Color colorMNeutralBorder    = Color(0xFFE2E8F0);
+
+
   // ── Accessible Foreground Overrides ───────────────────────────
   // #FFFFFF on #16A34A = 3.30:1 (FAIL 4.5:1). Use #001B12 on primary: 5.45:1 (PASS).
   static const Color colorForegroundOnPrimary = Color(0xFF001B12);
@@ -125,6 +136,16 @@ abstract final class OkTokens {
   static const Color colorGreenSurface    = Color(0xFF062A1A);
   static const Color colorGreenBackground = Color(0xFF001B12);
   static const Color colorGreenAccent     = Color(0xFF84CC16);
+
+  // ── Consumer Morder Blue & White Application Palette ────────────────────────
+
+  static const Color colorMBluePrimary    = Color(0xFF2563EB);
+  static const Color colorMBlueDark       = Color(0xFF1D4ED8);
+  static const Color colorMBlueLight      = Color(0xFF60A5FA);
+  static const Color colorMBlueSurface    = Color(0xFFEFF6FF);
+  static const Color colorMBlueBackground = Color(0xFFF8FAFC);
+  static const Color colorMBlueAccent     = Color(0xFFDBEAFE);
+  static const Color colorMBlueText       = Color(0xFF0F172A);
 
   // ── Agent Blue Application Palette ────────────────────────────
 

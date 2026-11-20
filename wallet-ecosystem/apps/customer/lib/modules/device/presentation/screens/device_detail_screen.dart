@@ -4,6 +4,7 @@ import '../../domain/entities/device.dart';
 import '../device_list_providers.dart';
 import '../widgets/device_status_badge.dart';
 import 'block_device_confirmation_screen.dart';
+import '../../../../core/theme/design_tokens.dart';
 
 class DeviceDetailScreen extends ConsumerStatefulWidget {
   final Device device;
@@ -30,7 +31,8 @@ class _DeviceDetailScreenState extends ConsumerState<DeviceDetailScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to trust device. Please try again.')),
+          const SnackBar(
+              content: Text('Failed to trust device. Please try again.')),
         );
       }
     } finally {
@@ -53,7 +55,9 @@ class _DeviceDetailScreenState extends ConsumerState<DeviceDetailScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: const Text('Remove'),
           ),
         ],
@@ -73,7 +77,8 @@ class _DeviceDetailScreenState extends ConsumerState<DeviceDetailScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to remove device. Please try again.')),
+          const SnackBar(
+              content: Text('Failed to remove device. Please try again.')),
         );
       }
     } finally {
@@ -127,14 +132,23 @@ class _DeviceDetailScreenState extends ConsumerState<DeviceDetailScreen> {
                   ),
                   const SizedBox(height: 24),
                   _InfoRow(label: 'Platform', value: device.platform),
-                  _InfoRow(label: 'Last seen', value: _formatDateTime(device.lastSeenAt)),
-                  _InfoRow(label: 'Registered', value: _formatDateTime(device.createdAt)),
+                  _InfoRow(
+                      label: 'Last seen',
+                      value: _formatDateTime(device.lastSeenAt)),
+                  _InfoRow(
+                      label: 'Registered',
+                      value: _formatDateTime(device.createdAt)),
                   if (device.trustedAt != null)
-                    _InfoRow(label: 'Trusted at', value: _formatDateTime(device.trustedAt)),
+                    _InfoRow(
+                        label: 'Trusted at',
+                        value: _formatDateTime(device.trustedAt)),
                   if (device.blockedAt != null) ...[
-                    _InfoRow(label: 'Blocked at', value: _formatDateTime(device.blockedAt)),
+                    _InfoRow(
+                        label: 'Blocked at',
+                        value: _formatDateTime(device.blockedAt)),
                     if (device.blockedReason != null)
-                      _InfoRow(label: 'Block reason', value: device.blockedReason!),
+                      _InfoRow(
+                          label: 'Block reason', value: device.blockedReason!),
                   ],
                   const SizedBox(height: 32),
                   if (device.status == DeviceStatus.pendingVerification)
@@ -154,13 +168,15 @@ class _DeviceDetailScreenState extends ConsumerState<DeviceDetailScreen> {
                         onPressed: () => Navigator.push(
                           context,
                           MaterialPageRoute<void>(
-                            builder: (_) => BlockDeviceConfirmationScreen(device: device),
+                            builder: (_) =>
+                                BlockDeviceConfirmationScreen(device: device),
                           ),
                         ),
-                        icon: const Icon(Icons.block, color: Colors.red),
-                        label: const Text(
+                        icon: const Icon(Icons.block, color: AppColors.error),
+                        label: Text(
                           'Block Device',
-                          style: TextStyle(color: Colors.red),
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.error),
                         ),
                       ),
                     ),
@@ -169,10 +185,12 @@ class _DeviceDetailScreenState extends ConsumerState<DeviceDetailScreen> {
                       label: 'Remove ${device.deviceName}',
                       child: OutlinedButton.icon(
                         onPressed: _removeDevice,
-                        icon: const Icon(Icons.delete_outline, color: Colors.red),
-                        label: const Text(
+                        icon: const Icon(Icons.delete_outline,
+                            color: AppColors.error),
+                        label: Text(
                           'Remove Device',
-                          style: TextStyle(color: Colors.red),
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.error),
                         ),
                       ),
                     ),
@@ -201,7 +219,8 @@ class _InfoRow extends StatelessWidget {
             width: 110,
             child: Text(
               label,
-              style: const TextStyle(color: Colors.grey, fontSize: 13),
+              style:
+                  Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 13),
             ),
           ),
           Expanded(

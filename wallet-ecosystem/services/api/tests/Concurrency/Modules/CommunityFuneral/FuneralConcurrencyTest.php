@@ -123,7 +123,7 @@ final class FuneralConcurrencyTest extends LedgerTestCase
         $rep = $service->addRepresentative($hh['id'], $customer->id, 'restricted-evidence-conc', $manager->id);
         $service->verifyRepresentative($hh['id'], $rep['id'], $reviewer->id);
 
-        $coll = $service->createCollection($comm['id'], $beneficiary->id, 'evidence-conc-coll', $manager->id);
+        $coll = $service->createCollection($comm['id'], $beneficiary->id, $hh['id'], 'evidence-conc-coll', $manager->id);
         $service->approveCollection($coll['id'], $reviewer->id);
 
         return [$service, [

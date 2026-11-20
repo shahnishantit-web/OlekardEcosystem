@@ -19,6 +19,8 @@ final class FuneralCollection extends Model
         'community_id',
         'status',
         'beneficiary_id',
+        'target_household_id',
+        'purpose',
         'evidence_reference',
         'amount_minor',
         'currency_code',

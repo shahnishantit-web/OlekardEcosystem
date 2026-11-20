@@ -126,7 +126,7 @@ class _ServicesHomeScreenState extends ConsumerState<ServicesHomeScreen> {
                 ),
                 Text(
                   'Browse events, register free, or buy tickets',
-                  style: AppTypography.caption.copyWith(color: Colors.grey),
+                  style: Theme.of(context).textTheme.bodySmall,
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -153,7 +153,7 @@ class _ServicesHomeScreenState extends ConsumerState<ServicesHomeScreen> {
                 ),
                 Text(
                   '${category.providerCount} providers',
-                  style: AppTypography.caption.copyWith(color: Colors.grey),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
             ),

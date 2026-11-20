@@ -71,7 +71,9 @@ class _SameCurrencyTransferScreenState
         loading: () => const Center(child: CircularProgressIndicator()),
         error:   (e, _) => Center(
           child: Text('Failed to load wallets: $e',
-              style: const TextStyle(color: Colors.red)),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.error,
+              )),
         ),
         data: (wallets) {
           if (_submitted) {
@@ -167,7 +169,9 @@ class _SameCurrencyTransferScreenState
           ),
           if (_error != null) ...[
             const SizedBox(height: 12),
-            Text(_error!, style: const TextStyle(color: Colors.red)),
+            Text(_error!, style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.error,
+            )),
           ],
           const SizedBox(height: 24),
           ElevatedButton(
@@ -192,7 +196,7 @@ class _SameCurrencyTransferScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.check_circle, color: Colors.green, size: 64),
+            Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary, size: 64),
             const SizedBox(height: 16),
             const Text('Transfer Successful',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),

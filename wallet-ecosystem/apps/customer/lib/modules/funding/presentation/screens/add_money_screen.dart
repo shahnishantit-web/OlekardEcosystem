@@ -100,7 +100,7 @@ class _AddMoneyScreenState extends ConsumerState<AddMoneyScreen> {
             data: (limits) => Text(
               'Min: ${limits.minFundMinorUnits / 100} / '
               'Max: ${limits.maxFundMinorUnits / 100}',
-              style: AppTypography.caption.copyWith(color: Colors.grey),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),

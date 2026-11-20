@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -49,6 +51,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
   final SecureStorageService _storage;
   int _authOperationGeneration = 0;
+  late final StreamSubscription<void> _sessionExpiredSubscription;
 
   AuthNotifier({
     required AuthRepository repository,
@@ -56,7 +59,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
   })  : _repository = repository,
         _storage = storage,
         super(const AuthState(status: AuthStateEnum.unknown)) {
+    _sessionExpiredSubscription =
+        SessionEventBus.instance.onSessionExpired.listen((_) {
+      _authOperationGeneration++;
+      state = const AuthState(status: AuthStateEnum.unauthenticated);
+    });
     _initialize();
+  }
+
+  @override
+  void dispose() {
+    unawaited(_sessionExpiredSubscription.cancel());
+    super.dispose();
   }
 
   Future<void> _initialize() async {

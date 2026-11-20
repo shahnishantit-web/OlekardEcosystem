@@ -94,7 +94,7 @@ class _WalletTile extends StatelessWidget {
         subtitle: Text('Balance: ${wallet.symbol}${wallet.balance}'),
         trailing: wallet.isActive
             ? null
-            : const Chip(label: Text('Inactive'), backgroundColor: Colors.grey),
+            : const Chip(label: Text('Inactive'), backgroundColor: AppColors.outline),
       ),
     );
   }

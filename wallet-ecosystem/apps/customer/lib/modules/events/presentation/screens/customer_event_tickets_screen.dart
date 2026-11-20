@@ -6,6 +6,7 @@ import 'package:shared_payment/shared_payment.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/di/providers.dart';
+import '../widgets/event_image.dart';
 
 final eventTicketsApiProvider =
     Provider<Dio>((ref) => ref.watch(apiClientProvider).dio);
@@ -118,6 +119,15 @@ class _CustomerEventTicketsScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            EventImage(
+              imageUrl: ticket['image_url']?.toString(),
+              eventId: ticket['event_id']?.toString(),
+              label:
+                  'Image for ${ticket['event_title']?.toString() ?? 'event'}',
+              width: double.infinity,
+              height: 180,
+            ),
+            const SizedBox(height: 12),
             Text(ticket['event_title'] as String,
                 style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 4),

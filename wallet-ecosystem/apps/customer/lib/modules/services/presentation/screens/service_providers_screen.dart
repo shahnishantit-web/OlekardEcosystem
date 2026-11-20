@@ -51,7 +51,9 @@ class ServiceProvidersScreen extends ConsumerWidget {
                     subtitle: Text(
                       p.isActive ? p.description : 'Unavailable',
                       style: AppTypography.caption.copyWith(
-                        color: p.isActive ? null : Colors.grey,
+                        color: p.isActive
+                            ? null
+                            : Theme.of(context).disabledColor,
                       ),
                     ),
                     trailing: p.isActive

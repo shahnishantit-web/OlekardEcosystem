@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Modules\CommunityFuneral;
 
 use App\Modules\CommunityFuneral\Domain\Contracts\OrganisationMembershipVerifier;
+use App\Modules\CommunityFuneral\Application\FuneralAssistanceService;
 use App\Modules\Payment\Domain\Enums\PayoutBeneficiaryStatus;
 use App\Modules\Payment\Infrastructure\Models\PayoutBeneficiaryModel;
 use Illuminate\Support\Facades\DB;
@@ -62,11 +63,15 @@ final class FuneralCollectionReviewTest extends IntegrationTestCase
             'actor_id' => $reviewer->id,
             'role' => 'reviewer',
         ])->assertOk();
+        $funeral = app(FuneralAssistanceService::class);
+        $household = $funeral->createHousehold($communityId, 'Bereaved household', $manager->id);
+        $funeral->reviewHousehold($household['id'], 'eligible', null, $reviewer->id);
 
         // 2. Create Collection
         $this->withActorToken($manager, ['Idempotency-Key' => (string) Uuid::uuid7()]);
         $collRes = $this->postJson("$url/communities/$communityId/collections", [
             'beneficiary_id' => $beneficiary1->id,
+            'target_household_id' => $household['id'],
             'evidence_reference' => 'restricted-evidence-test',
         ])->assertCreated();
         $collectionId = $collRes->json('data.id');
@@ -103,7 +108,7 @@ final class FuneralCollectionReviewTest extends IntegrationTestCase
         $this->postJson("$url/collections/$collectionId/activate")->assertStatus(422);
     }
 
-    public function test_payout_request_endpoint_returns_503_and_preserves_blocked_liability(): void
+    public function test_payout_request_stays_disabled_until_local_mock_bank_ledger_is_enabled(): void
     {
         $finance = $this->makeAdminWithPermission('community.funeral.payout.request');
         $collectionId = (string) Uuid::uuid7();
@@ -113,7 +118,6 @@ final class FuneralCollectionReviewTest extends IntegrationTestCase
 
         $response->assertStatus(503)
             ->assertJsonPath('success', false)
-            ->assertJsonPath('error.code', 'PAYOUT_PREREQUISITES_UNRESOLVED')
-            ->assertJsonPath('error.message', 'Family disbursement is unavailable until the shared P18 payout contract and finance approvals are released.');
+            ->assertJsonPath('error.message', 'Funeral payouts require the local mock-bank ledger configuration. No external bank payout adapter is configured.');
     }
 }

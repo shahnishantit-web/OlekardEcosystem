@@ -18,7 +18,7 @@ final class FuneralObligationResolver implements BusinessPurposeResolverInterfac
 
     public function resolve(string $purposeReference, string $actorId, string $correlationId): EnrichedPayableObligation
     {
-        if (config('community_funeral.http_enabled', false) !== true || app()->environment('production')) {
+        if (! app(FuneralFeatureReadiness::class)->isEnabled()) {
             throw new PurposeNotPayableException('funeral_contribution', $purposeReference, 'Funeral Assistance is unavailable pending prerequisite approval.');
         }
 
