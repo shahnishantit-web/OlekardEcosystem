@@ -45,7 +45,7 @@ final class DevEventWorkflowUsersSeeder extends Seeder
                 'organisation.registry.read', 'organisation.registry.request', EventPermissions::CREATE, EventPermissions::READ,
                 EventPermissions::UPDATE, EventPermissions::SUBMIT, EventPermissions::ASSIGNMENT_GRANT,
                 EventPermissions::ASSIGNMENT_REVOKE, EventPermissions::CANCEL_REQUEST,
-                EventPermissions::GATE_ASSIGNMENT_MANAGE, EventPermissions::ATTENDANCE_READ,
+                EventPermissions::GATE_ASSIGNMENT_MANAGE, EventPermissions::ATTENDANCE_READ, EventPermissions::PAYOUT_REQUEST,
             ],
             'reviewer' => [
                 'organisation.registry.read', 'organisation.registry.review', EventPermissions::READ, EventPermissions::REVIEW,
@@ -55,6 +55,7 @@ final class DevEventWorkflowUsersSeeder extends Seeder
                 'organisation.registry.read', 'organisation.registry.approve', EventPermissions::READ, EventPermissions::PRICE_APPROVE, EventPermissions::PUBLISH,
                 EventPermissions::SALES_RESUME, EventPermissions::COMPLIMENTARY_APPROVE,
                 EventPermissions::CURRENCY_ASSIGN,
+                EventPermissions::PAYOUT_APPROVE,
             ],
         ];
 
@@ -93,6 +94,7 @@ final class DevEventWorkflowUsersSeeder extends Seeder
         $this->ensureOrganisationCreatorAssignment($events, $organisationId, $userIds['creator']);
         $eventId = $this->ensureDemoEvent($events, $organisationId, $userIds['creator']);
         $this->ensureEventAssignments($events, $organisationId, $eventId, $userIds);
+        $this->ensurePocSponsor($events, $organisationId, $eventId, $userIds['creator'], $userIds['approver']);
 
         $this->command?->info('Local event workflow users and scoped demo fixtures provisioned.');
         $this->command?->table(
@@ -103,7 +105,7 @@ final class DevEventWorkflowUsersSeeder extends Seeder
         );
         $this->command?->line('Demo organisation ID: '.$organisationId);
         $this->command?->line('Demo event ID: '.$eventId.' (draft; use /community/events to load it)');
-        $this->command?->warn('Local/testing only credentials. Publication and sales-resume HTTP routes are not registered in the current API.');
+        $this->command?->warn('Local/testing only credentials. Synthetic publication and settlement are available only with the explicitly enabled local Events POC.');
     }
 
     private function ensureRole($identity, string $slug, string $key): string
@@ -228,6 +230,10 @@ final class DevEventWorkflowUsersSeeder extends Seeder
     {
         $this->ensureEventAssignment($events, 'organisation', $organisationId, $organisationId, null, null, $actorId,
             EventPermissions::CREATE, $actorId);
+        $this->ensureEventAssignment($events, 'organisation', $organisationId, $organisationId, null, null, $actorId,
+            EventPermissions::READ, $actorId);
+        $this->ensureEventAssignment($events, 'organisation', $organisationId, $organisationId, null, null, $actorId,
+            EventPermissions::UPDATE, $actorId);
     }
 
     private function ensureDemoEvent($events, string $organisationId, string $creatorId): string
@@ -281,16 +287,45 @@ final class DevEventWorkflowUsersSeeder extends Seeder
             ['creator', EventPermissions::READ], ['creator', EventPermissions::UPDATE], ['creator', EventPermissions::SUBMIT],
             ['creator', EventPermissions::CANCEL_REQUEST], ['creator', EventPermissions::GATE_ASSIGNMENT_MANAGE],
             ['creator', EventPermissions::ATTENDANCE_READ],
+            ['creator', EventPermissions::PAYOUT_REQUEST],
             ['reviewer', EventPermissions::READ], ['reviewer', EventPermissions::REVIEW],
             ['reviewer', EventPermissions::CANCEL_APPROVE], ['reviewer', EventPermissions::ATTENDANCE_READ],
             ['approver', EventPermissions::READ], ['approver', EventPermissions::PRICE_APPROVE],
             ['approver', EventPermissions::PUBLISH], ['approver', EventPermissions::SALES_RESUME],
             ['approver', EventPermissions::CURRENCY_ASSIGN], ['approver', EventPermissions::ATTENDANCE_READ],
+            ['approver', EventPermissions::PAYOUT_APPROVE],
         ];
         foreach ($assignments as [$key, $permission]) {
             $this->ensureEventAssignment($events, 'event', $eventId, $organisationId, $eventId, null,
                 $users[$key], $permission, $users['creator']);
         }
+    }
+
+    private function ensurePocSponsor($events, string $organisationId, string $eventId, string $creatorId, string $reportActorId): void
+    {
+        if (! config('events.poc_enabled') || ! config('events.poc_demo_sponsor_enabled')
+            || ! $events->getSchemaBuilder()->hasTable('community_services.event_sponsors')) {
+            return;
+        }
+        $id = $this->stableId('poc-sponsor');
+        $events->table('community_services.event_sponsors')->updateOrInsert(['id' => $id], [
+            'organisation_id' => $organisationId, 'name' => 'LOCAL POC Community Sponsor',
+            'description' => 'Local demonstration sponsor profile. This is not a BTC integration or commercial sponsorship.',
+            'logo_url' => null, 'report_actor_id' => $reportActorId, 'active' => true,
+            'created_by' => $creatorId,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $events->table('community_services.event_sponsor_links')->insertOrIgnore([
+            'event_id' => $eventId, 'sponsor_id' => $id, 'created_at' => now(),
+        ]);
+        $events->table('community_services.event_sponsor_audit')->insertOrIgnore([
+            'id' => $this->stableId('poc-sponsor-audit-created'), 'sponsor_id' => $id,
+            'event_id' => null, 'actor_id' => $creatorId, 'action' => 'sponsor_created', 'created_at' => now(),
+        ]);
+        $events->table('community_services.event_sponsor_audit')->insertOrIgnore([
+            'id' => $this->stableId('poc-sponsor-audit-linked'), 'sponsor_id' => $id,
+            'event_id' => $eventId, 'actor_id' => $creatorId, 'action' => 'sponsor_linked', 'created_at' => now(),
+        ]);
     }
 
     private function ensureEventAssignment($events, string $scopeType, string $scopeId, string $organisationId,

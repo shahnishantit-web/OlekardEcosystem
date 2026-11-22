@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;
 
-/** Development authoring and review surface. It has no publish or sales endpoint. */
+/** Authoring and review surface; publication providers are fail-closed outside the local POC. */
 final class EventAuthoringController extends Controller
 {
     public function __construct(
@@ -59,6 +59,16 @@ final class EventAuthoringController extends Controller
     public function approveReview(Request $request, string $eventId): JsonResponse
     {
         return $this->transition($this->workflow->approvePublication(...), $request, $eventId);
+    }
+
+    public function publish(Request $request, string $eventId): JsonResponse
+    {
+        return $this->transition($this->workflow->publish(...), $request, $eventId);
+    }
+
+    public function resumeSales(Request $request, string $eventId): JsonResponse
+    {
+        return $this->transition($this->workflow->resumeSales(...), $request, $eventId);
     }
 
     public function reject(Request $request, string $eventId): JsonResponse

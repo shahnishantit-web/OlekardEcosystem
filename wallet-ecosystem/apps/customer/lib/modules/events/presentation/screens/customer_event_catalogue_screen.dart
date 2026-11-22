@@ -192,6 +192,18 @@ class _CustomerEventDetailsScreenState
               style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 8),
           Text(event['organiser_name']?.toString() ?? ''),
+          if (event['sponsors'] is List && (event['sponsors'] as List).isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text('Supported by', style: Theme.of(context).textTheme.titleSmall),
+            ...(event['sponsors'] as List).whereType<Map<String, dynamic>>().map((sponsor) => ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: sponsor['logo_url'] is String && (sponsor['logo_url'] as String).isNotEmpty
+                  ? Image.network(sponsor['logo_url'] as String, width: 40, height: 40, errorBuilder: (_, __, ___) => const Icon(Icons.business))
+                  : const Icon(Icons.business),
+              title: Text(sponsor['name']?.toString() ?? 'Sponsor'),
+              subtitle: Text(sponsor['description']?.toString() ?? ''),
+            )),
+          ],
           if (startsAt != null) ...[
             const SizedBox(height: 20),
             _DetailLine(label: 'Starts', value: _formatDate(startsAt)),

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Events\Infrastructure\Http\Controllers;
 
+use App\Modules\Events\Application\EventSponsorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 
 final class CustomerEventCatalogueController extends Controller
 {
+    public function __construct(private readonly EventSponsorService $sponsors) {}
+
     public function index(Request $request): JsonResponse
     {
         abort_unless(strtoupper((string) $request->attributes->get('identity.actor_type', '')) === 'CUSTOMER', 403,
@@ -39,6 +42,7 @@ final class CustomerEventCatalogueController extends Controller
                 'currency_code' => $event->currency_code,
                 'currency_precision' => (int) ($event->currency_precision_snapshot ?? 2),
                 'max_tickets_per_order' => $event->max_tickets_per_order,
+                'sponsors' => $this->sponsors->publicForEvent((string) $event->id),
                 'categories' => $categories,
             ];
         })->filter(static fn (array $event): bool => $event['categories']->isNotEmpty())

@@ -6,6 +6,7 @@ namespace App\Modules\CommunityFuneral\Application;
 
 use App\Modules\CommunityFuneral\Domain\Contracts\OrganisationMembershipVerifier;
 use App\Modules\CommunityFuneral\Application\Jobs\DispatchFuneralPrivateNotice;
+use App\Modules\CommunityFuneral\Application\Jobs\SendFuneralHouseholdInvitation;
 use App\Modules\Payment\Domain\Enums\PayoutBeneficiaryStatus;
 use App\Modules\Payment\Infrastructure\Models\PayoutBeneficiaryModel;
 use App\Modules\Ledger\Domain\Contracts\LedgerModuleContract;
@@ -14,6 +15,7 @@ use App\Modules\Platform\Domain\Contracts\AuditServiceInterface;
 use App\Modules\Platform\Domain\ValueObjects\AuditEventData;
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Ramsey\Uuid\Uuid;
@@ -102,7 +104,7 @@ final class FuneralAssistanceService
     }
 
     /** @return array<string, mixed> */
-    public function createHousehold(string $communityId, string $privateReference, string $actorId): array
+    public function createHousehold(string $communityId, string $privateReference, string $actorId, ?string $contactPhone = null, bool $contactConsent = false): array
     {
         $community = $this->community($communityId);
         $this->assertCommunityManager($communityId, $actorId, (string) $community->created_by);
@@ -113,12 +115,18 @@ final class FuneralAssistanceService
             'community_id' => $communityId,
             'private_reference' => $privateReference,
             'status' => 'pending_review',
+            'contact_phone_encrypted' => $contactPhone === null ? null : Crypt::encryptString($contactPhone),
+            'contact_consent_at' => $contactPhone !== null && $contactConsent ? $now : null,
             'created_by' => $actorId,
             'created_at' => $now,
             'updated_at' => $now,
         ]);
 
-        return (array) $this->thisHousehold($id);
+        $household = (array) $this->thisHousehold($id);
+        unset($household['contact_phone_encrypted']);
+        $household['has_consented_contact'] = $contactPhone !== null && $contactConsent;
+
+        return $household;
     }
 
     /** @return array<string, mixed> */
@@ -254,9 +262,11 @@ final class FuneralAssistanceService
                 throw ValidationException::withMessages(['households' => 'No reviewed eligible or exempt households are available.']);
             }
             foreach ($households as $household) {
-                if ($household->status === 'eligible' && ! $this->db()->table('community_services.funeral_representatives')
-                    ->where('household_id', $household->id)->where('status', 'verified')->exists()) {
-                    throw ValidationException::withMessages(['households' => 'Every participating household requires a verified representative.']);
+                $hasVerifiedRepresentative = $this->db()->table('community_services.funeral_representatives')
+                    ->where('household_id', $household->id)->where('status', 'verified')->exists();
+                if ($household->status === 'eligible' && ! $hasVerifiedRepresentative
+                    && (empty($household->contact_phone_encrypted) || $household->contact_consent_at === null)) {
+                    throw ValidationException::withMessages(['households' => 'Each eligible household needs a verified customer representative or a consented phone contact for its OleKard invitation.']);
                 }
             }
 
@@ -287,6 +297,7 @@ final class FuneralAssistanceService
             $this->db()->table('community_services.funeral_snapshot_households')->insert($members);
             $obligationCount = 0;
             $noticeIds = [];
+            $invitationIds = [];
             foreach ($members as $member) {
                 if ($member['eligibility_status'] !== 'eligible') {
                     continue;
@@ -300,14 +311,20 @@ final class FuneralAssistanceService
                 $obligationCount++;
                 $recipients = $this->db()->table('community_services.funeral_representatives')
                     ->where('household_id', $member['household_id'])->where('status', 'verified')->pluck('actor_id');
-                foreach ($recipients as $recipientId) {
-                    $noticeId = (string) Uuid::uuid7();
-                    $this->db()->table('community_services.funeral_private_notices')->insertOrIgnore([
-                        'id' => $noticeId, 'snapshot_household_id' => $member['id'],
-                        'recipient_actor_id' => $recipientId, 'status' => 'pending',
-                        'attempts' => 0, 'created_at' => $now, 'updated_at' => $now,
-                    ]);
-                    $noticeIds[] = $noticeId;
+                if ($recipients->isNotEmpty()) {
+                    foreach ($recipients as $recipientId) {
+                        $noticeId = (string) Uuid::uuid7();
+                        $this->db()->table('community_services.funeral_private_notices')->insertOrIgnore([
+                            'id' => $noticeId, 'snapshot_household_id' => $member['id'],
+                            'recipient_actor_id' => $recipientId, 'status' => 'pending',
+                            'attempts' => 0, 'created_at' => $now, 'updated_at' => $now,
+                        ]);
+                        $noticeIds[] = $noticeId;
+                    }
+                } else {
+                    $household = $this->thisHousehold((string) $member['household_id']);
+                    $invitationId = $this->createHouseholdInvitation($collection, $household, $actorId, $now);
+                    $invitationIds[] = $invitationId;
                 }
             }
             $this->db()->table('community_services.funeral_collections')->where('id', $collectionId)->update([
@@ -324,9 +341,137 @@ final class FuneralAssistanceService
                     }
                 });
             }
+            foreach ($invitationIds as $invitationId) {
+                $this->db()->afterCommit(static function () use ($invitationId): void {
+                    try {
+                        SendFuneralHouseholdInvitation::dispatch($invitationId);
+                    } catch (\Throwable) {
+                        Log::warning('community_funeral.household_invitation_pending', ['invitation_id' => $invitationId]);
+                    }
+                });
+            }
 
-            return ['snapshot_id' => $snapshotId, 'eligible_count' => $eligible, 'exempt_count' => $exempt, 'obligation_count' => $obligationCount];
+            return ['snapshot_id' => $snapshotId, 'eligible_count' => $eligible, 'exempt_count' => $exempt, 'obligation_count' => $obligationCount, 'invitation_count' => count($invitationIds)];
         });
+    }
+
+    /** @return array<string, mixed> */
+    public function claimHouseholdInvitation(string $token, string $actorId): array
+    {
+        return $this->db()->transaction(function () use ($token, $actorId): array {
+            $invitation = $this->db()->table('community_services.funeral_household_invitations')
+                ->where('token_hash', hash('sha256', $token))->lockForUpdate()->first();
+            if ($invitation === null) {
+                throw ValidationException::withMessages(['invitation' => 'This household invitation is invalid or has expired.']);
+            }
+            if ($invitation->status === 'claimed') {
+                if ($invitation->claimed_by === $actorId) {
+                    return $this->claimedInvitationSummary($invitation);
+                }
+                throw ValidationException::withMessages(['invitation' => 'This household invitation has already been claimed.']);
+            }
+            if (now()->greaterThan($invitation->expires_at)) {
+                $this->db()->table('community_services.funeral_household_invitations')->where('id', $invitation->id)
+                    ->update(['status' => 'expired', 'updated_at' => now()]);
+                throw ValidationException::withMessages(['invitation' => 'This household invitation has expired. Ask the community manager to send a new invitation.']);
+            }
+            if (! in_array($invitation->status, ['sent', 'pending', 'failed'], true)) {
+                throw ValidationException::withMessages(['invitation' => 'This household invitation is no longer available.']);
+            }
+
+            $user = DB::connection('identity')->table('identity.users')->where('id', $actorId)->where('status', 'active')->first(['id', 'actor_type', 'mobile_number']);
+            if ($user === null || strtoupper((string) $user->actor_type) !== 'CUSTOMER') {
+                throw ValidationException::withMessages(['account' => 'Sign in to an active OleKard customer account to join this household.']);
+            }
+            $invitedPhone = Crypt::decryptString((string) $invitation->contact_phone_encrypted);
+            if (! hash_equals($invitedPhone, (string) $user->mobile_number)) {
+                throw ValidationException::withMessages(['phone' => 'Sign in or register using the phone number that received this invitation.']);
+            }
+
+            $household = $this->thisHousehold((string) $invitation->household_id);
+            if ($household->status !== 'eligible' || $household->contact_consent_at === null) {
+                throw ValidationException::withMessages(['household' => 'This household is not eligible to join this collection.']);
+            }
+            $existing = $this->db()->table('community_services.funeral_representatives')
+                ->where('household_id', $household->id)->where('actor_id', $actorId)->first();
+            $now = now();
+            if ($existing === null) {
+                $representativeId = (string) Uuid::uuid7();
+                $this->db()->table('community_services.funeral_representatives')->insert([
+                    'id' => $representativeId, 'household_id' => $household->id, 'actor_id' => $actorId,
+                    'status' => 'verified', 'verification_method' => 'phone_invite',
+                    'evidence_reference' => 'phone_invitation:'.$invitation->id,
+                    'verified_by' => null, 'verified_at' => $now, 'created_at' => $now, 'updated_at' => $now,
+                ]);
+            } elseif ($existing->status !== 'verified') {
+                $this->db()->table('community_services.funeral_representatives')->where('id', $existing->id)->update([
+                    'status' => 'verified', 'verification_method' => 'phone_invite',
+                    'evidence_reference' => 'phone_invitation:'.$invitation->id,
+                    'verified_by' => null, 'verified_at' => $now, 'updated_at' => $now,
+                ]);
+            }
+
+            $this->db()->table('community_services.funeral_household_invitations')->where('id', $invitation->id)->update([
+                'status' => 'claimed', 'claimed_by' => $actorId, 'claimed_at' => $now, 'updated_at' => $now,
+                'token_encrypted' => '',
+            ]);
+            $this->audit('household.invitation.claimed', $actorId, 'household_invitation', (string) $invitation->id, (string) $invitation->status, 'claimed');
+
+            return $this->claimedInvitationSummary($invitation);
+        });
+    }
+
+    /** @return array<string, mixed> */
+    private function claimedInvitationSummary(object $invitation): array
+    {
+        $household = $this->thisHousehold((string) $invitation->household_id);
+        $collection = $this->collection((string) $invitation->collection_id);
+        $community = $this->community((string) $collection->community_id);
+        return [
+            'household_reference' => (string) $household->private_reference,
+            'community_name' => (string) $community->display_name,
+            'collection_id' => (string) $collection->id,
+            'collection_purpose' => (string) $collection->purpose,
+            'amount_minor' => (int) $collection->amount_minor,
+            'currency_code' => (string) $collection->currency_code,
+            'collection_status' => (string) $collection->status,
+        ];
+    }
+
+    private function createHouseholdInvitation(object $collection, object $household, string $actorId, mixed $now): string
+    {
+        $token = bin2hex(random_bytes(32));
+        $id = (string) Uuid::uuid7();
+        $this->db()->table('community_services.funeral_household_invitations')->insert([
+            'id' => $id, 'collection_id' => $collection->id, 'household_id' => $household->id,
+            'token_hash' => hash('sha256', $token), 'token_encrypted' => Crypt::encryptString($token),
+            'contact_phone_encrypted' => (string) $household->contact_phone_encrypted,
+            'status' => 'pending', 'attempt_count' => 0, 'expires_at' => $now->copy()->addDays(30),
+            'created_by' => $actorId, 'created_at' => $now, 'updated_at' => $now,
+        ]);
+        $this->audit('household.invitation.created', $actorId, 'household_invitation', $id, null, 'pending');
+
+        return $id;
+    }
+
+    /** @return array{url:string, expires_at:string} */
+    public function householdInvitationLink(string $householdId, string $actorId): array
+    {
+        $household = $this->thisHousehold($householdId);
+        $community = $this->community((string) $household->community_id);
+        $this->assertCommunityManager((string) $community->id, $actorId, (string) $community->created_by);
+        $invitation = $this->db()->table('community_services.funeral_household_invitations')
+            ->where('household_id', $householdId)->whereIn('status', ['pending', 'sending', 'sent', 'failed'])
+            ->where('expires_at', '>', now())->orderByDesc('created_at')->first();
+        if ($invitation === null || trim((string) $invitation->token_encrypted) === '') {
+            throw ValidationException::withMessages(['invitation' => 'There is no active join invitation for this household. Activate an eligible collection with consented contact details first.']);
+        }
+        $baseUrl = rtrim((string) config('community_funeral.customer_app_url', 'http://localhost:50416'), '/');
+        $routePrefix = (bool) config('community_funeral.customer_app_hash_routes', true) ? '/#' : '';
+        return [
+            'url' => $baseUrl.$routePrefix.'/join-funeral?token='.rawurlencode(Crypt::decryptString((string) $invitation->token_encrypted)),
+            'expires_at' => (string) $invitation->expires_at,
+        ];
     }
 
     /** @return list<array<string, mixed>> */
@@ -779,6 +924,7 @@ final class FuneralAssistanceService
             ->map(static fn (object $row): array => [
                 'obligation_id' => $row->obligation_id, 'payment_intent_id' => $row->payment_intent_id,
                 'reference' => $row->correlation_id ?: $row->payment_intent_id,
+                'channel' => 'in_app',
                 'amount_minor' => (int) $row->gross_amount_minor, 'fee_minor' => (int) $row->fee_amount_minor,
                 'currency_code' => $row->currency_code, 'status' => $row->domain_status === 'confirmed' ? 'succeeded' : 'late_review',
                 'review_reason' => $row->review_reason, 'occurred_at' => $row->confirmed_at,
@@ -815,7 +961,7 @@ final class FuneralAssistanceService
             ->orderByDesc('pi.created_at')->get(['o.id as obligation_id', 'pi.id as payment_intent_id', 'pi.amount_minor', 'pi.currency_code', 'pi.status', 'pi.created_at']);
         foreach ($intentRows as $row) {
             $receipts[] = ['obligation_id' => $row->obligation_id, 'payment_intent_id' => $row->payment_intent_id,
-                'reference' => $row->payment_intent_id, 'amount_minor' => (int) $row->amount_minor, 'fee_minor' => 0,
+                'reference' => $row->payment_intent_id, 'channel' => 'in_app', 'amount_minor' => (int) $row->amount_minor, 'fee_minor' => 0,
                 'currency_code' => $row->currency_code, 'status' => (string) $row->status, 'review_reason' => null,
                 'occurred_at' => $row->created_at];
         }

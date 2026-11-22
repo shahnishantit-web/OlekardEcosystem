@@ -12,10 +12,11 @@ final class LogSmsChannel implements SmsChannelInterface
 {
     public function send(string $phoneNumber, string $body): SmsDeliveryResult
     {
+        $safeBody = preg_replace('/([?&](?:token|invite|code)=)[^&\\s]+/i', '$1[REDACTED]', $body) ?? '[REDACTED]';
         Log::info('notification.sms.log', [
             'channel' => 'sms',
             'phone'   => substr($phoneNumber, 0, 4).'****',
-            'body'    => $body,
+            'body'    => $safeBody,
         ]);
 
         return new SmsDeliveryResult(success: true);

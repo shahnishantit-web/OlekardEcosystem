@@ -28,6 +28,7 @@ Route::prefix('api/v1/community/funeral')->middleware(['identity.auth', FuneralR
         ->middleware(['identity.require-permission:community.funeral.review', 'idempotency:require-identity']);
     Route::post('/households/{householdId}/representatives/{representativeId}/revoke', [FuneralAssistanceController::class, 'revokeRepresentative'])
         ->middleware(['identity.require-permission:community.funeral.review', 'idempotency:require-identity']);
+    Route::get('/households/{householdId}/invitation-link', [FuneralAssistanceController::class, 'householdInvitationLink']);
     Route::post('/communities/{communityId}/collections', [FuneralAssistanceController::class, 'createCollection'])
         ->middleware(['identity.require-permission:community.funeral.manage', 'idempotency:require-identity']);
     Route::patch('/collections/{collectionId}/beneficiary', [FuneralAssistanceController::class, 'changeBeneficiary'])
@@ -38,6 +39,7 @@ Route::prefix('api/v1/community/funeral')->middleware(['identity.auth', FuneralR
         ->middleware(['identity.require-permission:community.funeral.review', 'idempotency:require-identity']);
     Route::get('/my/obligations', [FuneralAssistanceController::class, 'myObligations'])
         ->middleware('identity.require-permission:community.funeral.household.read');
+    Route::post('/invitations/claim', [FuneralAssistanceController::class, 'claimHouseholdInvitation']);
     Route::post('/collections/{collectionId}/close', [FuneralAssistanceController::class, 'close'])
         ->middleware(['identity.require-permission:community.funeral.manage', 'idempotency:require-identity']);
     Route::get('/collections/{collectionId}/aggregate-report', [FuneralAssistanceController::class, 'report'])

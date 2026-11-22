@@ -13,6 +13,7 @@ use App\Modules\CommunityFuneral\Http\Requests\ChangeBeneficiaryRequest;
 use App\Modules\CommunityFuneral\Http\Requests\CreateCollectionRequest;
 use App\Modules\CommunityFuneral\Http\Requests\CreateCommunityRequest;
 use App\Modules\CommunityFuneral\Http\Requests\CreateHouseholdRequest;
+use App\Modules\CommunityFuneral\Http\Requests\ClaimHouseholdInvitationRequest;
 use App\Modules\CommunityFuneral\Http\Requests\ReviewHouseholdRequest;
 use App\Modules\CommunityFuneral\Http\Resources\FuneralCollectionResource;
 use App\Modules\CommunityFuneral\Http\Resources\FuneralCommunityResource;
@@ -91,6 +92,7 @@ final class FuneralAssistanceController
             ->get([
                 'household.id', 'household.private_reference', 'household.status', 'household.exemption_reference',
                 'household.reviewed_by', 'household.reviewed_at', 'household.created_by', 'household.created_at',
+                'household.contact_phone_encrypted', 'household.contact_consent_at',
             ]);
         $representatives = $db->table('community_services.funeral_representatives as representative')
             ->join('community_services.funeral_households as household', 'household.id', '=', 'representative.household_id')
@@ -98,6 +100,7 @@ final class FuneralAssistanceController
             ->get([
                 'representative.id', 'representative.household_id', 'representative.actor_id', 'representative.status',
                 'representative.evidence_reference', 'representative.verified_by', 'representative.verified_at',
+                'representative.verification_method',
             ])->groupBy('household_id');
         $collections = $db->table('community_services.funeral_collections as collection')
             ->leftJoin('community_services.funeral_closures as closure', 'closure.collection_id', '=', 'collection.id')
@@ -138,14 +141,25 @@ final class FuneralAssistanceController
             ]);
         });
         $staff = $staff->map(fn (object $row): array => array_merge((array) $row, (array) ($identityUsers->get($row->actor_id) ?? [])));
-        $householdRows = $households->map(fn (object $row): array => array_merge((array) $row, [
+        $invitations = $db->table('community_services.funeral_household_invitations')
+            ->whereIn('household_id', $households->pluck('id'))->orderByDesc('created_at')
+            ->get(['id', 'household_id', 'collection_id', 'status', 'sent_at', 'expires_at'])
+            ->groupBy('household_id');
+        $householdRows = $households->map(function (object $row) use ($identityUsers, $representatives, $invitations): array {
+            $household = (array) $row;
+            unset($household['contact_phone_encrypted']);
+            return array_merge($household, [
             'creator_email' => $identityUsers->get($row->created_by)->email ?? null,
             'reviewer_email' => $identityUsers->get($row->reviewed_by)->email ?? null,
+            'has_consented_contact' => $row->contact_consent_at !== null && $row->contact_phone_encrypted !== null,
+            'invitation_status' => $invitations->get($row->id)?->first()?->status,
+            'invitation_sent_at' => $invitations->get($row->id)?->first()?->sent_at,
             'representatives' => ($representatives->get($row->id) ?? collect())->map(fn (object $rep): array => array_merge((array) $rep, [
                 'email' => $identityUsers->get($rep->actor_id)->email ?? null,
                 'mobile_number' => $identityUsers->get($rep->actor_id)->mobile_number ?? null,
             ]))->values(),
-        ]));
+        ]);
+        });
 
         return response()->json(['success' => true, 'data' => [
             'community' => [
@@ -199,7 +213,13 @@ final class FuneralAssistanceController
     public function createHousehold(CreateHouseholdRequest $request, string $communityId): JsonResponse
     {
         $data = $request->validated();
-        return response()->json(['success' => true, 'data' => $this->service->createHousehold($communityId, $data['private_reference'], $this->actor($request))], 201);
+        return response()->json(['success' => true, 'data' => $this->service->createHousehold(
+            $communityId,
+            $data['private_reference'],
+            $this->actor($request),
+            $data['contact_phone'] ?? null,
+            (bool) ($data['contact_consent'] ?? false),
+        )], 201);
     }
 
     public function reviewHousehold(ReviewHouseholdRequest $request, string $householdId): JsonResponse
@@ -267,6 +287,22 @@ final class FuneralAssistanceController
         return response()->json(['success' => true, 'data' => FuneralObligationResource::collection($obligations)->resolve()]);
     }
 
+    public function claimHouseholdInvitation(ClaimHouseholdInvitationRequest $request): JsonResponse
+    {
+        return response()->json(['success' => true, 'data' => $this->service->claimHouseholdInvitation(
+            $request->validated('token'),
+            $this->actor($request),
+        )]);
+    }
+
+    public function householdInvitationLink(Request $request, string $householdId): JsonResponse
+    {
+        return response()->json(['success' => true, 'data' => $this->service->householdInvitationLink(
+            $householdId,
+            $this->actor($request),
+        )]);
+    }
+
     public function close(Request $request, string $collectionId): JsonResponse
     {
         $this->service->closeCollection($collectionId, $this->actor($request));
@@ -289,9 +325,9 @@ final class FuneralAssistanceController
     {
         $rows = $this->service->transactionHistory($collectionId, $this->actor($request));
         $stream = fopen('php://temp', 'r+');
-        fputcsv($stream, ['Date', 'Reference', 'Payment Intent', 'Obligation', 'Amount Minor', 'Currency', 'Fee Minor', 'Status', 'Review Reason']);
+        fputcsv($stream, ['Date', 'Channel', 'Reference', 'Payment Intent', 'Obligation', 'Amount Minor', 'Currency', 'Fee Minor', 'Status', 'Review Reason']);
         foreach ($rows as $row) {
-            fputcsv($stream, [$row['occurred_at'], $row['reference'], $row['payment_intent_id'], $row['obligation_id'], $row['amount_minor'], $row['currency_code'], $row['fee_minor'], $row['status'], $row['review_reason']]);
+            fputcsv($stream, [$row['occurred_at'], $row['channel'] ?? 'in_app', $row['reference'], $row['payment_intent_id'], $row['obligation_id'], $row['amount_minor'], $row['currency_code'], $row['fee_minor'], $row['status'], $row['review_reason']]);
         }
         rewind($stream);
         $csv = stream_get_contents($stream) ?: '';

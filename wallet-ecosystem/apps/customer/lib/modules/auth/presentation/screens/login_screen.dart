@@ -102,6 +102,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   onPressed: () => context.push('/forgot-pin'),
                   child: const Text('Forgot PIN?'),
                 ),
+                const Divider(height: AppSpacing.xl),
+                TextButton.icon(
+                  onPressed: () => context.push('/events/operations/login'),
+                  icon: const Icon(Icons.event_note_outlined),
+                  label: const Text('Event organiser / reviewer sign in'),
+                ),
               ],
             ),
           ),

@@ -124,7 +124,9 @@ final class EventCancellationService
                 'review_request_hash' => $reviewHash, 'updated_at' => $now,
             ]);
 
-            $orders = $this->db()->table('community_services.event_orders')->where('event_id', $eventId)->orderBy('id')->get(['id', 'organisation_id', 'payment_intent_id']);
+            $orders = $this->db()->table('community_services.event_orders')->where('event_id', $eventId)->orderBy('id')
+                ->get(['id', 'organisation_id', 'payment_intent_id', 'total_minor', 'currency_code', 'order_state', 'payment_state', 'accounting_state']);
+            $pocRefundCount = 0;
             foreach ($orders as $order) {
                 $this->db()->table('community_services.event_cancellation_financial_cases')->insertOrIgnore([
                     'id' => (string) Uuid::uuid7(), 'cancellation_request_id' => $requestId, 'event_id' => $eventId,
@@ -132,6 +134,19 @@ final class EventCancellationService
                     'payment_intent_id' => $order->payment_intent_id, 'state' => 'pending_reconciliation',
                     'created_at' => $now, 'updated_at' => $now,
                 ]);
+                if (app()->environment('local') && config('events.poc_enabled') === true
+                    && $order->order_state === 'issued' && $order->payment_state === 'confirmed'
+                    && $order->accounting_state === 'verified' && (int) $order->total_minor > 0) {
+                    $refundId = (string) Uuid::uuid7();
+                    $this->db()->table('community_services.event_poc_refunds')->insertOrIgnore([
+                        'id' => $refundId, 'event_id' => $eventId, 'cancellation_request_id' => $requestId,
+                        'order_id' => $order->id, 'payment_intent_id' => $order->payment_intent_id,
+                        'amount_minor' => (int) $order->total_minor, 'currency_code' => $order->currency_code,
+                        'status' => 'simulated_refunded', 'poc_reference' => 'POC-REFUND-'.$refundId,
+                        'simulated_at' => $now, 'created_at' => $now, 'updated_at' => $now,
+                    ]);
+                    $pocRefundCount++;
+                }
             }
 
             $this->audit($eventId, $actorId, 'cancellation_effective', $expectedVersion, $correlationId, $now);
@@ -145,7 +160,9 @@ final class EventCancellationService
             ), 'community_services');
 
             $result = $this->requestResult($requestId) + [
-                'financial_recovery_state' => $orders->isEmpty() ? 'not_required' : 'pending_reconciliation',
+                'financial_recovery_state' => $orders->isEmpty() ? 'not_required'
+                    : ($pocRefundCount > 0 ? 'poc_simulated' : 'pending_reconciliation'),
+                'poc_simulated_refund_count' => $pocRefundCount,
                 'invalidated_ticket_count' => $tickets->count(),
             ];
             $this->db()->table('community_services.event_cancellation_requests')->where('id', $requestId)

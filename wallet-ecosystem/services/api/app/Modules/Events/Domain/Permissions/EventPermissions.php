@@ -44,6 +44,8 @@ final class EventPermissions
 
     public const PAYOUT_REQUEST = 'events.payout.request';
 
+    public const PAYOUT_APPROVE = 'events.payout.approve';
+
     public const ASSIGNMENT_GRANT = 'events.assignment.grant';
 
     public const ASSIGNMENT_REVOKE = 'events.assignment.revoke';
@@ -62,6 +64,7 @@ final class EventPermissions
             self::COMPLIMENTARY_APPROVE,
             self::GATE_VALIDATE, self::ATTENDANCE_READ, self::REFUND_REQUEST,
             self::REFUND_EXCEPTION_REVIEW, self::PAYOUT_REQUEST,
+            self::PAYOUT_APPROVE,
         ];
     }
 

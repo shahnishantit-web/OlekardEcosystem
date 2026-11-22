@@ -11,6 +11,8 @@ use App\Modules\Events\Infrastructure\Http\Controllers\ComplimentaryApprovalCont
 use App\Modules\Events\Infrastructure\Http\Controllers\EventOrderController;
 use App\Modules\Events\Infrastructure\Http\Controllers\FreeEventRegistrationController;
 use App\Modules\Events\Infrastructure\Http\Controllers\CustomerEventCatalogueController;
+use App\Modules\Events\Infrastructure\Http\Controllers\EventSponsorController;
+use App\Modules\Events\Infrastructure\Http\Controllers\EventPocSettlementController;
 use App\Modules\Events\Infrastructure\Http\Controllers\EventInventoryHoldController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +20,11 @@ Route::prefix('v1/events')->middleware(['identity.auth'])->group(static function
     Route::get('customer/catalogue', [CustomerEventCatalogueController::class, 'index']);
     Route::get('organisations/{organisationId}/drafts', [EventAuthoringController::class, 'index']);
     Route::get('organisations/{organisationId}/members', [EventAssignmentController::class, 'organisationMembers']);
+    Route::get('organisations/{organisationId}/sponsors', [EventSponsorController::class, 'index']);
+    Route::get('{eventId}/sponsor-report', [EventSponsorController::class, 'report']);
+    Route::get('{eventId}/poc-settlements', [EventPocSettlementController::class, 'index']);
+    Route::get('{eventId}/poc-refunds', [EventPocSettlementController::class, 'refunds']);
+    Route::get('{eventId}/poc-event-end', [EventPocSettlementController::class, 'eventEnd']);
     Route::get('{eventId}/invitation-customers', [EventAssignmentController::class, 'invitationCustomers']);
     Route::get('tickets', [EventAdmissionController::class, 'tickets']);
     Route::get('tickets/{ticketId}', [EventAdmissionController::class, 'ticket']);
@@ -41,6 +48,11 @@ Route::prefix('v1/events')->middleware(['identity.auth', 'idempotency:require-id
     Route::post('{eventId}/orders', [EventOrderController::class, 'create']);
     Route::post('orders/{orderId}/payment-intent', [EventOrderController::class, 'paymentIntent']);
     Route::post('organisations/{organisationId}/drafts', [EventAuthoringController::class, 'store']);
+    Route::post('organisations/{organisationId}/sponsors', [EventSponsorController::class, 'store']);
+    Route::post('{eventId}/sponsors', [EventSponsorController::class, 'link']);
+    Route::post('{eventId}/poc-settlements', [EventPocSettlementController::class, 'request']);
+    Route::post('{eventId}/poc-simulate-end', [EventPocSettlementController::class, 'simulateEventEnd']);
+    Route::post('poc-settlements/{settlementId}/approve', [EventPocSettlementController::class, 'approve']);
     Route::put('{eventId}', [EventAuthoringController::class, 'update']);
     Route::post('{eventId}/submit-review', [EventAuthoringController::class, 'submit']);
     Route::post('{eventId}/cancellation-requests', [EventCancellationController::class, 'request']);
@@ -51,6 +63,8 @@ Route::prefix('v1/events')->middleware(['identity.auth', 'idempotency:require-id
     Route::delete('{eventId}/complimentary-approvals/{approvalId}', [ComplimentaryApprovalController::class, 'revoke']);
     Route::post('{eventId}/approve-prices', [EventAuthoringController::class, 'approvePrices']);
     Route::post('{eventId}/approve-review', [EventAuthoringController::class, 'approveReview']);
+    Route::post('{eventId}/publish', [EventAuthoringController::class, 'publish']);
+    Route::post('{eventId}/resume-sales', [EventAuthoringController::class, 'resumeSales']);
     Route::post('{eventId}/reject', [EventAuthoringController::class, 'reject']);
     Route::post('{eventId}/gates', [EventAssignmentController::class, 'storeGate']);
     Route::post('{eventId}/currency-assignment', [EventCurrencyController::class, 'assign']);

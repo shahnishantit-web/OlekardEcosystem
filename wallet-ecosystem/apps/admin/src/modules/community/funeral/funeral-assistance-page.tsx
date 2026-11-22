@@ -19,10 +19,11 @@ type Community = {
 type Staff = { id: string; actor_id: string; role: 'manager' | 'reviewer'; email: string | null; mobile_number: string | null };
 type Representative = {
   id: string; actor_id: string; status: string; evidence_reference: string | null;
-  email: string | null; mobile_number: string | null; verified_by: string | null;
+  email: string | null; mobile_number: string | null; verified_by: string | null; verification_method: string;
 };
 type Household = {
   id: string; private_reference: string; status: string; exemption_reference: string | null;
+  has_consented_contact: boolean; invitation_status: string | null; invitation_sent_at: string | null;
   creator_email: string | null; reviewer_email: string | null; representatives: Representative[];
 };
 type Collection = {
@@ -46,7 +47,7 @@ type Report = {
   unresolved_liability_count: number; pending_payment_count: number; pending_refund_count: number;
   late_review_count: number; payout_liability_open: number; settlement_status: string; payout_status: string; disbursement: Disbursement | null;
 };
-type Transaction = { obligation_id: string; payment_intent_id: string; reference: string; amount_minor: number; fee_minor: number; currency_code: string; status: string; review_reason: string | null; occurred_at: string };
+type Transaction = { obligation_id: string; payment_intent_id: string; reference: string; channel: 'in_app' | 'offline'; amount_minor: number; fee_minor: number; currency_code: string; status: string; review_reason: string | null; occurred_at: string };
 
 // Funeral routes are registered under api/v1 in the Laravel API. In local
 // Admin configuration NEXT_PUBLIC_API_URL points at the API origin directly.
@@ -81,6 +82,8 @@ export function FuneralAssistancePage() {
   const [staffActorId, setStaffActorId] = useState('');
   const [staffRole, setStaffRole] = useState<'manager' | 'reviewer'>('manager');
   const [householdReference, setHouseholdReference] = useState('');
+  const [householdContactPhone, setHouseholdContactPhone] = useState('');
+  const [householdContactConsent, setHouseholdContactConsent] = useState(false);
   const [reviewHouseholdId, setReviewHouseholdId] = useState('');
   const [householdDecision, setHouseholdDecision] = useState<'eligible' | 'exempt'>('eligible');
   const [exemptionReference, setExemptionReference] = useState('');
@@ -171,7 +174,11 @@ export function FuneralAssistancePage() {
   const createHousehold = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!selectedId) return;
-    await mutate(`${API}/communities/${selectedId}/households`, 'post', { private_reference: householdReference.trim() }, 'Household added for review.', () => setHouseholdReference(''));
+    const hasPhone = householdContactPhone.trim().length > 0;
+    await mutate(`${API}/communities/${selectedId}/households`, 'post', {
+      private_reference: householdReference.trim(),
+      ...(hasPhone ? { contact_phone: householdContactPhone.trim(), contact_consent: householdContactConsent } : {}),
+    }, 'Household added for eligibility review.', () => { setHouseholdReference(''); setHouseholdContactPhone(''); setHouseholdContactConsent(false); });
   };
   const reviewHousehold = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -187,6 +194,15 @@ export function FuneralAssistancePage() {
     await mutate(`${API}/households/${representativeHouseholdId}/representatives`, 'post', {
       actor_id: representativeActorId, evidence_reference: representativeEvidence.trim(),
     }, 'Household representative added. Independent verification is still required.', () => setRepresentativeEvidence(''));
+  };
+  const copyInvitationLink = async (householdId: string) => {
+    if (!authenticatedClient) return;
+    setError(null); setNotice(null);
+    try {
+      const response = await authenticatedClient.get<{ url: string }>(`${API}/households/${householdId}/invitation-link`);
+      await navigator.clipboard.writeText(response.data.url);
+      setNotice('Join link copied. Share it only with the person whose phone received the invitation.');
+    } catch (cause) { setError(messageFor(cause, 'Could not retrieve the active household invitation link.')); }
   };
   const createCollection = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -331,10 +347,12 @@ export function FuneralAssistancePage() {
                 </Card>
                 <Card>
                   <h2 className="text-lg font-semibold">Add household</h2>
-                  <p className="mb-3 mt-1 text-sm text-text-secondary">Use a private household reference. A different reviewer must decide eligibility.</p>
-                  <form className="flex flex-col gap-3 sm:flex-row" onSubmit={(event) => void createHousehold(event)}>
-                    <input className={inputClass} maxLength={200} required value={householdReference} onChange={(event) => setHouseholdReference(event.target.value)} placeholder="Household reference" disabled={!readiness?.enabled || !canManage} />
-                    <Button variant="primary" disabled={busy || !readiness?.enabled || !canManage || !householdReference.trim()}>Add household</Button>
+                  <p className="mb-3 mt-1 text-sm text-text-secondary">Use a private household reference. If the household representative does not yet have an OleKard account, record their phone with consent so an invitation can be sent when a collection opens.</p>
+                  <form className="space-y-3" onSubmit={(event) => void createHousehold(event)}>
+                    <input className={inputClass} maxLength={200} required value={householdReference} onChange={(event) => setHouseholdReference(event.target.value)} placeholder="Private household reference" disabled={!readiness?.enabled || !canManage} />
+                    <input className={inputClass} type="tel" inputMode="tel" pattern="[+][1-9][0-9]{9,14}" value={householdContactPhone} onChange={(event) => setHouseholdContactPhone(event.target.value)} placeholder="Contact phone in international format, e.g. +267… (optional)" disabled={!readiness?.enabled || !canManage} />
+                    {householdContactPhone.trim() && <label className="flex items-start gap-2 text-sm text-text-secondary"><input type="checkbox" checked={householdContactConsent} onChange={(event) => setHouseholdContactConsent(event.target.checked)} required disabled={!readiness?.enabled || !canManage} /><span>The household agreed that OleKard may use this number to send funeral collection and account-joining instructions.</span></label>}
+                    <Button variant="primary" disabled={busy || !readiness?.enabled || !canManage || !householdReference.trim() || (Boolean(householdContactPhone.trim()) && !householdContactConsent)}>Add household</Button>
                   </form>
                 </Card>
                 <Card>
@@ -347,8 +365,8 @@ export function FuneralAssistancePage() {
                   </form>
                 </Card>
                 <Card>
-                  <h2 className="text-lg font-semibold">Add verified household representative</h2>
-                  <p className="mb-3 mt-1 text-sm text-text-secondary">The selected active customer receives and pays this household’s obligation after the collection opens.</p>
+                  <h2 className="text-lg font-semibold">Link an existing customer</h2>
+                  <p className="mb-3 mt-1 text-sm text-text-secondary">Use this for a household representative who already has an OleKard customer account. For someone without an account, use the consented phone above; the collection invitation will guide them to register or sign in and claim their household.</p>
                   <form className="space-y-3" onSubmit={(event) => void addRepresentative(event)}>
                     <select className={selectClass} value={representativeHouseholdId} onChange={(event) => setRepresentativeHouseholdId(event.target.value)} required disabled={!readiness?.enabled || !canManage}><option value="">Choose a household</option>{workspace.households.map((household) => <option key={household.id} value={household.id}>{household.private_reference}</option>)}</select>
                     <select className={selectClass} value={representativeActorId} onChange={(event) => setRepresentativeActorId(event.target.value)} required disabled={!readiness?.enabled || !canManage}><option value="">Choose an active member</option>{memberOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
@@ -359,7 +377,7 @@ export function FuneralAssistancePage() {
               </div>
               <Card className="mt-4">
                 <h2 className="font-semibold">Household directory</h2>
-                <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[800px] text-left text-sm"><thead><tr className="border-b text-text-secondary"><th className="py-2 pr-3">Household</th><th className="py-2 pr-3">Eligibility</th><th className="py-2 pr-3">Representative</th><th className="py-2 pr-3">Review</th><th className="py-2">Actions</th></tr></thead><tbody>{workspace.households.map((household) => <tr key={household.id} className="border-b border-border align-top"><td className="py-3 pr-3 font-medium">{household.private_reference}</td><td className="py-3 pr-3 capitalize">{household.status.replaceAll('_', ' ')}{household.exemption_reference && <div className="text-xs text-text-secondary">Exemption evidence: {household.exemption_reference}</div>}</td><td className="py-3 pr-3">{household.representatives.length ? household.representatives.map((rep) => <div key={rep.id} className="mb-2">{personLabel(rep)}<div className="text-xs capitalize text-text-secondary">{rep.status.replaceAll('_', ' ')}</div>{rep.status === 'unverified' && rep.evidence_reference && canReview && <Button variant="secondary" disabled={busy || !readiness?.enabled} onClick={() => void mutate(`${API}/households/${household.id}/representatives/${rep.id}/verify`, 'post', {}, 'Representative verified.')}>Verify representative</Button>}</div>) : <span className="text-text-secondary">None assigned</span>}</td><td className="py-3 pr-3 text-text-secondary">{household.reviewer_email ?? 'Awaiting review'}</td><td className="py-3">{household.status === 'pending_review' && canReview && <Button variant="secondary" disabled={busy || !readiness?.enabled} onClick={() => { setReviewHouseholdId(household.id); setHouseholdDecision('eligible'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Review</Button>}</td></tr>)}</tbody></table>{workspace.households.length === 0 && <p className="py-6 text-center text-sm text-text-secondary">No households have been added.</p>}</div>
+                <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[800px] text-left text-sm"><thead><tr className="border-b text-text-secondary"><th className="py-2 pr-3">Household</th><th className="py-2 pr-3">Eligibility</th><th className="py-2 pr-3">Representative / invitation</th><th className="py-2 pr-3">Review</th><th className="py-2">Actions</th></tr></thead><tbody>{workspace.households.map((household) => <tr key={household.id} className="border-b border-border align-top"><td className="py-3 pr-3 font-medium">{household.private_reference}</td><td className="py-3 pr-3 capitalize">{household.status.replaceAll('_', ' ')}{household.exemption_reference && <div className="text-xs text-text-secondary">Exemption evidence: {household.exemption_reference}</div>}</td><td className="py-3 pr-3">{household.representatives.length ? household.representatives.map((rep) => <div key={rep.id} className="mb-2">{personLabel(rep)}<div className="text-xs capitalize text-text-secondary">{rep.status.replaceAll('_', ' ')}{rep.verification_method === 'phone_invite' ? ' by verified phone invitation' : ''}</div>{rep.status === 'unverified' && rep.evidence_reference && canReview && <Button variant="secondary" disabled={busy || !readiness?.enabled} onClick={() => void mutate(`${API}/households/${household.id}/representatives/${rep.id}/verify`, 'post', {}, 'Representative verified.')}>Verify representative</Button>}</div>) : <span className="text-text-secondary">No OleKard account linked</span>}{!household.representatives.some((rep) => rep.status === 'verified') && household.has_consented_contact && <div className="mt-1 text-xs text-text-secondary">Phone invitation: {household.invitation_status?.replaceAll('_', ' ') ?? 'will send when a collection opens'}{household.invitation_sent_at ? ` · sent ${new Date(household.invitation_sent_at).toLocaleString()}` : ''}</div>}</td><td className="py-3 pr-3 text-text-secondary">{household.reviewer_email ?? 'Awaiting review'}</td><td className="py-3">{household.status === 'pending_review' && canReview && <Button variant="secondary" disabled={busy || !readiness?.enabled} onClick={() => { setReviewHouseholdId(household.id); setHouseholdDecision('eligible'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Review</Button>}{household.has_consented_contact && !household.representatives.some((rep) => rep.status === 'verified') && household.invitation_status && <Button className="mt-2" variant="secondary" disabled={busy || !canManage} onClick={() => void copyInvitationLink(household.id)}>Copy join link</Button>}</td></tr>)}</tbody></table>{workspace.households.length === 0 && <p className="py-6 text-center text-sm text-text-secondary">No households have been added.</p>}</div>
               </Card>
             </>}
           </>}
@@ -388,7 +406,7 @@ export function FuneralAssistancePage() {
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {collection.status === 'under_review' && canReview && <Button variant="secondary" disabled={busy || !readiness?.enabled} onClick={() => void mutate(`${API}/collections/${collection.id}/review`, 'post', {}, 'Collection independently approved.')}>Approve collection</Button>}
-                      {collection.status === 'approved' && canReview && <Button variant="primary" disabled={busy || !readiness?.enabled} onClick={() => void mutate(`${API}/collections/${collection.id}/activate`, 'post', {}, 'Collection activated; eligibility snapshot and household obligations created.')}>Activate and notify households</Button>}
+                      {collection.status === 'approved' && canReview && <Button variant="primary" disabled={busy || !readiness?.enabled} onClick={() => void mutate(`${API}/collections/${collection.id}/activate`, 'post', {}, 'Collection activated. Existing representatives are notified in-app; households without OleKard accounts receive a phone invitation to join.')}>Activate and notify households</Button>}
                       {collection.status === 'active' && canManage && <Button variant="secondary" disabled={busy || !readiness?.enabled} onClick={() => void mutate(`${API}/collections/${collection.id}/close`, 'post', {}, 'Collection closed. Review its reconciliation report.')}>Close collection</Button>}
                       {canReport && <Button variant="secondary" disabled={busy || !readiness?.enabled} onClick={() => { setTab('finance'); void loadReport(collection.id); }}>View contribution history</Button>}
                       {(collection.status === 'closed' || collection.status === 'archived') && canReport && <Button variant="secondary" disabled={busy || !readiness?.enabled} onClick={() => { setTab('finance'); void loadReport(collection.id); }}>Open reconciliation</Button>}
@@ -455,7 +473,8 @@ export function FuneralAssistancePage() {
               })()}
               <Card className="mt-4">
                 <div className="flex flex-wrap items-center justify-between gap-3"><h3 className="font-semibold">Contribution transaction history</h3><Button variant="secondary" disabled={busy || !canReport} onClick={() => void exportTransactions(report.collection_id)}>Export CSV</Button></div>
-                <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead><tr className="border-b text-text-secondary"><th className="py-2 pr-3">Date</th><th className="py-2 pr-3">Reference</th><th className="py-2 pr-3">Amount</th><th className="py-2 pr-3">Fee</th><th className="py-2">Status</th></tr></thead><tbody>{transactions.map((tx) => <tr key={tx.payment_intent_id} className="border-b border-border"><td className="py-2 pr-3">{new Date(tx.occurred_at).toLocaleString()}</td><td className="py-2 pr-3 font-mono text-xs">{tx.reference}</td><td className="py-2 pr-3">{formatMoney(tx.amount_minor, tx.currency_code)}</td><td className="py-2 pr-3">{formatMoney(tx.fee_minor, tx.currency_code)}</td><td className="py-2 capitalize">{tx.status.replaceAll('_', ' ')}{tx.review_reason ? ` · ${tx.review_reason.replaceAll('_', ' ')}` : ''}</td></tr>)}</tbody></table>{transactions.length === 0 && <p className="py-4 text-sm text-text-secondary">No payment attempts recorded.</p>}</div>
+                <p className="mt-1 text-sm text-text-secondary">Digital receipts are labeled OleKard app. The current workflow does not yet accept or record offline contributions.</p>
+                <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[820px] text-left text-sm"><thead><tr className="border-b text-text-secondary"><th className="py-2 pr-3">Date</th><th className="py-2 pr-3">Channel</th><th className="py-2 pr-3">Reference</th><th className="py-2 pr-3">Amount</th><th className="py-2 pr-3">Fee</th><th className="py-2">Status</th></tr></thead><tbody>{transactions.map((tx) => <tr key={tx.payment_intent_id} className="border-b border-border"><td className="py-2 pr-3">{new Date(tx.occurred_at).toLocaleString()}</td><td className="py-2 pr-3">{tx.channel === 'offline' ? 'Offline' : 'OleKard app'}</td><td className="py-2 pr-3 font-mono text-xs">{tx.reference}</td><td className="py-2 pr-3">{formatMoney(tx.amount_minor, tx.currency_code)}</td><td className="py-2 pr-3">{formatMoney(tx.fee_minor, tx.currency_code)}</td><td className="py-2 capitalize">{tx.status.replaceAll('_', ' ')}{tx.review_reason ? ` · ${tx.review_reason.replaceAll('_', ' ')}` : ''}</td></tr>)}</tbody></table>{transactions.length === 0 && <p className="py-4 text-sm text-text-secondary">No payment attempts recorded.</p>}</div>
               </Card>
             </>}
             {workspace?.collections.filter((collection) => collection.status === 'closed').map((collection) => <Card key={`carry-${collection.id}`} className="mt-4">

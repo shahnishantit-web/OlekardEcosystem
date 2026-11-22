@@ -75,6 +75,12 @@ class ProfileScreen extends ConsumerWidget {
                 child: const Text('Security Settings'),
               ),
               const SizedBox(height: AppSpacing.md),
+              OutlinedButton.icon(
+                onPressed: () => context.push('/events/operations/login'),
+                icon: const Icon(Icons.event_note_outlined),
+                label: const Text('Event team workspace'),
+              ),
+              const SizedBox(height: AppSpacing.md),
               TextButton(
                 onPressed: () => ref.read(authProvider.notifier).logout(),
                 child: const Text('Log Out',

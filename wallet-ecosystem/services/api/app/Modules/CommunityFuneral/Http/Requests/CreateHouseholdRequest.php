@@ -18,6 +18,8 @@ final class CreateHouseholdRequest extends FormRequest
     {
         return [
             'private_reference' => ['required', 'string', 'max:200'],
+            'contact_phone' => ['nullable', 'string', 'regex:/^\\+[1-9][0-9]{9,14}$/'],
+            'contact_consent' => ['required_with:contact_phone', 'accepted'],
         ];
     }
 }

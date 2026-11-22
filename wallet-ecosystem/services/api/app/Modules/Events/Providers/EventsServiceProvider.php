@@ -27,6 +27,10 @@ use App\Modules\Events\Infrastructure\DenyOrganiserVerification;
 use App\Modules\Events\Infrastructure\IdentityInvitationRecipientVerifier;
 use App\Modules\Events\Infrastructure\LocalDemoEventPricingContract;
 use App\Modules\Events\Infrastructure\LocalDemoEventsPaymentServiceActorProvider;
+use App\Modules\Events\Infrastructure\LocalPocBootstrapApprovalEvidenceVerifier;
+use App\Modules\Events\Infrastructure\LocalPocEventPublicationReadiness;
+use App\Modules\Events\Infrastructure\LocalPocOrganiserVerification;
+use App\Modules\Events\Infrastructure\LocalPocEventNotificationDispatcher;
 use App\Modules\Events\Infrastructure\NotificationServiceCancellationDispatcher;
 use App\Modules\Events\Infrastructure\PaidEventTicketPurposeResolver;
 use App\Modules\Events\Infrastructure\ScopedEventDraftAuthorizer;
@@ -41,14 +45,24 @@ final class EventsServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(EventDraftAuthorizer::class, ScopedEventDraftAuthorizer::class);
-        $this->app->bind(EventCancellationNotificationDispatcher::class, NotificationServiceCancellationDispatcher::class);
+        $this->app->bind(EventCancellationNotificationDispatcher::class, static function (): EventCancellationNotificationDispatcher {
+            if (app()->environment('local') && config('events.poc_enabled') === true) {
+                return new LocalPocEventNotificationDispatcher();
+            }
+            return app(NotificationServiceCancellationDispatcher::class);
+        });
         $this->app->bind(EventWorkflowAuthorizer::class, ScopedEventWorkflowAuthorizer::class);
-        $this->app->bind(EventPublicationReadiness::class, DenyEventPublicationReadiness::class);
-        $this->app->bind(OrganiserVerificationContract::class, DenyOrganiserVerification::class);
-        $this->app->bind(BootstrapApprovalEvidenceVerifier::class, DenyBootstrapApprovalEvidenceVerifier::class);
+        $localPoc = app()->environment('local') && config('events.poc_enabled') === true;
+        $this->app->bind(EventPublicationReadiness::class, $localPoc
+            ? LocalPocEventPublicationReadiness::class : DenyEventPublicationReadiness::class);
+        $this->app->bind(OrganiserVerificationContract::class, $localPoc
+            ? LocalPocOrganiserVerification::class : DenyOrganiserVerification::class);
+        $this->app->bind(BootstrapApprovalEvidenceVerifier::class, $localPoc
+            ? LocalPocBootstrapApprovalEvidenceVerifier::class : DenyBootstrapApprovalEvidenceVerifier::class);
         $this->app->bind(ComplimentaryAllocationApprovalContract::class, DatabaseComplimentaryAllocationApproval::class);
         $this->app->bind(EventPricingContract::class, static function (): EventPricingContract {
-            if (app()->environment('local') && config('events.local_demo_pricing_enabled') === true) {
+            if (app()->environment('local') && (config('events.local_demo_pricing_enabled') === true
+                || config('events.poc_enabled') === true)) {
                 return new LocalDemoEventPricingContract();
             }
 
@@ -56,7 +70,8 @@ final class EventsServiceProvider extends ServiceProvider
         });
         $this->app->bind(InvitationRecipientVerifier::class, IdentityInvitationRecipientVerifier::class);
         $this->app->bind(EventsPaymentServiceActorProvider::class, static function (): EventsPaymentServiceActorProvider {
-            if (app()->environment('local') && config('events.local_demo_payment_fulfilment_enabled') === true) {
+            if (app()->environment('local') && (config('events.local_demo_payment_fulfilment_enabled') === true
+                || config('events.poc_enabled') === true)) {
                 return new LocalDemoEventsPaymentServiceActorProvider();
             }
 

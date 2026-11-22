@@ -13,7 +13,8 @@ final class LocalDemoEventPricingContract implements EventPricingContract
 {
     public function quote(EventPricingRequest $request): EventPricingBreakdown
     {
-        abort_unless(app()->environment('local') && config('events.local_demo_pricing_enabled') === true,
+        abort_unless(app()->environment('local') && (config('events.local_demo_pricing_enabled') === true
+            || config('events.poc_enabled') === true),
             503, 'Local demo event pricing is disabled.');
 
         $subtotal = $request->subtotalMinor();

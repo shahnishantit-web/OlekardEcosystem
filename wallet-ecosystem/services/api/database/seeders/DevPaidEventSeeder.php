@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Modules\Events\Domain\Permissions\EventPermissions;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Ramsey\Uuid\Uuid;
@@ -135,6 +136,9 @@ final class DevPaidEventSeeder extends Seeder
                 'created_at' => $now,
                 'updated_at' => $now,
             ]);
+
+            $this->ensureAuthorityAssignments($events, $organisationId, $eventId, $creatorId, $reviewerId, $approverId);
+            if ($index === 0) $this->ensurePocSponsor($events, $organisationId, $eventId, $creatorId, $approverId);
         }
 
         if (config('events.local_demo_pricing_enabled') === true) {
@@ -146,6 +150,48 @@ final class DevPaidEventSeeder extends Seeder
             $this->command?->warn('Set EVENTS_LOCAL_DEMO_PRICING_ENABLED=true in local .env and rerun this seeder to enable demo checkout.');
         } else {
             $this->command?->warn('Local demo checkout uses test-only zero-fee pricing and the development mock bank. No real payment is processed.');
+        }
+    }
+
+    private function ensureAuthorityAssignments($events, string $organisationId, string $eventId, string $creatorId,
+        string $reviewerId, string $approverId): void
+    {
+        $assignments = [
+            ['organisation', $organisationId, $organisationId, null, $creatorId, EventPermissions::READ],
+            ['organisation', $organisationId, $organisationId, null, $creatorId, EventPermissions::UPDATE],
+            ['event', $eventId, $organisationId, $eventId, $creatorId, EventPermissions::READ],
+            ['event', $eventId, $organisationId, $eventId, $creatorId, EventPermissions::UPDATE],
+            ['event', $eventId, $organisationId, $eventId, $creatorId, EventPermissions::CANCEL_REQUEST],
+            ['event', $eventId, $organisationId, $eventId, $creatorId, EventPermissions::PAYOUT_REQUEST],
+            ['event', $eventId, $organisationId, $eventId, $creatorId, EventPermissions::ATTENDANCE_READ],
+            ['event', $eventId, $organisationId, $eventId, $reviewerId, EventPermissions::READ],
+            ['event', $eventId, $organisationId, $eventId, $reviewerId, EventPermissions::CANCEL_APPROVE],
+            ['event', $eventId, $organisationId, $eventId, $reviewerId, EventPermissions::ATTENDANCE_READ],
+            ['event', $eventId, $organisationId, $eventId, $approverId, EventPermissions::READ],
+            ['event', $eventId, $organisationId, $eventId, $approverId, EventPermissions::PAYOUT_APPROVE],
+            ['event', $eventId, $organisationId, $eventId, $approverId, EventPermissions::ATTENDANCE_READ],
+        ];
+        foreach ($assignments as [$scopeType, $scopeId, $orgId, $assignedEventId, $actorId, $permission]) {
+            $existing = $events->table('community_services.event_authority_assignments')
+                ->where('scope_type', $scopeType)->where('scope_id', $scopeId)->where('actor_id', $actorId)
+                ->where('permission_slug', $permission)->whereNull('revoked_at')->exists();
+            if ($existing) continue;
+            $assignmentId = $this->id('assignment/'.$scopeType.'/'.$scopeId.'/'.$actorId.'/'.$permission);
+            $events->table('community_services.event_authority_assignments')->insert([
+                'id' => $assignmentId, 'scope_type' => $scopeType, 'scope_id' => $scopeId,
+                'organisation_id' => $orgId, 'event_id' => $assignedEventId, 'gate_id' => null,
+                'actor_id' => $actorId, 'permission_slug' => $permission, 'granted_by_actor_id' => $creatorId,
+                'granted_at' => now(), 'revoked_by_actor_id' => null, 'revoked_at' => null,
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+            $events->table('community_services.event_authority_assignment_audit')->insertOrIgnore([
+                'id' => $this->id('assignment-audit/'.$scopeType.'/'.$scopeId.'/'.$actorId.'/'.$permission),
+                'assignment_id' => $assignmentId, 'action' => 'granted', 'actor_id' => $creatorId,
+                'target_actor_id' => $actorId, 'scope_type' => $scopeType, 'scope_id' => $scopeId,
+                'permission_slug' => $permission, 'reason_code' => 'local_demo_seed',
+                'correlation_id' => $this->id('assignment-correlation/'.$scopeType.'/'.$scopeId.'/'.$actorId.'/'.$permission),
+                'created_at' => now(),
+            ]);
         }
     }
 
@@ -246,5 +292,27 @@ final class DevPaidEventSeeder extends Seeder
     private function id(string $name): string
     {
         return Uuid::uuid5(Uuid::NAMESPACE_URL, 'olekard.local/paid-event-demo/'.$name)->toString();
+    }
+
+    private function ensurePocSponsor($events, string $organisationId, string $eventId, string $creatorId, string $reportActorId): void
+    {
+        if (! config('events.poc_enabled') || ! config('events.poc_demo_sponsor_enabled')) return;
+        $id = $this->id('poc-sponsor');
+        $events->table('community_services.event_sponsors')->updateOrInsert(['id' => $id], [
+            'organisation_id' => $organisationId, 'name' => 'LOCAL POC Sponsor',
+            'description' => 'Local demonstration sponsor profile. This is not a BTC integration or commercial sponsorship.',
+            'logo_url' => null, 'report_actor_id' => $reportActorId, 'active' => true,
+            'created_by' => $creatorId, 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $events->table('community_services.event_sponsor_links')->insertOrIgnore([
+            'event_id' => $eventId, 'sponsor_id' => $id, 'created_at' => now(),
+        ]);
+        foreach ([['created', null], ['linked', $eventId]] as [$action, $auditedEventId]) {
+            $events->table('community_services.event_sponsor_audit')->insertOrIgnore([
+                'id' => $this->id('poc-sponsor-audit/'.$action), 'sponsor_id' => $id,
+                'event_id' => $auditedEventId, 'actor_id' => $creatorId,
+                'action' => $action === 'created' ? 'sponsor_created' : 'sponsor_linked', 'created_at' => now(),
+            ]);
+        }
     }
 }

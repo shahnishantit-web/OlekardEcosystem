@@ -5,6 +5,7 @@ import '../../modules/auth/presentation/auth_providers.dart';
 import '../../modules/auth/presentation/screens/splash_screen.dart';
 import '../../modules/auth/presentation/screens/login_screen.dart';
 import '../../modules/auth/presentation/screens/register_screen.dart';
+import '../../modules/auth/presentation/screens/funeral_invitation_screen.dart';
 import '../../modules/auth/presentation/screens/otp_verification_screen.dart';
 import '../../modules/auth/presentation/screens/profile_setup_screen.dart';
 import '../../modules/auth/presentation/screens/pin_creation_screen.dart';
@@ -36,9 +37,11 @@ import '../../modules/payment/presentation/money_flow_screen.dart';
 import '../../modules/events/presentation/screens/customer_event_tickets_screen.dart';
 import '../../modules/events/presentation/screens/free_event_registration_screen.dart';
 import '../../modules/events/presentation/screens/customer_event_catalogue_screen.dart';
+import '../../modules/event_operations/presentation/screens/event_operations_screens.dart';
 import '../../modules/payment/application/customer_money_service.dart';
 import '../../modules/security_settings/presentation/screens/step_up_pin_screen.dart';
 import '../shell/main_shell.dart';
+import '../security/secure_storage_service.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   // Refresh redirects without replacing the Navigator and its active PIN sheet.
@@ -50,25 +53,49 @@ final routerProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
     initialLocation: '/',
     refreshListenable: authenticated,
-    redirect: (context, state) {
+    redirect: (context, state) async {
       final isAuthenticated = ref.read(authProvider).isAuthenticated;
+      // Event Operations has its own admin actor session and must not reuse or
+      // depend on the customer's wallet session.
+      if (state.matchedLocation.startsWith('/events/operations')) return null;
       final isAuthRoute = state.matchedLocation.startsWith('/login') ||
           state.matchedLocation.startsWith('/register') ||
           state.matchedLocation.startsWith('/forgot-pin') ||
           state.matchedLocation == '/';
 
       if (!isAuthenticated && !isAuthRoute) {
+        if (state.matchedLocation == '/join-funeral') return null;
         return '/login';
       }
       if (isAuthenticated && isAuthRoute && state.matchedLocation != '/') {
+        final invitation =
+            await const SecureStorageService().readPendingFuneralInvitation();
+        if (invitation != null && invitation.isNotEmpty) {
+          return Uri(
+              path: '/join-funeral',
+              queryParameters: {'token': invitation}).toString();
+        }
         return '/home';
       }
       return null;
     },
     routes: [
       GoRoute(path: '/', builder: (_, __) => const SplashScreen()),
+      GoRoute(
+        path: '/events/operations/login',
+        builder: (_, __) => const EventOperationsLoginScreen(),
+      ),
+      GoRoute(
+        path: '/events/operations',
+        builder: (_, __) => const EventOperationsHomeScreen(),
+      ),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
+      GoRoute(
+        path: '/join-funeral',
+        builder: (_, state) =>
+            FuneralInvitationScreen(token: state.uri.queryParameters['token']),
+      ),
       GoRoute(
           path: '/register/otp',
           builder: (_, __) => const OtpVerificationScreen()),

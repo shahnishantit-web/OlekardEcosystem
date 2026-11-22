@@ -21,6 +21,8 @@ type EventDraft = {
   organiser_name: string;
   sponsors: string[];
   capacity: number;
+  currency_code?: string | null;
+  currency_locked_at?: string | null;
   timezone: string;
   starts_at: string;
   ends_at: string;
@@ -37,6 +39,12 @@ type EventDraft = {
 type EventCategory = { id?: string; name: string; capacity: number; price_minor: number; allocation_type: 'paid' | 'free' | 'complimentary'; complimentary_quota?: number | null; max_per_person?: number | null };
 type OrganisationOption = { id: string; display_name: string; registry_reference: string; status: string };
 type ActorOption = { id: string; display_name: string; email: string | null; mobile_number: string | null };
+type SponsorOption = { id: string; name: string; description: string; logo_url: string | null; report_actor_id: string | null; active: boolean };
+type SponsorReport = { event_title: string; event_starts_at: string; no_shows_finalized: boolean; categories: Array<{ category: string; free_registrations: number; paid_sales: number; admissions: number }> };
+type CurrencyOption = { code: string; name: string; decimal_places: number; is_active: boolean };
+type POCSettlement = { id: string; requested_by_actor_id: string; approved_by_actor_id: string | null; amount_minor: number; currency_code: string; status: string; poc_reference: string };
+type POCRefund = { id: string; cancellation_request_id: string; amount_minor: number; currency_code: string; status: string; poc_reference: string };
+type POCEventEnd = { id: string; actor_id: string; simulated_at: string };
 type EventForm = {
   title: string; image_url: string; event_format: 'physical' | 'online' | 'hybrid'; venue_country_code: string;
   organiser_name: string; sponsors: string; capacity: string; timezone: string; starts_at: string;
@@ -96,7 +104,21 @@ export function EventAuthoringPage() {
   const { authenticatedClient, hasPermission, user } = useAuth();
   const [organisationId, setOrganisationId] = useState('');
   const [organisations, setOrganisations] = useState<OrganisationOption[]>([]);
+  const [currencies, setCurrencies] = useState<CurrencyOption[]>([]);
+  const [currencyCode, setCurrencyCode] = useState('');
+  const [currencyApprovalReference, setCurrencyApprovalReference] = useState('');
   const [organisationMembers, setOrganisationMembers] = useState<ActorOption[]>([]);
+  const [sponsors, setSponsors] = useState<SponsorOption[]>([]);
+  const [sponsorPocEnabled, setSponsorPocEnabled] = useState(false);
+  const [sponsorName, setSponsorName] = useState('');
+  const [sponsorDescription, setSponsorDescription] = useState('');
+  const [sponsorLogoUrl, setSponsorLogoUrl] = useState('');
+  const [sponsorReportActorId, setSponsorReportActorId] = useState('');
+  const [selectedSponsorId, setSelectedSponsorId] = useState('');
+  const [sponsorReport, setSponsorReport] = useState<SponsorReport | null>(null);
+  const [pocSettlements, setPocSettlements] = useState<POCSettlement[]>([]);
+  const [pocRefunds, setPocRefunds] = useState<POCRefund[]>([]);
+  const [pocEventEnd, setPocEventEnd] = useState<POCEventEnd | null>(null);
   const [eventRows, setEventRows] = useState<EventDraft[]>([]);
   const [eventId, setEventId] = useState('');
   const [draft, setDraft] = useState<EventDraft | null>(null);
@@ -141,6 +163,9 @@ export function EventAuthoringPage() {
     void authenticatedClient.get<OrganisationOption[]>('/v1/identity/organisations?stage=active')
       .then(response => setOrganisations(response.data))
       .catch(showError);
+    void authenticatedClient.get<CurrencyOption[]>('/v1/multi-currency/currencies')
+      .then(response => setCurrencies(response.data.filter(currency => currency.is_active)))
+      .catch(() => setCurrencies([]));
   }, [authenticatedClient]);
 
   useEffect(() => {
@@ -153,7 +178,117 @@ export function EventAuthoringPage() {
         .then(response => setOrganisationMembers(response.data))
         .catch(() => setOrganisationMembers([]));
     } else setOrganisationMembers([]);
+    void authenticatedClient.get<SponsorOption[]>(`/v1/events/organisations/${organisationId}/sponsors`)
+      .then(response => { setSponsors(response.data); setSponsorPocEnabled(true); })
+      .catch(() => { setSponsors([]); setSponsorPocEnabled(false); });
   }, [authenticatedClient, organisationId, hasPermission]);
+
+  const createSponsor = async () => {
+    if (!authenticatedClient || !organisationId) return;
+    setBusy(true); setMessage('');
+    try {
+      const response = await authenticatedClient.post<SponsorOption>(`/v1/events/organisations/${organisationId}/sponsors`, {
+        name: sponsorName, description: sponsorDescription, logo_url: sponsorLogoUrl || null,
+        report_actor_id: sponsorReportActorId || null,
+      }, { idempotencyKey: crypto.randomUUID() });
+      setSponsors(current => [...current, response.data]);
+      setSponsorName(''); setSponsorDescription(''); setSponsorLogoUrl(''); setSponsorReportActorId('');
+      setMessage('POC sponsor record created. Branding and report access are synthetic local-demo data.');
+    } catch (error) { showError(error); }
+    finally { setBusy(false); }
+  };
+
+  const linkSponsor = async () => {
+    if (!authenticatedClient || !draft || !selectedSponsorId) return;
+    setBusy(true); setMessage('');
+    try {
+      await authenticatedClient.post(`/v1/events/${draft.id}/sponsors`, { sponsor_id: selectedSponsorId }, { idempotencyKey: crypto.randomUUID() });
+      setMessage('Sponsor linked to the event. Their report is aggregate-only and requires the assigned sponsor viewer account.');
+    } catch (error) { showError(error); }
+    finally { setBusy(false); }
+  };
+
+  const loadSponsorReport = async () => {
+    if (!authenticatedClient || !draft) return;
+    setBusy(true); setMessage('');
+    try {
+      const response = await authenticatedClient.get<SponsorReport>(`/v1/events/${draft.id}/sponsor-report`);
+      setSponsorReport(response.data);
+    } catch (error) { showError(error); }
+    finally { setBusy(false); }
+  };
+
+  const assignCurrency = async () => {
+    const selectedCurrency = currencyCode || draft?.currency_code || '';
+    if (!authenticatedClient || !draft || !selectedCurrency || !currencyApprovalReference.trim()) return;
+    setBusy(true); setMessage('');
+    try {
+      await authenticatedClient.post(`/v1/events/${draft.id}/currency-assignment`, {
+        currency_code: selectedCurrency, approval_reference: currencyApprovalReference.trim(), policy_version: 'poc-local-v1',
+      }, { idempotencyKey: crypto.randomUUID() });
+      setMessage(`POC currency ${selectedCurrency} assigned. Currency is locked after the first inventory hold or order.`);
+      await loadDraft();
+    } catch (error) { showError(error); }
+    finally { setBusy(false); }
+  };
+
+  const loadPocSettlements = async () => {
+    if (!authenticatedClient || !draft) return;
+    try {
+      const response = await authenticatedClient.get<POCSettlement[]>(`/v1/events/${draft.id}/poc-settlements`);
+      setPocSettlements(response.data);
+    } catch (error) { showError(error); }
+  };
+
+  const loadPocRefunds = async () => {
+    if (!authenticatedClient || !draft) return;
+    try {
+      const response = await authenticatedClient.get<POCRefund[]>(`/v1/events/${draft.id}/poc-refunds`);
+      setPocRefunds(response.data);
+    } catch (error) { showError(error); }
+  };
+
+  const loadPocEventEnd = async (targetEventId = draft?.id) => {
+    if (!authenticatedClient || !targetEventId) return;
+    try {
+      const response = await authenticatedClient.get<POCEventEnd | null>(`/v1/events/${targetEventId}/poc-event-end`);
+      setPocEventEnd(response.data);
+    } catch (error) { showError(error); }
+  };
+
+  const simulatePocEventEnd = async () => {
+    if (!authenticatedClient || !draft) return;
+    setBusy(true); setMessage('');
+    try {
+      const response = await authenticatedClient.post<POCEventEnd>(`/v1/events/${draft.id}/poc-simulate-end`, {}, { idempotencyKey: crypto.randomUUID() });
+      setPocEventEnd(response.data);
+      setMessage('POC event end recorded and ticket sales paused. This does not change the real-world event date.');
+      await loadDraft();
+    } catch (error) { showError(error); }
+    finally { setBusy(false); }
+  };
+
+  const requestPocSettlement = async () => {
+    if (!authenticatedClient || !draft) return;
+    setBusy(true); setMessage('');
+    try {
+      await authenticatedClient.post(`/v1/events/${draft.id}/poc-settlements`, {}, { idempotencyKey: crypto.randomUUID() });
+      setMessage('POC settlement requested. This is a simulated record and does not transfer funds or post a Ledger journal.');
+      await loadPocSettlements();
+    } catch (error) { showError(error); }
+    finally { setBusy(false); }
+  };
+
+  const approvePocSettlement = async (settlement: POCSettlement) => {
+    if (!authenticatedClient) return;
+    setBusy(true); setMessage('');
+    try {
+      await authenticatedClient.post(`/v1/events/poc-settlements/${settlement.id}/approve`, {}, { idempotencyKey: crypto.randomUUID() });
+      setMessage('POC settlement marked simulated paid. No real disbursement occurred.');
+      await loadPocSettlements();
+    } catch (error) { showError(error); }
+    finally { setBusy(false); }
+  };
 
   const showError = (error: unknown) => {
     const candidate = error as {
@@ -208,6 +343,7 @@ export function EventAuthoringPage() {
     try {
       const response = await authenticatedClient.get<EventDraft>(`/v1/events/${eventId}`);
       acceptDraft(response.data);
+      await loadPocEventEnd(eventId);
       const requests = await authenticatedClient.get<CancellationRequest[]>(`/v1/events/${eventId}/cancellation-requests`);
       setCancellationRequests(requests.data);
       const approvals = await authenticatedClient.get<ComplimentaryApproval[]>(`/v1/events/${eventId}/complimentary-approvals`);
@@ -439,7 +575,7 @@ export function EventAuthoringPage() {
     <PageContainer>
       <PageHeader title="Events · authoring and review" />
       <p role="status" className="mb-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-        Draft and review tools only. Publication, ticket sales, checkout, admission and payout are unavailable.
+        Local POC capabilities are simulated and available only when the API has EVENTS_POC_ENABLED=true in APP_ENV=local. POC payment, sponsor branding, notifications, refunds and settlement records must not be treated as production activity.
       </p>
       <Card className="mb-4 p-4">
         <h2 className="mb-3 text-lg font-semibold">Select an organisation or event</h2>
@@ -466,6 +602,20 @@ export function EventAuthoringPage() {
         {eventId && <Button className="mt-3" variant="secondary" onClick={loadDraft} disabled={busy || !hasPermission('events.event.read')}>Load selected event</Button>}
         {organisations.length === 0 && <p className="mt-3 text-sm text-text-secondary">No active organisations are available to this account. Complete organisation approval and membership setup first, or refresh after signing in with an authorised account.</p>}
       </Card>
+      {organisationId && sponsorPocEnabled && hasPermission('events.event.update') && <Card className="mb-4 p-4">
+        <h2 className="mb-1 text-lg font-semibold">POC sponsors and branding</h2>
+        <p className="mb-3 text-sm text-text-secondary">Local demo only. Sponsor names, descriptions and logos are displayed to customers. Report viewers see aggregate metrics only. Do not enter real BTC credentials or private contact data.</p>
+        <div className="grid gap-3 md:grid-cols-2">
+          <label className="flex flex-col gap-1 text-sm">Sponsor name<input value={sponsorName} onChange={event => setSponsorName(event.target.value)} maxLength={200} className="rounded border border-border px-3 py-2" /></label>
+          <label className="flex flex-col gap-1 text-sm">Brand logo URL<input type="url" value={sponsorLogoUrl} onChange={event => setSponsorLogoUrl(event.target.value)} className="rounded border border-border px-3 py-2" /></label>
+          <label className="flex flex-col gap-1 text-sm md:col-span-2">Sponsor description<textarea value={sponsorDescription} onChange={event => setSponsorDescription(event.target.value)} maxLength={2000} rows={2} className="rounded border border-border px-3 py-2" /></label>
+          <label className="flex flex-col gap-1 text-sm">Sponsor report viewer<select value={sponsorReportActorId} onChange={event => setSponsorReportActorId(event.target.value)} className="rounded border border-border px-3 py-2"><option value="">No sponsor report viewer</option>{organisationMembers.map(member => <option key={member.id} value={member.id}>{member.display_name}{member.email ? ` · ${member.email}` : member.mobile_number ? ` · ${member.mobile_number}` : ''}</option>)}</select></label>
+        </div>
+        <Button className="mt-3" variant="secondary" onClick={() => void createSponsor()} disabled={busy || !sponsorName.trim() || !sponsorDescription.trim()}>Create sponsor</Button>
+        {sponsors.length > 0 && <ul className="mt-3 space-y-2">{sponsors.map(sponsor => <li key={sponsor.id} className="rounded border border-border p-2 text-sm">{sponsor.name}{sponsor.report_actor_id ? ` · report access: ${actorLabel(sponsor.report_actor_id)}` : ' · no report viewer'}</li>)}</ul>}
+        {draft && <div className="mt-3 flex flex-wrap items-end gap-2"><label className="flex min-w-64 flex-1 flex-col gap-1 text-sm">Link sponsor to selected event<select value={selectedSponsorId} onChange={event => setSelectedSponsorId(event.target.value)} className="rounded border border-border px-3 py-2"><option value="">Choose a sponsor</option>{sponsors.map(sponsor => <option key={sponsor.id} value={sponsor.id}>{sponsor.name}</option>)}</select></label><Button variant="secondary" onClick={linkSponsor} disabled={busy || !selectedSponsorId}>Link sponsor</Button><Button variant="secondary" onClick={loadSponsorReport} disabled={busy || !sponsors.some(sponsor => sponsor.report_actor_id === user?.id)}>Load sponsor report</Button></div>}
+        {sponsorReport && <div className="mt-3 rounded border border-border p-3"><h3 className="font-medium">{sponsorReport.event_title} · sponsor report</h3><p className="text-xs text-text-secondary">Aggregate only. No attendee or ticket identifiers.</p><table className="mt-2 w-full text-left text-sm"><thead><tr><th>Category</th><th>Free registrations</th><th>Paid sales</th><th>Admissions</th></tr></thead><tbody>{sponsorReport.categories.map(row => <tr key={row.category}><td>{row.category}</td><td>{row.free_registrations}</td><td>{row.paid_sales}</td><td>{row.admissions}</td></tr>)}</tbody></table></div>}
+      </Card>}
       {organisationId && !draft && hasPermission('events.event.create') && <Card className="mb-4 p-4">
         <h2 className="mb-1 text-lg font-semibold">Create event draft</h2>
         <p className="mb-4 text-sm text-text-secondary">Enter event details and ticket categories below. Finance assigns currency separately.</p>
@@ -477,6 +627,15 @@ export function EventAuthoringPage() {
       {draft && <Card className="p-4">
         <h2 className="mb-2 text-lg font-semibold">{draft.title} · version {draft.version}</h2>
         <p className="mb-3 text-sm">State: {draft.status} · lifecycle: {draft.lifecycle_state ?? 'active'} · sales: {draft.sales_state}</p>
+        <section aria-label="Event currency assignment" className="mb-4 rounded border border-border p-3">
+          <h3 className="mb-2 font-semibold">Finance currency assignment</h3>
+          <p className="mb-2 text-sm text-text-secondary">Current currency: {draft.currency_code ?? 'not assigned'}. POC events must use an active currency from the local currency registry.</p>
+          {hasPermission('events.currency.assign') && <div className="flex flex-wrap items-end gap-2">
+            <label className="flex min-w-48 flex-1 flex-col gap-1 text-sm">Currency<select value={currencyCode || draft.currency_code || ''} onChange={event => setCurrencyCode(event.target.value)} disabled={draft.currency_locked_at != null} className="rounded border border-border px-3 py-2"><option value="">Choose active currency</option>{currencies.map(currency => <option key={currency.code} value={currency.code}>{currency.code} · {currency.name}</option>)}</select></label>
+            <label className="flex min-w-56 flex-1 flex-col gap-1 text-sm">Finance approval reference<input value={currencyApprovalReference} onChange={event => setCurrencyApprovalReference(event.target.value)} placeholder="POC-LOCAL-FINANCE-001" disabled={draft.currency_locked_at != null} className="rounded border border-border px-3 py-2" /></label>
+            <Button variant="secondary" onClick={assignCurrency} disabled={busy || !currencyCode && !draft.currency_code || !currencyApprovalReference.trim() || draft.currency_locked_at != null}>Assign currency</Button>
+          </div>}
+        </section>
         <form onSubmit={event => { event.preventDefault(); void saveDraft(); }}>
           <EventDraftFields value={eventForm} onChange={updateEventForm} />
           <Button type="submit" className="mt-4" disabled={busy || !hasPermission('events.event.update') || categoryCapacityExceeded || scheduleErrors.length > 0}>Save new version</Button>
@@ -485,6 +644,8 @@ export function EventAuthoringPage() {
           <Button variant="secondary" onClick={() => transition('submit-review')} disabled={busy || !hasPermission('events.event.submit')}>Submit for review</Button>
           <Button variant="secondary" onClick={() => transition('approve-prices')} disabled={busy || !hasPermission('events.price.approve')}>Finance: approve prices</Button>
           <Button variant="secondary" onClick={() => transition('approve-review')} disabled={busy || !hasPermission('events.event.review')}>Approve event review</Button>
+          <Button variant="secondary" onClick={() => transition('publish')} disabled={busy || !hasPermission('events.event.publish') || draft.status !== 'approved'}>Publish approved version</Button>
+          {draft.status === 'published' && draft.sales_state !== 'active' && <Button variant="secondary" onClick={() => transition('resume-sales')} disabled={busy || !hasPermission('events.sales.resume')}>Resume sales</Button>}
           <Button variant="secondary" onClick={() => {
             const reason = window.prompt('Reason for rejection');
             if (reason !== null && reason.trim() !== '') void transition('reject', { reason });
@@ -508,6 +669,10 @@ export function EventAuthoringPage() {
             </div>}
             {request.review_reason !== null && request.review_reason !== '' && <p className="mt-1 text-sm">Review: {request.review_reason}</p>}
           </li>)}</ul>}
+          <div className="mt-3"><Button variant="secondary" onClick={loadPocRefunds} disabled={busy}>Refresh POC refund simulations</Button>
+            {pocRefunds.length > 0 && <ul className="mt-2 space-y-2">{pocRefunds.map(refund => <li key={refund.id} className="rounded border border-border p-2 text-sm">{refund.status} · {`${(refund.amount_minor / 100).toFixed(2)} ${refund.currency_code}`} · {refund.poc_reference}</li>)}</ul>}
+            <p className="mt-1 text-xs text-text-secondary">Simulated records only. No refund provider was called and no compensating Ledger journal was posted.</p>
+          </div>
         </section>
         <section className="mt-6 border-t border-border pt-4" aria-label="Complimentary allocation approval">
           <h3 className="mb-2 font-semibold">Complimentary allocation approval</h3>
@@ -547,6 +712,14 @@ export function EventAuthoringPage() {
           </table>}
           <p className="mt-2 text-xs text-muted-foreground">Aggregate counts only. No attendee names, ticket identifiers or scan records are available here.</p>
         </section>}
+        <section className="mt-6 border-t border-border pt-4" aria-label="POC settlement">
+          <h3 className="mb-2 font-semibold">Local POC organiser settlement</h3>
+          <p className="mb-3 text-sm text-text-secondary">The manager can simulate event completion for a fast POC, which pauses sales and records an audit entry without changing the event dates. Then a different assigned approver can complete a simulated settlement based on issued paid orders with verified accounting. No funds move and no Ledger journal is posted.</p>
+          {hasPermission('events.payout.request') && <Button variant="secondary" onClick={simulatePocEventEnd} disabled={busy || pocEventEnd !== null || draft.lifecycle_state === 'cancelled'}>Simulate event end (POC only)</Button>}
+          {pocEventEnd && <p className="mt-2 text-sm">POC end recorded {pocEventEnd.simulated_at} by {actorLabel(pocEventEnd.actor_id)}.</p>}
+          <div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={requestPocSettlement} disabled={busy || !hasPermission('events.payout.request')}>Request simulated settlement</Button><Button variant="secondary" onClick={loadPocSettlements} disabled={busy}>Refresh settlement records</Button></div>
+          {pocSettlements.length > 0 && <ul className="mt-3 space-y-2">{pocSettlements.map(settlement => <li key={settlement.id} className="rounded border border-border p-3 text-sm"><p>{settlement.status} · {`${(settlement.amount_minor / 100).toFixed(2)} ${settlement.currency_code}`} · {settlement.poc_reference}</p><p>Requested by {actorLabel(settlement.requested_by_actor_id)}{settlement.approved_by_actor_id ? ` · approved by ${actorLabel(settlement.approved_by_actor_id)}` : ''}</p>{settlement.status === 'pending_approval' && <Button className="mt-2" variant="secondary" onClick={() => void approvePocSettlement(settlement)} disabled={busy || !hasPermission('events.payout.approve') || settlement.requested_by_actor_id === user?.id}>Approve simulated settlement</Button>}</li>)}</ul>}
+        </section>
         <section className="mt-6 border-t border-border pt-4" aria-label="Complimentary invitation management">
           <h3 className="mb-2 font-semibold">Issue a free or complimentary invitation</h3>
           <p className="mb-3 text-sm text-muted-foreground">Development and event-scoped controls only. Complimentary approval authority and production publication remain pending. The token is shown once in this response and must be shared securely.</p>
@@ -660,7 +833,7 @@ function EventDraftFields({ value, onChange }: { value: EventForm; onChange: <K 
       <label className="flex flex-col gap-1 text-sm">Event capacity<input required type="number" min={1} value={value.capacity} onChange={e => onChange('capacity', e.target.value)} className="rounded border border-border px-3 py-2" /></label>
       <label className="flex flex-col gap-1 text-sm">Maximum tickets per order<input required type="number" min={1} value={value.max_tickets_per_order} onChange={e => onChange('max_tickets_per_order', e.target.value)} className="rounded border border-border px-3 py-2" /></label>
       <label className="flex flex-col gap-1 text-sm">Time zone (IANA)<input required placeholder="Africa/Gaborone" value={value.timezone} onChange={e => onChange('timezone', e.target.value)} className="rounded border border-border px-3 py-2" /></label>
-      <label className="flex flex-col gap-1 text-sm">Sponsors, separated by commas<input value={value.sponsors} onChange={e => onChange('sponsors', e.target.value)} className="rounded border border-border px-3 py-2" /></label>
+      <label className="flex flex-col gap-1 text-sm">Legacy sponsor labels<input value={value.sponsors} onChange={e => onChange('sponsors', e.target.value)} className="rounded border border-border px-3 py-2" /><span className="text-xs text-text-secondary">For POC sponsor profiles and branding, create and link structured sponsors below.</span></label>
       {([['starts_at','Event starts'],['ends_at','Event ends'],['sales_start_at','Ticket sales start'],['sales_end_at','Ticket sales end']] as const).map(([key,label]) => <label key={key} className="flex flex-col gap-1 text-sm">{label}<input required type="datetime-local" value={value[key]} onChange={e => onChange(key, e.target.value)} className="rounded border border-border px-3 py-2" /></label>)}
       {scheduleErrors.length > 0 && <ul role="alert" className="space-y-1 text-sm text-error">{scheduleErrors.map(error => <li key={error}>{error}</li>)}</ul>}
     </div>
