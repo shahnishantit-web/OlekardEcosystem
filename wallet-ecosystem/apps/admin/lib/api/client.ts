@@ -14,9 +14,9 @@ interface RequestOptions {
     signal?: AbortSignal;
 }
 export class ApiClient {
-    private readonly baseUrl: string;
-    constructor(baseUrl: string = process.env.NEXT_PUBLIC_API_URL ?? '/api') {
-        this.baseUrl = baseUrl.replace(/\/$/, '');
+    private readonly baseUrl: string | undefined;
+    constructor(baseUrl: string | undefined = process.env.NEXT_PUBLIC_API_URL) {
+        this.baseUrl = baseUrl?.replace(/\/$/, '');
     }
     private buildHeaders(options: RequestOptions = {}): Headers {
         const headers = new Headers({
@@ -30,6 +30,9 @@ export class ApiClient {
         return headers;
     }
     private async request<T>(method: string, path: string, body?: unknown, options: RequestOptions = {}): Promise<ApiResponse<T>> {
+        if (!this.baseUrl) {
+            throw new Error('NEXT_PUBLIC_API_URL is not configured for the Admin Panel.');
+        }
         const url = `${this.baseUrl}${path}`;
         const response = await fetch(url, {
             method,

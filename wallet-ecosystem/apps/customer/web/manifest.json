@@ -1,11 +1,11 @@
 {
-    "name": "wallet_customer",
-    "short_name": "wallet_customer",
+    "name": "OleKard",
+    "short_name": "OleKard",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#F4F4F4",
+    "theme_color": "#053C67",
+    "description": "OleKard customer wallet and services.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/lib/auth/context';
 import { NAV_SECTIONS } from '@/src/lib/navigation/nav-items';
 
@@ -44,14 +45,24 @@ export function AdminSidebar({ currentPath, collapsed, onToggle: _onToggle }: Ad
         style={{ height: 'var(--header-height)', padding: collapsed ? '0' : '0 16px' }}
       >
         {collapsed ? (
-          <span className="text-ok-primary font-bold text-lg w-full text-center">OK</span>
+          <Image
+            src="/icon.png"
+            alt="OleKard"
+            width={30}
+            height={30}
+            className="mx-auto rounded-md"
+          />
         ) : (
           <>
-            <div className="w-8 h-8 rounded-lg bg-[#344976] text-white grid place-items-center font-bold text-base mr-2.5 shrink-0">
-              O
-            </div>
+            <Image
+              src="/olekard-logo.png"
+              alt="OleKard"
+              width={526}
+              height={114}
+              className="mr-2.5 h-auto w-[118px] shrink-0"
+            />
             <span className="font-bold text-sm text-text-primary">
-              OleKard <span className="text-text-secondary font-normal">/ Admin</span>
+              Admin
             </span>
           </>
         )}

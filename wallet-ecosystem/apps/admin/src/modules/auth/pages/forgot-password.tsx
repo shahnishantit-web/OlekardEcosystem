@@ -2,6 +2,7 @@
 
 import { type FormEvent, useId, useState } from 'react';
 import Link from 'next/link';
+import { OleKardLogo } from '@/components/branding/OleKardLogo';
 import { Button } from '@/components/ui/Button';
 import { requestPasswordReset } from '@/src/modules/auth/api/password-recovery';
 import { isApiError } from '@/lib/utils/errors';
@@ -56,20 +57,7 @@ export function ForgotPasswordPage() {
       <div className="w-full max-w-[420px]">
 
         {/* Logo */}
-        <div className="flex items-center gap-3 mb-10">
-          <div
-            className="w-9 h-9 rounded-lg bg-ok-primary flex items-center justify-center flex-shrink-0"
-            aria-hidden="true"
-          >
-            <span className="text-[11px] font-black text-white select-none tracking-tight">OK</span>
-          </div>
-          <div>
-            <p className="text-[15px] font-bold text-text-primary leading-none tracking-tight">OleKard</p>
-            <p className="text-[10px] text-text-secondary uppercase tracking-[0.12em] leading-none mt-[5px]">
-              Admin Platform
-            </p>
-          </div>
-        </div>
+        <OleKardLogo />
 
         {phase === 'form' ? (
           <>

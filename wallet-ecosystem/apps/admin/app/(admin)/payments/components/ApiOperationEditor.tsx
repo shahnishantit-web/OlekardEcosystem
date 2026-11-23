@@ -78,7 +78,7 @@ export function ApiOperationEditor({ initial = {}, onChange }: Props) {
             value={form.base_url ?? ''}
             onChange={e => { update({ base_url: e.target.value }); validateUrl(e.target.value); }}
             onBlur={e => validateUrl(e.target.value)}
-            placeholder="https://api.provider.com"
+            placeholder="Provider HTTPS endpoint"
             className={`flex-1 rounded border px-3 py-2 text-sm ${urlError ? 'border-red-400' : 'border-gray-300'}`}
           />
           {form.base_url?.startsWith('https://') && (

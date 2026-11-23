@@ -17,6 +17,20 @@ class ApiClient {
       headers: {'Accept': 'application/json'},
     ));
 
+    if (baseUrl.trim().isEmpty) {
+      _dio.interceptors.add(InterceptorsWrapper(
+        onRequest: (options, handler) {
+          handler.reject(DioException(
+            requestOptions: options,
+            message: 'API_BASE_URL is not configured. Run Flutter with '
+                '--dart-define-from-file=config/local.web.json or provide '
+                'your deployment configuration.',
+            type: DioExceptionType.unknown,
+          ));
+        },
+      ));
+    }
+
     _dio.interceptors.addAll([
       AuthInterceptor(_dio, _storage),
       CorrelationIdInterceptor(),

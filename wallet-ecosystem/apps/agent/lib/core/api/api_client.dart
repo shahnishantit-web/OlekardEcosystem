@@ -9,7 +9,6 @@ import '../session/session_event_bus.dart';
 
 const String _apiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
-  defaultValue: 'http://localhost:8000',
 );
 
 Dio createDio(BuildContext? navigatorContext) {
@@ -21,6 +20,20 @@ Dio createDio(BuildContext? navigatorContext) {
       headers: {'Accept': 'application/json'},
     ),
   );
+
+  if (_apiBaseUrl.trim().isEmpty) {
+    dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) {
+        handler.reject(DioException(
+          requestOptions: options,
+          message: 'API_BASE_URL is not configured. Run Flutter with '
+              '--dart-define-from-file=config/local.web.json or provide '
+              'your deployment configuration.',
+          type: DioExceptionType.unknown,
+        ));
+      },
+    ));
+  }
 
   dio.interceptors.addAll([
     CorrelationIdInterceptor(),

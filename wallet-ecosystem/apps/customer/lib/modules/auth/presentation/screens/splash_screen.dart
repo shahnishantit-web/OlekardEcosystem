@@ -31,24 +31,21 @@ class SplashScreen extends ConsumerWidget {
     }
 
     return const Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.onPrimary,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.account_balance_wallet, size: 64, color: AppColors.onPrimary),
-            SizedBox(height: AppSpacing.md),
-            Text(
-              'OleKard Wallet',
-              style: TextStyle(
-                color: AppColors.onPrimary,
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-              ),
+            Image(
+              image: AssetImage('assets/branding/olekard-logo.png'),
+              semanticLabel: 'OleKard',
+              width: 280,
+              height: 120,
+              fit: BoxFit.contain,
             ),
             SizedBox(height: AppSpacing.lg),
             CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.onPrimary),
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
           ],
         ),

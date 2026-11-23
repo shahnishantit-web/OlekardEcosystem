@@ -8,24 +8,30 @@ class SplashScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return const Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.onPrimary,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.account_balance_wallet, size: 80, color: Colors.white),
+            Image(
+              image: AssetImage('assets/branding/olekard-logo.png'),
+              semanticLabel: 'OleKard',
+              width: 280,
+              height: 120,
+              fit: BoxFit.contain,
+            ),
             SizedBox(height: AppSpacing.md),
             Text(
-              'OleKard Agent',
+              'Agent Portal',
               style: TextStyle(
-                color: Colors.white,
+                color: AppColors.primaryDark,
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
             ),
             SizedBox(height: AppSpacing.xl),
             CircularProgressIndicator(
-              color: Colors.white70,
+              color: AppColors.primary,
             ),
           ],
         ),

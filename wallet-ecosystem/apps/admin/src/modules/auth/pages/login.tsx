@@ -4,6 +4,7 @@ import { type FormEvent, useEffect, useId, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { OleKardLogo } from '@/components/branding/OleKardLogo';
 import { Loading } from '@/components/ui/Loading';
 import { useAuth } from '@/lib/auth/context';
 import type { MfaMethod } from '@/lib/auth/context';
@@ -265,21 +266,7 @@ export function AdminLoginPage() {
         <div style={{ width: '100%', maxWidth: '400px' }}>
 
           {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '40px' }}>
-            <div style={{
-              width: '38px', height: '38px', borderRadius: '10px', flexShrink: 0,
-              background: `linear-gradient(135deg, ${C.primary} 0%, ${C.primaryDark} 100%)`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <span style={{ fontSize: '11px', fontWeight: 900, color: '#fff', letterSpacing: '-0.5px' }}>OK</span>
-            </div>
-            <div>
-              <p style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: C.text, lineHeight: 1 }}>OleKard</p>
-              <p style={{ margin: '5px 0 0', fontSize: '10px', color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.12em', lineHeight: 1 }}>
-                Admin Platform
-              </p>
-            </div>
-          </div>
+          <OleKardLogo />
 
           {/* Heading */}
           <div style={{ marginBottom: '28px' }}>

@@ -232,6 +232,8 @@ class AuthRepositoryImpl implements AuthRepository {
     }
     throw AuthException(message is String
         ? message
-        : 'Unable to authenticate. Please try again.');
+        : e.message?.contains('API_BASE_URL is not configured') == true
+            ? e.message!
+            : 'Unable to authenticate. Please try again.');
   }
 }

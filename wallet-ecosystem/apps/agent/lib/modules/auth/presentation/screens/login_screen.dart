@@ -119,10 +119,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: AppSpacing.xl),
-                      const Icon(
-                        Icons.account_balance_wallet,
-                        size: 56,
-                        color: AppColors.primary,
+                      Center(
+                        child: Image.asset(
+                          'assets/branding/olekard-logo.png',
+                          semanticLabel: 'OleKard',
+                          width: 210,
+                          height: 58,
+                          fit: BoxFit.contain,
+                        ),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       Text(

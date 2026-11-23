@@ -13,11 +13,11 @@ interface RequestOptions {
 /** Called when the API returns 401 so the auth context can sign the user out. */
 type OnUnauthorized = () => void;
 export class AuthenticatedApiClient {
-    private readonly baseUrl: string;
+    private readonly baseUrl: string | undefined;
     private readonly accessToken: string;
     private readonly onUnauthorized: OnUnauthorized | undefined;
     constructor(accessToken: string, baseUrl?: string, onUnauthorized?: OnUnauthorized) {
-        this.baseUrl = (baseUrl ?? process.env['NEXT_PUBLIC_API_URL'] ?? '/api').replace(/\/$/, '');
+        this.baseUrl = (baseUrl ?? process.env['NEXT_PUBLIC_API_URL'])?.replace(/\/$/, '');
         this.accessToken = accessToken;
         this.onUnauthorized = onUnauthorized;
     }
@@ -34,6 +34,9 @@ export class AuthenticatedApiClient {
         return headers;
     }
     private async request<T>(method: string, path: string, body?: unknown, options: RequestOptions = {}): Promise<ApiResponse<T>> {
+        if (!this.baseUrl) {
+            throw new Error('NEXT_PUBLIC_API_URL is not configured for the Admin Panel.');
+        }
         const url = `${this.baseUrl}${path}`;
         const response = await fetch(url, {
             method,
@@ -60,6 +63,9 @@ export class AuthenticatedApiClient {
         return json as ApiResponse<T>;
     }
     async getBlob(path: string): Promise<Blob> {
+        if (!this.baseUrl) {
+            throw new Error('NEXT_PUBLIC_API_URL is not configured for the Admin Panel.');
+        }
         const response = await fetch(this.baseUrl + path, { headers: this.buildHeaders() });
         if (response.status === 401)
             this.onUnauthorized?.();

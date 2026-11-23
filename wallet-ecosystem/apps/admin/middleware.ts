@@ -97,5 +97,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     return NextResponse.next();
 }
 export const config = {
-    matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+    // Keep public image assets available before sign-in. This includes the
+    // Admin Panel wordmark and Next.js app / Apple icons.
+    matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico)$).*)'],
 };

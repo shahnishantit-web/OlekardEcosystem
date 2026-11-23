@@ -58,57 +58,65 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: AppSpacing.xxl),
-                const Text('Welcome back', style: AppTypography.headline),
-                const SizedBox(height: AppSpacing.sm),
-                const Text('Log in to your wallet', style: AppTypography.body),
-                const SizedBox(height: AppSpacing.xl),
-                TextFormField(
-                  controller: _phoneController,
-                  keyboardType:
-                      kIsWeb ? TextInputType.text : TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone Number',
-                    hintText: '+254712345678',
-                    prefixIcon: Icon(Icons.phone),
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: AppSpacing.md),
+                  Center(
+                    child: Image.asset(
+                      'assets/branding/olekard-logo.png',
+                      semanticLabel: 'OleKard',
+                      width: 190,
+                      height: 52,
+                      fit: BoxFit.contain,
+                    ),
                   ),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return 'Phone number required';
-                    }
-                    if (!RegExp(r'^\+\d{10,15}$').hasMatch(v.trim())) {
-                      return 'Enter a valid phone number in E.164 format';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                PrimaryButton(
-                  label: 'Log In',
-                  isLoading: isLoading,
-                  onPressed: _submit,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextButton(
-                  onPressed: () => context.push('/register'),
-                  child: const Text('New here? Create account'),
-                ),
-                TextButton(
-                  onPressed: () => context.push('/forgot-pin'),
-                  child: const Text('Forgot PIN?'),
-                ),
-                const Divider(height: AppSpacing.xl),
-                TextButton.icon(
-                  onPressed: () => context.push('/events/operations/login'),
-                  icon: const Icon(Icons.event_note_outlined),
-                  label: const Text('Event organiser / reviewer sign in'),
-                ),
-              ],
+                  const SizedBox(height: AppSpacing.xxl),
+                  const Text('Welcome back', style: AppTypography.headline),
+                  const SizedBox(height: AppSpacing.sm),
+                  const Text('Log in to your wallet',
+                      style: AppTypography.body),
+                  const SizedBox(height: AppSpacing.xl),
+                  TextFormField(
+                    controller: _phoneController,
+                    keyboardType:
+                        kIsWeb ? TextInputType.text : TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Phone Number',
+                      hintText: '+254712345678',
+                      prefixIcon: Icon(Icons.phone),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) {
+                        return 'Phone number required';
+                      }
+                      if (!RegExp(r'^\+\d{10,15}$').hasMatch(v.trim())) {
+                        return 'Enter a valid phone number in E.164 format';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  PrimaryButton(
+                    label: 'Log In',
+                    isLoading: isLoading,
+                    onPressed: _submit,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextButton(
+                    onPressed: () => context.push('/register'),
+                    child: const Text('New here? Create account'),
+                  ),
+                  TextButton(
+                    onPressed: () => context.push('/forgot-pin'),
+                    child: const Text('Forgot PIN?'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
