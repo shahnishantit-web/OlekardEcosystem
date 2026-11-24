@@ -2,19 +2,19 @@ import 'package:wallet_agent/modules/transactions/domain/entities/agent_transact
 
 class AgentTransactionDto {
   static PaymentHistoryItem fromJson(Map<String, dynamic> json) {
+    final rawAmount = json['amount'] ?? json['amount_minor_units'] ?? 0;
+    final type = json['type'] as String? ?? 'unknown';
+    final rawStatus = json['status'] as String? ?? 'pending';
     return PaymentHistoryItem(
       id: json['id'] as String,
       referenceNumber: (json['reference_number'] ??
-          json['reference']) as String,
-      purposeType: _parsePurposeType(
-          json['purpose_type'] as String? ??
-          json['type'] as String? ??
-          'unknown'),
-      status: _parseStatus(json['status'] as String? ?? 'pending'),
-      amountMinorUnits:
-          (json['amount'] ?? json['amount_minor_units']) as int? ?? 0,
+          json['reference'] ??
+          json['id']) as String,
+      purposeType: _parsePurposeType(json['purpose_type'] as String? ?? type),
+      status: _parseStatus(rawStatus),
+      amountMinorUnits: (rawAmount as num).toInt(),
       feeMinorUnits: json['fee_minor_units'] as int? ?? 0,
-      currencyCode: json['currency_code'] as String,
+      currencyCode: json['currency_code'] as String? ?? 'BWP',
       counterpartyName: json['counterparty_name'] as String?,
       counterpartyWalletNumber: json['counterparty_wallet_number'] as String?,
       description: json['description'] as String?,
@@ -22,29 +22,32 @@ class AgentTransactionDto {
       completedAt: json['completed_at'] != null
           ? DateTime.parse(json['completed_at'] as String)
           : null,
-      captureStatus: _parseCaptureStatus(
-          json['capture_status'] as String? ?? 'pending'),
+      captureStatus:
+          _parseCaptureStatus(json['capture_status'] as String? ?? 'captured'),
       accountingStatus: _parseAccountingStatus(
-          json['accounting_status'] as String? ?? 'pending'),
-      serviceStatus: _parseServiceStatus(
-          json['service_status'] as String? ?? 'pending'),
+          json['accounting_status'] as String? ?? 'posted'),
+      serviceStatus:
+          _parseServiceStatus(json['service_status'] as String? ?? 'confirmed'),
       refundStatus: json['refund_status'] != null
           ? _parseRefundStatus(json['refund_status'] as String)
           : null,
-      refundEligible: json['refund_eligible'] as bool? ?? false,
+      refundEligible: false,
       domainDeepLink: _parseDomainDeepLink(json['domain_deep_link']),
-      receiptAvailable: json['receipt_available'] as bool? ?? false,
+      receiptAvailable: false,
       providerName: json['provider_name'] as String?,
       providerReference: json['provider_reference'] as String?,
-      direction: _parseDirection(json['direction'] as String? ?? 'debit'),
+      direction: _parseDirection(json['direction'] as String? ??
+          (type == 'cash_in' ? 'credit' : 'debit')),
     );
   }
 
   static PaymentPurposeType _parsePurposeType(String s) => switch (s) {
-        'cash_in' || 'funding_agent_cash_in' =>
+        'cash_in' ||
+        'funding_agent_cash_in' =>
           PaymentPurposeType.fundingAgentCashIn,
         'cash_out' || 'withdrawal' => PaymentPurposeType.withdrawal,
-        'float_top_up' || 'funding_bank_transfer' =>
+        'float_top_up' ||
+        'funding_bank_transfer' =>
           PaymentPurposeType.fundingBankTransfer,
         'wallet_transfer' || 'transfer' => PaymentPurposeType.walletTransfer,
         'commission' => PaymentPurposeType.servicePayment,
@@ -57,7 +60,7 @@ class AgentTransactionDto {
   static PaymentStatus _parseStatus(String s) => switch (s) {
         'pending' => PaymentStatus.pending,
         'processing' => PaymentStatus.processing,
-        'completed' => PaymentStatus.completed,
+        'completed' || 'posted' || 'succeeded' => PaymentStatus.completed,
         'failed' => PaymentStatus.failed,
         'reversed' => PaymentStatus.reversed,
         'cancelled' => PaymentStatus.cancelled,
@@ -106,8 +109,7 @@ class AgentTransactionDto {
           label: raw['label'] as String?,
         );
       }
-      return UnavailableLink(
-          reason: raw['reason'] as String? ?? 'unavailable');
+      return UnavailableLink(reason: raw['reason'] as String? ?? 'unavailable');
     }
     return null;
   }

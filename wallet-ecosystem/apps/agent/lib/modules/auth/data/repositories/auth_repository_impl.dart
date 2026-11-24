@@ -44,7 +44,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> logout() async {
     try {
-      await _dio.post<void>('/v1/agent/auth/logout');
+      await _dio.post<void>('/v1/auth/logout');
     } finally {
       await _storage.clearAuthTokens();
       AuthInterceptor.clearCachedTokens();
@@ -54,11 +54,18 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<AuthToken> refreshToken(String refreshToken) async {
     final response = await _dio.post<Map<String, dynamic>>(
-      '/v1/agent/auth/refresh',
+      '/v1/auth/token/refresh',
       data: {'refresh_token': refreshToken},
     );
-    final dto = AuthResponseDto.fromJson(response.data!);
-    final token = dto.toAuthToken();
+    final data =
+        response.data?['data'] as Map<String, dynamic>? ?? response.data!;
+    final token = AuthToken(
+      accessToken: data['access_token'] as String,
+      refreshToken: data['refresh_token'] as String,
+      expiresAt: DateTime.now().add(
+        Duration(seconds: (data['expires_in'] as num?)?.toInt() ?? 900),
+      ),
+    );
     await Future.wait([
       _storage.saveAccessToken(token.accessToken),
       _storage.saveRefreshToken(token.refreshToken),
@@ -75,13 +82,18 @@ class AuthRepositoryImpl implements AuthRepository {
     String phone,
   ) async {
     final response = await _dio.post<Map<String, dynamic>>(
-      '/v1/agent/auth/forgot-pin',
-      data: ForgotPinRequestDto(phone: phone).toJson(),
+      '/v1/auth/pin/reset/initiate',
+      data: {'mobile_number': phone},
     );
-    final data = response.data!;
+    final data =
+        response.data?['data'] as Map<String, dynamic>? ?? response.data!;
+    final challengeId = data['challenge_id'] as String?;
+    if (challengeId == null || challengeId.isEmpty) {
+      throw const FormatException('PIN reset challenge was not issued.');
+    }
     return (
-      otpReference: data['otp_reference'] as String,
-      expiresAt: DateTime.parse(data['expires_at'] as String),
+      otpReference: challengeId,
+      expiresAt: DateTime.now().add(const Duration(minutes: 10)),
     );
   }
 
@@ -89,39 +101,46 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> resetPin({
     required String otpReference,
     required String otpCode,
-    required String newPinHash,
+    required String newPin,
   }) async {
     await _dio.post<void>(
-      '/v1/agent/auth/reset-pin',
-      data: ResetPinRequestDto(
-        otpReference: otpReference,
-        otpCode: otpCode,
-        newPinHash: newPinHash,
-      ).toJson(),
+      '/v1/auth/pin/reset/complete',
+      data: {
+        'challenge_id': otpReference,
+        'otp': otpCode,
+        'new_pin': newPin,
+      },
     );
   }
 
   @override
   Future<void> changePin({
-    required String currentPinHash,
-    required String newPinHash,
+    required String currentPin,
+    required String newPin,
   }) async {
     await _dio.post<void>(
-      '/v1/agent/auth/change-pin',
-      data: ChangePinRequestDto(
-        currentPinHash: currentPinHash,
-        newPinHash: newPinHash,
-      ).toJson(),
+      '/v1/auth/pin/change',
+      data: {'current_pin': currentPin, 'new_pin': newPin},
     );
   }
 
   @override
-  Future<String> stepUp(String pinHash) async {
-    final response = await _dio.post<Map<String, dynamic>>(
-      '/v1/agent/auth/step-up',
-      data: StepUpRequestDto(pinHash: pinHash).toJson(),
+  Future<String?> stepUp(String pin) async {
+    final initiation = await _dio.post<Map<String, dynamic>>(
+      '/v1/auth/step-up/initiate',
+      data: {'scope': 'agent_transaction'},
     );
-    return response.data!['step_up_token'] as String;
+    final challenge =
+        initiation.data?['data'] as Map<String, dynamic>? ?? initiation.data!;
+    if (challenge['step_up_required'] != true) return null;
+    final token = challenge['step_up_token'] as String;
+    final verified = await _dio.post<Map<String, dynamic>>(
+      '/v1/auth/step-up/verify',
+      data: {'step_up_token': token, 'method': 'pin', 'credential': pin},
+    );
+    final data =
+        verified.data?['data'] as Map<String, dynamic>? ?? verified.data!;
+    return data['step_up_access_token'] as String?;
   }
 
   @override
@@ -129,6 +148,10 @@ class AuthRepositoryImpl implements AuthRepository {
     final response = await _dio.get<Map<String, dynamic>>(
       '/v1/agent/profile',
     );
-    return AgentDto.fromJson(response.data!).toEntity();
+    final body = response.data!;
+    final profile = body['data'] is Map<String, dynamic>
+        ? body['data'] as Map<String, dynamic>
+        : body;
+    return AgentDto.fromJson(profile).toEntity();
   }
 }

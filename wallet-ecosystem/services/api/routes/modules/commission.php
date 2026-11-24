@@ -41,6 +41,8 @@ Route::prefix('v1')->middleware(['identity.auth'])->group(static function (): vo
 
     // ── Agent Commission Views (US5, US6) ────────────────────────────────────
 
+    Route::get('agents/{agentId}/commissions/summary', [AgentCommissionController::class, 'summary']);
+
     Route::get('agents/{agentId}/commissions', [AgentCommissionController::class, 'index']);
 
     Route::get('agents/{agentId}/commissions/pending', [AgentCommissionController::class, 'pending']);

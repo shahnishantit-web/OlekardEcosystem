@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Agent\Infrastructure\Http\Controllers\AgentApplicationController;
 use App\Modules\Agent\Infrastructure\Http\Controllers\AgentCustomerController;
 use App\Modules\Agent\Infrastructure\Http\Controllers\AgentLifecycleController;
+use App\Modules\Agent\Infrastructure\Http\Controllers\AgentProfileController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,6 +19,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('v1')->middleware(['identity.auth'])->group(static function (): void {
+
+    Route::get('agent/profile', [AgentProfileController::class, 'show'])
+        ->middleware('identity.require-actor-type:agent');
 
     // ── Agent Application Onboarding ────────────────────────────────────────
 
@@ -63,6 +67,9 @@ Route::prefix('v1')->middleware(['identity.auth'])->group(static function (): vo
 
     // T081: US-AGENT-010 — Search agent customers
     Route::get('agents/{id}/customers', [AgentCustomerController::class, 'search'])
+        ->middleware('identity.require-permission:agent.customer.search');
+
+    Route::get('agents/{id}/customers/{cid}', [AgentCustomerController::class, 'show'])
         ->middleware('identity.require-permission:agent.customer.search');
 
     // T086: US-AGENT-011 — Register customer via agent (idempotent)

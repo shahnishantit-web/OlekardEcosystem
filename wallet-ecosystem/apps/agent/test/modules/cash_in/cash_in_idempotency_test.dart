@@ -1,121 +1,89 @@
 import 'dart:convert';
+
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:dio/dio.dart';
-
 import 'package:wallet_agent/modules/cash_in/data/models/cash_in_request_dto.dart';
 import 'package:wallet_agent/modules/cash_in/data/repositories/cash_in_repository_impl.dart';
 
 class MockDio extends Mock implements Dio {}
 
 void main() {
-  late MockDio mockDio;
-  late CashInRepositoryImpl repo;
+  late MockDio dio;
+  late CashInRepositoryImpl repository;
 
-  final rawResult = jsonDecode(
-    '{"reference_number":"CI-2026-000001","amount_minor_units":50000,"fee_minor_units":250,'
-    '"currency_code":"BWP","customer_name":"Bonolo Sithole","agent_name":"Test Agent",'
-    '"agent_location_code":"GAB-001","timestamp":"2026-10-05T09:30:00Z","status":"completed"}',
+  final responseBody = jsonDecode(
+    '{"success":true,"data":{"id":"txn-demo-1","reference":"CI-DEMO-001",'
+    '"amount":50000,"currency_code":"BWP","status":"completed",'
+    '"created_at":"2026-10-05T09:30:00Z"}}',
   ) as Map<String, dynamic>;
 
   setUp(() {
-    mockDio = MockDio();
-    repo = CashInRepositoryImpl(dio: mockDio);
+    dio = MockDio();
+    repository = CashInRepositoryImpl(dio: dio, agentId: 'agent-demo-1');
     registerFallbackValue(RequestOptions(path: ''));
+    registerFallbackValue(Options());
   });
 
-  test('returns result on 200', () async {
-    when(() => mockDio.post<Map<String, dynamic>>(
+  const request = CashInRequestDto(
+    customerId: 'customer-demo-1',
+    customerName: 'Demo Customer',
+    walletId: 'wallet-demo-1',
+    amountMinorUnits: 50000,
+    currencyCode: 'BWP',
+  );
+
+  test('posts the backend cash-in contract and parses its response resource',
+      () async {
+    when(() => dio.post<Map<String, dynamic>>(
           any(),
           data: any(named: 'data'),
           options: any(named: 'options'),
-        )).thenAnswer(
-      (_) async => Response(
-        data: rawResult,
-        statusCode: 200,
-        requestOptions: RequestOptions(path: '/v1/agent/cash-in'),
-      ),
-    );
+        )).thenAnswer((invocation) async => Response(
+          data: responseBody,
+          statusCode: 201,
+          requestOptions: RequestOptions(path: '/cash-in'),
+        ));
 
-    const request = CashInRequestDto(
-      walletId: 'wlt_01J8XYZABC000001',
-      amountMinorUnits: 50000,
-      currencyCode: 'BWP',
-      pinHash: 'hash',
-    );
-    final result = await repo.submitCashIn(request);
-    expect(result.referenceNumber, equals('CI-2026-000001'));
-    expect(result.netMinorUnits, equals(50000 - 250));
+    final result = await repository.submitCashIn(request);
+
+    expect(result.referenceNumber, 'CI-DEMO-001');
+    expect(result.amountMinorUnits, 50000);
+    expect(result.feeMinorUnits, 0);
+    verify(() => dio.post<Map<String, dynamic>>(
+          '/v1/agents/agent-demo-1/customers/customer-demo-1/cash-in',
+          data: {
+            'customer_wallet_id': 'wallet-demo-1',
+            'amount': 50000,
+            'currency_code': 'BWP',
+          },
+          options: any(named: 'options'),
+        )).called(1);
   });
 
-  test('replays cached result on 409', () async {
-    // First call succeeds
-    when(() => mockDio.post<Map<String, dynamic>>(
-          any(),
-          data: any(named: 'data'),
-          options: any(named: 'options'),
-        )).thenAnswer(
-      (_) async => Response(
-        data: rawResult,
-        statusCode: 200,
-        requestOptions: RequestOptions(path: '/v1/agent/cash-in'),
-      ),
-    );
-    const request = CashInRequestDto(
-      walletId: 'wlt_01J8XYZABC000001',
-      amountMinorUnits: 50000,
-      currencyCode: 'BWP',
-      pinHash: 'hash',
-    );
-    final first = await repo.submitCashIn(request);
-
-    // Second call returns 409 with same result body
-    when(() => mockDio.post<Map<String, dynamic>>(
-          any(),
-          data: any(named: 'data'),
-          options: any(named: 'options'),
-        )).thenThrow(
-      DioException(
-        requestOptions: RequestOptions(path: '/v1/agent/cash-in'),
-        response: Response(
-          data: rawResult,
-          statusCode: 409,
-          requestOptions: RequestOptions(path: '/v1/agent/cash-in'),
-        ),
-        type: DioExceptionType.badResponse,
-      ),
-    );
-    final second = await repo.submitCashIn(request);
-    expect(second.referenceNumber, equals(first.referenceNumber));
-  });
-
-  test('PIN is never logged during submit', () async {
-    when(() => mockDio.post<Map<String, dynamic>>(
+  test('sends an idempotency key and no PIN field in the transaction payload',
+      () async {
+    when(() => dio.post<Map<String, dynamic>>(
           any(),
           data: any(named: 'data'),
           options: any(named: 'options'),
         )).thenAnswer((_) async => Response(
-          data: rawResult,
-          statusCode: 200,
-          requestOptions: RequestOptions(path: '/v1/agent/cash-in'),
+          data: responseBody,
+          statusCode: 201,
+          requestOptions: RequestOptions(path: '/cash-in'),
         ));
 
-    const request = CashInRequestDto(
-      walletId: 'w',
-      amountMinorUnits: 1000,
-      currencyCode: 'BWP',
-      pinHash: 'bcrypt_secret_hash',
-    );
-    await repo.submitCashIn(request);
+    await repository.submitCashIn(request);
 
-    // PIN hash must NOT appear in the URL path (only in the encrypted body)
-    final capturedPaths = verify(() => mockDio.post<Map<String, dynamic>>(
-          captureAny(), // capture the URL path
-          data: any(named: 'data'),
-          options: any(named: 'options'),
+    final call = verify(() => dio.post<Map<String, dynamic>>(
+          any(),
+          data: captureAny(named: 'data'),
+          options: captureAny(named: 'options'),
         )).captured;
-    for (final path in capturedPaths) {
-      expect(path.toString(), isNot(contains('bcrypt_secret_hash')));
-    }
+    final body = call[0] as Map<String, dynamic>;
+    final options = call[1] as Options;
+    expect(body.containsKey('pin_hash'), isFalse);
+    expect(body.containsKey('pin'), isFalse);
+    expect(options.headers?['Idempotency-Key'], isNotEmpty);
   });
 }

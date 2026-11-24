@@ -9,19 +9,28 @@ class PinPadWidget extends StatelessWidget {
   final void Function(String pin) onCompleted;
   final int length;
   final String? errorText;
+  final bool enabled;
+  final bool clearOnCompleted;
 
   const PinPadWidget({
     super.key,
     required this.onCompleted,
     this.length = 6,
     this.errorText,
+    this.enabled = true,
+    this.clearOnCompleted = true,
   });
 
   @override
   Widget build(BuildContext context) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          OkPinPadWidget(onCompleted: onCompleted, pinLength: length),
+          OkPinPadWidget(
+            onCompleted: onCompleted,
+            pinLength: length,
+            enabled: enabled,
+            clearOnCompleted: clearOnCompleted,
+          ),
           if (errorText != null)
             Padding(
               padding: const EdgeInsets.only(top: 8),

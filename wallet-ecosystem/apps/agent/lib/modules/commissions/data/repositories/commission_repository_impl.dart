@@ -7,14 +7,22 @@ import 'package:wallet_agent/modules/commissions/data/models/commission_dto.dart
 
 class CommissionRepositoryImpl implements CommissionRepository {
   final Dio _dio;
-  CommissionRepositoryImpl({required Dio dio}) : _dio = dio;
+  final String agentId;
+  CommissionRepositoryImpl({required Dio dio, required this.agentId})
+      : _dio = dio;
 
   @override
   Future<CommissionBalance> getBalance() async {
     final response = await _dio.get<Map<String, dynamic>>(
-      '/v1/agent/commissions/balance',
+      '/v1/agents/$agentId/commissions/summary',
     );
-    return CommissionBalanceDto.fromJson(response.data!).toEntity();
+    final data =
+        response.data?['data'] as Map<String, dynamic>? ?? response.data!;
+    return CommissionBalance(
+      availableMinorUnits: (data['paid_total'] as num).toInt(),
+      pendingMinorUnits: (data['pending_total'] as num).toInt(),
+      currencyCode: data['currency_code'] as String,
+    );
   }
 
   @override
@@ -25,12 +33,14 @@ class CommissionRepositoryImpl implements CommissionRepository {
     DateTime? toDate,
   }) async {
     final response = await _dio.get<Map<String, dynamic>>(
-      '/v1/agent/commissions',
+      '/v1/agents/$agentId/commissions',
       queryParameters: {
         'page': page,
-        if (type != null) 'type': type,
-        if (fromDate != null) 'from_date': fromDate.toIso8601String().substring(0, 10),
-        if (toDate != null) 'to_date': toDate.toIso8601String().substring(0, 10),
+        'per_page': 20,
+        if (type != null && type != 'registration') 'transaction_type': type,
+        if (fromDate != null)
+          'from': fromDate.toIso8601String().substring(0, 10),
+        if (toDate != null) 'to': toDate.toIso8601String().substring(0, 10),
       },
     );
     final data = response.data!;
@@ -38,11 +48,16 @@ class CommissionRepositoryImpl implements CommissionRepository {
         .map((e) =>
             CommissionEntryDto.fromJson(e as Map<String, dynamic>).toEntity())
         .toList();
+    final meta = data['meta'] as Map<String, dynamic>? ?? const {};
     return PaginatedResult(
       data: items,
-      currentPage: data['current_page'] as int,
-      total: data['total'] as int,
-      lastPage: data['last_page'] as int,
+      currentPage: (meta['current_page'] as num?)?.toInt() ??
+          (meta['page'] as num?)?.toInt() ??
+          1,
+      total: (meta['total'] as num?)?.toInt() ?? items.length,
+      lastPage: (meta['last_page'] as num?)?.toInt() ??
+          (meta['pages'] as num?)?.toInt() ??
+          1,
     );
   }
 }

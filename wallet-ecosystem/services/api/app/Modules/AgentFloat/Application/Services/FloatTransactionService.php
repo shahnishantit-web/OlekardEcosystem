@@ -8,6 +8,14 @@ use App\Modules\AgentFloat\Infrastructure\Models\FloatTransactionModel;
 
 final class FloatTransactionService
 {
+    public function find(string $agentId, string $transactionId): ?FloatTransactionModel
+    {
+        return FloatTransactionModel::query()
+            ->where('agent_id', $agentId)
+            ->whereKey($transactionId)
+            ->first();
+    }
+
     public function list(
         string  $agentId,
         int     $page,
@@ -15,6 +23,7 @@ final class FloatTransactionService
         ?string $from,
         ?string $to,
         ?string $type,
+        ?string $status = null,
     ): array {
         $query = FloatTransactionModel::where('agent_id', $agentId)
             ->orderBy('created_at', 'desc');
@@ -29,6 +38,10 @@ final class FloatTransactionService
 
         if ($type !== null) {
             $query->where('type', $type);
+        }
+
+        if ($status !== null) {
+            $query->where('status', $status);
         }
 
         $total   = $query->count();

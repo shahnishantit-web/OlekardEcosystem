@@ -27,42 +27,40 @@ class CustomerRegistrationRequestDto {
   Map<String, dynamic> toJson() => {
         'first_name': firstName,
         'last_name': lastName,
-        'phone_number': phoneNumber,
-        'national_id': nationalId,
+        'phone': phoneNumber,
+        'id_type': 'national_id',
+        'id_number': nationalId,
         if (email != null) 'email': email,
       };
 }
 
 class RegistrationResultDto {
-  final String walletId;
-  final String walletNumber;
+  final String customerId;
+  final String phone;
+  final String status;
   final String customerName;
-  final String referenceNumber;
-  final DateTime createdAt;
 
   const RegistrationResultDto({
-    required this.walletId,
-    required this.walletNumber,
+    required this.customerId,
+    required this.phone,
+    required this.status,
     required this.customerName,
-    required this.referenceNumber,
-    required this.createdAt,
   });
 
   factory RegistrationResultDto.fromJson(Map<String, dynamic> json) {
     return RegistrationResultDto(
-      walletId: json['wallet_id'] as String,
-      walletNumber: json['wallet_number'] as String,
-      customerName: json['customer_name'] as String,
-      referenceNumber: json['reference_number'] as String,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      customerId: json['id'] as String,
+      phone: json['phone'] as String,
+      status: json['status'] as String,
+      customerName:
+          '${json['first_name'] ?? ''} ${json['last_name'] ?? ''}'.trim(),
     );
   }
 
   RegistrationResult toEntity() => RegistrationResult(
-        walletId: walletId,
-        walletNumber: walletNumber,
+        customerId: customerId,
+        phone: phone,
+        status: status,
         customerName: customerName,
-        referenceNumber: referenceNumber,
-        createdAt: createdAt,
       );
 }

@@ -4,8 +4,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
-import '../security/secure_storage_service.dart';
-import '../session/session_event_bus.dart';
+import 'package:wallet_agent/core/security/secure_storage_service.dart';
+import 'package:wallet_agent/core/session/session_event_bus.dart';
 
 const String _apiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
@@ -98,7 +98,9 @@ class AuthInterceptor extends Interceptor {
     if (err.response?.statusCode == 401) {
       final path = err.requestOptions.path;
       final isAuthEndpoint = path.contains('/agent/auth/') ||
-          path.contains('/auth/refresh') ||
+          path.contains('/auth/token/refresh') ||
+          path.contains('/auth/pin/reset/') ||
+          path.contains('/auth/step-up/') ||
           path.contains('/auth/logout');
       if (isAuthEndpoint) {
         handler.next(err);
@@ -173,10 +175,11 @@ class AuthInterceptor extends Interceptor {
     if (refreshToken == null) return false;
     try {
       final response = await _dio.post<Map<String, dynamic>>(
-        '/v1/agent/auth/refresh',
+        '/v1/auth/token/refresh',
         data: {'refresh_token': refreshToken},
       );
-      final data = response.data!;
+      final data =
+          response.data?['data'] as Map<String, dynamic>? ?? response.data!;
       updateCachedTokens(
         accessToken: data['access_token'] as String,
         refreshToken: data['refresh_token'] as String,

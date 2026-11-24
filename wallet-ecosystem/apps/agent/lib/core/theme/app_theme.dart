@@ -7,16 +7,16 @@ abstract final class AppTheme {
         useMaterial3: true,
         brightness: Brightness.dark,
         colorScheme: const ColorScheme.dark(
-          primary:          AppColors.primary,
-          onPrimary:        AppColors.onPrimary,
+          primary: AppColors.primary,
+          onPrimary: AppColors.onPrimary,
           primaryContainer: AppColors.primaryDark,
-          secondary:        AppColors.secondary,
-          onSecondary:      AppColors.onPrimary,
-          surface:          AppColors.surface,
-          onSurface:        AppColors.onSurface,
-          error:            AppColors.error,
-          onError:          AppColors.onPrimary,
-          outline:          AppColors.outline,
+          secondary: AppColors.secondary,
+          onSecondary: AppColors.textPrimary,
+          surface: AppColors.surface,
+          onSurface: AppColors.onSurface,
+          error: AppColors.error,
+          onError: AppColors.textPrimary,
+          outline: AppColors.outline,
         ),
         scaffoldBackgroundColor: AppColors.background,
         appBarTheme: AppBarTheme(
@@ -67,7 +67,8 @@ abstract final class AppTheme {
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
             foregroundColor: AppColors.primary,
-            minimumSize: const Size(AppSpacing.minTouchTarget, AppSpacing.minTouchTarget),
+            minimumSize: const Size(
+                AppSpacing.minTouchTarget, AppSpacing.minTouchTarget),
             textStyle: AppTypography.labelLarge,
           ),
         ),
@@ -109,26 +110,39 @@ abstract final class AppTheme {
           thickness: 1,
         ),
         textTheme: TextTheme(
-          displayLarge:   AppTypography.displayLarge.copyWith(color: AppColors.textPrimary),
-          displayMedium:  AppTypography.displayMedium.copyWith(color: AppColors.textPrimary),
-          headlineLarge:  AppTypography.headlineLarge.copyWith(color: AppColors.textPrimary),
-          headlineMedium: AppTypography.headlineMedium.copyWith(color: AppColors.textPrimary),
-          titleLarge:     AppTypography.titleLarge.copyWith(color: AppColors.textPrimary),
-          titleMedium:    AppTypography.titleMedium.copyWith(color: AppColors.textPrimary),
-          bodyLarge:      AppTypography.bodyLarge.copyWith(color: AppColors.textPrimary),
-          bodyMedium:     AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
-          bodySmall:      AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-          labelLarge:     AppTypography.labelLarge.copyWith(color: AppColors.textPrimary),
-          labelMedium:    AppTypography.labelMedium.copyWith(color: AppColors.textSecondary),
+          displayLarge:
+              AppTypography.displayLarge.copyWith(color: AppColors.textPrimary),
+          displayMedium: AppTypography.displayMedium
+              .copyWith(color: AppColors.textPrimary),
+          headlineLarge: AppTypography.headlineLarge
+              .copyWith(color: AppColors.textPrimary),
+          headlineMedium: AppTypography.headlineMedium
+              .copyWith(color: AppColors.textPrimary),
+          titleLarge:
+              AppTypography.titleLarge.copyWith(color: AppColors.textPrimary),
+          titleMedium:
+              AppTypography.titleMedium.copyWith(color: AppColors.textPrimary),
+          bodyLarge:
+              AppTypography.bodyLarge.copyWith(color: AppColors.textPrimary),
+          bodyMedium:
+              AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
+          bodySmall:
+              AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+          labelLarge:
+              AppTypography.labelLarge.copyWith(color: AppColors.textPrimary),
+          labelMedium: AppTypography.labelMedium
+              .copyWith(color: AppColors.textSecondary),
         ),
         navigationBarTheme: NavigationBarThemeData(
           backgroundColor: AppColors.surface,
-          indicatorColor: AppColors.primary,
+          indicatorColor: AppColors.surfaceVariant,
           labelTextStyle: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return AppTypography.labelLarge.copyWith(color: AppColors.primary);
+              return AppTypography.labelLarge
+                  .copyWith(color: AppColors.primary);
             }
-            return AppTypography.labelLarge.copyWith(color: AppColors.onSurfaceVariant);
+            return AppTypography.labelLarge
+                .copyWith(color: AppColors.onSurfaceVariant);
           }),
           iconTheme: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {

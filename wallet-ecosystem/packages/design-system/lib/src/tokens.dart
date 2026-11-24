@@ -156,6 +156,15 @@ abstract final class OkTokens {
   static const Color colorBlueBackground = Color(0xFF001329);
   static const Color colorBlueAccent     = Color(0xFF38BDF8);
 
+  // ── Agent Gold & black Application Palette ────────────────────────────
+static const Color colorBGoldPrimary    = Color(0xFFD4AF37); // Gold buttons and active states
+static const Color colorBGoldDark       = Color(0xFF101010); // Near-black headers and text on gold
+static const Color colorBGoldLight      = Color(0xFFF2D675); // Light gold for icons and highlights
+static const Color colorBGoldSurface    = Color(0xFF1B1B1B); // Charcoal cards and forms
+static const Color colorBGoldBackground = Color(0xFF101010); // Near-black screen background
+static const Color colorBGoldAccent     = Color(0xFF332B16); // Muted gold for selected backgrounds
+static const Color colorBGoldText       = Color(0xFFF7F3E8); // Ivory text on dark surfaces
+
   // ── Administration Teal Application Palette ───────────────────
 
   static const Color colorTealPrimary    = Color(0xFF0F766E);

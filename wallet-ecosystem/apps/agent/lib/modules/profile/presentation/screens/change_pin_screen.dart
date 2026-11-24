@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:wallet_agent/core/api/api_client.dart';
-import 'package:wallet_agent/core/security/pin_service.dart';
+import 'package:wallet_agent/modules/auth/presentation/auth_providers.dart';
 import 'package:wallet_agent/core/security/screenshot_guard.dart';
 import 'package:wallet_agent/core/theme/design_tokens.dart';
 import 'package:wallet_agent/shared/widgets/pin_pad_widget.dart';
@@ -20,8 +19,8 @@ class ChangePinScreen extends ConsumerStatefulWidget {
 
 class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
   _ChangePinStep _step = _ChangePinStep.current;
-  String? _currentPinHash;
-  String? _newPinHash;
+  String? _currentPin;
+  String? _newPin;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -39,7 +38,7 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
 
   Future<void> _onCurrentPin(String pin) async {
     setState(() {
-      _currentPinHash = PinService.hash(pin);
+      _currentPin = pin;
       _step = _ChangePinStep.newPin;
       _errorMessage = null;
     });
@@ -47,19 +46,18 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
 
   void _onNewPin(String pin) {
     setState(() {
-      _newPinHash = PinService.hash(pin);
+      _newPin = pin;
       _step = _ChangePinStep.confirm;
       _errorMessage = null;
     });
   }
 
   Future<void> _onConfirmPin(String pin) async {
-    final confirmHash = PinService.hash(pin);
-    if (_newPinHash != confirmHash) {
+    if (_newPin != pin) {
       setState(() {
         _errorMessage = 'PINs do not match. Please try again.';
         _step = _ChangePinStep.newPin;
-        _newPinHash = null;
+        _newPin = null;
       });
       return;
     }
@@ -68,13 +66,10 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
       _errorMessage = null;
     });
     try {
-      await createDio(null).post<void>(
-        '/v1/agent/auth/change-pin',
-        data: {
-          'current_pin_hash': _currentPinHash,
-          'new_pin_hash': _newPinHash,
-        },
-      );
+      await ref.read(authRepositoryProvider).changePin(
+            currentPin: _currentPin!,
+            newPin: _newPin!,
+          );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('PIN changed successfully.')),
@@ -83,13 +78,12 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
       }
     } on DioException catch (e) {
       setState(() {
-        _errorMessage =
-            (e.response?.data as Map<String, dynamic>?)?['message']
-                    as String? ??
-                'PIN change failed. Please try again.';
+        _errorMessage = (e.response?.data as Map<String, dynamic>?)?['message']
+                as String? ??
+            'PIN change failed. Please try again.';
         _step = _ChangePinStep.current;
-        _currentPinHash = null;
-        _newPinHash = null;
+        _currentPin = null;
+        _newPin = null;
       });
     } finally {
       if (mounted) setState(() => _isLoading = false);

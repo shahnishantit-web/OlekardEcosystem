@@ -25,6 +25,11 @@ final class EventAdmissionController extends Controller
         return response()->json(['data' => $result]);
     }
 
+    public function myGateAssignments(Request $request): JsonResponse
+    {
+        return response()->json(['data' => $this->admission->assignedGates($this->operator($request))]);
+    }
+
     public function tickets(Request $request): JsonResponse
     {
         return $this->privateResponse(['data' => $this->admission->ticketsForPurchaser($this->purchaser($request))]);

@@ -10,6 +10,18 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 final class CommissionReportService
 {
+    public function summary(string $agentId): array
+    {
+        $pendingStatuses = [CommissionStatus::Pending->value, CommissionStatus::Approved->value];
+        $query = CommissionModel::where('agent_id', $agentId);
+
+        return [
+            'paid_total' => (int) (clone $query)->where('status', CommissionStatus::Paid->value)->sum('amount'),
+            'pending_total' => (int) (clone $query)->whereIn('status', $pendingStatuses)->sum('amount'),
+            'currency_code' => (string) ($query->value('currency_code') ?? 'BWP'),
+        ];
+    }
+
     public function listPaid(string $agentId, array $filters, int $page, int $perPage): LengthAwarePaginator
     {
         $query = CommissionModel::where('agent_id', $agentId)
@@ -20,6 +32,9 @@ final class CommissionReportService
         }
         if (isset($filters['to'])) {
             $query->where('updated_at', '<=', $filters['to']);
+        }
+        if (isset($filters['transaction_type'])) {
+            $query->where('transaction_type', $filters['transaction_type']);
         }
 
         return $query->orderByDesc('updated_at')->paginate(perPage: $perPage, page: $page);

@@ -78,18 +78,48 @@ final class EventAdmissionService
         return $db->transaction($admit, 3);
     }
 
-    /** @return list<array{ticket_id:string,event_id:string,event_title:string,image_url:string|null,category:string,status:string,credential:string}> */
+    /** @return list<array{event_id:string,event_title:string,event_starts_at:string,gate_id:string,gate_name:string}> */
+    public function assignedGates(string $actorId): array
+    {
+        $this->authorization->assertPermission($actorId, EventPermissions::GATE_VALIDATE);
+
+        return $this->db()->table('community_services.event_authority_assignments as a')
+            ->join('community_services.event_gates as g', 'g.id', '=', 'a.gate_id')
+            ->join('community_services.event_drafts as e', 'e.id', '=', 'a.event_id')
+            ->where('a.actor_id', $actorId)->where('a.scope_type', 'gate')
+            ->where('a.permission_slug', EventPermissions::GATE_VALIDATE)->whereNull('a.revoked_at')
+            ->whereColumn('g.event_id', 'a.event_id')
+            ->whereColumn('g.organisation_id', 'a.organisation_id')
+            ->whereColumn('e.organisation_id', 'a.organisation_id')
+            ->where('g.status', 'active')->where('e.workflow_state', 'published')
+            ->where('e.lifecycle_state', 'active')->whereColumn('e.published_version', 'e.version')
+            ->orderBy('e.starts_at')->orderBy('e.title')->orderBy('g.name')
+            ->get([
+                'e.id as event_id', 'e.title as event_title', 'e.starts_at as event_starts_at',
+                'g.id as gate_id', 'g.name as gate_name',
+            ])
+            ->map(static fn (object $row): array => [
+                'event_id' => (string) $row->event_id,
+                'event_title' => (string) $row->event_title,
+                'event_starts_at' => (string) $row->event_starts_at,
+                'gate_id' => (string) $row->gate_id,
+                'gate_name' => (string) $row->gate_name,
+            ])->all();
+    }
+
+    /** @return list<array{ticket_id:string,event_id:string,event_title:string,event_starts_at:string,image_url:string|null,category:string,status:string,credential:string}> */
     public function ticketsForPurchaser(string $actorId): array
     {
         return $this->db()->table('community_services.event_tickets as t')
             ->join('community_services.event_drafts as e', 'e.id', '=', 't.event_id')
             ->where('t.owner_actor_id', $actorId)->whereIn('t.status', ['valid', 'revoked'])
             ->orderByDesc('t.issued_at')->orderByDesc('t.created_at')->orderByDesc('t.id')->get([
-                't.id', 't.event_id', 'e.title as event_title', 'e.image_url', 't.category_name', 't.status', 't.cancellation_request_id', 't.credential_encrypted',
+                't.id', 't.event_id', 'e.title as event_title', 'e.starts_at as event_starts_at', 'e.image_url', 't.category_name', 't.status', 't.cancellation_request_id', 't.credential_encrypted',
             ])->map(fn (object $ticket): array => [
                 'ticket_id' => (string) $ticket->id,
                 'event_id' => (string) $ticket->event_id,
                 'event_title' => (string) $ticket->event_title,
+                'event_starts_at' => (string) $ticket->event_starts_at,
                 'image_url' => $ticket->image_url === null ? null : (string) $ticket->image_url,
                 'category' => (string) $ticket->category_name,
                 'status' => $this->ticketStatus((string) $ticket->id, (string) $ticket->status, $ticket->cancellation_request_id),
@@ -97,19 +127,20 @@ final class EventAdmissionService
             ])->all();
     }
 
-    /** @return array{ticket_id:string,event_id:string,event_title:string,image_url:string|null,category:string,status:string,credential:string} */
+    /** @return array{ticket_id:string,event_id:string,event_title:string,event_starts_at:string,image_url:string|null,category:string,status:string,credential:string} */
     public function ticketForPurchaser(string $ticketId, string $actorId): array
     {
         $ticket = $this->db()->table('community_services.event_tickets as t')
             ->join('community_services.event_drafts as e', 'e.id', '=', 't.event_id')
             ->where('t.id', $ticketId)->where('t.owner_actor_id', $actorId)
-            ->first(['t.id', 't.event_id', 'e.title as event_title', 'e.image_url', 't.category_name', 't.status', 't.cancellation_request_id', 't.credential_encrypted']);
+            ->first(['t.id', 't.event_id', 'e.title as event_title', 'e.starts_at as event_starts_at', 'e.image_url', 't.category_name', 't.status', 't.cancellation_request_id', 't.credential_encrypted']);
         abort_if($ticket === null, 404, 'Ticket was not found.');
         abort_unless(in_array($ticket->status, ['valid', 'revoked'], true), 404, 'Ticket was not found.');
 
         return [
             'ticket_id' => (string) $ticket->id, 'event_id' => (string) $ticket->event_id,
             'event_title' => (string) $ticket->event_title,
+            'event_starts_at' => (string) $ticket->event_starts_at,
             'image_url' => $ticket->image_url === null ? null : (string) $ticket->image_url,
             'category' => (string) $ticket->category_name,
             'status' => $this->ticketStatus((string) $ticket->id, (string) $ticket->status, $ticket->cancellation_request_id),

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:wallet_agent/core/security/pin_service.dart';
 import 'package:wallet_agent/core/security/screenshot_guard.dart';
 import 'package:wallet_agent/core/theme/design_tokens.dart';
 import 'package:wallet_agent/shared/widgets/pin_pad_widget.dart';
@@ -44,9 +43,10 @@ class _StepUpPinScreenState extends ConsumerState<StepUpPinScreen> {
       _errorMessage = null;
     });
     try {
-      final pinHash = PinService.hash(pin);
-      final stepUpToken =
-          await ref.read(authRepositoryProvider).stepUp(pinHash);
+      final stepUpToken = await ref.read(authRepositoryProvider).stepUp(pin);
+      if (stepUpToken == null || stepUpToken.isEmpty) {
+        throw StateError('Additional verification was not issued.');
+      }
       // Store in memory only — never persisted.
       _inMemoryStepUpToken = stepUpToken;
       if (mounted) context.pop();

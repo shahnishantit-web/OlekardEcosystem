@@ -1,14 +1,8 @@
-import 'dart:io';
-
 import 'package:wallet_agent/modules/customer_onboarding/domain/entities/customer_profile.dart';
 
 abstract class CustomerOnboardingRepository {
   Future<RegistrationResult> registerCustomer(CustomerProfile profile);
-  Future<void> submitKycDocuments({
-    required String customerId,
-    required File frontImage,
-    File? backImage,
-  });
+  Future<void> initiateKyc(String customerId);
   Future<CustomerStatus> getCustomerStatus(String customerId);
 }
 

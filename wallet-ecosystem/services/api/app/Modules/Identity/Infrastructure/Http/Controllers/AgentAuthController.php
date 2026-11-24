@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Identity\Infrastructure\Http\Controllers;
 
 use App\Modules\Identity\Application\Commands\LoginWithPinCommand;
+use App\Modules\Agent\Application\Services\AgentProfilePayloadBuilder;
 use App\Modules\Identity\Domain\Exceptions\AccountLockedException;
 use App\Modules\Identity\Domain\Exceptions\DeviceBlockedException;
 use App\Modules\Identity\Domain\Exceptions\DeviceVerificationRequiredException;
@@ -15,7 +16,6 @@ use App\Modules\Identity\Infrastructure\Security\IpHasher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -29,6 +29,7 @@ final class AgentAuthController extends Controller
     public function __construct(
         private readonly AuthenticationService $authentication,
         private readonly IpHasher              $ipHasher,
+        private readonly AgentProfilePayloadBuilder $profiles,
     ) {}
 
     /**
@@ -65,7 +66,16 @@ final class AgentAuthController extends Controller
                 platform:             'mobile',
             ));
 
-            $agentPayload = $this->buildAgentPayload($session->userId, $phone);
+            $agentPayload = $this->profiles->build($session->userId, $phone) ?? [
+                'id' => $session->userId,
+                'phone' => $phone,
+                'first_name' => 'Agent',
+                'last_name' => 'User',
+                'location_code' => 'N/A',
+                'status' => 'active',
+                'kyc_status' => 'pending',
+                'created_at' => now()->toIso8601String(),
+            ];
 
             return response()->json([
                 'success'       => true,
@@ -93,53 +103,6 @@ final class AgentAuthController extends Controller
         } catch (AccountLockedException) {
             return $this->errorResponse('IDENTITY_004', 'Account is locked.', 423, $correlationId);
         }
-    }
-
-    private function buildAgentPayload(string $userId, string $phone): array
-    {
-        $agent = DB::connection('platform')
-            ->table('agent.agents')
-            ->where('user_id', $userId)
-            ->first();
-
-        $profile = DB::connection('profile')
-            ->table('profile.user_profiles')
-            ->where('user_id', $userId)
-            ->first();
-
-        $personalInfo = [];
-        $kycResult    = 'pending';
-
-        if ($agent !== null) {
-            $application = DB::connection('platform')
-                ->table('agent.agent_applications')
-                ->where('id', $agent->application_id)
-                ->first();
-
-            if ($application !== null) {
-                $personalInfo = json_decode((string) ($application->personal_info ?? '{}'), true) ?? [];
-                $kycResult    = $application->kyc_result ?? 'pending';
-            }
-        }
-
-        $kycStatus = match ($kycResult) {
-            'passed' => 'verified',
-            'failed' => 'rejected',
-            default  => 'pending',
-        };
-
-        return [
-            'id'            => $agent?->id ?? $userId,
-            'phone'         => $phone,
-            'first_name'    => $profile?->first_name ?? $personalInfo['first_name'] ?? 'Agent',
-            'last_name'     => $profile?->last_name  ?? $personalInfo['last_name']  ?? 'User',
-            'location_code' => $personalInfo['location_code'] ?? 'N/A',
-            'status'        => $agent?->status ?? 'active',
-            'kyc_status'    => $kycStatus,
-            'created_at'    => $agent
-                ? \Carbon\Carbon::parse($agent->created_at)->toIso8601String()
-                : now()->toIso8601String(),
-        ];
     }
 
     private function errorResponse(string $code, string $message, int $status, string $correlationId): JsonResponse

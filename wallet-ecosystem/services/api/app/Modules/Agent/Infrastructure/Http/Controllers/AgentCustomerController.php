@@ -69,6 +69,26 @@ final class AgentCustomerController extends Controller
         ], 200, ['X-Correlation-ID' => $correlationId]);
     }
 
+    public function show(Request $request, string $id, string $cid): JsonResponse
+    {
+        $correlationId = $request->header('X-Correlation-ID', (string) Str::uuid());
+        $actorId = (string) $request->attributes->get('identity.user_id');
+        try {
+            $status = $this->service->customerStatus($id, $cid, $actorId, $correlationId);
+        } catch (UnauthorizedCustomerAccessException) {
+            return $this->errorResponse('UNAUTHORIZED_CUSTOMER_ACCESS', 'Agent is not authorized to access this customer.', 403, $correlationId);
+        } catch (AgentNotActiveException) {
+            return $this->errorResponse('AGENT_SUSPENDED', 'Agent account is suspended.', 403, $correlationId);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $status,
+            'error' => null,
+            'meta' => null,
+        ], 200, ['X-Correlation-ID' => $correlationId]);
+    }
+
     // T086 ————————————————————————————————————————————————
     public function register(RegisterCustomerRequest $request, string $id): JsonResponse
     {

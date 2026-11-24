@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:wallet_agent/core/security/pin_service.dart';
 import 'package:wallet_agent/core/theme/design_tokens.dart';
 import 'package:wallet_agent/shared/widgets/pin_pad_widget.dart';
 import 'package:wallet_agent/modules/auth/presentation/auth_providers.dart';
@@ -50,15 +49,15 @@ class _PinResetScreenState extends ConsumerState<PinResetScreen> {
       _errorMessage = null;
     });
     try {
-      final newPinHash = PinService.hash(confirmPin);
       await ref.read(authRepositoryProvider).resetPin(
             otpReference: widget.otpReference,
             otpCode: widget.otpCode,
-            newPinHash: newPinHash,
+            newPin: confirmPin,
           );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('PIN reset successfully. Please log in.')),
+          const SnackBar(
+              content: Text('PIN reset successfully. Please log in.')),
         );
         context.go('/login');
       }
@@ -85,7 +84,9 @@ class _PinResetScreenState extends ConsumerState<PinResetScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _isConfirming ? 'Confirm your new PIN' : 'Enter a new 6-digit PIN',
+              _isConfirming
+                  ? 'Confirm your new PIN'
+                  : 'Enter a new 6-digit PIN',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: AppSpacing.xl),

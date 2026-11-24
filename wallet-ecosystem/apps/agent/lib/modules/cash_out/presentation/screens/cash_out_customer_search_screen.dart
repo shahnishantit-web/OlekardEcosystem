@@ -119,13 +119,13 @@ class _CashOutCustomerSearchScreenState
                           PrimaryButton(
                             label: 'Confirm Customer',
                             onPressed: _result.isActive
-                                ? () => context
-                                    .push('/cash-out/form', extra: {
-                                  'wallet_id': _result.walletId,
-                                  'customer_name': _result.customerName,
-                                  'masked_wallet_number':
-                                      _result.maskedWalletNumber,
-                                })
+                                ? () => context.push('/cash-out/form', extra: {
+                                      'wallet_id': _result.walletId,
+                                      'customer_id': _result.customerId,
+                                      'customer_name': _result.customerName,
+                                      'masked_wallet_number':
+                                          _result.maskedWalletNumber,
+                                    })
                                 : null,
                           ),
                         ],

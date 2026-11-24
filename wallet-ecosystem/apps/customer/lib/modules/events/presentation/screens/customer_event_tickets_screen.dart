@@ -112,6 +112,9 @@ class _CustomerEventTicketsScreenState
     final admitted = ticket['status'] == 'admitted';
     final cancelled = ticket['status'] == 'cancelled';
     final revoked = ticket['status'] == 'revoked';
+    final eventStartsAt = DateTime.tryParse(
+      ticket['event_starts_at']?.toString() ?? '',
+    );
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
@@ -130,6 +133,17 @@ class _CustomerEventTicketsScreenState
             const SizedBox(height: 12),
             Text(ticket['event_title'] as String,
                 style: Theme.of(context).textTheme.titleLarge),
+            if (eventStartsAt != null) ...[
+              const SizedBox(height: 6),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.calendar_month_outlined, size: 18),
+                  const SizedBox(width: 6),
+                  Text(_formatEventDate(eventStartsAt)),
+                ],
+              ),
+            ],
             const SizedBox(height: 4),
             Text(ticket['category'] as String),
             const SizedBox(height: 12),
@@ -162,4 +176,23 @@ class _CustomerEventTicketsScreenState
       ),
     );
   }
+}
+
+String _formatEventDate(DateTime value) {
+  final date = value.toLocal();
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  return '${months[date.month - 1]} ${date.day}, ${date.year}';
 }

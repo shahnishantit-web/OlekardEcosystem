@@ -17,17 +17,15 @@ class CustomerProfile {
 }
 
 class RegistrationResult {
-  final String walletId;
-  final String walletNumber;
+  final String customerId;
+  final String phone;
+  final String status;
   final String customerName;
-  final String referenceNumber;
-  final DateTime createdAt;
 
   const RegistrationResult({
-    required this.walletId,
-    required this.walletNumber,
+    required this.customerId,
+    required this.phone,
+    required this.status,
     required this.customerName,
-    required this.referenceNumber,
-    required this.createdAt,
   });
 }

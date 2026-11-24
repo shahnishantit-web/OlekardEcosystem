@@ -16,15 +16,15 @@ abstract class AuthRepository {
   Future<void> resetPin({
     required String otpReference,
     required String otpCode,
-    required String newPinHash,
+    required String newPin,
   });
 
   Future<void> changePin({
-    required String currentPinHash,
-    required String newPinHash,
+    required String currentPin,
+    required String newPin,
   });
 
-  Future<String> stepUp(String pinHash);
+  Future<String?> stepUp(String pin);
 
   Future<Agent> getProfile();
 }

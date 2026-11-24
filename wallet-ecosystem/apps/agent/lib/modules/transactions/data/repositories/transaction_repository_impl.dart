@@ -8,8 +8,6 @@ import 'package:wallet_agent/modules/transactions/domain/entities/refund_request
 import 'package:wallet_agent/modules/transactions/domain/repositories/transaction_repository.dart';
 import 'package:wallet_agent/modules/transactions/infrastructure/payment_cache_store.dart';
 import 'package:wallet_agent/modules/transactions/data/models/transaction_dto.dart';
-import 'package:wallet_agent/modules/transactions/data/models/payment_history_filter_dto.dart';
-import 'package:wallet_agent/modules/transactions/data/models/receipt_dto.dart';
 
 class AccessDeniedException implements Exception {
   final String message;
@@ -19,31 +17,59 @@ class AccessDeniedException implements Exception {
 class TransactionRepositoryImpl implements TransactionRepository {
   final Dio _dio;
   final PaymentCacheStore _cache;
+  final String agentId;
 
-  TransactionRepositoryImpl({required Dio dio, required PaymentCacheStore cache})
+  TransactionRepositoryImpl(
+      {required Dio dio,
+      required PaymentCacheStore cache,
+      required this.agentId})
       : _dio = dio,
         _cache = cache;
 
   @override
   Future<PaginatedResult<PaymentHistoryItem>> fetchHistory(
       PaymentHistoryFilter filter) async {
-    final params = PaymentHistoryFilterDto.toQueryParams(filter);
+    final params = <String, dynamic>{
+      'page': filter.page,
+      'per_page': filter.perPage,
+      if (filter.dateFrom != null)
+        'from': filter.dateFrom!.toIso8601String().substring(0, 10),
+      if (filter.dateTo != null)
+        'to': filter.dateTo!.toIso8601String().substring(0, 10),
+      if (filter.status != null) 'status': filter.status!.name,
+      if (filter.purposeType != null)
+        'type': switch (filter.purposeType!) {
+          PaymentPurposeType.fundingBankTransfer => 'funding',
+          PaymentPurposeType.fundingAgentCashIn => 'cash_in',
+          PaymentPurposeType.withdrawal => 'cash_out',
+          _ => null,
+        },
+    }..removeWhere((key, value) => value == null);
     final res = await _dio.get<Map<String, dynamic>>(
-      '/v1/payment/history',
+      '/v1/agents/$agentId/float-wallet/transactions',
       queryParameters: params,
     );
     final data = res.data!;
     final rawJson = jsonEncode(data);
     if (filter.page == 1) {
-      await _cache.writeHistoryPage('_default', rawJson);
+      await _cache.writeHistoryPage('agent', rawJson);
     }
-    return PaginatedResult.fromJson(data, AgentTransactionDto.fromJson);
+    final items = (data['data'] as List<dynamic>)
+        .map((e) => AgentTransactionDto.fromJson(e as Map<String, dynamic>))
+        .toList();
+    final meta = data['meta'] as Map<String, dynamic>? ?? const {};
+    return PaginatedResult(
+      data: items,
+      currentPage: (meta['page'] as num?)?.toInt() ?? filter.page,
+      total: (meta['total'] as num?)?.toInt() ?? items.length,
+      lastPage: (meta['pages'] as num?)?.toInt() ?? 1,
+    );
   }
 
   @override
   Future<PaymentHistoryItem> fetchDetail(String intentId) async {
     final res = await _dio.get<Map<String, dynamic>>(
-      '/v1/payment/history/$intentId',
+      '/v1/agents/$agentId/float-wallet/transactions/$intentId',
     );
     final item = (res.data!['data'] ?? res.data!) as Map<String, dynamic>;
     await _cache.writeDetail(intentId, jsonEncode(item));
@@ -52,52 +78,24 @@ class TransactionRepositoryImpl implements TransactionRepository {
 
   @override
   Future<PaymentReceipt> fetchReceipt(String intentId) async {
-    try {
-      final res = await _dio.get<Map<String, dynamic>>(
-        '/v1/payment/receipts/$intentId',
-      );
-      return ReceiptDto.fromJson(
-          (res.data!['data'] ?? res.data!) as Map<String, dynamic>);
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 403) {
-        throw const AccessDeniedException('not_owner');
-      }
-      rethrow;
-    }
+    throw UnsupportedError('Receipts are not part of Agent float activity.');
   }
 
   @override
   Future<ReceiptDownloadToken> requestDownloadToken(String intentId) async {
-    try {
-      final res = await _dio.post<Map<String, dynamic>>(
-        '/v1/payment/receipts/$intentId/download-token',
-      );
-      return ReceiptDownloadTokenDto.fromJson(
-          (res.data!['data'] ?? res.data!) as Map<String, dynamic>);
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 403) {
-        throw const AccessDeniedException('not_owner');
-      }
-      rethrow;
-    }
+    throw UnsupportedError(
+        'Receipt downloads are not part of Agent float activity.');
   }
 
   @override
   Future<void> submitRefund(RefundRequest request) async {
-    await _dio.post<void>('/v1/payment/refunds', data: {
-      'intent_id': request.intentId,
-      'reason': request.reason,
-      if (request.amountMinorUnits != null)
-        'amount_minor_units': request.amountMinorUnits,
-    });
+    throw UnsupportedError(
+        'Refunds are not available for Agent float activity.');
   }
 
   @override
   Future<void> createSupportTicket(SupportTicketDraft draft) async {
-    await _dio.post<void>('/v1/support/tickets', data: {
-      'payment_intent_id': draft.paymentIntentId,
-      'subject': draft.subject,
-      if (draft.description != null) 'description': draft.description,
-    });
+    throw UnsupportedError(
+        'Payment-intent support is not part of Agent float activity.');
   }
 }

@@ -5,9 +5,12 @@ import 'package:wallet_agent/core/api/api_client.dart';
 import 'package:wallet_agent/modules/cash_out/data/repositories/cash_out_repository_impl.dart';
 import 'package:wallet_agent/modules/cash_out/domain/entities/cash_out_result.dart';
 import 'package:wallet_agent/modules/cash_out/domain/repositories/cash_out_repository.dart';
+import 'package:wallet_agent/modules/auth/presentation/auth_providers.dart';
 
 final cashOutRepositoryProvider = Provider<CashOutRepository>((ref) {
-  return CashOutRepositoryImpl(dio: createDio(null));
+  final agentId = ref.watch(authNotifierProvider.select((s) => s.agent?.id));
+  if (agentId == null) throw StateError('Agent session is not available.');
+  return CashOutRepositoryImpl(dio: createDio(null), agentId: agentId);
 });
 
 class CashOutResultNotifier extends StateNotifier<CashOutResult?> {

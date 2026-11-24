@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\AgentFloat\Infrastructure\Http\Controllers;
 
+use App\Modules\Agent\Infrastructure\Models\AgentModel;
 use App\Modules\AgentFloat\Application\Services\FloatCashInService;
 use App\Modules\AgentFloat\Domain\Exceptions\FloatDailyLimitExceededException;
 use App\Modules\AgentFloat\Domain\Exceptions\FloatTransactionLimitExceededException;
@@ -40,8 +41,12 @@ final class AgentFloatCashInController extends Controller
     public function cashIn(CashInRequest $request, string $agentId, string $customerId): JsonResponse
     {
         $correlationId  = $request->header('X-Correlation-ID', (string) Str::uuid());
-        $actorId        = $request->attributes->get('identity.user_id');
+        $actorId        = (string) $request->attributes->get('identity.user_id');
         $idempotencyKey = $request->header('Idempotency-Key');
+
+        if (! AgentModel::query()->where('id', $agentId)->where('user_id', $actorId)->exists()) {
+            return $this->errorResponse('AGENT_SCOPE_DENIED', 'Agent access is not authorized.', 403, $correlationId);
+        }
 
         if (! $idempotencyKey) {
             return $this->errorResponse('VALIDATION_ERROR', 'Idempotency-Key header is required.', 422, $correlationId);

@@ -60,6 +60,8 @@ Route::prefix('v1')->middleware(['identity.auth'])->group(static function (): vo
     // T065: US9 — View float transaction history
     Route::get('agents/{agentId}/float-wallet/transactions', [AgentFloatTransactionController::class, 'index'])
         ->middleware('identity.require-permission:agent_float.transactions.view');
+    Route::get('agents/{agentId}/float-wallet/transactions/{transactionId}', [AgentFloatTransactionController::class, 'show'])
+        ->middleware('identity.require-permission:agent_float.transactions.view');
 
     // ── Cash-In / Cash-Out (US4, US5) ───────────────────────────────────────
 

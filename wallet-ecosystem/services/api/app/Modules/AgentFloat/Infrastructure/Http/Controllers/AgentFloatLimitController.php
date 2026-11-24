@@ -10,6 +10,7 @@ use App\Modules\AgentFloat\Infrastructure\Http\Resources\FloatLimitResource;
 use App\Modules\AgentFloat\Infrastructure\Models\FloatLimitModel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 final class AgentFloatLimitController extends Controller
@@ -40,7 +41,9 @@ final class AgentFloatLimitController extends Controller
             return $this->errorResponse('VALIDATION_ERROR', 'At least one limit field must be provided.', 422, $correlationId);
         }
 
-        $limits = $this->limitService->updateLimits($agentId, $validated, $actorId, $correlationId);
+        $limits = DB::connection('platform')->transaction(
+            fn () => $this->limitService->updateLimits($agentId, $validated, $actorId, $correlationId)
+        );
 
         return response()->json([
             'success' => true,

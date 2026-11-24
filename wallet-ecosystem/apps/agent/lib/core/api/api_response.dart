@@ -37,11 +37,16 @@ class PaginatedResult<T> {
     final items = (json['data'] as List<dynamic>)
         .map((e) => fromJsonT(e as Map<String, dynamic>))
         .toList();
+    final meta = json['meta'] as Map<String, dynamic>? ?? const {};
     return PaginatedResult(
       data: items,
-      currentPage: json['current_page'] as int,
-      total: json['total'] as int,
-      lastPage: json['last_page'] as int,
+      currentPage: (meta['current_page'] ??
+          meta['page'] ??
+          json['current_page'] ??
+          1) as int,
+      total: (meta['total'] ?? json['total'] ?? items.length) as int,
+      lastPage:
+          (meta['last_page'] ?? meta['pages'] ?? json['last_page'] ?? 1) as int,
     );
   }
 }

@@ -4,12 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:wallet_agent/core/security/biometric_service.dart';
-import 'package:wallet_agent/core/security/pin_service.dart';
+import 'package:wallet_agent/core/notifications/push_notification_service.dart';
 import 'package:wallet_agent/core/theme/design_tokens.dart';
 import 'package:wallet_agent/shared/widgets/offline_banner.dart';
 import 'package:wallet_agent/shared/widgets/pin_pad_widget.dart';
 import 'package:wallet_agent/shared/widgets/primary_button.dart';
-import 'package:wallet_agent/core/notifications/push_notification_service.dart';
 import 'package:wallet_agent/modules/auth/presentation/auth_providers.dart';
 
 final _biometricServiceProvider = Provider((_) => BiometricService());
@@ -25,6 +24,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  String _enteredPin = '';
+  int _pinEntryVersion = 0;
   String? _errorMessage;
   DateTime? _lockoutUntil;
 
@@ -57,14 +58,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  Future<void> _onPinCompleted(String pin) async {
-    if (_phoneController.text.trim().isEmpty) {
-      setState(() => _errorMessage = 'Please enter your phone number first.');
+  void _onPinCompleted(String pin) {
+    if (!mounted) return;
+    setState(() {
+      _enteredPin = pin;
+      _errorMessage = null;
+    });
+  }
+
+  void _handleLogin() {
+    if (_isLoading || !_formKey.currentState!.validate()) return;
+    if (_enteredPin.length != 6) {
+      setState(() => _errorMessage = 'Enter your 6-digit PIN.');
       return;
     }
-    final pinHash = PinService.hash(pin);
-    await ref.read(secureStorageServiceProvider).savePinHash(pinHash);
-    await _submitLogin(pin: pin);
+    _submitLogin(pin: _enteredPin);
   }
 
   Future<void> _submitLogin({required String pin}) async {
@@ -72,6 +80,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _enteredPin = '';
+      _pinEntryVersion++;
     });
     try {
       await ref.read(authNotifierProvider.notifier).login(
@@ -136,7 +146,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       Text(
-                        'Enter your phone number and PIN',
+                        'Enter both details, then tap Login.',
                         style: AppTypography.bodyMedium.copyWith(
                           color: AppColors.onSurfaceVariant,
                         ),
@@ -150,6 +160,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           prefixIcon: Icon(Icons.phone),
                           hintText: '+267 XX XXX XXX',
                         ),
+                        onChanged: (_) => setState(() {
+                          _errorMessage = null;
+                          _lockoutUntil = null;
+                        }),
                         validator: (v) =>
                             (v == null || v.trim().isEmpty)
                                 ? 'Phone number is required'
@@ -162,8 +176,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       const SizedBox(height: AppSpacing.md),
                       PinPadWidget(
+                        key: ValueKey(_pinEntryVersion),
                         onCompleted: _onPinCompleted,
                         errorText: _errorMessage,
+                        enabled: !_isLoading,
+                        clearOnCompleted: false,
                       ),
                       if (_lockoutUntil != null)
                         Padding(
@@ -181,11 +198,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       PrimaryButton(
                         label: 'Login',
                         isLoading: _isLoading,
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            // PIN submit triggers via PinPadWidget.onCompleted
-                          }
-                        },
+                        onPressed: _handleLogin,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       Center(

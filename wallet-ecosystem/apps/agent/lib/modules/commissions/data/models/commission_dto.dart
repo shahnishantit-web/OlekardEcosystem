@@ -33,7 +33,6 @@ class CommissionEntryDto {
   final int amountMinorUnits;
   final String currencyCode;
   final String status;
-  final double rateApplied;
   final DateTime createdAt;
 
   const CommissionEntryDto({
@@ -43,19 +42,20 @@ class CommissionEntryDto {
     required this.amountMinorUnits,
     required this.currencyCode,
     required this.status,
-    required this.rateApplied,
     required this.createdAt,
   });
 
   factory CommissionEntryDto.fromJson(Map<String, dynamic> json) {
     return CommissionEntryDto(
       id: json['id'] as String,
-      referenceNumber: json['reference_number'] as String,
+      referenceNumber: (json['reference_number'] ??
+          json['transaction_id'] ??
+          json['id']) as String,
       transactionType: json['transaction_type'] as String,
-      amountMinorUnits: json['amount_minor_units'] as int,
+      amountMinorUnits:
+          (json['amount_minor_units'] ?? json['amount'] as num).toInt(),
       currencyCode: json['currency_code'] as String,
       status: json['status'] as String,
-      rateApplied: (json['rate_applied'] as num?)?.toDouble() ?? 0.0,
       createdAt: DateTime.parse(json['created_at'] as String),
     );
   }
@@ -67,7 +67,6 @@ class CommissionEntryDto {
         amountMinorUnits: amountMinorUnits,
         currencyCode: currencyCode,
         status: status,
-        rateApplied: rateApplied,
         createdAt: createdAt,
       );
 }

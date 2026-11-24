@@ -37,8 +37,7 @@ class _CustomerSearchScreenState extends ConsumerState<CustomerSearchScreen> {
       _result = null;
     });
     try {
-      final lookup =
-          await ref.read(cashInRepositoryProvider).searchCustomer(q);
+      final lookup = await ref.read(cashInRepositoryProvider).searchCustomer(q);
       setState(() => _result = lookup);
     } on DioException catch (e) {
       final statusCode = e.response?.statusCode;
@@ -122,6 +121,7 @@ class _CustomerSearchScreenState extends ConsumerState<CustomerSearchScreen> {
                             onPressed: _result.isActive
                                 ? () => context.push('/cash-in/form', extra: {
                                       'wallet_id': _result.walletId,
+                                      'customer_id': _result.customerId,
                                       'customer_name': _result.customerName,
                                       'masked_wallet_number':
                                           _result.maskedWalletNumber,

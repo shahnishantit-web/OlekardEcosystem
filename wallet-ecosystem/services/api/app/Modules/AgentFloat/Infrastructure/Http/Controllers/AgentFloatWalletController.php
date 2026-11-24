@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\AgentFloat\Infrastructure\Http\Controllers;
 
+use App\Modules\Agent\Infrastructure\Models\AgentModel;
 use App\Modules\AgentFloat\Application\Services\FloatWalletProvisioningService;
 use App\Modules\AgentFloat\Domain\Exceptions\AgentNotEligibleForFloatException;
 use App\Modules\AgentFloat\Domain\Exceptions\FloatWalletAlreadyExistsException;
@@ -13,9 +14,12 @@ use App\Modules\AgentFloat\Infrastructure\Http\Resources\FloatWalletResource;
 use App\Modules\AgentFloat\Infrastructure\Models\AgentFloatWalletModel;
 use App\Modules\AgentFloat\Infrastructure\Models\FloatLimitModel;
 use App\Modules\Ledger\Domain\Contracts\LedgerModuleContract;
+use App\Modules\Identity\Domain\Contracts\IdentityModuleContract;
 use App\Modules\Wallet\Infrastructure\Models\WalletModel;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 final class AgentFloatWalletController extends Controller
@@ -23,6 +27,7 @@ final class AgentFloatWalletController extends Controller
     public function __construct(
         private readonly FloatWalletProvisioningService $provisioningService,
         private readonly LedgerModuleContract           $ledger,
+        private readonly IdentityModuleContract        $identity,
     ) {}
 
     /**
@@ -53,12 +58,14 @@ final class AgentFloatWalletController extends Controller
         $isReplay = false;
 
         try {
-            $floatWallet = $this->provisioningService->provision(
-                agentId:        $agentId,
-                currencyCode:   $request->validated()['currency_code'],
-                actorId:        $actorId,
-                idempotencyKey: $idempotencyKey,
-                correlationId:  $correlationId,
+            $floatWallet = DB::connection('platform')->transaction(
+                fn () => $this->provisioningService->provision(
+                    agentId:        $agentId,
+                    currencyCode:   $request->validated()['currency_code'],
+                    actorId:        $actorId,
+                    idempotencyKey: $idempotencyKey,
+                    correlationId:  $correlationId,
+                )
             );
         } catch (FloatWalletAlreadyExistsException $e) {
             // Check if this is an idempotent replay — idempotency handler returns the wallet
@@ -95,8 +102,16 @@ final class AgentFloatWalletController extends Controller
      *   @OA\Response(response=404, description="Float wallet not found")
      * )
      */
-    public function show(string $agentId): JsonResponse
+    public function show(Request $request, string $agentId): JsonResponse
     {
+        $actorId = (string) $request->attributes->get('identity.user_id');
+        if ($actorId === '') {
+            abort(401);
+        }
+        if (! $this->identity->hasPermission($actorId, 'agent_float.wallet.view_any')
+            && ! AgentModel::query()->where('id', $agentId)->where('user_id', $actorId)->exists()) {
+            abort(403);
+        }
         $correlationId = (string) Str::uuid();
 
         $floatWallet = AgentFloatWalletModel::where('agent_id', $agentId)->first();

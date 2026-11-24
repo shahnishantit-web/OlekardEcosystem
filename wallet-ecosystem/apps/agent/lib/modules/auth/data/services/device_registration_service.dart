@@ -1,6 +1,7 @@
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:uuid/uuid.dart';
 
 import 'package:wallet_agent/core/security/secure_storage_service.dart';
 
@@ -8,6 +9,7 @@ class DeviceRegistrationService {
   final Dio _dio;
   final SecureStorageService _storage;
   final DeviceInfoPlugin _deviceInfo;
+  final _uuid = const Uuid();
 
   DeviceRegistrationService({
     required Dio dio,
@@ -22,38 +24,28 @@ class DeviceRegistrationService {
     if (existingId != null) return existingId;
 
     final (platform, model, osVersion) = await _getDeviceAttributes();
+    final fingerprint = await _storage.getDeviceFingerprint() ?? _uuid.v4();
+    await _storage.saveDeviceFingerprint(fingerprint);
 
     final response = await _dio.post<Map<String, dynamic>>(
-      '/v1/agent/devices',
+      '/v1/auth/devices/register',
       data: {
-        'device_id': _generateDeviceIdentifier(),
+        'device_fingerprint': fingerprint,
+        'device_name': '$model ($osVersion)',
         'platform': platform,
-        'model': model,
-        'os_version': osVersion,
       },
     );
 
-    final deviceId = response.data!['id'] as String;
+    final data =
+        response.data?['data'] as Map<String, dynamic>? ?? response.data!;
+    final deviceId = data['id'] as String;
     await _storage.saveDeviceId(deviceId);
     return deviceId;
   }
 
   Future<void> registerPushToken(String pushToken) async {
-    var deviceId = await _storage.getDeviceId();
-    // Device not registered yet — register first then retry.
-    deviceId ??= await registerDevice();
-
-    final platform = defaultTargetPlatform == TargetPlatform.iOS
-        ? 'ios'
-        : 'android';
-
-    await _dio.post<void>(
-      '/v1/agent/devices/$deviceId/push-token',
-      data: {
-        'push_token': pushToken,
-        'platform': platform,
-      },
-    );
+    throw UnsupportedError(
+        'Push-token registration is not available in the current API.');
   }
 
   Future<(String platform, String model, String osVersion)>
@@ -65,12 +57,6 @@ class DeviceRegistrationService {
       final info = await _deviceInfo.iosInfo;
       return ('ios', info.utsname.machine, info.systemVersion);
     }
-    return ('unknown', 'unknown', 'unknown');
-  }
-
-  String _generateDeviceIdentifier() {
-    // Deterministic per-install identifier derived from timestamp + random.
-    // A real implementation would use a persisted UUID stored on first install.
-    return DateTime.now().millisecondsSinceEpoch.toRadixString(16);
+    return ('web', 'Web browser', 'unknown');
   }
 }

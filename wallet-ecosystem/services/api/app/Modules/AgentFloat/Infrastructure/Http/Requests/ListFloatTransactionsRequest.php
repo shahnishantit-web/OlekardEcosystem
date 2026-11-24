@@ -22,6 +22,7 @@ final class ListFloatTransactionsRequest extends FormRequest
             'from'     => ['sometimes', 'nullable', 'date'],
             'to'       => ['sometimes', 'nullable', 'date'],
             'type'     => ['sometimes', 'nullable', 'string', 'in:funding,cash_in,cash_out'],
+            'status'   => ['sometimes', 'nullable', 'string', 'in:pending,processing,completed,failed,reversed,cancelled'],
         ];
     }
 }

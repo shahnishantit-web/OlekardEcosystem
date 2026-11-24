@@ -19,7 +19,6 @@ import 'package:wallet_agent/modules/cash_out/presentation/screens/cash_out_conf
 import 'package:wallet_agent/modules/cash_out/presentation/screens/cash_out_customer_search_screen.dart';
 import 'package:wallet_agent/modules/cash_out/presentation/screens/cash_out_form_screen.dart';
 import 'package:wallet_agent/modules/cash_out/presentation/screens/cash_out_result_screen.dart';
-import 'package:wallet_agent/modules/cash_out/presentation/screens/pickup_code_screen.dart';
 import 'package:wallet_agent/modules/events/presentation/screens/event_gate_scan_screen.dart';
 import 'package:wallet_agent/modules/commissions/presentation/screens/commissions_screen.dart';
 import 'package:wallet_agent/modules/customer_onboarding/domain/entities/customer_profile.dart';
@@ -70,8 +69,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/', builder: (_, __) => const SplashScreen()),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-      GoRoute(
-          path: '/forgot-pin', builder: (_, __) => const ForgotPinScreen()),
+      GoRoute(path: '/forgot-pin', builder: (_, __) => const ForgotPinScreen()),
       GoRoute(
         path: '/forgot-pin/otp',
         builder: (_, state) {
@@ -110,6 +108,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) {
           final e = state.extra as Map<String, dynamic>;
           return CashInFormScreen(
+            customerId: e['customer_id'] as String,
             walletId: e['wallet_id'] as String,
             customerName: e['customer_name'] as String,
             maskedWalletNumber: e['masked_wallet_number'] as String,
@@ -122,6 +121,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) {
           final e = state.extra as Map<String, dynamic>;
           return CashInConfirmationScreen(
+            customerId: e['customer_id'] as String,
             walletId: e['wallet_id'] as String,
             customerName: e['customer_name'] as String,
             amountMinorUnits: e['amount_minor_units'] as int,
@@ -141,7 +141,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/cash-out/scan',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (_, __) => const PickupCodeScreen(),
+        builder: (_, __) => const CashOutCustomerSearchScreen(),
       ),
       GoRoute(
         path: '/events/gate-scan',
@@ -160,6 +160,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) {
           final e = state.extra as Map<String, dynamic>;
           return CashOutFormScreen(
+            customerId: e['customer_id'] as String,
             walletId: e['wallet_id'] as String,
             customerName: e['customer_name'] as String,
             maskedWalletNumber: e['masked_wallet_number'] as String,
@@ -172,6 +173,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) {
           final e = state.extra as Map<String, dynamic>;
           return CashOutConfirmationScreen(
+            customerId: e['customer_id'] as String,
             walletId: e['wallet_id'] as String,
             customerName: e['customer_name'] as String,
             amountMinorUnits: e['amount_minor_units'] as int,
@@ -295,4 +297,3 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
-

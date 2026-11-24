@@ -10,12 +10,14 @@ import 'package:wallet_agent/shared/widgets/primary_button.dart';
 import 'package:wallet_agent/shared/widgets/transaction_step_flow.dart';
 
 class CashOutFormScreen extends ConsumerStatefulWidget {
+  final String customerId;
   final String walletId;
   final String customerName;
   final String maskedWalletNumber;
 
   const CashOutFormScreen({
     super.key,
+    required this.customerId,
     required this.walletId,
     required this.customerName,
     required this.maskedWalletNumber,
@@ -49,8 +51,7 @@ class _CashOutFormScreenState extends ConsumerState<CashOutFormScreen> {
         context: context,
         builder: (_) => AlertDialog(
           title: const Text('You are offline'),
-          content: const Text(
-              'You must be connected to perform a cash-out.'),
+          content: const Text('You must be connected to perform a cash-out.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -62,6 +63,7 @@ class _CashOutFormScreenState extends ConsumerState<CashOutFormScreen> {
       return;
     }
     context.push('/cash-out/confirm', extra: {
+      'customer_id': widget.customerId,
       'wallet_id': widget.walletId,
       'customer_name': widget.customerName,
       'amount_minor_units': _previewMinorUnits,
@@ -84,62 +86,61 @@ class _CashOutFormScreenState extends ConsumerState<CashOutFormScreen> {
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Form(
                   key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Customer', style: AppTypography.labelLarge),
-                    Text(widget.customerName,
-                        style: AppTypography.titleLarge),
-                    Text(widget.maskedWalletNumber,
-                        style: AppTypography.bodyMedium
-                            .copyWith(color: AppColors.onSurfaceVariant)),
-                    const SizedBox(height: AppSpacing.xl),
-                    TextFormField(
-                      controller: _amountController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true),
-                      decoration: const InputDecoration(
-                        labelText: 'Amount (BWP)',
-                        prefixIcon: Icon(Icons.attach_money),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Customer', style: AppTypography.labelLarge),
+                      Text(widget.customerName,
+                          style: AppTypography.titleLarge),
+                      Text(widget.maskedWalletNumber,
+                          style: AppTypography.bodyMedium
+                              .copyWith(color: AppColors.onSurfaceVariant)),
+                      const SizedBox(height: AppSpacing.xl),
+                      TextFormField(
+                        controller: _amountController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        decoration: const InputDecoration(
+                          labelText: 'Amount (BWP)',
+                          prefixIcon: Icon(Icons.attach_money),
+                        ),
+                        onChanged: _onAmountChanged,
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) {
+                            return 'Amount is required';
+                          }
+                          final parsed = double.tryParse(v.replaceAll(',', ''));
+                          if (parsed == null || parsed <= 0) {
+                            return 'Enter a valid amount';
+                          }
+                          return null;
+                        },
                       ),
-                      onChanged: _onAmountChanged,
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) {
-                          return 'Amount is required';
-                        }
-                        final parsed =
-                            double.tryParse(v.replaceAll(',', ''));
-                        if (parsed == null || parsed <= 0) {
-                          return 'Enter a valid amount';
-                        }
-                        return null;
-                      },
-                    ),
-                    if (_previewMinorUnits > 0) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      Row(
-                        children: [
-                          const Text('Preview: ',
-                              style: AppTypography.bodyMedium),
-                          AmountDisplay(
-                            minorUnits: _previewMinorUnits,
-                            currencyCode: 'BWP',
-                            size: AmountSize.medium,
-                          ),
-                        ],
+                      if (_previewMinorUnits > 0) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        Row(
+                          children: [
+                            const Text('Preview: ',
+                                style: AppTypography.bodyMedium),
+                            AmountDisplay(
+                              minorUnits: _previewMinorUnits,
+                              currencyCode: 'BWP',
+                              size: AmountSize.medium,
+                            ),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(height: AppSpacing.xl),
+                      PrimaryButton(
+                        label: 'Review Transaction',
+                        onPressed: _proceed,
                       ),
                     ],
-                    const SizedBox(height: AppSpacing.xl),
-                    PrimaryButton(
-                      label: 'Review Transaction',
-                      onPressed: _proceed,
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
         ),
       ),
     );

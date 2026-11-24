@@ -6,6 +6,7 @@ const _kAccessToken = 'agent_access_token';
 const _kRefreshToken = 'agent_refresh_token';
 const _kPinHash = 'agent_pin_hash';
 const _kDeviceId = 'agent_device_id';
+const _kDeviceFingerprint = 'agent_device_fingerprint';
 
 class SecureStorageService {
   final FlutterSecureStorage _storage;
@@ -118,6 +119,23 @@ class SecureStorageService {
       debugPrint('SecureStorage read error: $e');
       return null;
     }
+  }
+
+  Future<void> saveDeviceFingerprint(String fingerprint) async {
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_kDeviceFingerprint, fingerprint);
+      return;
+    }
+    await _storage.write(key: _kDeviceFingerprint, value: fingerprint);
+  }
+
+  Future<String?> getDeviceFingerprint() async {
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(_kDeviceFingerprint);
+    }
+    return _storage.read(key: _kDeviceFingerprint);
   }
 
   Future<void> clearAll() async {

@@ -2,23 +2,24 @@ import 'package:wallet_agent/modules/cash_out/domain/entities/cash_out_result.da
 import 'package:wallet_agent/modules/cash_out/domain/entities/pickup_code_lookup.dart';
 
 class CashOutRequestDto {
+  final String customerId;
+  final String customerName;
   final String walletId;
   final int amountMinorUnits;
   final String currencyCode;
-  final String pinHash;
 
   const CashOutRequestDto({
+    required this.customerId,
+    required this.customerName,
     required this.walletId,
     required this.amountMinorUnits,
     required this.currencyCode,
-    required this.pinHash,
   });
 
   Map<String, dynamic> toJson() => {
-        'wallet_id': walletId,
-        'amount_minor_units': amountMinorUnits,
+        'customer_wallet_id': walletId,
+        'amount': amountMinorUnits,
         'currency_code': currencyCode,
-        'pin_hash': pinHash,
       };
 }
 

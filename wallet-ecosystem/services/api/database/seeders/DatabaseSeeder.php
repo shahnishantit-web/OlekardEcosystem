@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             CustomerAgentSeeder::class,
             DevCustomerSeeder::class,
             DevAgentSeeder::class,
+            DevAgentFloatSeeder::class,
             WatchlistEntrySeeder::class,
             ReportPermissionSeeder::class,
             ReportDefinitionSeeder::class,

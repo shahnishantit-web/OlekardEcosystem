@@ -26,12 +26,23 @@ final class AgentCommissionController extends Controller
 
         $paginator = $this->reportService->listPaid(
             agentId: $agentId,
-            filters: $request->only(['from', 'to']),
+            filters: $request->only(['from', 'to', 'transaction_type']),
             page:    (int) $request->query('page', 1),
             perPage: (int) $request->query('per_page', 20),
         );
 
         return CommissionResource::collection($paginator);
+    }
+
+    public function summary(Request $request, string $agentId): \Illuminate\Http\JsonResponse
+    {
+        $this->guardAgentAccess($request, $agentId);
+        return response()->json([
+            'success' => true,
+            'data' => $this->reportService->summary($agentId),
+            'error' => null,
+            'meta' => null,
+        ]);
     }
 
     public function pending(Request $request, string $agentId): PendingCommissionsSummaryResource

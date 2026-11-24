@@ -4,18 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:wallet_agent/core/connectivity/connectivity_service.dart';
-import 'package:wallet_agent/core/security/pin_service.dart';
 import 'package:wallet_agent/core/security/screenshot_guard.dart';
 import 'package:wallet_agent/core/theme/design_tokens.dart';
 import 'package:wallet_agent/shared/widgets/amount_display.dart';
 import 'package:wallet_agent/shared/widgets/offline_banner.dart';
-import 'package:wallet_agent/shared/widgets/pin_pad_widget.dart';
 import 'package:wallet_agent/modules/cash_out/data/models/cash_out_request_dto.dart';
 import 'package:wallet_agent/modules/cash_out/presentation/cash_out_providers.dart';
 import 'package:wallet_agent/modules/dashboard/presentation/dashboard_providers.dart';
 import 'package:wallet_agent/shared/widgets/transaction_step_flow.dart';
 
 class CashOutConfirmationScreen extends ConsumerStatefulWidget {
+  final String customerId;
   final String walletId;
   final String customerName;
   final int amountMinorUnits;
@@ -23,6 +22,7 @@ class CashOutConfirmationScreen extends ConsumerStatefulWidget {
 
   const CashOutConfirmationScreen({
     super.key,
+    required this.customerId,
     required this.walletId,
     required this.customerName,
     required this.amountMinorUnits,
@@ -51,12 +51,13 @@ class _CashOutConfirmationScreenState
     super.dispose();
   }
 
-  Future<void> _onPinCompleted(String pin) async {
+  Future<void> _submitCashOut() async {
     // Verify online before PIN submission (T076)
     final isOnline = ref.read(connectivityProvider);
     if (!isOnline) {
       setState(() {
-        _pinError = 'You are offline. Cash-out requires an internet connection.';
+        _pinError =
+            'You are offline. Cash-out requires an internet connection.';
       });
       return;
     }
@@ -66,30 +67,29 @@ class _CashOutConfirmationScreenState
       _pinError = null;
     });
     try {
-      final pinHash = PinService.hash(pin);
-      final result =
-          await ref.read(cashOutRepositoryProvider).submitCashOut(
-                CashOutRequestDto(
-                  walletId: widget.walletId,
-                  amountMinorUnits: widget.amountMinorUnits,
-                  currencyCode: widget.currencyCode,
-                  pinHash: pinHash,
-                ),
-              );
+      final result = await ref.read(cashOutRepositoryProvider).submitCashOut(
+            CashOutRequestDto(
+              customerId: widget.customerId,
+              customerName: widget.customerName,
+              walletId: widget.walletId,
+              amountMinorUnits: widget.amountMinorUnits,
+              currencyCode: widget.currencyCode,
+            ),
+          );
       ref.read(cashOutResultProvider.notifier).setResult(result);
       ref.invalidate(dashboardProvider);
       if (mounted) context.go('/cash-out/result', extra: result);
     } on DioException catch (e) {
-      final code =
-          (e.response?.data as Map<String, dynamic>?)?['code'] as String?;
-      if (code == 'step_up_required' && mounted) {
+      final payload = e.response?.data as Map<String, dynamic>?;
+      final error = payload?['error'] as Map<String, dynamic>?;
+      final code = (error?['code'] ?? payload?['code']) as String?;
+      if ((code == 'step_up_required' || code == 'STEP_UP_REQUIRED') &&
+          mounted) {
         context.push('/step-up-pin');
       } else {
         setState(() {
-          _pinError =
-              (e.response?.data as Map<String, dynamic>?)?['message']
-                      as String? ??
-                  'Transaction failed. Please try again.';
+          _pinError = (error?['message'] ?? payload?['message']) as String? ??
+              'Transaction failed. Please try again.';
         });
       }
     } finally {
@@ -99,8 +99,6 @@ class _CashOutConfirmationScreenState
 
   @override
   Widget build(BuildContext context) {
-    const estimatedFee = 250;
-
     return Scaffold(
       appBar: AppBar(title: const Text('Confirm Cash Out')),
       body: TransactionStepFlow(
@@ -115,58 +113,55 @@ class _CashOutConfirmationScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Column(
-                        children: [
-                          _InfoRow(
-                              label: 'Customer',
-                              value: widget.customerName),
-                          const Divider(),
-                          _AmountRow(
-                            label: 'Amount',
-                            minorUnits: widget.amountMinorUnits,
-                            currency: widget.currencyCode,
-                          ),
-                          _AmountRow(
-                            label: 'Estimated Fee',
-                            minorUnits: estimatedFee,
-                            currency: widget.currencyCode,
-                          ),
-                          const Divider(),
-                          _AmountRow(
-                            label: 'Float Credit',
-                            minorUnits:
-                                widget.amountMinorUnits - estimatedFee,
-                            currency: widget.currencyCode,
-                            bold: true,
-                          ),
-                        ],
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Column(
+                          children: [
+                            _InfoRow(
+                                label: 'Customer', value: widget.customerName),
+                            const Divider(),
+                            _AmountRow(
+                              label: 'Amount',
+                              minorUnits: widget.amountMinorUnits,
+                              currency: widget.currencyCode,
+                            ),
+                            const Divider(),
+                            _AmountRow(
+                              label: 'Customer receives',
+                              minorUnits: widget.amountMinorUnits,
+                              currency: widget.currencyCode,
+                              bold: true,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  Semantics(
-                    label: 'Enter your PIN to confirm the cash-out',
-                    child: const Text(
-                      'Enter your PIN to confirm',
-                      style: AppTypography.titleMedium,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  if (_isLoading)
-                    const Center(child: CircularProgressIndicator())
-                  else
-                    PinPadWidget(
-                      onCompleted: _onPinCompleted,
-                      errorText: _pinError,
-                    ),
-                ],
+                    const SizedBox(height: AppSpacing.xl),
+                    const Text('Review and confirm',
+                        style: AppTypography.titleMedium),
+                    const SizedBox(height: AppSpacing.md),
+                    if (_pinError != null) ...[
+                      Text(_pinError!,
+                          style: const TextStyle(color: AppColors.error)),
+                      const SizedBox(height: AppSpacing.sm),
+                    ],
+                    if (_isLoading)
+                      const Center(child: CircularProgressIndicator())
+                    else
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: _submitCashOut,
+                          icon: const Icon(Icons.check),
+                          label: const Text('Confirm Cash Out'),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
         ),
       ),
     );

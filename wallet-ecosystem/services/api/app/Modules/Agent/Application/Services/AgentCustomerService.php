@@ -135,6 +135,36 @@ final class AgentCustomerService
         return $paginator;
     }
 
+    /** Return the linked customer's identity and KYC state for the owning agent. */
+    public function customerStatus(
+        string $agentId,
+        string $customerId,
+        string $actorId,
+        string $correlationId,
+    ): array {
+        $this->assertAgentActive($agentId);
+        $this->assertLinked($agentId, $customerId, $actorId, $correlationId);
+
+        $customer = DB::connection('platform')
+            ->table('agent.agent_customer_relationships')
+            ->where('agent_id', $agentId)
+            ->where('customer_id', $customerId)
+            ->first(['customer_id', 'first_name', 'last_name', 'mobile_number', 'customer_status']);
+
+        if ($customer === null) {
+            throw new UnauthorizedCustomerAccessException();
+        }
+
+        $status = (string) $customer->customer_status;
+        return [
+            'id' => $customer->customer_id,
+            'name' => trim($customer->first_name . ' ' . $customer->last_name),
+            'phone' => $customer->mobile_number,
+            'account_status' => $status,
+            'kyc_status' => $status === 'kyc_verified' ? 'verified' : 'pending',
+        ];
+    }
+
     // T084 ————————————————————————————————————————————————
     public function registerCustomer(
         string $agentId,

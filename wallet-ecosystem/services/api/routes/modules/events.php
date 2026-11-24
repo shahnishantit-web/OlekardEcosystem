@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1/events')->middleware(['identity.auth'])->group(static function (): void {
     Route::get('customer/catalogue', [CustomerEventCatalogueController::class, 'index']);
+    Route::get('my-gate-assignments', [EventAdmissionController::class, 'myGateAssignments']);
     Route::get('organisations/{organisationId}/drafts', [EventAuthoringController::class, 'index']);
     Route::get('organisations/{organisationId}/members', [EventAssignmentController::class, 'organisationMembers']);
     Route::get('organisations/{organisationId}/sponsors', [EventSponsorController::class, 'index']);

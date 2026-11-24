@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import 'package:wallet_agent/core/theme/design_tokens.dart';
@@ -20,19 +19,7 @@ class FloatScreen extends ConsumerWidget {
     final txAsync = ref.watch(floatTransactionsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Float'),
-        actions: [
-          Semantics(
-            label: 'Request Float Top-Up',
-            child: IconButton(
-              icon: const Icon(Icons.add_circle_outline),
-              tooltip: 'Request Top-Up',
-              onPressed: () => context.push('/float/top-up'),
-            ),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Float')),
       body: Column(
         children: [
           const OfflineBanner(),
@@ -68,14 +55,13 @@ class FloatScreen extends ConsumerWidget {
                               '${tx.type}, ${tx.amountMinorUnits ~/ 100} ${tx.currencyCode}',
                           child: ListTile(
                             leading: const Icon(Icons.swap_horiz),
-                            title: Text(tx.type
-                                .replaceAll('_', ' ')
-                                .toUpperCase()),
+                            title: Text(
+                                tx.type.replaceAll('_', ' ').toUpperCase()),
                             subtitle: Text(
                               DateFormat('d MMM yyyy, HH:mm')
                                   .format(tx.createdAt),
-                              style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.onSurfaceVariant),
+                              style: AppTypography.bodySmall
+                                  .copyWith(color: AppColors.onSurfaceVariant),
                             ),
                             trailing: AmountDisplay(
                               minorUnits: tx.amountMinorUnits,
@@ -123,7 +109,8 @@ class _BalanceCard extends StatelessWidget {
               const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
-                  const Icon(Icons.warning_amber, color: AppColors.error, size: 16),
+                  const Icon(Icons.warning_amber,
+                      color: AppColors.error, size: 16),
                   const SizedBox(width: AppSpacing.xs),
                   Text(
                     'Float balance is low',

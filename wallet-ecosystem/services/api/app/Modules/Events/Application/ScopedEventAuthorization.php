@@ -104,7 +104,7 @@ final class ScopedEventAuthorization
         $this->assertEvent($managerId, $organisationId, $eventId, 'events.gate.assignment.manage');
     }
 
-    private function assertPermission(string $actorId, string $permission): void
+    public function assertPermission(string $actorId, string $permission): void
     {
         abort_unless($this->identity->hasPermission($actorId, $permission), 403, 'Events permission is required.');
     }

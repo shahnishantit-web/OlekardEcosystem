@@ -16,10 +16,10 @@ class FloatBalanceDto {
   factory FloatBalanceDto.fromJson(Map<String, dynamic> json) {
     return FloatBalanceDto(
       walletId: json['wallet_id'] as String,
-      balanceMinorUnits: json['balance_minor_units'] as int,
+      balanceMinorUnits:
+          (json['balance_minor_units'] ?? json['balance'] as num).toInt(),
       currencyCode: json['currency_code'] as String,
-      lowThresholdMinorUnits:
-          json['low_threshold_minor_units'] as int?,
+      lowThresholdMinorUnits: json['low_threshold_minor_units'] as int?,
     );
   }
 
@@ -53,9 +53,11 @@ class FloatTransactionDto {
   factory FloatTransactionDto.fromJson(Map<String, dynamic> json) {
     return FloatTransactionDto(
       id: json['id'] as String,
-      referenceNumber: json['reference_number'] as String,
+      referenceNumber:
+          (json['reference_number'] ?? json['reference']) as String,
       type: json['type'] as String,
-      amountMinorUnits: json['amount_minor_units'] as int,
+      amountMinorUnits:
+          (json['amount_minor_units'] ?? json['amount'] as num).toInt(),
       currencyCode: json['currency_code'] as String,
       status: json['status'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),

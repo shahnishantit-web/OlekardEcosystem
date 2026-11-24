@@ -6,9 +6,12 @@ import 'package:wallet_agent/core/api/api_response.dart';
 import 'package:wallet_agent/modules/commissions/data/repositories/commission_repository_impl.dart';
 import 'package:wallet_agent/modules/commissions/domain/entities/commission_balance.dart';
 import 'package:wallet_agent/modules/commissions/domain/repositories/commission_repository.dart';
+import 'package:wallet_agent/modules/auth/presentation/auth_providers.dart';
 
 final commissionRepositoryProvider = Provider<CommissionRepository>((ref) {
-  return CommissionRepositoryImpl(dio: createDio(null));
+  final agentId = ref.watch(authNotifierProvider.select((s) => s.agent?.id));
+  if (agentId == null) throw StateError('Agent session is not available.');
+  return CommissionRepositoryImpl(dio: createDio(null), agentId: agentId);
 });
 
 final commissionBalanceProvider =

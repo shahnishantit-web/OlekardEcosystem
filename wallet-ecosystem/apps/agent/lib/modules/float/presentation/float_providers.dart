@@ -6,9 +6,12 @@ import 'package:wallet_agent/core/api/api_response.dart';
 import 'package:wallet_agent/modules/float/data/repositories/float_repository_impl.dart';
 import 'package:wallet_agent/modules/float/domain/entities/float_balance.dart';
 import 'package:wallet_agent/modules/float/domain/repositories/float_repository.dart';
+import 'package:wallet_agent/modules/auth/presentation/auth_providers.dart';
 
 final floatRepositoryProvider = Provider<FloatRepository>((ref) {
-  return FloatRepositoryImpl(dio: createDio(null));
+  final agentId = ref.watch(authNotifierProvider.select((s) => s.agent?.id));
+  if (agentId == null) throw StateError('Agent session is not available.');
+  return FloatRepositoryImpl(dio: createDio(null), agentId: agentId);
 });
 
 final floatBalanceProvider =

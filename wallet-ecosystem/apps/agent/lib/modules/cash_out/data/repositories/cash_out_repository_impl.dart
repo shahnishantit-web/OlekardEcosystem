@@ -1,69 +1,79 @@
 import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
 
-import 'package:wallet_agent/modules/cash_in/domain/entities/customer_lookup.dart';
 import 'package:wallet_agent/modules/cash_in/data/models/cash_in_request_dto.dart';
+import 'package:wallet_agent/modules/cash_in/domain/entities/customer_lookup.dart';
+import 'package:wallet_agent/modules/cash_out/data/models/cash_out_request_dto.dart';
 import 'package:wallet_agent/modules/cash_out/domain/entities/cash_out_result.dart';
 import 'package:wallet_agent/modules/cash_out/domain/entities/pickup_code_lookup.dart';
 import 'package:wallet_agent/modules/cash_out/domain/repositories/cash_out_repository.dart';
-import 'package:wallet_agent/modules/cash_out/data/models/cash_out_request_dto.dart';
 
 class CashOutRepositoryImpl implements CashOutRepository {
   final Dio _dio;
+  final String agentId;
   final _uuid = const Uuid();
-  final Map<String, CashOutResult> _idempotencyCache = {};
 
-  CashOutRepositoryImpl({required Dio dio}) : _dio = dio;
+  CashOutRepositoryImpl({required Dio dio, required this.agentId}) : _dio = dio;
 
   @override
   Future<PickupCodeLookup> lookupPickupCode(String code) async {
-    try {
-      final response = await _dio.get<Map<String, dynamic>>(
-        '/v1/agent/cash-out/lookup',
-        queryParameters: {'code': code},
-      );
-      return PickupCodeLookupDto.fromJson(response.data!).toEntity();
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 410) {
-        throw PickupCodeExpiredException(code);
-      }
-      if (e.response?.statusCode == 409) {
-        throw PickupCodeRedeemedException(code);
-      }
-      rethrow;
-    }
+    throw UnsupportedError(
+      'Pickup-code lookup is not available in the current API. Search for the customer instead.',
+    );
   }
 
   @override
   Future<CustomerLookup> searchCustomer(String query) async {
     final response = await _dio.get<Map<String, dynamic>>(
-      '/v1/agent/customers',
-      queryParameters: {'q': query},
+      '/v1/agents/$agentId/customers',
+      queryParameters: {'search': query, 'per_page': 20},
     );
-    return CustomerLookupDto.fromJson(response.data!).toEntity();
+    final rows = response.data?['data'] as List<dynamic>? ?? const [];
+    if (rows.isEmpty) {
+      throw DioException(
+        requestOptions: RequestOptions(path: '/v1/agents/$agentId/customers'),
+        response: Response(
+          requestOptions: RequestOptions(path: '/v1/agents/$agentId/customers'),
+          statusCode: 404,
+        ),
+      );
+    }
+    final row = rows.first as Map<String, dynamic>;
+    final customerId = row['id'] as String;
+    final walletResponse = await _dio.get<Map<String, dynamic>>(
+      '/v1/agents/$agentId/customers/$customerId/wallet',
+    );
+    final wallet = walletResponse.data?['data'] as Map<String, dynamic>? ??
+        walletResponse.data!;
+    return CustomerLookupDto(
+      customerId: customerId,
+      walletId: wallet['wallet_id'] as String,
+      customerName:
+          '${row['first_name'] ?? ''} ${row['last_name'] ?? ''}'.trim(),
+      maskedWalletNumber: 'Wallet linked',
+      accountStatus: row['status'] as String? ?? 'unknown',
+    ).toEntity();
   }
 
   @override
   Future<CashOutResult> submitCashOut(CashOutRequestDto request) async {
-    final idempotencyKey = _uuid.v4();
-    try {
-      final response = await _dio.post<Map<String, dynamic>>(
-        '/v1/agent/cash-out',
-        data: request.toJson(),
-        options: Options(headers: {'Idempotency-Key': idempotencyKey}),
-      );
-      final result = CashOutResultDto.fromJson(response.data!).toEntity();
-      _idempotencyCache[idempotencyKey] = result;
-      return result;
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 409) {
-        final cached = _idempotencyCache[idempotencyKey];
-        if (cached != null) return cached;
-        return CashOutResultDto.fromJson(
-          e.response!.data as Map<String, dynamic>,
-        ).toEntity();
-      }
-      rethrow;
-    }
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/v1/agents/$agentId/customers/${request.customerId}/cash-out',
+      data: request.toJson(),
+      options: Options(headers: {'Idempotency-Key': _uuid.v4()}),
+    );
+    final data =
+        response.data?['data'] as Map<String, dynamic>? ?? response.data!;
+    return CashOutResult(
+      referenceNumber: data['reference'] as String? ?? data['id'] as String,
+      amountMinorUnits: (data['amount'] as num).toInt(),
+      feeMinorUnits: 0,
+      currencyCode: data['currency_code'] as String,
+      customerName: request.customerName,
+      agentName: 'Agent',
+      agentLocationCode: '',
+      timestamp: DateTime.parse(data['created_at'] as String),
+      status: data['status'] as String,
+    );
   }
 }

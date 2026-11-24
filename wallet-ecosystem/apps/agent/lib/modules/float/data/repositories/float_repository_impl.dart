@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:uuid/uuid.dart';
 
 import 'package:wallet_agent/core/api/api_response.dart';
 import 'package:wallet_agent/modules/float/domain/entities/float_balance.dart';
@@ -8,16 +7,26 @@ import 'package:wallet_agent/modules/float/data/models/float_dto.dart';
 
 class FloatRepositoryImpl implements FloatRepository {
   final Dio _dio;
-  final _uuid = const Uuid();
+  final String agentId;
 
-  FloatRepositoryImpl({required Dio dio}) : _dio = dio;
+  FloatRepositoryImpl({required Dio dio, required this.agentId}) : _dio = dio;
 
   @override
   Future<FloatBalance> getBalance() async {
-    final response = await _dio.get<Map<String, dynamic>>(
-      '/v1/agent/float/balance',
-    );
-    return FloatBalanceDto.fromJson(response.data!).toEntity();
+    final responses = await Future.wait([
+      _dio.get<Map<String, dynamic>>('/v1/agents/$agentId/float-wallet'),
+      _dio.get<Map<String, dynamic>>('/v1/agent/dashboard'),
+    ]);
+    final wallet = responses[0].data?['data'] as Map<String, dynamic>? ??
+        responses[0].data!;
+    final dashboard = responses[1].data?['data'] as Map<String, dynamic>? ??
+        responses[1].data!;
+    return FloatBalanceDto.fromJson({
+      'wallet_id': wallet['wallet_id'],
+      'balance': wallet['balance'],
+      'currency_code': dashboard['float_currency_code'],
+      'low_threshold_minor_units': dashboard['low_float_threshold_minor_units'],
+    }).toEntity();
   }
 
   @override
@@ -27,37 +36,37 @@ class FloatRepositoryImpl implements FloatRepository {
     DateTime? toDate,
   }) async {
     final response = await _dio.get<Map<String, dynamic>>(
-      '/v1/agent/float/transactions',
+      '/v1/agents/$agentId/float-wallet/transactions',
       queryParameters: {
         'page': page,
-        if (fromDate != null) 'from_date': fromDate.toIso8601String().substring(0, 10),
-        if (toDate != null) 'to_date': toDate.toIso8601String().substring(0, 10),
+        'per_page': 20,
+        if (fromDate != null)
+          'from': fromDate.toIso8601String().substring(0, 10),
+        if (toDate != null) 'to': toDate.toIso8601String().substring(0, 10),
       },
     );
     final data = response.data!;
     final items = (data['data'] as List<dynamic>)
-        .map((e) => FloatTransactionDto.fromJson(e as Map<String, dynamic>)
-            .toEntity())
+        .map((e) =>
+            FloatTransactionDto.fromJson(e as Map<String, dynamic>).toEntity())
         .toList();
     return PaginatedResult(
       data: items,
-      currentPage: data['current_page'] as int,
-      total: data['total'] as int,
-      lastPage: data['last_page'] as int,
+      currentPage: (data['meta'] as Map<String, dynamic>?)?['page'] as int? ??
+          data['current_page'] as int? ??
+          page,
+      total: (data['meta'] as Map<String, dynamic>?)?['total'] as int? ??
+          data['total'] as int? ??
+          items.length,
+      lastPage: (data['meta'] as Map<String, dynamic>?)?['pages'] as int? ??
+          data['last_page'] as int? ??
+          1,
     );
   }
 
   @override
   Future<FloatTopUpResult> requestTopUp(FloatTopUpRequest request) async {
-    final idempotencyKey = _uuid.v4();
-    final response = await _dio.post<Map<String, dynamic>>(
-      '/v1/agent/float/top-up',
-      data: {
-        'amount_minor_units': request.amountMinorUnits,
-        'currency_code': request.currencyCode,
-      },
-      options: Options(headers: {'Idempotency-Key': idempotencyKey}),
-    );
-    return FloatTopUpResultDto.fromJson(response.data!).toEntity();
+    throw UnsupportedError(
+        'Float funding must be performed by an authorised administrator.');
   }
 }

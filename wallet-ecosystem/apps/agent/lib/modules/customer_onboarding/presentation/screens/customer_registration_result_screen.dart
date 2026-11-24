@@ -12,26 +12,23 @@ class CustomerRegistrationResultScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Registration Complete')),
+      appBar: AppBar(title: const Text('Customer Registered')),
       body: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           children: [
             Expanded(
               child: SuccessView(
-                referenceNumber: result.referenceNumber,
+                referenceNumber: result.customerId,
                 additionalContent: Card(
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.md),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _Row(
-                            label: 'Customer',
-                            value: result.customerName),
-                        _Row(
-                            label: 'Wallet Number',
-                            value: result.walletNumber),
+                        _Row(label: 'Customer', value: result.customerName),
+                        _Row(label: 'Phone', value: result.phone),
+                        _Row(label: 'Status', value: result.status),
                       ],
                     ),
                   ),

@@ -89,7 +89,7 @@ class DashboardScreen extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: _QuickActionTile(
-                            icon: Icons.account_balance_wallet_outlined,
+                            icon: Icons.add_card_outlined,
                             label: 'Top Up Float',
                             onTap: () => context.go('/float/top-up'),
                           ),
@@ -97,7 +97,7 @@ class DashboardScreen extends ConsumerWidget {
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: _QuickActionTile(
-                            icon: Icons.paid_outlined,
+                            icon: Icons.payments_outlined,
                             label: 'My Commissions',
                             onTap: () => context.go('/commissions'),
                           ),
@@ -151,6 +151,7 @@ class _StatsRow extends StatelessWidget {
             amount: cashInAmount,
             currency: currency,
             color: AppColors.success,
+            icon: Icons.south_west_rounded,
           ),
         ),
         const SizedBox(width: AppSpacing.md),
@@ -161,6 +162,7 @@ class _StatsRow extends StatelessWidget {
             amount: cashOutAmount,
             currency: currency,
             color: AppColors.primary,
+            icon: Icons.north_east_rounded,
           ),
         ),
       ],
@@ -174,6 +176,7 @@ class _StatCard extends StatelessWidget {
   final int amount;
   final String currency;
   final Color color;
+  final IconData icon;
 
   const _StatCard({
     required this.label,
@@ -181,6 +184,7 @@ class _StatCard extends StatelessWidget {
     required this.amount,
     required this.currency,
     required this.color,
+    required this.icon,
   });
 
   @override
@@ -191,9 +195,31 @@ class _StatCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label,
-                style: AppTypography.bodySmall
-                    .copyWith(color: AppColors.onSurfaceVariant)),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    style: AppTypography.bodySmall
+                        .copyWith(color: AppColors.onSurfaceVariant),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.14),
+                    borderRadius:
+                        BorderRadius.circular(AppSpacing.borderRadiusSm),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.xs),
+                    child: Icon(icon, size: 18, color: color),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: AppSpacing.xs),
             Text('$count tx',
                 style: AppTypography.titleMedium.copyWith(color: color)),
@@ -225,14 +251,14 @@ class _ShortcutGrid extends StatelessWidget {
       childAspectRatio: 1.5,
       children: [
         _ShortcutTile(
-          icon: Icons.add_circle_outline,
+          icon: Icons.south_west_rounded,
           label: 'Cash In',
           route: '/cash-in/search',
           color: AppColors.success,
           enabled: isOnline,
         ),
         _ShortcutTile(
-          icon: Icons.remove_circle_outline,
+          icon: Icons.north_east_rounded,
           label: 'Cash Out',
           route: '/cash-out/scan',
           color: AppColors.primary,
@@ -242,21 +268,21 @@ class _ShortcutGrid extends StatelessWidget {
           icon: Icons.qr_code_scanner,
           label: 'Event Gate',
           route: '/events/gate-scan',
-          color: AppColors.secondary,
+          color: AppColors.primaryLight,
           enabled: isOnline,
         ),
         const _ShortcutTile(
-          icon: Icons.person_add_outlined,
+          icon: Icons.person_add_alt_1_outlined,
           label: 'Register Customer',
           route: '/onboarding/register',
-          color: AppColors.secondary,
+          color: AppColors.primaryLight,
           enabled: true,
         ),
         const _ShortcutTile(
           icon: Icons.receipt_long_outlined,
           label: 'Transactions',
           route: '/transactions',
-          color: AppColors.accent,
+          color: AppColors.primaryLight,
           enabled: true,
         ),
       ],
@@ -349,8 +375,23 @@ class _ShortcutTile extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon,
-                      color: enabled ? color : AppColors.disabled, size: 28),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: enabled
+                          ? color.withValues(alpha: 0.14)
+                          : AppColors.disabled.withValues(alpha: 0.14),
+                      borderRadius:
+                          BorderRadius.circular(AppSpacing.borderRadiusSm),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.sm),
+                      child: Icon(
+                        icon,
+                        color: enabled ? color : AppColors.disabled,
+                        size: 24,
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
                     label,

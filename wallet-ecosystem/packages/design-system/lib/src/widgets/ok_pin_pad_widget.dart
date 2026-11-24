@@ -9,12 +9,14 @@ class OkPinPadWidget extends StatefulWidget {
   final ValueChanged<String> onCompleted;
   final int pinLength;
   final bool enabled;
+  final bool clearOnCompleted;
 
   const OkPinPadWidget({
     super.key,
     required this.onCompleted,
     this.pinLength = 6,
     this.enabled = true,
+    this.clearOnCompleted = true,
   });
 
   @override
@@ -58,9 +60,11 @@ class _OkPinPadWidgetState extends State<OkPinPadWidget> {
     if (_completionSent || value.length != widget.pinLength) return;
     _completionSent = true;
     widget.onCompleted(value);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _clearInput();
-    });
+    if (widget.clearOnCompleted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _clearInput();
+      });
+    }
   }
 
   void _clearInput() {

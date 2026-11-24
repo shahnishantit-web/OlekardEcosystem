@@ -2,33 +2,36 @@ import 'package:wallet_agent/modules/cash_in/domain/entities/cash_in_result.dart
 import 'package:wallet_agent/modules/cash_in/domain/entities/customer_lookup.dart';
 
 class CashInRequestDto {
+  final String customerId;
+  final String customerName;
   final String walletId;
   final int amountMinorUnits;
   final String currencyCode;
-  final String pinHash;
 
   const CashInRequestDto({
+    required this.customerId,
+    required this.customerName,
     required this.walletId,
     required this.amountMinorUnits,
     required this.currencyCode,
-    required this.pinHash,
   });
 
   Map<String, dynamic> toJson() => {
-        'wallet_id': walletId,
-        'amount_minor_units': amountMinorUnits,
+        'customer_wallet_id': walletId,
+        'amount': amountMinorUnits,
         'currency_code': currencyCode,
-        'pin_hash': pinHash,
       };
 }
 
 class CustomerLookupDto {
+  final String customerId;
   final String walletId;
   final String customerName;
   final String maskedWalletNumber;
   final String accountStatus;
 
   const CustomerLookupDto({
+    required this.customerId,
     required this.walletId,
     required this.customerName,
     required this.maskedWalletNumber,
@@ -37,14 +40,17 @@ class CustomerLookupDto {
 
   factory CustomerLookupDto.fromJson(Map<String, dynamic> json) {
     return CustomerLookupDto(
+      customerId: json['customer_id'] as String,
       walletId: json['wallet_id'] as String,
       customerName: json['customer_name'] as String,
-      maskedWalletNumber: json['masked_wallet_number'] as String,
+      maskedWalletNumber:
+          json['masked_wallet_number'] as String? ?? 'Wallet linked',
       accountStatus: json['account_status'] as String,
     );
   }
 
   CustomerLookup toEntity() => CustomerLookup(
+        customerId: customerId,
         walletId: walletId,
         customerName: customerName,
         maskedWalletNumber: maskedWalletNumber,

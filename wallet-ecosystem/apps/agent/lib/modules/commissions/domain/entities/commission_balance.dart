@@ -17,7 +17,6 @@ class CommissionEntry {
   final int amountMinorUnits;
   final String currencyCode;
   final String status;
-  final double rateApplied;
   final DateTime createdAt;
 
   const CommissionEntry({
@@ -27,7 +26,6 @@ class CommissionEntry {
     required this.amountMinorUnits,
     required this.currencyCode,
     required this.status,
-    required this.rateApplied,
     required this.createdAt,
   });
 }

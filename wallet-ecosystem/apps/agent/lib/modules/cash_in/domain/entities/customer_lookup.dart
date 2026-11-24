@@ -1,10 +1,12 @@
 class CustomerLookup {
+  final String customerId;
   final String walletId;
   final String customerName;
   final String maskedWalletNumber;
   final String accountStatus;
 
   const CustomerLookup({
+    required this.customerId,
     required this.walletId,
     required this.customerName,
     required this.maskedWalletNumber,

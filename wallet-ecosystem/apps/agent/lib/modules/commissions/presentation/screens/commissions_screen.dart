@@ -47,10 +47,10 @@ class CommissionsScreen extends ConsumerWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Available', style: AppTypography.labelLarge),
+                        const Text('Paid', style: AppTypography.labelLarge),
                         Semantics(
                           label:
-                              'Available commission: ${balance.availableMinorUnits ~/ 100} ${balance.currencyCode}',
+                              'Paid commission: ${balance.availableMinorUnits ~/ 100} ${balance.currencyCode}',
                           child: AmountDisplay(
                             minorUnits: balance.availableMinorUnits,
                             currencyCode: balance.currencyCode,
@@ -122,8 +122,8 @@ class CommissionsScreen extends ConsumerWidget {
                       itemBuilder: (ctx, i) {
                         final entry = page.data[i];
                         return Semantics(
-                          label:
-                              'Commission for ${entry.transactionType}, ${entry.amountMinorUnits ~/ 100} ${entry.currencyCode}, rate ${(entry.rateApplied * 100).toStringAsFixed(2)}%',
+                          label: 'Commission for ${entry.transactionType}, '
+                              '${entry.amountMinorUnits ~/ 100} ${entry.currencyCode}',
                           child: ListTile(
                             leading: const CircleAvatar(
                               backgroundColor: AppColors.successLight,
@@ -137,7 +137,7 @@ class CommissionsScreen extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '${entry.referenceNumber} · Rate: ${(entry.rateApplied * 100).toStringAsFixed(2)}%',
+                                  entry.referenceNumber,
                                   style: AppTypography.bodySmall.copyWith(
                                       color: AppColors.onSurfaceVariant),
                                 ),

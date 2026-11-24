@@ -74,12 +74,12 @@ class OkThemeExtension extends ThemeExtension<OkThemeExtension> {
       );
 
   factory OkThemeExtension.agent() => const OkThemeExtension(
-        primary:       OkTokens.colorBluePrimary,
-        primaryDark:   OkTokens.colorBlueDark,
-        primaryLight:  OkTokens.colorBlueLight,
-        accent:        OkTokens.colorBlueAccent,
-        appBackground: OkTokens.colorBlueBackground,
-        appSurface:    OkTokens.colorBlueSurface,
+        primary:       OkTokens.colorBGoldPrimary,
+        primaryDark:   OkTokens.colorBGoldDark,
+        primaryLight:  OkTokens.colorBGoldLight,
+        accent:        OkTokens.colorBGoldAccent,
+        appBackground: OkTokens.colorBGoldBackground,
+        appSurface:    OkTokens.colorBGoldSurface,
         successBg:     OkTokens.colorStatusSuccessBg,
         successFg:     OkTokens.colorStatusSuccess,
         successBorder: OkTokens.colorStatusSuccessBorder,
@@ -92,7 +92,7 @@ class OkThemeExtension extends ThemeExtension<OkThemeExtension> {
         infoBg:        OkTokens.colorStatusInfoBg,
         infoFg:        OkTokens.colorStatusInfo,
         infoBorder:    OkTokens.colorStatusInfoBorder,
-        navActive:     Color.fromRGBO(37, 99, 235, 0.15),
+        navActive:     Color.fromRGBO(212, 175, 55, 0.15),
       );
 
   @override

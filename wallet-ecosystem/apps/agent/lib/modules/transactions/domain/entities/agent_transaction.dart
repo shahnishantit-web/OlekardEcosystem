@@ -34,7 +34,7 @@ enum ServiceStatus { pending, submitted, confirmed, failed }
 
 enum RefundStatus { requested, pending, approved, rejected, reversed }
 
-/// Unified payment history item for the agent app (P19 payment history API).
+/// Agent float activity item shown in the Agent app transaction history.
 class PaymentHistoryItem {
   final String id;
   final String referenceNumber;
@@ -92,7 +92,19 @@ class PaymentHistoryItem {
     if (providerName != null && providerName!.isNotEmpty) {
       return providerName!;
     }
-    return purposeType.name;
+    return switch (purposeType) {
+      PaymentPurposeType.fundingBankTransfer => 'Float funding',
+      PaymentPurposeType.fundingAgentCashIn => 'Cash in',
+      PaymentPurposeType.withdrawal => 'Cash out',
+      PaymentPurposeType.walletTransfer => 'Wallet transfer',
+      PaymentPurposeType.servicePayment => 'Service payment',
+      PaymentPurposeType.billPayment => 'Bill payment',
+      PaymentPurposeType.merchantPayment => 'Merchant payment',
+      PaymentPurposeType.fxConversion => 'Currency conversion',
+      PaymentPurposeType.refund => 'Refund',
+      PaymentPurposeType.reversal => 'Reversal',
+      PaymentPurposeType.unknown => 'Agent transaction',
+    };
   }
 
   String? get maskedProviderReference {
