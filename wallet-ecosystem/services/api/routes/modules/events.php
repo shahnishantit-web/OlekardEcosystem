@@ -2,27 +2,34 @@
 
 declare(strict_types=1);
 
+use App\Modules\Events\Infrastructure\Http\Controllers\ComplimentaryApprovalController;
+use App\Modules\Events\Infrastructure\Http\Controllers\CustomerEventCatalogueController;
 use App\Modules\Events\Infrastructure\Http\Controllers\EventAdmissionController;
 use App\Modules\Events\Infrastructure\Http\Controllers\EventAssignmentController;
 use App\Modules\Events\Infrastructure\Http\Controllers\EventAuthoringController;
-use App\Modules\Events\Infrastructure\Http\Controllers\EventCurrencyController;
 use App\Modules\Events\Infrastructure\Http\Controllers\EventCancellationController;
-use App\Modules\Events\Infrastructure\Http\Controllers\ComplimentaryApprovalController;
-use App\Modules\Events\Infrastructure\Http\Controllers\EventOrderController;
-use App\Modules\Events\Infrastructure\Http\Controllers\FreeEventRegistrationController;
-use App\Modules\Events\Infrastructure\Http\Controllers\CustomerEventCatalogueController;
-use App\Modules\Events\Infrastructure\Http\Controllers\EventSponsorController;
-use App\Modules\Events\Infrastructure\Http\Controllers\EventPocSettlementController;
+use App\Modules\Events\Infrastructure\Http\Controllers\EventCurrencyController;
 use App\Modules\Events\Infrastructure\Http\Controllers\EventInventoryHoldController;
+use App\Modules\Events\Infrastructure\Http\Controllers\EventOrderController;
+use App\Modules\Events\Infrastructure\Http\Controllers\EventPocSettlementController;
+use App\Modules\Events\Infrastructure\Http\Controllers\EventReportController;
+use App\Modules\Events\Infrastructure\Http\Controllers\EventSponsorController;
+use App\Modules\Events\Infrastructure\Http\Controllers\FreeEventRegistrationController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1/events')->middleware(['identity.auth'])->group(static function (): void {
     Route::get('customer/catalogue', [CustomerEventCatalogueController::class, 'index']);
+    Route::get('sponsor-reports', [EventSponsorController::class, 'assignedReports']);
     Route::get('my-gate-assignments', [EventAdmissionController::class, 'myGateAssignments']);
     Route::get('organisations/{organisationId}/drafts', [EventAuthoringController::class, 'index']);
     Route::get('organisations/{organisationId}/members', [EventAssignmentController::class, 'organisationMembers']);
     Route::get('organisations/{organisationId}/sponsors', [EventSponsorController::class, 'index']);
+    Route::get('organisations/{organisationId}/sponsor-report-viewers', [EventSponsorController::class, 'reportViewers']);
     Route::get('{eventId}/sponsor-report', [EventSponsorController::class, 'report']);
+    Route::get('{eventId}/sponsor-report.csv', [EventSponsorController::class, 'exportReport']);
+    Route::get('{eventId}/sponsors', [EventSponsorController::class, 'eventSponsors']);
+    Route::get('{eventId}/report', [EventReportController::class, 'show']);
+    Route::get('{eventId}/report.csv', [EventReportController::class, 'export']);
     Route::get('{eventId}/poc-settlements', [EventPocSettlementController::class, 'index']);
     Route::get('{eventId}/poc-refunds', [EventPocSettlementController::class, 'refunds']);
     Route::get('{eventId}/poc-event-end', [EventPocSettlementController::class, 'eventEnd']);
@@ -50,7 +57,11 @@ Route::prefix('v1/events')->middleware(['identity.auth', 'idempotency:require-id
     Route::post('orders/{orderId}/payment-intent', [EventOrderController::class, 'paymentIntent']);
     Route::post('organisations/{organisationId}/drafts', [EventAuthoringController::class, 'store']);
     Route::post('organisations/{organisationId}/sponsors', [EventSponsorController::class, 'store']);
+    Route::patch('organisations/{organisationId}/sponsors/{sponsorId}', [EventSponsorController::class, 'update'])
+        ->middleware('idempotency:require-identity');
     Route::post('{eventId}/sponsors', [EventSponsorController::class, 'link']);
+    Route::delete('{eventId}/sponsors/{sponsorId}', [EventSponsorController::class, 'unlink'])
+        ->middleware('idempotency:require-identity');
     Route::post('{eventId}/poc-settlements', [EventPocSettlementController::class, 'request']);
     Route::post('{eventId}/poc-simulate-end', [EventPocSettlementController::class, 'simulateEventEnd']);
     Route::post('poc-settlements/{settlementId}/approve', [EventPocSettlementController::class, 'approve']);

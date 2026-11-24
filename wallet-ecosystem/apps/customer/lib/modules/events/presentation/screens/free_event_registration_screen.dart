@@ -12,7 +12,18 @@ final freeEventRegistrationDioProvider = Provider<Dio>(
 
 /// Invite tokens are entered in the authenticated app and never placed in a URL.
 class FreeEventRegistrationScreen extends ConsumerStatefulWidget {
-  const FreeEventRegistrationScreen({super.key});
+  const FreeEventRegistrationScreen({
+    super.key,
+    this.eventId,
+    this.categoryId,
+    this.eventTitle,
+    this.categoryName,
+  });
+
+  final String? eventId;
+  final String? categoryId;
+  final String? eventTitle;
+  final String? categoryName;
 
   @override
   ConsumerState<FreeEventRegistrationScreen> createState() =>
@@ -21,8 +32,8 @@ class FreeEventRegistrationScreen extends ConsumerStatefulWidget {
 
 class _FreeEventRegistrationScreenState
     extends ConsumerState<FreeEventRegistrationScreen> {
-  final _eventId = TextEditingController();
-  final _categoryId = TextEditingController();
+  late final _eventId = TextEditingController(text: widget.eventId ?? '');
+  late final _categoryId = TextEditingController(text: widget.categoryId ?? '');
   final _invitation = TextEditingController();
   bool _busy = false;
   String? _message;
@@ -38,7 +49,12 @@ class _FreeEventRegistrationScreenState
 
   Future<void> _register() async {
     if (_eventId.text.isEmpty || _categoryId.text.isEmpty) {
-      setState(() => _message = 'Enter the event and free category details.');
+      setState(() => _message = 'Select an event and ticket category first.');
+      return;
+    }
+    if (widget.eventId != null && _invitation.text.trim().isEmpty) {
+      setState(() => _message =
+          'Enter the invitation token provided by the event organiser.');
       return;
     }
     setState(() {
@@ -49,13 +65,13 @@ class _FreeEventRegistrationScreenState
       final token = _invitation.text.trim();
       final idempotencyKey = _idempotencyKey ??= const Uuid().v4();
       await ref.read(freeEventRegistrationDioProvider).post<Object?>(
-        '/v1/events/${_eventId.text.trim()}/free-registrations',
-        data: {
-          'category_id': _categoryId.text.trim(),
-          if (token.isNotEmpty) 'invitation_token': token,
-        },
-        options: Options(headers: {'Idempotency-Key': idempotencyKey}),
-      );
+            '/v1/events/${_eventId.text.trim()}/free-registrations',
+            data: {
+              'category_id': _categoryId.text.trim(),
+              if (token.isNotEmpty) 'invitation_token': token,
+            },
+            options: Options(headers: {'Idempotency-Key': idempotencyKey}),
+          );
       if (!mounted) return;
       context.go('/events/tickets');
     } on DioException catch (error) {
@@ -81,20 +97,23 @@ class _FreeEventRegistrationScreenState
         body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            const Text(
-              'Registration is available for published events with an active free allocation. An invitation token is optional for open free categories and is never sent in a URL.',
-            ),
+            Text(widget.eventTitle == null
+                ? 'Enter the invitation token for your complimentary event ticket. Invitation tokens are private and are never placed in a URL.'
+                : 'Enter the invitation token for ${widget.eventTitle} · ${widget.categoryName ?? 'Complimentary ticket'}.'),
             const SizedBox(height: 16),
-            TextField(
-              controller: _eventId,
-              onChanged: (_) => _idempotencyKey = null,
-              decoration: const InputDecoration(labelText: 'Event ID'),
-            ),
-            TextField(
-              controller: _categoryId,
-              onChanged: (_) => _idempotencyKey = null,
-              decoration: const InputDecoration(labelText: 'Free category ID'),
-            ),
+            if (widget.eventId == null)
+              TextField(
+                controller: _eventId,
+                onChanged: (_) => _idempotencyKey = null,
+                decoration: const InputDecoration(labelText: 'Event ID'),
+              ),
+            if (widget.categoryId == null)
+              TextField(
+                controller: _categoryId,
+                onChanged: (_) => _idempotencyKey = null,
+                decoration:
+                    const InputDecoration(labelText: 'Ticket category ID'),
+              ),
             TextField(
               controller: _invitation,
               onChanged: (_) => _idempotencyKey = null,
@@ -102,13 +121,13 @@ class _FreeEventRegistrationScreenState
               autocorrect: false,
               enableSuggestions: false,
               decoration: const InputDecoration(
-                labelText: 'Invitation token (if required)',
+                labelText: 'Invitation token',
               ),
             ),
             const SizedBox(height: 16),
             FilledButton(
               onPressed: _busy ? null : _register,
-              child: Text(_busy ? 'Registering…' : 'Register for free'),
+              child: Text(_busy ? 'Registering…' : 'Redeem invitation'),
             ),
             if (_message != null) ...[
               const SizedBox(height: 12),

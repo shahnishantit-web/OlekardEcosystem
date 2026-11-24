@@ -18,6 +18,8 @@ type EventDraft = {
   lifecycle_state?: string;
   event_format: 'physical' | 'online' | 'hybrid';
   venue_country_code: string | null;
+  venue_name: string | null;
+  venue_address: string | null;
   organiser_name: string;
   sponsors: string[];
   capacity: number;
@@ -40,13 +42,16 @@ type EventCategory = { id?: string; name: string; capacity: number; price_minor:
 type OrganisationOption = { id: string; display_name: string; registry_reference: string; status: string };
 type ActorOption = { id: string; display_name: string; email: string | null; mobile_number: string | null };
 type SponsorOption = { id: string; name: string; description: string; logo_url: string | null; report_actor_id: string | null; active: boolean };
-type SponsorReport = { event_title: string; event_starts_at: string; no_shows_finalized: boolean; categories: Array<{ category: string; free_registrations: number; paid_sales: number; admissions: number }> };
+type LinkedSponsor = SponsorOption & { linked_at: string };
+type EventReportCategory = { category: string; allocation_type: string; capacity: number; tickets_issued: number; paid_sales: number; free_registrations: number; complimentary_allocations_used: number; active_holds: number; remaining_capacity: number; admissions: number; no_shows: number | null; no_shows_finalized: boolean };
+type EventReport = { event_id: string; event_title: string; event_starts_at: string; event_ends_at: string; event_status: string; event_capacity: number; totals: Record<string, number | boolean | null>; categories: EventReportCategory[]; privacy: string };
+type SponsorReport = EventReport & { sponsors: string[] };
 type CurrencyOption = { code: string; name: string; decimal_places: number; is_active: boolean };
 type POCSettlement = { id: string; requested_by_actor_id: string; approved_by_actor_id: string | null; amount_minor: number; currency_code: string; status: string; poc_reference: string };
 type POCRefund = { id: string; cancellation_request_id: string; amount_minor: number; currency_code: string; status: string; poc_reference: string };
 type POCEventEnd = { id: string; actor_id: string; simulated_at: string };
 type EventForm = {
-  title: string; image_url: string; event_format: 'physical' | 'online' | 'hybrid'; venue_country_code: string;
+  title: string; image_url: string; event_format: 'physical' | 'online' | 'hybrid'; venue_country_code: string; venue_name: string; venue_address: string;
   organiser_name: string; sponsors: string; capacity: string; timezone: string; starts_at: string;
   ends_at: string; sales_start_at: string; sales_end_at: string; max_tickets_per_order: string;
   cancellation_policy: string; transfer_policy: string; entry_policy: string; categories: Array<{
@@ -56,7 +61,7 @@ type EventForm = {
 };
 
 const emptyEventForm: EventForm = {
-  title: '', image_url: '', event_format: 'physical', venue_country_code: '', organiser_name: '', sponsors: '', capacity: '',
+  title: '', image_url: '', event_format: 'physical', venue_country_code: '', venue_name: '', venue_address: '', organiser_name: '', sponsors: '', capacity: '',
   timezone: 'Africa/Gaborone', starts_at: '', ends_at: '', sales_start_at: '', sales_end_at: '',
   max_tickets_per_order: '', cancellation_policy: '', transfer_policy: '', entry_policy: '', categories: [],
 };
@@ -108,12 +113,15 @@ export function EventAuthoringPage() {
   const [currencyCode, setCurrencyCode] = useState('');
   const [currencyApprovalReference, setCurrencyApprovalReference] = useState('');
   const [organisationMembers, setOrganisationMembers] = useState<ActorOption[]>([]);
+  const [sponsorReportViewers, setSponsorReportViewers] = useState<ActorOption[]>([]);
   const [sponsors, setSponsors] = useState<SponsorOption[]>([]);
+  const [linkedSponsors, setLinkedSponsors] = useState<LinkedSponsor[]>([]);
   const [sponsorPocEnabled, setSponsorPocEnabled] = useState(false);
   const [sponsorName, setSponsorName] = useState('');
   const [sponsorDescription, setSponsorDescription] = useState('');
   const [sponsorLogoUrl, setSponsorLogoUrl] = useState('');
   const [sponsorReportActorId, setSponsorReportActorId] = useState('');
+  const [editingSponsorId, setEditingSponsorId] = useState<string | null>(null);
   const [selectedSponsorId, setSelectedSponsorId] = useState('');
   const [sponsorReport, setSponsorReport] = useState<SponsorReport | null>(null);
   const [pocSettlements, setPocSettlements] = useState<POCSettlement[]>([]);
@@ -126,6 +134,7 @@ export function EventAuthoringPage() {
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
   const [attendance, setAttendance] = useState<AttendanceCategory[] | null>(null);
+  const [eventReport, setEventReport] = useState<EventReport | null>(null);
   const [cancellationRequests, setCancellationRequests] = useState<CancellationRequest[]>([]);
   const [cancellationReason, setCancellationReason] = useState('');
   const [complimentaryApprovals, setComplimentaryApprovals] = useState<ComplimentaryApproval[]>([]);
@@ -169,7 +178,7 @@ export function EventAuthoringPage() {
   }, [authenticatedClient]);
 
   useEffect(() => {
-    if (!authenticatedClient || !organisationId) { setEventRows([]); setEventId(''); setOrganisationMembers([]); return; }
+    if (!authenticatedClient || !organisationId) { setEventRows([]); setEventId(''); setOrganisationMembers([]); setSponsorReportViewers([]); return; }
     void authenticatedClient.get<EventDraft[]>(`/v1/events/organisations/${organisationId}/drafts`)
       .then(response => setEventRows(response.data))
       .catch(showError);
@@ -178,6 +187,11 @@ export function EventAuthoringPage() {
         .then(response => setOrganisationMembers(response.data))
         .catch(() => setOrganisationMembers([]));
     } else setOrganisationMembers([]);
+    if (hasPermission('events.event.update')) {
+      void authenticatedClient.get<ActorOption[]>(`/v1/events/organisations/${organisationId}/sponsor-report-viewers`)
+        .then(response => setSponsorReportViewers(response.data))
+        .catch(() => setSponsorReportViewers([]));
+    } else setSponsorReportViewers([]);
     void authenticatedClient.get<SponsorOption[]>(`/v1/events/organisations/${organisationId}/sponsors`)
       .then(response => { setSponsors(response.data); setSponsorPocEnabled(true); })
       .catch(() => { setSponsors([]); setSponsorPocEnabled(false); });
@@ -193,7 +207,38 @@ export function EventAuthoringPage() {
       }, { idempotencyKey: crypto.randomUUID() });
       setSponsors(current => [...current, response.data]);
       setSponsorName(''); setSponsorDescription(''); setSponsorLogoUrl(''); setSponsorReportActorId('');
-      setMessage('POC sponsor record created. Branding and report access are synthetic local-demo data.');
+      setMessage('POC sponsor record created. Branding and report access are local demo data.');
+    } catch (error) { showError(error); }
+    finally { setBusy(false); }
+  };
+
+  const saveSponsor = async () => {
+    if (!authenticatedClient || !organisationId || !editingSponsorId) return;
+    setBusy(true); setMessage('');
+    try {
+      const response = await authenticatedClient.patch<SponsorOption>(
+        `/v1/events/organisations/${organisationId}/sponsors/${editingSponsorId}`,
+        { name: sponsorName, description: sponsorDescription, logo_url: sponsorLogoUrl || null, report_actor_id: sponsorReportActorId || null },
+        { idempotencyKey: crypto.randomUUID() },
+      );
+      setSponsors(current => current.map(item => item.id === response.data.id ? response.data : item));
+      setEditingSponsorId(null); setSponsorName(''); setSponsorDescription(''); setSponsorLogoUrl(''); setSponsorReportActorId('');
+      setMessage('Sponsor details and report access updated.');
+    } catch (error) { showError(error); }
+    finally { setBusy(false); }
+  };
+
+  const setSponsorActive = async (sponsor: SponsorOption) => {
+    if (!authenticatedClient || !organisationId) return;
+    setBusy(true); setMessage('');
+    try {
+      const response = await authenticatedClient.patch<SponsorOption>(
+        `/v1/events/organisations/${organisationId}/sponsors/${sponsor.id}`,
+        { active: !sponsor.active },
+        { idempotencyKey: crypto.randomUUID() },
+      );
+      setSponsors(current => current.map(item => item.id === response.data.id ? response.data : item));
+      setMessage(response.data.active ? 'Sponsor reactivated.' : 'Sponsor deactivated.');
     } catch (error) { showError(error); }
     finally { setBusy(false); }
   };
@@ -203,7 +248,21 @@ export function EventAuthoringPage() {
     setBusy(true); setMessage('');
     try {
       await authenticatedClient.post(`/v1/events/${draft.id}/sponsors`, { sponsor_id: selectedSponsorId }, { idempotencyKey: crypto.randomUUID() });
+      const linked = await authenticatedClient.get<LinkedSponsor[]>(`/v1/events/${draft.id}/sponsors`);
+      setLinkedSponsors(linked.data);
       setMessage('Sponsor linked to the event. Their report is aggregate-only and requires the assigned sponsor viewer account.');
+    } catch (error) { showError(error); }
+    finally { setBusy(false); }
+  };
+
+  const unlinkSponsor = async (sponsor: LinkedSponsor) => {
+    if (!authenticatedClient || !draft) return;
+    setBusy(true); setMessage('');
+    try {
+      await authenticatedClient.delete(`/v1/events/${draft.id}/sponsors/${sponsor.id}`, { idempotencyKey: crypto.randomUUID() });
+      const linked = await authenticatedClient.get<LinkedSponsor[]>(`/v1/events/${draft.id}/sponsors`);
+      setLinkedSponsors(linked.data);
+      setMessage(`${sponsor.name} removed from this event.`);
     } catch (error) { showError(error); }
     finally { setBusy(false); }
   };
@@ -216,6 +275,25 @@ export function EventAuthoringPage() {
       setSponsorReport(response.data);
     } catch (error) { showError(error); }
     finally { setBusy(false); }
+  };
+
+  const loadEventReport = async () => {
+    if (!authenticatedClient || !draft) return;
+    setBusy(true); setMessage('');
+    try {
+      const response = await authenticatedClient.get<EventReport>(`/v1/events/${draft.id}/report`);
+      setEventReport(response.data);
+    } catch (error) { showError(error); }
+    finally { setBusy(false); }
+  };
+
+  const exportEventReport = async () => {
+    if (!authenticatedClient || !draft) return;
+    try {
+      const blob = await authenticatedClient.getBlob(`/v1/events/${draft.id}/report.csv`);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a'); link.href = url; link.download = `event-report-${draft.id}.csv`; link.click(); URL.revokeObjectURL(url);
+    } catch (error) { showError(error); }
   };
 
   const assignCurrency = async () => {
@@ -305,7 +383,7 @@ export function EventAuthoringPage() {
     setEventId(value.id);
     setOrganisationId(value.organisation_id);
     setEventForm({
-      title: value.title, image_url: value.image_url ?? '', event_format: value.event_format ?? 'physical', venue_country_code: value.venue_country_code ?? '',
+      title: value.title, image_url: value.image_url ?? '', event_format: value.event_format ?? 'physical', venue_country_code: value.venue_country_code ?? '', venue_name: value.venue_name ?? '', venue_address: value.venue_address ?? '',
       organiser_name: value.organiser_name, sponsors: (value.sponsors ?? []).join(', '), capacity: String(value.capacity),
       timezone: value.timezone, starts_at: toLocalDateTime(value.starts_at, value.timezone), ends_at: toLocalDateTime(value.ends_at, value.timezone),
       sales_start_at: toLocalDateTime(value.sales_start_at, value.timezone), sales_end_at: toLocalDateTime(value.sales_end_at, value.timezone),
@@ -343,6 +421,8 @@ export function EventAuthoringPage() {
     try {
       const response = await authenticatedClient.get<EventDraft>(`/v1/events/${eventId}`);
       acceptDraft(response.data);
+      const linkedSponsorsResponse = await authenticatedClient.get<LinkedSponsor[]>(`/v1/events/${eventId}/sponsors`);
+      setLinkedSponsors(linkedSponsorsResponse.data);
       await loadPocEventEnd(eventId);
       const requests = await authenticatedClient.get<CancellationRequest[]>(`/v1/events/${eventId}/cancellation-requests`);
       setCancellationRequests(requests.data);
@@ -609,12 +689,13 @@ export function EventAuthoringPage() {
           <label className="flex flex-col gap-1 text-sm">Sponsor name<input value={sponsorName} onChange={event => setSponsorName(event.target.value)} maxLength={200} className="rounded border border-border px-3 py-2" /></label>
           <label className="flex flex-col gap-1 text-sm">Brand logo URL<input type="url" value={sponsorLogoUrl} onChange={event => setSponsorLogoUrl(event.target.value)} className="rounded border border-border px-3 py-2" /></label>
           <label className="flex flex-col gap-1 text-sm md:col-span-2">Sponsor description<textarea value={sponsorDescription} onChange={event => setSponsorDescription(event.target.value)} maxLength={2000} rows={2} className="rounded border border-border px-3 py-2" /></label>
-          <label className="flex flex-col gap-1 text-sm">Sponsor report viewer<select value={sponsorReportActorId} onChange={event => setSponsorReportActorId(event.target.value)} className="rounded border border-border px-3 py-2"><option value="">No sponsor report viewer</option>{organisationMembers.map(member => <option key={member.id} value={member.id}>{member.display_name}{member.email ? ` · ${member.email}` : member.mobile_number ? ` · ${member.mobile_number}` : ''}</option>)}</select></label>
+          <label className="flex flex-col gap-1 text-sm">Sponsor report viewer<select value={sponsorReportActorId} onChange={event => setSponsorReportActorId(event.target.value)} className="rounded border border-border px-3 py-2"><option value="">No sponsor report viewer</option>{sponsorReportViewers.map(member => <option key={member.id} value={member.id}>{member.display_name}{member.email ? ` · ${member.email}` : member.mobile_number ? ` · ${member.mobile_number}` : ''}</option>)}</select></label>
         </div>
-        <Button className="mt-3" variant="secondary" onClick={() => void createSponsor()} disabled={busy || !sponsorName.trim() || !sponsorDescription.trim()}>Create sponsor</Button>
-        {sponsors.length > 0 && <ul className="mt-3 space-y-2">{sponsors.map(sponsor => <li key={sponsor.id} className="rounded border border-border p-2 text-sm">{sponsor.name}{sponsor.report_actor_id ? ` · report access: ${actorLabel(sponsor.report_actor_id)}` : ' · no report viewer'}</li>)}</ul>}
-        {draft && <div className="mt-3 flex flex-wrap items-end gap-2"><label className="flex min-w-64 flex-1 flex-col gap-1 text-sm">Link sponsor to selected event<select value={selectedSponsorId} onChange={event => setSelectedSponsorId(event.target.value)} className="rounded border border-border px-3 py-2"><option value="">Choose a sponsor</option>{sponsors.map(sponsor => <option key={sponsor.id} value={sponsor.id}>{sponsor.name}</option>)}</select></label><Button variant="secondary" onClick={linkSponsor} disabled={busy || !selectedSponsorId}>Link sponsor</Button><Button variant="secondary" onClick={loadSponsorReport} disabled={busy || !sponsors.some(sponsor => sponsor.report_actor_id === user?.id)}>Load sponsor report</Button></div>}
-        {sponsorReport && <div className="mt-3 rounded border border-border p-3"><h3 className="font-medium">{sponsorReport.event_title} · sponsor report</h3><p className="text-xs text-text-secondary">Aggregate only. No attendee or ticket identifiers.</p><table className="mt-2 w-full text-left text-sm"><thead><tr><th>Category</th><th>Free registrations</th><th>Paid sales</th><th>Admissions</th></tr></thead><tbody>{sponsorReport.categories.map(row => <tr key={row.category}><td>{row.category}</td><td>{row.free_registrations}</td><td>{row.paid_sales}</td><td>{row.admissions}</td></tr>)}</tbody></table></div>}
+        <div className="mt-3 flex gap-2"><Button variant="secondary" onClick={() => void (editingSponsorId ? saveSponsor() : createSponsor())} disabled={busy || !sponsorName.trim() || !sponsorDescription.trim()}>{editingSponsorId ? 'Save sponsor' : 'Create sponsor'}</Button>{editingSponsorId && <Button variant="secondary" onClick={() => { setEditingSponsorId(null); setSponsorName(''); setSponsorDescription(''); setSponsorLogoUrl(''); setSponsorReportActorId(''); }} disabled={busy}>Cancel edit</Button>}</div>
+        {sponsors.length > 0 && <ul className="mt-3 space-y-2">{sponsors.map(sponsor => <li key={sponsor.id} className="flex flex-wrap items-center justify-between gap-2 rounded border border-border p-2 text-sm"><span>{sponsor.name} · {sponsor.active ? 'active' : 'inactive'}{sponsor.report_actor_id ? ` · report access: ${actorLabel(sponsor.report_actor_id)}` : ' · no report viewer'}</span><span className="flex gap-2"><Button variant="secondary" onClick={() => { setEditingSponsorId(sponsor.id); setSponsorName(sponsor.name); setSponsorDescription(sponsor.description); setSponsorLogoUrl(sponsor.logo_url ?? ''); setSponsorReportActorId(sponsor.report_actor_id ?? ''); }} disabled={busy}>Edit</Button><Button variant="secondary" onClick={() => void setSponsorActive(sponsor)} disabled={busy}>{sponsor.active ? 'Deactivate' : 'Reactivate'}</Button></span></li>)}</ul>}
+        {draft && <div className="mt-3 flex flex-wrap items-end gap-2"><label className="flex min-w-64 flex-1 flex-col gap-1 text-sm">Link sponsor to selected event<select value={selectedSponsorId} onChange={event => setSelectedSponsorId(event.target.value)} className="rounded border border-border px-3 py-2"><option value="">Choose a sponsor</option>{sponsors.filter(sponsor => sponsor.active && !linkedSponsors.some(linked => linked.id === sponsor.id)).map(sponsor => <option key={sponsor.id} value={sponsor.id}>{sponsor.name}</option>)}</select></label><Button variant="secondary" onClick={linkSponsor} disabled={busy || !selectedSponsorId}>Link sponsor</Button><Button variant="secondary" onClick={loadSponsorReport} disabled={busy || !sponsors.some(sponsor => sponsor.report_actor_id === user?.id)}>Load sponsor report</Button></div>}
+        {draft && linkedSponsors.length > 0 && <ul className="mt-3 space-y-2">{linkedSponsors.map(sponsor => <li key={sponsor.id} className="flex items-center justify-between gap-2 rounded border border-border p-2 text-sm"><span>{sponsor.name} · {sponsor.active ? 'active' : 'inactive'}{sponsor.logo_url ? ' · logo configured' : ''}</span><Button variant="secondary" onClick={() => void unlinkSponsor(sponsor)} disabled={busy || !hasPermission('events.event.update')}>Remove from event</Button></li>)}</ul>}
+        {sponsorReport && <div className="mt-3 rounded border border-border p-3"><h3 className="font-medium">{sponsorReport.event_title} · sponsor report</h3><p className="text-xs text-text-secondary">Assigned sponsor(s): {sponsorReport.sponsors.join(', ')}. {sponsorReport.privacy}</p><table className="mt-2 w-full text-left text-sm"><thead><tr><th>Category</th><th>Capacity</th><th>Issued</th><th>Free</th><th>Paid</th><th>Admissions</th></tr></thead><tbody>{sponsorReport.categories.map(row => <tr key={row.category}><td>{row.category}</td><td>{row.capacity}</td><td>{row.tickets_issued}</td><td>{row.free_registrations + row.complimentary_allocations_used}</td><td>{row.paid_sales}</td><td>{row.admissions}</td></tr>)}</tbody></table></div>}
       </Card>}
       {organisationId && !draft && hasPermission('events.event.create') && <Card className="mb-4 p-4">
         <h2 className="mb-1 text-lg font-semibold">Create event draft</h2>
@@ -650,7 +731,7 @@ export function EventAuthoringPage() {
             const reason = window.prompt('Reason for rejection');
             if (reason !== null && reason.trim() !== '') void transition('reject', { reason });
           }} disabled={busy || !hasPermission('events.event.review')}>Reject</Button>
-          {hasPermission('events.attendance.read') && <Button variant="secondary" onClick={loadAttendance} disabled={busy}>Load aggregate attendance</Button>}
+          {hasPermission('events.attendance.read') && <><Button variant="secondary" onClick={loadAttendance} disabled={busy}>Load aggregate attendance</Button><Button variant="secondary" onClick={loadEventReport} disabled={busy}>Load event report</Button>{eventReport && <Button variant="secondary" onClick={exportEventReport} disabled={busy}>Export report CSV</Button>}</>}
         </div>
         <section className="mt-6 border-t border-border pt-4" aria-label="Event cancellation">
           <h3 className="mb-2 font-semibold">Event cancellation</h3>
@@ -712,6 +793,11 @@ export function EventAuthoringPage() {
           </table>}
           <p className="mt-2 text-xs text-muted-foreground">Aggregate counts only. No attendee names, ticket identifiers or scan records are available here.</p>
         </section>}
+        {eventReport && <section aria-label="Event performance report" className="mt-5 rounded border border-border p-3">
+          <h3 className="mb-2 font-semibold">Event performance report</h3>
+          <p className="mb-3 text-sm text-text-secondary">{eventReport.privacy} Event capacity: {eventReport.event_capacity}. Current status: {eventReport.event_status}.</p>
+          <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr><th>Category</th><th>Allocation</th><th>Capacity</th><th>Issued</th><th>Paid sales</th><th>Free</th><th>Complimentary</th><th>Holds</th><th>Remaining</th><th>Admissions</th><th>No-shows</th></tr></thead><tbody>{eventReport.categories.map(row => <tr key={row.category}><td>{row.category}</td><td>{row.allocation_type}</td><td>{row.capacity}</td><td>{row.tickets_issued}</td><td>{row.paid_sales}</td><td>{row.free_registrations}</td><td>{row.complimentary_allocations_used}</td><td>{row.active_holds}</td><td>{row.remaining_capacity}</td><td>{row.admissions}</td><td>{row.no_shows_finalized ? row.no_shows : 'Event not ended'}</td></tr>)}</tbody></table></div>
+        </section>}
         <section className="mt-6 border-t border-border pt-4" aria-label="POC settlement">
           <h3 className="mb-2 font-semibold">Local POC organiser settlement</h3>
           <p className="mb-3 text-sm text-text-secondary">The manager can simulate event completion for a fast POC, which pauses sales and records an audit entry without changing the event dates. Then a different assigned approver can complete a simulated settlement based on issued paid orders with verified accounting. No funds move and no Ledger journal is posted.</p>
@@ -766,7 +852,11 @@ function buildEventPayload(form: EventForm): Record<string, unknown> {
       ...(category.allocation_type !== 'paid' ? { max_per_person: Number(category.max_per_person) } : {}),
     })),
   };
-  if (form.event_format === 'physical') payload['venue_country_code'] = form.venue_country_code.trim().toUpperCase();
+  if (form.event_format === 'physical' || form.event_format === 'hybrid') {
+    payload['venue_name'] = form.venue_name.trim();
+    payload['venue_address'] = form.venue_address.trim();
+    payload['venue_country_code'] = form.venue_country_code.trim().toUpperCase();
+  }
   return payload;
 }
 
@@ -829,7 +919,11 @@ function EventDraftFields({ value, onChange }: { value: EventForm; onChange: <K 
       <label className="flex flex-col gap-1 text-sm">Event image URL<input type="url" maxLength={2048} placeholder="Enter the event image address" value={value.image_url} onChange={e => onChange('image_url', e.target.value)} className="rounded border border-border px-3 py-2" /><span className="text-xs text-text-secondary">Optional. If the image cannot be loaded, customers see the default event image.</span></label>
       <label className="flex flex-col gap-1 text-sm">Organiser name<input required maxLength={200} value={value.organiser_name} onChange={e => onChange('organiser_name', e.target.value)} className="rounded border border-border px-3 py-2" /></label>
       <label className="flex flex-col gap-1 text-sm">Event format<select value={value.event_format} onChange={e => onChange('event_format', e.target.value as EventForm['event_format'])} className="rounded border border-border px-3 py-2"><option value="physical">Physical</option><option value="online">Online</option><option value="hybrid">Hybrid</option></select></label>
-      {value.event_format === 'physical' && <label className="flex flex-col gap-1 text-sm">Venue country code<input required maxLength={2} placeholder="BW" value={value.venue_country_code} onChange={e => onChange('venue_country_code', e.target.value.toUpperCase())} className="rounded border border-border px-3 py-2" /></label>}
+      {(value.event_format === 'physical' || value.event_format === 'hybrid') && <>
+        <label className="flex flex-col gap-1 text-sm">Venue name<input required maxLength={200} value={value.venue_name} onChange={e => onChange('venue_name', e.target.value)} className="rounded border border-border px-3 py-2" /></label>
+        <label className="flex flex-col gap-1 text-sm">Venue address<input required maxLength={500} value={value.venue_address} onChange={e => onChange('venue_address', e.target.value)} className="rounded border border-border px-3 py-2" /></label>
+        <label className="flex flex-col gap-1 text-sm">Venue country code<input required maxLength={2} placeholder="BW" value={value.venue_country_code} onChange={e => onChange('venue_country_code', e.target.value.toUpperCase())} className="rounded border border-border px-3 py-2" /></label>
+      </>}
       <label className="flex flex-col gap-1 text-sm">Event capacity<input required type="number" min={1} value={value.capacity} onChange={e => onChange('capacity', e.target.value)} className="rounded border border-border px-3 py-2" /></label>
       <label className="flex flex-col gap-1 text-sm">Maximum tickets per order<input required type="number" min={1} value={value.max_tickets_per_order} onChange={e => onChange('max_tickets_per_order', e.target.value)} className="rounded border border-border px-3 py-2" /></label>
       <label className="flex flex-col gap-1 text-sm">Time zone (IANA)<input required placeholder="Africa/Gaborone" value={value.timezone} onChange={e => onChange('timezone', e.target.value)} className="rounded border border-border px-3 py-2" /></label>

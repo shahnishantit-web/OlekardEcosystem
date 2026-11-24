@@ -39,6 +39,7 @@ final class CustomerEventCatalogueController extends Controller
                 'organiser_name' => $event->organiser_name,
                 'starts_at' => $event->starts_at, 'ends_at' => $event->ends_at, 'timezone' => $event->timezone,
                 'event_format' => $event->event_format, 'venue_country_code' => $event->venue_country_code,
+                'venue_name' => $event->venue_name, 'venue_address' => $event->venue_address,
                 'currency_code' => $event->currency_code,
                 'currency_precision' => (int) ($event->currency_precision_snapshot ?? 2),
                 'max_tickets_per_order' => $event->max_tickets_per_order,

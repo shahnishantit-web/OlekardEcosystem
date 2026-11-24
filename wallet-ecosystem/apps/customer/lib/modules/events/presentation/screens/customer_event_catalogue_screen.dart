@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/di/providers.dart';
 import '../widgets/event_image.dart';
 import 'customer_event_checkout_screen.dart';
+import 'free_event_registration_screen.dart';
 
 class CustomerEventCatalogueScreen extends ConsumerStatefulWidget {
   const CustomerEventCatalogueScreen({super.key});
@@ -116,6 +117,8 @@ class _EventRow extends StatelessWidget {
         child: Text([
           if ((event['organiser_name']?.toString() ?? '').isNotEmpty)
             event['organiser_name'].toString(),
+          if ((event['venue_name']?.toString() ?? '').isNotEmpty)
+            event['venue_name'].toString(),
           if (start != null) _formatDate(start),
         ].join('  •  ')),
       ),
@@ -192,17 +195,25 @@ class _CustomerEventDetailsScreenState
               style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 8),
           Text(event['organiser_name']?.toString() ?? ''),
-          if (event['sponsors'] is List && (event['sponsors'] as List).isNotEmpty) ...[
+          if (event['sponsors'] is List &&
+              (event['sponsors'] as List).isNotEmpty) ...[
             const SizedBox(height: 12),
             Text('Supported by', style: Theme.of(context).textTheme.titleSmall),
-            ...(event['sponsors'] as List).whereType<Map<String, dynamic>>().map((sponsor) => ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: sponsor['logo_url'] is String && (sponsor['logo_url'] as String).isNotEmpty
-                  ? Image.network(sponsor['logo_url'] as String, width: 40, height: 40, errorBuilder: (_, __, ___) => const Icon(Icons.business))
-                  : const Icon(Icons.business),
-              title: Text(sponsor['name']?.toString() ?? 'Sponsor'),
-              subtitle: Text(sponsor['description']?.toString() ?? ''),
-            )),
+            ...(event['sponsors'] as List)
+                .whereType<Map<String, dynamic>>()
+                .map((sponsor) => ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: sponsor['logo_url'] is String &&
+                              (sponsor['logo_url'] as String).isNotEmpty
+                          ? Image.network(sponsor['logo_url'] as String,
+                              width: 40,
+                              height: 40,
+                              errorBuilder: (_, __, ___) =>
+                                  const Icon(Icons.business))
+                          : const Icon(Icons.business),
+                      title: Text(sponsor['name']?.toString() ?? 'Sponsor'),
+                      subtitle: Text(sponsor['description']?.toString() ?? ''),
+                    )),
           ],
           if (startsAt != null) ...[
             const SizedBox(height: 20),
@@ -213,6 +224,11 @@ class _CustomerEventDetailsScreenState
           if ((event['event_format']?.toString() ?? '').isNotEmpty)
             _DetailLine(
                 label: 'Format', value: event['event_format'].toString()),
+          if ((event['venue_name']?.toString() ?? '').isNotEmpty)
+            _DetailLine(label: 'Venue', value: event['venue_name'].toString()),
+          if ((event['venue_address']?.toString() ?? '').isNotEmpty)
+            _DetailLine(
+                label: 'Address', value: event['venue_address'].toString()),
           const SizedBox(height: 24),
           Text('Tickets', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
@@ -221,12 +237,16 @@ class _CustomerEventDetailsScreenState
             final isBusy = _busyCategoryId == categoryId;
             final isPaid = category['allocation_type'] == 'paid' &&
                 (category['price_minor'] as num? ?? 0) > 0;
+            final isInvitationOnly =
+                category['allocation_type'] == 'complimentary';
             return Card(
               child: ListTile(
                 title: Text(category['name']?.toString() ?? 'Ticket'),
                 subtitle: Text(isPaid
                     ? '${_formatMoney((category['price_minor'] as num).toInt(), event['currency_code']?.toString() ?? 'BWP', (event['currency_precision'] as num?)?.toInt() ?? 2)} per ticket'
-                    : 'Free  •  Up to ${category['max_per_person'] ?? 1} per customer'),
+                    : isInvitationOnly
+                        ? 'Invitation required'
+                        : 'Free registration · Up to ${category['max_per_person'] ?? 1} per customer'),
                 trailing: FilledButton(
                   onPressed: _busyCategoryId == null
                       ? isPaid
@@ -239,13 +259,28 @@ class _CustomerEventDetailsScreenState
                                   ),
                                 ),
                               )
-                          : () => _register(category)
+                          : isInvitationOnly
+                              ? () => Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) =>
+                                          FreeEventRegistrationScreen(
+                                        eventId: event['id'].toString(),
+                                        categoryId: category['id'].toString(),
+                                        eventTitle: event['title']?.toString(),
+                                        categoryName:
+                                            category['name']?.toString(),
+                                      ),
+                                    ),
+                                  )
+                              : () => _register(category)
                       : null,
                   child: Text(isBusy
                       ? 'Registering…'
                       : isPaid
                           ? 'Buy ticket'
-                          : 'Register free'),
+                          : isInvitationOnly
+                              ? 'Redeem invitation'
+                              : 'Register free'),
                 ),
               ),
             );

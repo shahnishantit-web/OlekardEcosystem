@@ -166,9 +166,11 @@ final class EventDraftService
                 },
             ],
             'event_format' => ['required', 'string', 'in:physical,online,hybrid'],
+            'venue_name' => ['nullable', 'string', 'max:200', 'required_if:event_format,physical,hybrid', 'prohibited_unless:event_format,physical,hybrid'],
+            'venue_address' => ['nullable', 'string', 'max:500', 'required_if:event_format,physical,hybrid', 'prohibited_unless:event_format,physical,hybrid'],
             'venue_country_code' => [
                 'nullable', 'string', 'size:2', 'regex:/^[A-Z]{2}$/D',
-                'required_if:event_format,physical', 'prohibited_unless:event_format,physical',
+                'required_if:event_format,physical,hybrid', 'prohibited_unless:event_format,physical,hybrid',
                 static function (string $attribute, mixed $value, \Closure $fail): void {
                     if (is_string($value) && ! EventVenueCountryCode::isValid($value)) {
                         $fail('The venue country must be a valid ISO 3166-1 alpha-2 code.');
@@ -245,8 +247,8 @@ final class EventDraftService
         if ($instants['sales_start_at'] >= $instants['sales_end_at']) {
             $errors['sales_end_at'] = 'The sales window must end after it starts.';
         }
-        if ($instants['sales_end_at'] > $instants['starts_at']) {
-            $errors['sales_end_at'] = 'Ticket sales must end at or before the event starts.';
+        if ($instants['sales_end_at'] >= $instants['starts_at']) {
+            $errors['sales_end_at'] = 'Ticket sales must end before the event starts.';
         }
 
         if ($errors !== []) {
@@ -333,6 +335,11 @@ final class EventDraftService
     private function fields(array $data, bool $preserveCurrency = false): array
     {
         unset($data['categories']);
+        if (($data['event_format'] ?? null) === 'online') {
+            $data['venue_name'] = null;
+            $data['venue_address'] = null;
+            $data['venue_country_code'] = null;
+        }
         // Currency is assigned through the Finance/platform control path, not by an organiser draft.
         if ($preserveCurrency) {
             unset($data['currency_code']);
