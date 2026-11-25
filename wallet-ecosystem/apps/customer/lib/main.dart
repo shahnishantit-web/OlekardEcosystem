@@ -20,7 +20,7 @@ void main() async {
       bool.fromEnvironment('P26_E2E_ENABLE_WEB_SEMANTICS');
   if (!kIsWeb && AppFeatures.enableFirebase) {
     await Firebase.initializeApp();
-    await PushNotificationService.initialize();
+    //await PushNotificationService.initialize();
   }
   runApp(ProviderScope(
     overrides: [

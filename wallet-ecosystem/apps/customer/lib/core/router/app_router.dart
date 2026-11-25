@@ -34,6 +34,7 @@ import '../../modules/support/presentation/screens/dispute_list_screen.dart';
 import '../../modules/support/presentation/screens/raise_dispute_screen.dart';
 import '../../modules/support/presentation/screens/dispute_detail_screen.dart';
 import '../../modules/payment/presentation/money_flow_screen.dart';
+import '../../modules/payment/presentation/payment_return_screen.dart';
 import '../../modules/events/presentation/screens/customer_event_tickets_screen.dart';
 import '../../modules/events/presentation/screens/free_event_registration_screen.dart';
 import '../../modules/events/presentation/screens/customer_event_catalogue_screen.dart';
@@ -90,6 +91,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const EventOperationsHomeScreen(),
       ),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+      GoRoute(
+        path: '/payment/return',
+        builder: (_, state) => PaymentReturnScreen(
+          intentId: state.uri.queryParameters['intent_id'] ?? '',
+          purposeType: state.uri.queryParameters['purpose_type'] ?? '',
+          purposeReference:
+              state.uri.queryParameters['purpose_reference'] ?? '',
+        ),
+      ),
       GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
       GoRoute(
         path: '/join-funeral',

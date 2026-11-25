@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -502,7 +503,18 @@ class _FuneralContributionCheckoutScreenState
       if (actionUrl != null) {
         final uri = Uri.tryParse(actionUrl);
         if (uri != null && (uri.scheme == 'https' || uri.scheme == 'http')) {
-          await launchUrl(uri, mode: LaunchMode.platformDefault);
+          final checkoutUri = !kIsWeb && uri.path == '/mock-bank/checkout'
+              ? uri.replace(queryParameters: {
+                  ...uri.queryParameters,
+                  'return_to_app': '1',
+                })
+              : uri;
+          await launchUrl(
+            checkoutUri,
+            mode: !kIsWeb && checkoutUri.queryParameters['return_to_app'] == '1'
+                ? LaunchMode.inAppBrowserView
+                : LaunchMode.platformDefault,
+          );
         }
       }
     } catch (error) {

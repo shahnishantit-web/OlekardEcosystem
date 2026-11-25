@@ -16,6 +16,7 @@ Route::get('/', function () {
 if (! app()->isProduction() && ! app()->environment('staging')) {
     Route::get('/mock-bank/checkout', static function (\Illuminate\Http\Request $request): \Illuminate\Http\Response {
         $ref = $request->query('ref', '');
+        $returnToApp = $request->boolean('return_to_app') ? '1' : '0';
         $html = <<<HTML
         <!DOCTYPE html>
         <html lang="en">
@@ -37,6 +38,7 @@ if (! app()->isProduction() && ! app()->environment('staging')) {
             <form method="POST" action="/mock-bank/complete">
                 <input type="hidden" name="_token" value="{csrf_field_value}">
                 <input type="hidden" name="ref" value="{$ref}">
+                <input type="hidden" name="return_to_app" value="{$returnToApp}">
                 <input type="hidden" name="outcome" value="success">
                 <button type="submit" class="btn btn-success" onclick="this.form.outcome.value='success'">
                     ✓ Complete Payment
@@ -64,7 +66,7 @@ if (! app()->isProduction() && ! app()->environment('staging')) {
             ->where('id', $ref)->first(['payment_intent_id', 'provider_account_id', 'provider_code']);
         abort_if($attempt === null || $attempt->provider_code !== 'mock_bank', 404, 'Mock payment attempt was not found.');
         $intent = \Illuminate\Support\Facades\DB::connection('payment')->table('payment.payment_intents')
-            ->where('id', $attempt->payment_intent_id)->first(['amount_minor', 'currency_code']);
+            ->where('id', $attempt->payment_intent_id)->first(['amount_minor', 'currency_code', 'purpose_type', 'purpose_reference']);
         $account = \Illuminate\Support\Facades\DB::connection('payment')->table('payment.payment_provider_accounts')
             ->where('id', $attempt->provider_account_id)->first(['merchant_account_reference']);
         abort_if($intent === null || $account === null, 404, 'Mock payment attempt was not found.');
@@ -141,9 +143,26 @@ if (! app()->isProduction() && ! app()->environment('staging')) {
         $safeTitle = e($title);
         $safeMessage = e($message);
         $safeRef = e($ref);
+        $returnToApp = $request->boolean('return_to_app') && $callbackAccepted;
+        $mobileReturnUrl = null;
+        if ($returnToApp) {
+            $configuredReturnUrl = (string) config('payment.mock_bank.mobile_return_url', '');
+            $returnParts = parse_url($configuredReturnUrl);
+            if (is_array($returnParts) && isset($returnParts['scheme'], $returnParts['host'], $returnParts['path'])
+                && preg_match('/^[a-z][a-z0-9+.-]*$/i', $returnParts['scheme']) === 1) {
+                $mobileReturnUrl = rtrim($configuredReturnUrl, '?&').(str_contains($configuredReturnUrl, '?') ? '&' : '?').http_build_query([
+                    'intent_id' => (string) $attempt->payment_intent_id,
+                    'purpose_type' => (string) $intent->purpose_type,
+                    'purpose_reference' => (string) $intent->purpose_reference,
+                ], '', '&', PHP_QUERY_RFC3986);
+            }
+        }
+        $safeMobileReturnUrl = $mobileReturnUrl === null ? null : e($mobileReturnUrl);
+        $returnMeta = $safeMobileReturnUrl === null ? '' : '<meta http-equiv="refresh" content="1;url='.$safeMobileReturnUrl.'">';
+        $returnLink = $safeMobileReturnUrl === null ? '' : '<a id="return-link" href="'.$safeMobileReturnUrl.'">Return to OleKard</a>';
         $html = <<<HTML
         <!doctype html>
-        <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+        <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">{$returnMeta}
         <title>{$safeTitle}</title><style>
         body{font:16px system-ui,sans-serif;max-width:520px;margin:12vh auto;padding:24px;color:#172033}
         main{border:1px solid #dbe2ea;border-radius:16px;padding:28px;box-shadow:0 8px 30px #17203312}
@@ -151,11 +170,9 @@ if (! app()->isProduction() && ! app()->environment('staging')) {
         code{overflow-wrap:anywhere}
         </style></head><body><main><h1>{$safeTitle}</h1><p>{$safeMessage}</p>
         <p>Payment reference: <code>{$safeRef}</code></p>
-        <a id="return-link" href="#" hidden onclick="window.opener&&window.opener.focus();window.close();return false;">Return to checkout</a>
-        <p id="return-note">Switch back to the checkout tab or app. It checks the payment status automatically.</p>
-        </main><script>
-        if(window.opener){document.getElementById('return-link').hidden=false;document.getElementById('return-note').hidden=true;window.opener.focus();setTimeout(function(){window.close();},700);}
-        </script></body></html>
+        {$returnLink}
+        <p id="return-note">Return to OleKard to see the latest payment and ticket status.</p>
+        </main></body></html>
         HTML;
 
         return response($html, $callbackAccepted ? 200 : 502)->header('Content-Type', 'text/html; charset=UTF-8');
