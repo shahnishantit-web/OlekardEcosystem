@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/di/providers.dart';
+import '../../../../core/theme/design_tokens.dart';
 
 final freeEventRegistrationDioProvider = Provider<Dio>(
   (ref) => ref.watch(apiClientProvider).dio,
@@ -73,7 +74,10 @@ class _FreeEventRegistrationScreenState
             options: Options(headers: {'Idempotency-Key': idempotencyKey}),
           );
       if (!mounted) return;
-      context.go('/events/tickets');
+      context.go('/events/registration-confirmation', extra: {
+        'event_title': widget.eventTitle ?? '',
+        'category': widget.categoryName ?? '',
+      });
     } on DioException catch (error) {
       if (!mounted) return;
       final message = error.response?.data is Map<String, dynamic>
@@ -98,7 +102,7 @@ class _FreeEventRegistrationScreenState
           padding: const EdgeInsets.all(16),
           children: [
             Text(widget.eventTitle == null
-                ? 'Enter the invitation token for your complimentary event ticket. Invitation tokens are private and are never placed in a URL.'
+                ? 'An invitation token is optional for public free registration. Enter one if your organiser provided it.'
                 : 'Enter the invitation token for ${widget.eventTitle} · ${widget.categoryName ?? 'Complimentary ticket'}.'),
             const SizedBox(height: 16),
             if (widget.eventId == null)
@@ -127,11 +131,22 @@ class _FreeEventRegistrationScreenState
             const SizedBox(height: 16),
             FilledButton(
               onPressed: _busy ? null : _register,
-              child: Text(_busy ? 'Registering…' : 'Redeem invitation'),
+              child: Text(_busy
+                  ? 'Registering…'
+                  : widget.eventId == null
+                      ? 'Register for free'
+                      : 'Redeem invitation'),
             ),
             if (_message != null) ...[
               const SizedBox(height: 12),
-              Text(_message!),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                    color: AppColors.errorBg,
+                    borderRadius: BorderRadius.circular(12)),
+                child: Text(_message!,
+                    style: const TextStyle(color: AppColors.error)),
+              ),
             ],
           ],
         ),

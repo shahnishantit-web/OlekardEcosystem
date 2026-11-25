@@ -38,6 +38,7 @@ import '../../modules/payment/presentation/payment_return_screen.dart';
 import '../../modules/events/presentation/screens/customer_event_tickets_screen.dart';
 import '../../modules/events/presentation/screens/free_event_registration_screen.dart';
 import '../../modules/events/presentation/screens/customer_event_catalogue_screen.dart';
+import '../../modules/events/presentation/screens/event_registration_confirmation_screen.dart';
 import '../../modules/event_operations/presentation/screens/event_operations_screens.dart';
 import '../../modules/payment/application/customer_money_service.dart';
 import '../../modules/security_settings/presentation/screens/step_up_pin_screen.dart';
@@ -186,6 +187,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/events/tickets',
             builder: (_, __) => const CustomerEventTicketsScreen(),
+          ),
+          GoRoute(
+            path: '/events/registration-confirmation',
+            builder: (_, state) => EventRegistrationConfirmationScreen(
+              details: (state.extra as Map<String, String>?) ?? const {},
+            ),
           ),
           GoRoute(
             path: '/events/free-registration',

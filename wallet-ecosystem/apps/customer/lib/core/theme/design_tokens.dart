@@ -1,74 +1,58 @@
-import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 
-// Consumer app re-exports with app-specific aliases.
-// Source of truth is OkTokens in packages/design-system.
-
+/// Customer app visual tokens. Kept local so other OleKard apps are unaffected.
 abstract final class AppColors {
-  static const primary     = OkTokens.colorMBluePrimary;
-  static const primaryDark = OkTokens.colorMBlueDark;
-  static const primaryLight = OkTokens.colorMBlueLight;
-  static const secondary   = OkTokens.colorMBlueAccent;
-  static const surface     = OkTokens.colorMBlueSurface;
-  static const background  = OkTokens.colorMBlueBackground;
-  // Consumer blue primary uses the design system's white foreground token.
-  static const onPrimary   = OkTokens.colorNeutralWhite;
-  static const onSurface   = textPrimary;
-  static const outline     = OkTokens.colorNeutralBorder;
-
-  static const error        = OkTokens.colorStatusError;
-  static const errorBg      = OkTokens.colorStatusErrorBg;
-  static const success      = OkTokens.colorStatusSuccess;
-  static const successBg    = OkTokens.colorStatusSuccessBg;
-  static const warning      = OkTokens.colorStatusWarning;
-  static const warningBg    = OkTokens.colorStatusWarningBg;
-  static const info         = OkTokens.colorStatusInfo;
-  static const infoBg       = OkTokens.colorStatusInfoBg;
-  // Offline indicator — amber matches the warning semantic token (#F59E0B)
-  static const offlineAmber = OkTokens.colorStatusWarning;
-
-  static const textPrimary   = OkTokens.colorMNeutralWhite;
-  static const textSecondary = OkTokens.colorMNeutralSecondary;
+  static const primary = Color(0xFF1D4ED8);
+  static const primaryDark = Color(0xFF1E40AF);
+  static const primaryLight = Color(0xFFDBEAFE);
+  static const secondary = Color(0xFFEFF6FF);
+  static const surface = Color(0xFFFFFFFF);
+  static const background = Color(0xFFF4F7FC);
+  static const onPrimary = Color(0xFFFFFFFF);
+  static const onSurface = textPrimary;
+  static const outline = Color(0xFFE2E8F0);
+  static const textPrimary = Color(0xFF0F172A);
+  static const textSecondary = Color(0xFF475569);
+  static const error = Color(0xFFB42318);
+  static const errorBg = Color(0xFFFEF3F2);
+  static const success = Color(0xFF15803D);
+  static const successBg = Color(0xFFECFDF3);
+  static const warning = Color(0xFFB45309);
+  static const warningBg = Color(0xFFFFF7ED);
+  static const info = Color(0xFF1D4ED8);
+  static const infoBg = Color(0xFFEFF6FF);
+  static const offlineAmber = warning;
 }
 
 abstract final class AppTypography {
   static const headline = TextStyle(
-    fontSize: OkTokens.fontSize2xl,
-    fontWeight: OkTokens.fontWeightBold,
-    height: OkTokens.lineHeightTight,
-  );
+      fontSize: 28,
+      fontWeight: FontWeight.w700,
+      height: 1.18,
+      letterSpacing: -0.5);
   static const title = TextStyle(
-    fontSize: OkTokens.fontSizeXl,
-    fontWeight: OkTokens.fontWeightSemibold,
-    height: OkTokens.lineHeightSnug,
-  );
-  static const body = TextStyle(
-    fontSize: OkTokens.fontSizeBase,
-    fontWeight: OkTokens.fontWeightNormal,
-    height: OkTokens.lineHeightNormal,
-  );
-  static const label = TextStyle(
-    fontSize: OkTokens.fontSizeSm,
-    fontWeight: OkTokens.fontWeightMedium,
-    height: OkTokens.lineHeightNormal,
-  );
-  static const caption = TextStyle(
-    fontSize: OkTokens.fontSizeXs,
-    fontWeight: OkTokens.fontWeightNormal,
-    height: OkTokens.lineHeightNormal,
-  );
+      fontSize: 20,
+      fontWeight: FontWeight.w600,
+      height: 1.25,
+      letterSpacing: -0.2);
+  static const body =
+      TextStyle(fontSize: 16, fontWeight: FontWeight.w400, height: 1.5);
+  static const label =
+      TextStyle(fontSize: 14, fontWeight: FontWeight.w600, height: 1.35);
+  static const caption =
+      TextStyle(fontSize: 12, fontWeight: FontWeight.w400, height: 1.4);
   static const amount = TextStyle(
-    fontSize: OkTokens.fontSize3xl,
-    fontWeight: OkTokens.fontWeightBold,
-    height: OkTokens.lineHeightTight,
-  );
+      fontSize: 34,
+      fontWeight: FontWeight.w700,
+      height: 1.1,
+      letterSpacing: -0.8);
 }
 
 abstract final class AppSpacing {
-  static const double xs  = OkTokens.spacingXs;
-  static const double sm  = OkTokens.spacingSm;
-  static const double md  = OkTokens.spacingMd;
-  static const double lg  = OkTokens.spacingLg;
-  static const double xl  = OkTokens.spacingXl;
-  static const double xxl = OkTokens.spacing2xl;
+  static const double xs = 4;
+  static const double sm = 8;
+  static const double md = 16;
+  static const double lg = 24;
+  static const double xl = 32;
+  static const double xxl = 40;
 }

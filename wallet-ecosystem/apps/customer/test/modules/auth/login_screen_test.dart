@@ -6,6 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wallet_customer/core/router/app_router.dart';
 import 'package:wallet_customer/core/security/biometric_service.dart';
+import 'package:wallet_customer/modules/auth/presentation/screens/login_screen.dart';
 import 'package:wallet_customer/modules/auth/domain/repositories/auth_repository.dart';
 import 'package:wallet_customer/modules/auth/presentation/auth_providers.dart';
 
@@ -29,6 +30,31 @@ class _NoBiometrics extends BiometricService {
 }
 
 void main() {
+  testWidgets('sign-in stays reachable on a small screen with keyboard inset',
+      (tester) async {
+    FlutterSecureStorage.setMockInitialValues({});
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    tester.view.viewInsets = const FakeViewPadding(bottom: 240);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        authRepositoryProvider.overrideWithValue(_LoginRepository()),
+        biometricServiceProvider.overrideWithValue(_NoBiometrics()),
+      ],
+      child: const MaterialApp(home: LoginScreen()),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.byType(TextFormField), findsOneWidget);
+    await tester.tap(find.byType(TextFormField));
+    await tester.showKeyboard(find.byType(TextFormField));
+    await tester.pumpAndSettle();
+    expect(find.text('Log In'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('login retains its route and opens PIN entry after the challenge',
       (tester) async {
     FlutterSecureStorage.setMockInitialValues({});
