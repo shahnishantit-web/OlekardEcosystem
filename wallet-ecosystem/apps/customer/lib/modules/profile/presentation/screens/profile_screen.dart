@@ -64,7 +64,28 @@ class ProfileScreen extends ConsumerWidget {
                 'Member since',
                 profile.createdAt.toLocal().toString().substring(0, 10),
               ),
-              const SizedBox(height: AppSpacing.xl),
+              const SizedBox(height: AppSpacing.lg),
+              Card(
+                child: ListTile(
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+                  leading: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.confirmation_number_outlined,
+                        color: AppColors.primary),
+                  ),
+                  title: const Text('My Event Tickets'),
+                  subtitle: const Text('View your event passes'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => context.push('/events/tickets'),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
               OutlinedButton(
                 onPressed: () => context.push('/profile/edit'),
                 child: const Text('Edit Profile'),

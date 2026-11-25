@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1/events')->middleware(['identity.auth'])->group(static function (): void {
     Route::get('customer/catalogue', [CustomerEventCatalogueController::class, 'index']);
+    Route::get('customer/invitations', [CustomerEventCatalogueController::class, 'invitations']);
     Route::get('sponsor-reports', [EventSponsorController::class, 'assignedReports']);
     Route::get('my-gate-assignments', [EventAdmissionController::class, 'myGateAssignments']);
     Route::get('organisations/{organisationId}/drafts', [EventAuthoringController::class, 'index']);
@@ -50,6 +51,7 @@ Route::prefix('v1/events')->middleware(['identity.auth'])->group(static function
 Route::prefix('v1/events')->middleware(['identity.auth', 'idempotency:require-identity'])->group(static function (): void {
     Route::post('{eventId}/inventory-holds', [EventInventoryHoldController::class, 'store']);
     Route::post('{eventId}/free-registrations', [FreeEventRegistrationController::class, 'register']);
+    Route::post('customer/invitations/{invitationId}/accept', [FreeEventRegistrationController::class, 'acceptCustomerInvitation']);
     Route::post('{eventId}/invitations', [FreeEventRegistrationController::class, 'createInvitation']);
     Route::delete('invitations/{invitationId}', [FreeEventRegistrationController::class, 'revokeInvitation']);
     Route::post('{eventId}/quotes', [EventOrderController::class, 'quote']);

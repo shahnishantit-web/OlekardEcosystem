@@ -167,6 +167,7 @@ final class EventDraftService
             ],
             'event_format' => ['required', 'string', 'in:physical,online,hybrid'],
             'venue_name' => ['nullable', 'string', 'max:200', 'required_if:event_format,physical,hybrid', 'prohibited_unless:event_format,physical,hybrid'],
+            'venue_city' => ['nullable', 'string', 'max:120', 'prohibited_unless:event_format,physical,hybrid'],
             'venue_address' => ['nullable', 'string', 'max:500', 'required_if:event_format,physical,hybrid', 'prohibited_unless:event_format,physical,hybrid'],
             'venue_country_code' => [
                 'nullable', 'string', 'size:2', 'regex:/^[A-Z]{2}$/D',
@@ -337,6 +338,7 @@ final class EventDraftService
         unset($data['categories']);
         if (($data['event_format'] ?? null) === 'online') {
             $data['venue_name'] = null;
+            $data['venue_city'] = null;
             $data['venue_address'] = null;
             $data['venue_country_code'] = null;
         }

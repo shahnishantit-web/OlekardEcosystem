@@ -20,39 +20,9 @@ class _ServicesHomeScreenState extends ConsumerState<ServicesHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(serviceCategoriesProvider);
-    final isWide = MediaQuery.sizeOf(context).width >= 600;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Services'),
-        actions: isWide
-            ? [
-                TextButton(
-                  onPressed: () => context.push('/events/tickets'),
-                  child: const Text('My Event Tickets'),
-                ),
-                TextButton(
-                  onPressed: () => context.push('/services/funeral'),
-                  child: const Text('Funeral Assistance'),
-                ),
-              ]
-            : [
-                PopupMenuButton<String>(
-                  tooltip: 'Services menu',
-                  onSelected: (destination) => context.push(destination),
-                  itemBuilder: (context) => const [
-                    PopupMenuItem(
-                      value: '/events/tickets',
-                      child: Text('My Event Tickets'),
-                    ),
-                    PopupMenuItem(
-                      value: '/services/funeral',
-                      child: Text('Funeral Assistance'),
-                    ),
-                  ],
-                ),
-              ],
-      ),
+      appBar: AppBar(title: const Text('Services')),
       body: categoriesAsync.when(
         loading: () => const Padding(
           padding: EdgeInsets.all(AppSpacing.lg),
@@ -72,6 +42,9 @@ class _ServicesHomeScreenState extends ConsumerState<ServicesHomeScreen> {
               'events'.contains(query) ||
               'event registration'.contains(query) ||
               'registration'.contains(query);
+          final showFuneralAssistance = query.isEmpty ||
+              'funeral assistance community collections segotsamollo'
+                  .contains(query);
 
           return Column(
             children: [
@@ -86,7 +59,9 @@ class _ServicesHomeScreenState extends ConsumerState<ServicesHomeScreen> {
                 ),
               ),
               Expanded(
-                child: filtered.isEmpty && !showFreeEventRegistration
+                child: filtered.isEmpty &&
+                        !showFreeEventRegistration &&
+                        !showFuneralAssistance
                     ? const Center(child: Text('No services found.'))
                     : GridView.count(
                         crossAxisCount: 2,
@@ -96,6 +71,8 @@ class _ServicesHomeScreenState extends ConsumerState<ServicesHomeScreen> {
                         children: [
                           if (showFreeEventRegistration)
                             _buildFreeEventRegistrationCard(),
+                          if (showFuneralAssistance)
+                            _buildFuneralAssistanceCard(),
                           ...filtered.map(_buildCategoryCard),
                         ],
                       ),
@@ -128,6 +105,36 @@ class _ServicesHomeScreenState extends ConsumerState<ServicesHomeScreen> {
                   'Browse events, register free, or buy tickets',
                   style: Theme.of(context).textTheme.bodySmall,
                   textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+  Widget _buildFuneralAssistanceCard() => InkWell(
+        onTap: () => context.push('/services/funeral'),
+        borderRadius: BorderRadius.circular(12),
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.volunteer_activism_rounded,
+                    size: 32, color: AppColors.primary),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Funeral Assistance',
+                  style: AppTypography.label,
+                  textAlign: TextAlign.center,
+                ),
+                Text(
+                  'Support families through community giving',
+                  style: Theme.of(context).textTheme.bodySmall,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

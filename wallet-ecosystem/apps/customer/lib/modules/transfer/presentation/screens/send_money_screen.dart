@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:uuid/uuid.dart';
@@ -12,6 +12,7 @@ import '../../../../shared/widgets/amount_display.dart';
 import '../../../../shared/widgets/pin_pad_widget.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../../shared/widgets/success_view.dart';
+import '../../../../modules/wallet/presentation/widgets/wallet_components.dart';
 
 enum _Step { form, preview, pin, result }
 
@@ -53,7 +54,10 @@ class _SendMoneyScreenState extends ConsumerState<SendMoneyScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Send Money')),
-      body: _buildStep(context, isOffline),
+      body: Column(children: [
+        const OfflineBanner(),
+        Expanded(child: _buildStep(context, isOffline)),
+      ]),
     );
   }
 
@@ -67,29 +71,37 @@ class _SendMoneyScreenState extends ConsumerState<SendMoneyScreen> {
   }
 
   Widget _buildForm(bool isOffline) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: _walletController,
-                  decoration: const InputDecoration(labelText: 'Wallet Number or Phone'),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.qr_code_scanner),
-                tooltip: 'Scan QR',
-                onPressed: () => setState(() => _scanning = true),
-              ),
-            ],
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      children: [
+        const WalletFlowHeading(
+          step: 1,
+          title: 'Send money',
+          subtitle: 'Enter a wallet number or phone number to get started.',
+        ),
+        const SizedBox(height: 25),
+        Text('Recipient', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 9),
+        TextFormField(
+          controller: _walletController,
+          keyboardType: TextInputType.text,
+          textInputAction: TextInputAction.next,
+          decoration: InputDecoration(
+            labelText: 'Wallet number or phone',
+            prefixIcon: const Icon(Icons.person_outline_rounded),
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.qr_code_scanner_rounded),
+              tooltip: 'Scan recipient QR',
+              onPressed: () => setState(() => _scanning = !_scanning),
+            ),
           ),
-          if (_scanning)
-            SizedBox(
-              height: 200,
+        ),
+        if (_scanning) ...[
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: SizedBox(
+              height: 220,
               child: MobileScanner(
                 onDetect: (capture) {
                   final barcode = capture.barcodes.firstOrNull;
@@ -100,62 +112,87 @@ class _SendMoneyScreenState extends ConsumerState<SendMoneyScreen> {
                 },
               ),
             ),
-          const SizedBox(height: AppSpacing.md),
-          TextFormField(
-            controller: _amountController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(labelText: 'Amount'),
-          ),
-          if (_error != null) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Text(_error!, style: const TextStyle(color: AppColors.error)),
-          ],
-          const Spacer(),
-          PrimaryButton(
-            label: 'Continue',
-            isLoading: _isLoading,
-            onPressed: isOffline ? () => _showOfflineDialog(context) : _getPreview,
           ),
         ],
-      ),
+        const SizedBox(height: 22),
+        Text('Transfer amount', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 9),
+        TextFormField(
+          controller: _amountController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textInputAction: TextInputAction.done,
+          decoration: const InputDecoration(
+            hintText: '0.00',
+            prefixIcon: Icon(Icons.payments_outlined),
+          ),
+        ),
+        if (_error != null) ...[
+          const SizedBox(height: 12),
+          _FlowError(message: _error!),
+        ],
+        const SizedBox(height: 24),
+        PrimaryButton(
+          label: 'Review transfer',
+          isLoading: _isLoading,
+          onPressed:
+              isOffline ? () => _showOfflineDialog(context) : _getPreview,
+        ),
+      ],
     );
   }
 
   Widget _buildPreview() {
     final p = _preview!;
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text('Confirm Transfer', style: AppTypography.headline),
-          const SizedBox(height: AppSpacing.lg),
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      children: [
+        const WalletFlowHeading(
+          step: 2,
+          title: 'Review transfer',
+          subtitle: 'Confirm the recipient and total debit.',
+        ),
+        const SizedBox(height: 24),
+        WalletSummaryPanel(children: [
           _Row('Recipient', p.recipientName),
           _RowAmount('Amount', p.amountMinorUnits, p.currencyCode),
           _RowAmount('Fee', p.feeMinorUnits, p.currencyCode),
-          _RowAmount('Total Debit', p.amountMinorUnits + p.feeMinorUnits, p.currencyCode),
-          const Spacer(),
-          PrimaryButton(
-            label: 'Confirm Transfer',
-            onPressed: () => setState(() => _step = _Step.pin),
-          ),
-        ],
-      ),
+          _RowAmount('Total debit', p.amountMinorUnits + p.feeMinorUnits,
+              p.currencyCode),
+        ]),
+        const SizedBox(height: 24),
+        PrimaryButton(
+          label: 'Continue to PIN',
+          onPressed: () => setState(() => _step = _Step.pin),
+        ),
+        TextButton(
+          onPressed: () => setState(() => _step = _Step.form),
+          child: const Text('Back to details'),
+        ),
+      ],
     );
   }
 
-  Widget _buildPin() => Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          children: [
-            const Text('Enter PIN', style: AppTypography.title, textAlign: TextAlign.center),
-            const SizedBox(height: AppSpacing.xl),
-            if (_isLoading)
-              const Center(child: CircularProgressIndicator())
-            else
-              PinPadWidget(onCompleted: _submitTransfer),
-          ],
-        ),
+  Widget _buildPin() => ListView(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        children: [
+          const WalletFlowHeading(
+            step: 3,
+            title: 'Confirm securely',
+            subtitle: 'Enter your PIN to approve this transfer.',
+          ),
+          const SizedBox(height: 22),
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.all(40),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else
+            PinPadWidget(onCompleted: _submitTransfer),
+          TextButton(
+            onPressed: () => setState(() => _step = _Step.preview),
+            child: const Text('Back to review'),
+          ),
+        ],
       );
 
   Widget _buildResult() => SuccessView(
@@ -172,14 +209,21 @@ class _SendMoneyScreenState extends ConsumerState<SendMoneyScreen> {
       setState(() => _error = 'Enter a valid amount and recipient');
       return;
     }
-    setState(() { _isLoading = true; _error = null; });
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
     try {
-      final preview = await ref.read(transferRepositoryProvider).previewTransfer(
-            recipientWalletNumber: wallet,
-            amountMinorUnits: (amount * 100).round(),
-            currencyCode: 'KES',
-          );
-      setState(() { _preview = preview; _step = _Step.preview; });
+      final preview =
+          await ref.read(transferRepositoryProvider).previewTransfer(
+                recipientWalletNumber: wallet,
+                amountMinorUnits: (amount * 100).round(),
+                currencyCode: 'KES',
+              );
+      setState(() {
+        _preview = preview;
+        _step = _Step.preview;
+      });
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
@@ -200,9 +244,15 @@ class _SendMoneyScreenState extends ConsumerState<SendMoneyScreen> {
             ),
           );
       ref.invalidate(walletProvider);
-      setState(() { _referenceNumber = result.referenceNumber; _step = _Step.result; });
+      setState(() {
+        _referenceNumber = result.referenceNumber;
+        _step = _Step.result;
+      });
     } catch (e) {
-      setState(() { _error = e.toString(); _step = _Step.form; });
+      setState(() {
+        _error = e.toString();
+        _step = _Step.form;
+      });
     } finally {
       setState(() => _isLoading = false);
     }
@@ -214,7 +264,10 @@ class _SendMoneyScreenState extends ConsumerState<SendMoneyScreen> {
       builder: (_) => AlertDialog(
         title: const Text('You are offline'),
         content: const Text('Please reconnect to perform transactions.'),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context), child: const Text('OK'))
+        ],
       ),
     );
   }
@@ -229,10 +282,22 @@ class _Row extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: AppTypography.label),
-            Text(value, style: AppTypography.body),
+            Expanded(
+              child: Text(label,
+                  style: AppTypography.label.copyWith(
+                    color: AppColors.textSecondary,
+                  )),
+            ),
+            Flexible(
+              child: Text(value,
+                  textAlign: TextAlign.end,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                  )),
+            ),
           ],
         ),
       );
@@ -245,13 +310,49 @@ class _RowAmount extends StatelessWidget {
   const _RowAmount(this.label, this.minorUnits, this.currencyCode);
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+  Widget build(BuildContext context) => Row(
+        children: [
+          Expanded(
+            child: Text(label,
+                style: AppTypography.label.copyWith(
+                  color: AppColors.textSecondary,
+                )),
+          ),
+          Flexible(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: AmountDisplay(
+                  amountMinorUnits: minorUnits, currencyCode: currencyCode),
+            ),
+          ),
+        ],
+      );
+}
+
+class _FlowError extends StatelessWidget {
+  const _FlowError({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(13),
+        decoration: BoxDecoration(
+          color: AppColors.errorBg,
+          borderRadius: BorderRadius.circular(14),
+        ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: AppTypography.label),
-            AmountDisplay(amountMinorUnits: minorUnits, currencyCode: currencyCode),
+            const Icon(Icons.error_outline_rounded,
+                size: 19, color: AppColors.error),
+            const SizedBox(width: 9),
+            Expanded(
+              child: Text(message,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.error,
+                      )),
+            ),
           ],
         ),
       );

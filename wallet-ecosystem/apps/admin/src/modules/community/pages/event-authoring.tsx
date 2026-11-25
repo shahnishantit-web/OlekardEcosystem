@@ -19,6 +19,7 @@ type EventDraft = {
   event_format: 'physical' | 'online' | 'hybrid';
   venue_country_code: string | null;
   venue_name: string | null;
+  venue_city: string | null;
   venue_address: string | null;
   organiser_name: string;
   sponsors: string[];
@@ -51,7 +52,7 @@ type POCSettlement = { id: string; requested_by_actor_id: string; approved_by_ac
 type POCRefund = { id: string; cancellation_request_id: string; amount_minor: number; currency_code: string; status: string; poc_reference: string };
 type POCEventEnd = { id: string; actor_id: string; simulated_at: string };
 type EventForm = {
-  title: string; image_url: string; event_format: 'physical' | 'online' | 'hybrid'; venue_country_code: string; venue_name: string; venue_address: string;
+  title: string; image_url: string; event_format: 'physical' | 'online' | 'hybrid'; venue_country_code: string; venue_name: string; venue_city: string; venue_address: string;
   organiser_name: string; sponsors: string; capacity: string; timezone: string; starts_at: string;
   ends_at: string; sales_start_at: string; sales_end_at: string; max_tickets_per_order: string;
   cancellation_policy: string; transfer_policy: string; entry_policy: string; categories: Array<{
@@ -61,7 +62,7 @@ type EventForm = {
 };
 
 const emptyEventForm: EventForm = {
-  title: '', image_url: '', event_format: 'physical', venue_country_code: '', venue_name: '', venue_address: '', organiser_name: '', sponsors: '', capacity: '',
+  title: '', image_url: '', event_format: 'physical', venue_country_code: '', venue_name: '', venue_city: '', venue_address: '', organiser_name: '', sponsors: '', capacity: '',
   timezone: 'Africa/Gaborone', starts_at: '', ends_at: '', sales_start_at: '', sales_end_at: '',
   max_tickets_per_order: '', cancellation_policy: '', transfer_policy: '', entry_policy: '', categories: [],
 };
@@ -383,7 +384,7 @@ export function EventAuthoringPage() {
     setEventId(value.id);
     setOrganisationId(value.organisation_id);
     setEventForm({
-      title: value.title, image_url: value.image_url ?? '', event_format: value.event_format ?? 'physical', venue_country_code: value.venue_country_code ?? '', venue_name: value.venue_name ?? '', venue_address: value.venue_address ?? '',
+      title: value.title, image_url: value.image_url ?? '', event_format: value.event_format ?? 'physical', venue_country_code: value.venue_country_code ?? '', venue_name: value.venue_name ?? '', venue_city: value.venue_city ?? '', venue_address: value.venue_address ?? '',
       organiser_name: value.organiser_name, sponsors: (value.sponsors ?? []).join(', '), capacity: String(value.capacity),
       timezone: value.timezone, starts_at: toLocalDateTime(value.starts_at, value.timezone), ends_at: toLocalDateTime(value.ends_at, value.timezone),
       sales_start_at: toLocalDateTime(value.sales_start_at, value.timezone), sales_end_at: toLocalDateTime(value.sales_end_at, value.timezone),
@@ -854,6 +855,7 @@ function buildEventPayload(form: EventForm): Record<string, unknown> {
   };
   if (form.event_format === 'physical' || form.event_format === 'hybrid') {
     payload['venue_name'] = form.venue_name.trim();
+    payload['venue_city'] = form.venue_city.trim() || null;
     payload['venue_address'] = form.venue_address.trim();
     payload['venue_country_code'] = form.venue_country_code.trim().toUpperCase();
   }
@@ -921,6 +923,7 @@ function EventDraftFields({ value, onChange }: { value: EventForm; onChange: <K 
       <label className="flex flex-col gap-1 text-sm">Event format<select value={value.event_format} onChange={e => onChange('event_format', e.target.value as EventForm['event_format'])} className="rounded border border-border px-3 py-2"><option value="physical">Physical</option><option value="online">Online</option><option value="hybrid">Hybrid</option></select></label>
       {(value.event_format === 'physical' || value.event_format === 'hybrid') && <>
         <label className="flex flex-col gap-1 text-sm">Venue name<input required maxLength={200} value={value.venue_name} onChange={e => onChange('venue_name', e.target.value)} className="rounded border border-border px-3 py-2" /></label>
+        <label className="flex flex-col gap-1 text-sm">City<input maxLength={120} value={value.venue_city} onChange={e => onChange('venue_city', e.target.value)} className="rounded border border-border px-3 py-2" /></label>
         <label className="flex flex-col gap-1 text-sm">Venue address<input required maxLength={500} value={value.venue_address} onChange={e => onChange('venue_address', e.target.value)} className="rounded border border-border px-3 py-2" /></label>
         <label className="flex flex-col gap-1 text-sm">Venue country code<input required maxLength={2} placeholder="BW" value={value.venue_country_code} onChange={e => onChange('venue_country_code', e.target.value.toUpperCase())} className="rounded border border-border px-3 py-2" /></label>
       </>}

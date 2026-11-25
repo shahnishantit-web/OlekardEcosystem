@@ -58,6 +58,20 @@ final class FreeEventRegistrationController extends Controller
         )], 201)->header('Cache-Control', 'private, no-store, max-age=0');
     }
 
+    public function acceptCustomerInvitation(Request $request, string $invitationId): JsonResponse
+    {
+        $actorId = (string) $request->attributes->get('identity.user_id', '');
+        abort_unless(Str::isUuid($actorId)
+            && strtoupper((string) $request->attributes->get('identity.actor_type', '')) === 'CUSTOMER',
+            401, 'Authenticated customer context is required.');
+        $idempotencyKey = (string) $request->header('Idempotency-Key', '');
+        abort_unless($idempotencyKey !== '', 422, 'A valid Idempotency-Key is required.');
+
+        return response()->json(['data' => $this->registrations->acceptInvitation(
+            $invitationId, $actorId, $idempotencyKey, $this->correlationId($request),
+        )], 201)->header('Cache-Control', 'private, no-store, max-age=0');
+    }
+
     private function actor(Request $request): string
     {
         $actorId = (string) $request->attributes->get('identity.user_id', '');

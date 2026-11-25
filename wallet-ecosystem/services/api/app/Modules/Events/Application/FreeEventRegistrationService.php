@@ -120,6 +120,31 @@ final class FreeEventRegistrationService
     }
 
     /** @return array{registration_id:string,ticket_id:string,event_id:string,category:string,source:string} */
+    public function acceptInvitation(
+        string $invitationId,
+        string $actorId,
+        string $idempotencyKey,
+        ?string $correlationId,
+    ): array {
+        $invitation = $this->db()->table('community_services.event_invitations')
+            ->where('id', $invitationId)
+            ->where('recipient_actor_id', $actorId)
+            ->where('status', 'active')
+            ->whereNull('revoked_at')
+            ->first();
+        abort_if($invitation === null, 404, 'Invitation was not found.');
+
+        return $this->register(
+            (string) $invitation->event_id,
+            (string) $invitation->category_id,
+            $actorId,
+            $this->credentials->recoverForDisplay((string) $invitation->token_encrypted),
+            $idempotencyKey,
+            $correlationId,
+        );
+    }
+
+    /** @return array{registration_id:string,ticket_id:string,event_id:string,category:string,source:string} */
     public function register(
         string $eventId,
         string $categoryId,
@@ -162,6 +187,8 @@ final class FreeEventRegistrationService
                 && ($event->lifecycle_state ?? 'active') === 'active', 409,
                 'Registration is available only for the current published event.');
             abort_unless($event->sales_state === 'active', 409, 'Free registration is not open.');
+            abort_unless(now()->greaterThanOrEqualTo($event->sales_start_at)
+                && now()->lessThan($event->sales_end_at), 409, 'Free registration is outside its sales window.');
 
             $approvalSnapshot = $this->complimentaryApprovalSnapshot($event, $category);
             if ($category->allocation_type === 'complimentary' && $approvalSnapshot !== null) {
