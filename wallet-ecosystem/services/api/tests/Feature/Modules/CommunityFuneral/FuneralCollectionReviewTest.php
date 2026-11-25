@@ -114,10 +114,13 @@ final class FuneralCollectionReviewTest extends IntegrationTestCase
         $collectionId = (string) Uuid::uuid7();
 
         $this->withActorToken($finance, ['Idempotency-Key' => (string) Uuid::uuid7()]);
-        $response = $this->postJson("/api/v1/community/funeral/collections/$collectionId/payout-request");
+        $response = $this->postJson("/api/v1/community/funeral/collections/$collectionId/payout-request", [
+            'recipient_actor_id' => (string) Uuid::uuid7(),
+            'destination_type' => 'wallet',
+        ]);
 
         $response->assertStatus(503)
             ->assertJsonPath('success', false)
-            ->assertJsonPath('error.message', 'Funeral payouts require the local mock-bank ledger configuration. No external bank payout adapter is configured.');
+            ->assertJsonPath('error.message', 'Funeral household payout requires the local demo ledger configuration. No external wallet or bank transfer is sent by this demo flow.');
     }
 }

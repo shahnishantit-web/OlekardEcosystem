@@ -36,18 +36,24 @@ type Collection = {
   carry_forward_approved_by: string | null; payout_status: string | null; settlement_status: string | null;
   disbursement: Disbursement | null;
 };
-type Disbursement = { id: string; destination_type: string; amount_minor: number; currency_code: string; status: string; requested_by: string; requested_at: string; approved_by: string | null; approved_at: string | null; rejected_by: string | null; rejection_reason: string | null; provider_reference: string | null; receipt_reference: string | null; ledger_journal_id: string | null; paid_at: string | null };
+type Disbursement = { id: string; beneficiary_id: string | null; recipient_actor_id: string | null; recipient_email: string | null; destination_type: string; amount_minor: number; currency_code: string; status: string; requested_by: string; requested_at: string; approved_by: string | null; approved_at: string | null; rejected_by: string | null; rejection_reason: string | null; provider_reference: string | null; receipt_reference: string | null; ledger_journal_id: string | null; paid_at: string | null };
 type MemberOption = { actor_id: string; email: string | null; mobile_number: string | null; actor_type: string };
 type BeneficiaryOption = { id: string; account_holder_name: string; account_type: string; bank_name: string | null; currency_code: string };
 type Workspace = { community: Community; staff: Staff[]; households: Household[]; collections: Collection[] };
 type Directory = { members: MemberOption[]; beneficiaries: BeneficiaryOption[] };
 type Report = {
   collection_id: string; confirmed_gross_minor: number; confirmed_contribution_count: number; fee_total_minor: number;
+  digital_gross_minor: number; offline_gross_minor: number; offline_contribution_count: number; digital_payout_available_minor: number;
+  pending_offline_contribution_count: number;
+  offline_disbursed_minor: number; offline_available_for_disbursement_minor: number; pending_offline_disbursement_count: number;
+  offline_disbursements: OfflineDisbursement[];
   confirmed_refunds_minor: number; net_support_minor: number; late_review_gross_minor: number;
   unresolved_liability_count: number; pending_payment_count: number; pending_refund_count: number;
   late_review_count: number; payout_liability_open: number; settlement_status: string; payout_status: string; disbursement: Disbursement | null;
 };
-type Transaction = { obligation_id: string; payment_intent_id: string; reference: string; channel: 'in_app' | 'offline'; amount_minor: number; fee_minor: number; currency_code: string; status: string; review_reason: string | null; occurred_at: string };
+type Transaction = { id?: string; obligation_id: string; payment_intent_id: string | null; reference: string; channel: 'in_app' | 'offline'; amount_minor: number; fee_minor: number; currency_code: string; status: string; evidence_reference?: string | null; review_reason: string | null; occurred_at: string };
+type OfflineOption = { household_id: string; private_reference: string; amount_minor: number; currency_code: string };
+type OfflineDisbursement = { id: string; recipient_actor_id: string; amount_minor: number; currency_code: string; reference: string; evidence_reference: string; status: string; recorded_by: string; reviewed_by: string | null; rejection_reason: string | null; created_at: string };
 
 // Funeral routes are registered under api/v1 in the Laravel API. In local
 // Admin configuration NEXT_PUBLIC_API_URL points at the API origin directly.
@@ -73,6 +79,7 @@ export function FuneralAssistancePage() {
   const [directory, setDirectory] = useState<Directory>({ members: [], beneficiaries: [] });
   const [report, setReport] = useState<Report | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [offlineOptions, setOfflineOptions] = useState<OfflineOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -95,10 +102,24 @@ export function FuneralAssistancePage() {
   const [collectionPurpose, setCollectionPurpose] = useState('');
   const [collectionEvidence, setCollectionEvidence] = useState('');
   const [carryForwardReference, setCarryForwardReference] = useState('');
+  const [offlineHouseholdId, setOfflineHouseholdId] = useState('');
+  const [offlineReference, setOfflineReference] = useState('');
+  const [offlineEvidence, setOfflineEvidence] = useState('');
+  const [payoutRecipientActorId, setPayoutRecipientActorId] = useState('');
+  const [payoutDestinationType, setPayoutDestinationType] = useState<'wallet' | 'bank_transfer'>('wallet');
+  const [payoutBeneficiaryId, setPayoutBeneficiaryId] = useState('');
+  const [offlineCashRecipientActorId, setOfflineCashRecipientActorId] = useState('');
+  const [offlineCashAmount, setOfflineCashAmount] = useState('');
+  const [offlineCashReference, setOfflineCashReference] = useState('');
+  const [offlineCashEvidence, setOfflineCashEvidence] = useState('');
 
   const selectedCommunity = useMemo(
     () => communities.find((community) => community.id === selectedId) ?? null,
     [communities, selectedId],
+  );
+  const reportCollection = useMemo(
+    () => workspace?.collections.find((collection) => collection.id === report?.collection_id) ?? null,
+    [workspace, report?.collection_id],
   );
   const messageFor = (cause: unknown, fallback: string) => {
     const candidate = cause as { response?: { status?: number; data?: { error?: { message?: string }; message?: string } }; error?: { message?: string } };
@@ -215,12 +236,16 @@ export function FuneralAssistancePage() {
     if (!authenticatedClient) return;
     setBusy(true); setError(null);
     try {
-      const [response, transactionResponse] = await Promise.all([
+      const [response, transactionResponse, optionsResponse] = await Promise.all([
         authenticatedClient.get<Report>(`${API}/collections/${collectionId}/aggregate-report`),
         authenticatedClient.get<Transaction[]>(`${API}/collections/${collectionId}/transactions`),
+        canManage
+          ? authenticatedClient.get<OfflineOption[]>(`${API}/collections/${collectionId}/offline-contribution-options`)
+          : Promise.resolve({ data: [] as OfflineOption[] }),
       ]);
       setReport(response.data);
       setTransactions(transactionResponse.data ?? []);
+      setOfflineOptions(optionsResponse.data ?? []);
     } catch (cause) { setError(messageFor(cause, 'Unable to load the collection report.')); }
     finally { setBusy(false); }
   };
@@ -231,6 +256,30 @@ export function FuneralAssistancePage() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a'); link.href = url; link.download = `funeral-collection-${collectionId}-transactions.csv`; link.click(); URL.revokeObjectURL(url);
     } catch (cause) { setError(messageFor(cause, 'Unable to export collection transactions.')); }
+  };
+  const recordOfflineContribution = (event: React.FormEvent, collectionId: string) => {
+    event.preventDefault();
+    const option = offlineOptions.find((item) => item.household_id === offlineHouseholdId);
+    if (!option) return;
+    void mutate(`${API}/collections/${collectionId}/offline-contributions`, 'post', {
+      household_id: option.household_id, amount_minor: option.amount_minor,
+      reference: offlineReference.trim(), evidence_reference: offlineEvidence.trim() || null,
+    }, 'Offline contribution recorded and submitted for independent review.', () => {
+      setOfflineHouseholdId(''); setOfflineReference(''); setOfflineEvidence('');
+      void loadReport(collectionId);
+    });
+  };
+  const requestOfflineDisbursement = (event: React.FormEvent, collectionId: string) => {
+    event.preventDefault();
+    const amountMinor = Math.round(Number(offlineCashAmount) * 100);
+    if (!Number.isFinite(amountMinor) || amountMinor < 1) return;
+    void mutate(`${API}/collections/${collectionId}/offline-disbursements`, 'post', {
+      recipient_actor_id: offlineCashRecipientActorId, amount_minor: amountMinor,
+      reference: offlineCashReference.trim(), evidence_reference: offlineCashEvidence.trim(),
+    }, 'Offline cash handover submitted for independent review.', () => {
+      setOfflineCashAmount(''); setOfflineCashReference(''); setOfflineCashEvidence('');
+      void loadReport(collectionId);
+    });
   };
 
   const selectClass = 'w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary';
@@ -255,7 +304,7 @@ export function FuneralAssistancePage() {
                 <span className="mt-0.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-900">NOT AVAILABLE</span>
                 <div>
                   <h2 className="font-semibold text-text-primary">Readiness prerequisites are still closed</h2>
-                  <p className="mt-1 text-sm text-text-secondary">{readiness.message ?? 'The funeral API cannot accept setup or payment actions yet.'} The forms below become active when the API readiness gate is released. Beneficiary disbursement remains separately blocked until payout and finance approval are enabled.</p>
+                  <p className="mt-1 text-sm text-text-secondary">{readiness.message ?? 'The funeral API cannot accept setup or payment actions yet.'} The forms below become active when the API readiness gate is released. Local wallet payout is available only after the collection is closed and all review liabilities are resolved.</p>
                   <div className="mt-3 flex flex-wrap gap-3 text-sm">
                     <Link className="text-ok-primary underline" href="/configuration/operational_policy/community_funeral.http_enabled">Manage availability in Configuration</Link>
                     <Link className="text-ok-primary underline" href="/organisations/onboarding">Organisation onboarding</Link>
@@ -386,9 +435,9 @@ export function FuneralAssistancePage() {
             {!workspace ? <Card><p className="text-sm text-text-secondary">Select a community to review collections.</p></Card> : <>
               <Card>
                 <h2 className="text-lg font-semibold">Create a funeral collection</h2>
-                <p className="mb-3 mt-1 text-sm text-text-secondary">Select a verified payout beneficiary by its account holder name. The contribution uses the configured policy amount and currency.</p>
+                <p className="mb-3 mt-1 text-sm text-text-secondary">Select the organisation’s verified payment settlement account. The bereaved household is recorded separately and receives any eligible local wallet disbursement through its verified representative.</p>
                 <form className="grid gap-3 lg:grid-cols-[1fr_1fr_1.4fr_1fr_auto]" onSubmit={(event) => void createCollection(event)}>
-                  <select className={selectClass} value={beneficiaryId} onChange={(event) => setBeneficiaryId(event.target.value)} required disabled={!readiness?.enabled || !canManage}><option value="">Choose verified beneficiary</option>{verifiedBeneficiaryOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+                  <select className={selectClass} value={beneficiaryId} onChange={(event) => setBeneficiaryId(event.target.value)} required disabled={!readiness?.enabled || !canManage}><option value="">Choose organisation settlement account</option>{verifiedBeneficiaryOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
                   <select className={selectClass} value={targetHouseholdId} onChange={(event) => setTargetHouseholdId(event.target.value)} required disabled={!readiness?.enabled || !canManage}><option value="">Choose bereaved household</option>{workspace.households.filter((household) => household.status === 'eligible').map((household) => <option key={household.id} value={household.id}>{household.private_reference}</option>)}</select>
                   <input className={inputClass} maxLength={500} minLength={5} value={collectionPurpose} onChange={(event) => setCollectionPurpose(event.target.value)} placeholder="Purpose of this collection" required disabled={!readiness?.enabled || !canManage} />
                   <input className={inputClass} maxLength={500} value={collectionEvidence} onChange={(event) => setCollectionEvidence(event.target.value)} placeholder="Collection and beneficiary evidence reference" required disabled={!readiness?.enabled || !canManage} />
@@ -401,7 +450,7 @@ export function FuneralAssistancePage() {
                 <div className="mt-3 space-y-3">{workspace.collections.map((collection) => (
                   <div key={collection.id} className="rounded-xl border border-border p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div><div className="font-semibold text-text-primary">Bereaved household: {collection.target_household_reference ?? 'Legacy collection (not linked)'}</div><div className="mt-1 text-sm text-text-secondary">Payout destination: {collection.beneficiary_name} · {collection.purpose} · {formatMoney(collection.amount_minor, collection.currency_code)} · {collection.obligation_count} household obligations · {collection.fulfilled_count} paid</div><div className="mt-1 text-xs text-text-secondary">Terms {collection.terms_version} · {collection.evidence_reference ?? 'No evidence reference'}</div></div>
+                      <div><div className="font-semibold text-text-primary">Bereaved household: {collection.target_household_reference ?? 'Legacy collection (not linked)'}</div><div className="mt-1 text-sm text-text-secondary">Organisation settlement account: {collection.beneficiary_name} · {collection.purpose} · {formatMoney(collection.amount_minor, collection.currency_code)} · {collection.obligation_count} household obligations · {collection.fulfilled_count} paid</div><div className="mt-1 text-xs text-text-secondary">Terms {collection.terms_version} · {collection.evidence_reference ?? 'No evidence reference'}</div></div>
                       <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold capitalize text-text-primary">{collection.status.replaceAll('_', ' ')}</span>
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
@@ -429,8 +478,10 @@ export function FuneralAssistancePage() {
             {report && <>
               <div className="my-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {[
-                  ['Confirmed gross', formatMoney(report.confirmed_gross_minor)], ['Successful contributions', report.confirmed_contribution_count], ['Fees', formatMoney(report.fee_total_minor)],
-                  ['Refunds', formatMoney(report.confirmed_refunds_minor)], ['Net support', formatMoney(report.net_support_minor)],
+                  ['Confirmed total received', formatMoney(report.confirmed_gross_minor)], ['Successful contributions', report.confirmed_contribution_count],
+                  ['Digital receipts', formatMoney(report.digital_gross_minor)], ['Offline contributions', `${formatMoney(report.offline_gross_minor)} · ${report.offline_contribution_count}`],
+                  ['Offline cash handed over', formatMoney(report.offline_disbursed_minor)],
+                  ['Fees', formatMoney(report.fee_total_minor)], ['Refunds', formatMoney(report.confirmed_refunds_minor)], ['Net support', formatMoney(report.net_support_minor)],
                 ].map(([label, amount]) => <Card key={label}><p className="text-sm text-text-secondary">{label}</p><p className="mt-1 text-xl font-semibold text-text-primary">{amount}</p></Card>)}
               </div>
               <Card>
@@ -439,26 +490,37 @@ export function FuneralAssistancePage() {
                   <div><dt className="text-text-secondary">Pending payments</dt><dd className="font-semibold">{report.pending_payment_count}</dd></div>
                   <div><dt className="text-text-secondary">Pending refunds</dt><dd className="font-semibold">{report.pending_refund_count}</dd></div>
                   <div><dt className="text-text-secondary">Late review cases</dt><dd className="font-semibold">{report.late_review_count} · {formatMoney(report.late_review_gross_minor)}</dd></div>
+                  <div><dt className="text-text-secondary">Offline contributions awaiting review</dt><dd className="font-semibold">{report.pending_offline_contribution_count}</dd></div>
+                  <div><dt className="text-text-secondary">Cash handovers awaiting review</dt><dd className="font-semibold">{report.pending_offline_disbursement_count}</dd></div>
                   <div><dt className="text-text-secondary">Unresolved liabilities</dt><dd className="font-semibold">{report.unresolved_liability_count}</dd></div>
                 </dl>
                 <p className="mt-4 text-sm text-text-secondary">Settlement: <b className="capitalize text-text-primary">{report.settlement_status.replaceAll('_', ' ')}</b> · Payout: <b className="capitalize text-text-primary">{report.payout_status.replaceAll('_', ' ')}</b></p>
               </Card>
               {(() => {
                 const selectedCollection = workspace?.collections.find((collection) => collection.id === report.collection_id);
+                const targetHousehold = workspace?.households.find((household) => household.id === selectedCollection?.target_household_id);
+                const payoutRecipients = targetHousehold?.representatives.filter((rep) => rep.status === 'verified') ?? [];
                 const payout = report.disbursement ?? selectedCollection?.disbursement ?? null;
-                const requestPayout = () => void mutate(`${API}/collections/${report.collection_id}/payout-request`, 'post', {}, 'Disbursement submitted for independent approval.', () => { void loadReport(report.collection_id); });
-                const approvePayout = () => void mutate(`${API}/collections/${report.collection_id}/payout/approve`, 'post', {}, 'Disbursement approved and settled to the beneficiary ledger destination.', () => { void loadReport(report.collection_id); });
+                const payoutRecipient = payoutRecipients.find((rep) => rep.actor_id === payout?.recipient_actor_id);
+                const payoutBanks = directory.beneficiaries.filter((item) => item.account_type === 'bank_account' && item.currency_code === reportCollection?.currency_code && item.id !== reportCollection?.beneficiary_id);
+                const requestPayout = () => void mutate(`${API}/collections/${report.collection_id}/payout-request`, 'post', { recipient_actor_id: payoutRecipientActorId, destination_type: payoutDestinationType, ...(payoutDestinationType === 'bank_transfer' ? { beneficiary_id: payoutBeneficiaryId } : {}) }, `${payoutDestinationType === 'wallet' ? 'Wallet payout' : 'Bank transfer'} submitted for independent approval.`, () => { void loadReport(report.collection_id); });
+                const approvePayout = () => void mutate(`${API}/collections/${report.collection_id}/payout/approve`, 'post', {}, payout?.destination_type === 'bank_transfer' ? 'Local mock bank transfer approved and recorded.' : 'Disbursement approved and settled to the bereaved household representative wallet.', () => { void loadReport(report.collection_id); });
                 const rejectPayout = () => {
                   const reason = window.prompt('Reason for rejecting this payout request:')?.trim();
                   if (reason) void mutate(`${API}/collections/${report.collection_id}/payout/reject`, 'post', { reason }, 'Disbursement request rejected.', () => { void loadReport(report.collection_id); });
                 };
                 return <Card className="mt-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div><h3 className="font-semibold">Beneficiary disbursement</h3><p className="mt-1 text-sm text-text-secondary">Bank payouts use the local mock-bank ledger only. Wallet payouts credit the verified wallet. No external bank transfer is sent by this demo flow.</p></div>
-                    {(!payout || ['rejected', 'failed'].includes(payout.status)) && <Button variant="secondary" disabled={busy || !canRequestPayout || selectedCollection?.status !== 'closed' || report.net_support_minor <= 0 || report.pending_payment_count > 0 || report.pending_refund_count > 0 || report.late_review_count > 0} title={selectedCollection?.status !== 'closed' ? 'Close the collection before requesting payout.' : !canRequestPayout ? 'Your account cannot request beneficiary payout.' : undefined} onClick={requestPayout}>{payout ? 'Resubmit' : 'Request'} {formatMoney(report.net_support_minor)} payout</Button>}
+                    <div><h3 className="font-semibold">Beneficiary payout</h3><p className="mt-1 text-sm text-text-secondary">Only digitally settled funds are eligible. Offline contributions are recorded and disbursed separately. Both wallet settlement and bank transfer use independent approval. Bank transfer is a local mock for this POC; it does not send money to a real bank.</p></div>
+                    {(!payout || ['rejected', 'failed'].includes(payout.status)) && <Button variant="secondary" disabled={busy || !canRequestPayout || !payoutRecipientActorId || (payoutDestinationType === 'bank_transfer' && !payoutBeneficiaryId) || selectedCollection?.status !== 'closed' || report.digital_payout_available_minor <= 0 || report.pending_payment_count > 0 || report.pending_refund_count > 0 || report.late_review_count > 0 || report.pending_offline_contribution_count > 0} title={selectedCollection?.status !== 'closed' ? 'Close the collection before requesting payout.' : !canRequestPayout ? 'Your account cannot request beneficiary payout.' : undefined} onClick={requestPayout}>{payout ? 'Resubmit' : 'Request'} {formatMoney(report.digital_payout_available_minor)} payout</Button>}
                   </div>
+                  {(!payout || ['rejected', 'failed'].includes(payout.status)) && <div className="mt-3 grid max-w-2xl gap-3 sm:grid-cols-2">
+                    <label className="block text-sm font-medium">Payout method<select className={`${selectClass} mt-1`} value={payoutDestinationType} onChange={(event) => { setPayoutDestinationType(event.target.value as 'wallet' | 'bank_transfer'); setPayoutBeneficiaryId(''); }} disabled={!canRequestPayout || selectedCollection?.status !== 'closed'}><option value="wallet">OleKard wallet</option><option value="bank_transfer">Bank transfer (local POC mock)</option></select></label>
+                    <label className="block text-sm font-medium">Bereaved household representative<select id={`payout-recipient-${report.collection_id}`} className={`${selectClass} mt-1`} value={payoutRecipientActorId} onChange={(event) => setPayoutRecipientActorId(event.target.value)} disabled={!canRequestPayout || selectedCollection?.status !== 'closed'}><option value="">Choose verified representative</option>{payoutRecipients.map((rep) => <option key={rep.actor_id} value={rep.actor_id}>{personLabel(rep)}</option>)}</select>{payoutRecipients.length === 0 && <span className="mt-1 block text-xs text-amber-700">Link and verify a representative for this household first.</span>}</label>
+                    {payoutDestinationType === 'bank_transfer' && <label className="block text-sm font-medium sm:col-span-2">Verified bank account<select className={`${selectClass} mt-1`} value={payoutBeneficiaryId} onChange={(event) => setPayoutBeneficiaryId(event.target.value)} disabled={!canRequestPayout || selectedCollection?.status !== 'closed'}><option value="">Choose an organisation verified bank account</option>{payoutBanks.map((bank) => <option key={bank.id} value={bank.id}>{bank.account_holder_name}{bank.bank_name ? ` · ${bank.bank_name}` : ''} · ${bank.currency_code}</option>)}</select>{payoutBanks.length === 0 && <span className="mt-1 block text-xs text-amber-700">Add and verify a bank account in Payment Beneficiaries. The collection receiving account cannot be reused for payout.</span>}</label>}
+                  </div>}
                   {payout && <div className="mt-3 rounded-lg border border-border p-3 text-sm">
-                    <p><b>{formatMoney(payout.amount_minor, payout.currency_code)}</b> · {payout.destination_type.replaceAll('_', ' ')} · <span className="capitalize">{payout.status.replaceAll('_', ' ')}</span></p>
+                    <p><b>{formatMoney(payout.amount_minor, payout.currency_code)}</b> · {payout.destination_type.replaceAll('_', ' ')} to {payoutRecipient ? personLabel(payoutRecipient) : 'verified bereaved-household representative'}{payout.destination_type === 'bank_transfer' && payout.beneficiary_id ? ` · ${directory.beneficiaries.find((bank) => bank.id === payout.beneficiary_id)?.account_holder_name ?? 'verified bank beneficiary'}` : ''} · <span className="capitalize">{payout.status.replaceAll('_', ' ')}</span></p>
                     {payout.receipt_reference && <p className="mt-1">Receipt: <span className="font-mono">{payout.receipt_reference}</span>{payout.provider_reference ? ` · Provider: ${payout.provider_reference}` : ''}</p>}
                     {payout.ledger_journal_id && <p className="mt-1">Ledger journal: <span className="font-mono">{payout.ledger_journal_id}</span></p>}
                     {payout.paid_at && <p className="mt-1">Settled: {new Date(payout.paid_at).toLocaleString()}</p>}
@@ -472,9 +534,28 @@ export function FuneralAssistancePage() {
                 </Card>;
               })()}
               <Card className="mt-4">
+                <h3 className="font-semibold">Offline cash handover to bereaved household</h3>
+                <p className="mt-1 text-sm text-text-secondary">Record an in-person cash handover against confirmed offline contributions. The recipient must be a verified representative of the bereaved household. A different reviewer must approve the receipt; this record does not post a wallet or ledger transfer.</p>
+                {canRequestPayout && reportCollection?.status === 'closed' && report.offline_available_for_disbursement_minor > 0 && <form className="mt-3 grid gap-2 rounded-lg border border-border p-3 sm:grid-cols-2" onSubmit={(event) => requestOfflineDisbursement(event, report.collection_id)}>
+                  <select className={selectClass} value={offlineCashRecipientActorId} onChange={(event) => setOfflineCashRecipientActorId(event.target.value)} required><option value="">Choose verified household representative</option>{reportCollection ? (workspace?.households.find((household) => household.id === reportCollection.target_household_id)?.representatives ?? []).filter((rep) => rep.status === 'verified').map((rep) => <option key={rep.actor_id} value={rep.actor_id}>{personLabel(rep)}</option>) : null}</select>
+                  <input className={inputClass} type="number" min="0.01" step="0.01" max={(report.offline_available_for_disbursement_minor / 100).toFixed(2)} value={offlineCashAmount} onChange={(event) => setOfflineCashAmount(event.target.value)} placeholder={`Amount up to ${formatMoney(report.offline_available_for_disbursement_minor)}`} required />
+                  <input className={inputClass} value={offlineCashReference} onChange={(event) => setOfflineCashReference(event.target.value)} placeholder="Handover receipt reference" minLength={3} maxLength={120} required />
+                  <input className={inputClass} value={offlineCashEvidence} onChange={(event) => setOfflineCashEvidence(event.target.value)} placeholder="Handover evidence reference" minLength={3} maxLength={500} required />
+                  <Button variant="secondary" disabled={busy || !offlineCashRecipientActorId || !offlineCashReference.trim() || !offlineCashEvidence.trim()}>Submit cash handover for review</Button>
+                </form>}
+                <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead><tr className="border-b text-text-secondary"><th className="py-2 pr-3">Date</th><th className="py-2 pr-3">Recipient</th><th className="py-2 pr-3">Amount</th><th className="py-2 pr-3">Reference / evidence</th><th className="py-2 pr-3">Status</th><th className="py-2">Review</th></tr></thead><tbody>{report.offline_disbursements.map((item) => { const household = workspace?.households.find((row) => row.id === reportCollection?.target_household_id); const recipient = household?.representatives.find((rep) => rep.actor_id === item.recipient_actor_id); return <tr key={item.id} className="border-b border-border"><td className="py-2 pr-3">{new Date(item.created_at).toLocaleString()}</td><td className="py-2 pr-3">{recipient ? personLabel(recipient) : 'Verified household representative'}</td><td className="py-2 pr-3">{formatMoney(item.amount_minor, item.currency_code)}</td><td className="py-2 pr-3"><div>{item.reference}</div><div className="text-xs text-text-secondary">{item.evidence_reference}</div></td><td className="py-2 pr-3 capitalize">{item.status.replaceAll('_', ' ')}{item.rejection_reason ? ` · ${item.rejection_reason}` : ''}</td><td className="py-2">{item.status === 'pending_review' && canApprovePayout && item.recorded_by !== user?.id && <div className="flex gap-2"><Button variant="secondary" disabled={busy} onClick={() => void mutate(`${API}/offline-disbursements/${item.id}/review`, 'post', { decision: 'confirmed' }, 'Cash handover independently confirmed.', () => { void loadReport(report.collection_id); })}>Confirm</Button><Button variant="secondary" disabled={busy} onClick={() => { const reason = window.prompt('Reason for rejecting this cash handover:')?.trim(); if (reason) void mutate(`${API}/offline-disbursements/${item.id}/review`, 'post', { decision: 'rejected', reason }, 'Cash handover rejected with reason.', () => { void loadReport(report.collection_id); }); }}>Reject</Button></div>}</td></tr>; })}</tbody></table>{report.offline_disbursements.length === 0 && <p className="py-4 text-sm text-text-secondary">No cash handovers have been recorded.</p>}</div>
+                <p className="mt-2 text-sm text-text-secondary">Remaining confirmed offline contribution balance: <b>{formatMoney(report.offline_available_for_disbursement_minor)}</b></p>
+              </Card>
+              <Card className="mt-4">
                 <div className="flex flex-wrap items-center justify-between gap-3"><h3 className="font-semibold">Contribution transaction history</h3><Button variant="secondary" disabled={busy || !canReport} onClick={() => void exportTransactions(report.collection_id)}>Export CSV</Button></div>
-                <p className="mt-1 text-sm text-text-secondary">Digital receipts are labeled OleKard app. The current workflow does not yet accept or record offline contributions.</p>
-                <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[820px] text-left text-sm"><thead><tr className="border-b text-text-secondary"><th className="py-2 pr-3">Date</th><th className="py-2 pr-3">Channel</th><th className="py-2 pr-3">Reference</th><th className="py-2 pr-3">Amount</th><th className="py-2 pr-3">Fee</th><th className="py-2">Status</th></tr></thead><tbody>{transactions.map((tx) => <tr key={tx.payment_intent_id} className="border-b border-border"><td className="py-2 pr-3">{new Date(tx.occurred_at).toLocaleString()}</td><td className="py-2 pr-3">{tx.channel === 'offline' ? 'Offline' : 'OleKard app'}</td><td className="py-2 pr-3 font-mono text-xs">{tx.reference}</td><td className="py-2 pr-3">{formatMoney(tx.amount_minor, tx.currency_code)}</td><td className="py-2 pr-3">{formatMoney(tx.fee_minor, tx.currency_code)}</td><td className="py-2 capitalize">{tx.status.replaceAll('_', ' ')}{tx.review_reason ? ` · ${tx.review_reason.replaceAll('_', ' ')}` : ''}</td></tr>)}</tbody></table>{transactions.length === 0 && <p className="py-4 text-sm text-text-secondary">No payment attempts recorded.</p>}</div>
+                <p className="mt-1 text-sm text-text-secondary">Offline cash or other in-person contributions are recorded with a reference and require independent confirmation. They are not treated as ledger-settled payment funds.</p>
+                {canManage && reportCollection?.status === 'active' && <form className="mt-3 grid gap-2 rounded-lg border border-border p-3 sm:grid-cols-2" onSubmit={(event) => recordOfflineContribution(event, report.collection_id)}>
+                  <select className={selectClass} value={offlineHouseholdId} onChange={(event) => setOfflineHouseholdId(event.target.value)} required><option value="">Select unpaid household</option>{offlineOptions.map((option) => <option key={option.household_id} value={option.household_id}>{option.private_reference} · {formatMoney(option.amount_minor, option.currency_code)}</option>)}</select>
+                  <input className={inputClass} value={offlineReference} onChange={(event) => setOfflineReference(event.target.value)} placeholder="Cash receipt / community reference" minLength={3} maxLength={120} required />
+                  <input className={inputClass} value={offlineEvidence} onChange={(event) => setOfflineEvidence(event.target.value)} placeholder="Evidence reference (optional)" maxLength={500} />
+                  <Button variant="secondary" disabled={busy || !canManage || !offlineHouseholdId || !offlineReference.trim()}>Record offline contribution for review</Button>
+                </form>}
+                <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[900px] text-left text-sm"><thead><tr className="border-b text-text-secondary"><th className="py-2 pr-3">Date</th><th className="py-2 pr-3">Channel</th><th className="py-2 pr-3">Reference / evidence</th><th className="py-2 pr-3">Amount</th><th className="py-2 pr-3">Fee</th><th className="py-2 pr-3">Status</th><th className="py-2">Review</th></tr></thead><tbody>{transactions.map((tx) => <tr key={tx.id ?? tx.payment_intent_id} className="border-b border-border"><td className="py-2 pr-3">{new Date(tx.occurred_at).toLocaleString()}</td><td className="py-2 pr-3">{tx.channel === 'offline' ? 'Offline' : 'OleKard app'}</td><td className="py-2 pr-3 font-mono text-xs">{tx.reference}{tx.evidence_reference && <div className="mt-1 font-sans text-text-secondary">Evidence: {tx.evidence_reference}</div>}</td><td className="py-2 pr-3">{formatMoney(tx.amount_minor, tx.currency_code)}</td><td className="py-2 pr-3">{formatMoney(tx.fee_minor, tx.currency_code)}</td><td className="py-2 pr-3 capitalize">{tx.status.replaceAll('_', ' ')}{tx.review_reason ? ` · ${tx.review_reason.replaceAll('_', ' ')}` : ''}</td><td className="py-2">{tx.channel === 'offline' && tx.status === 'pending_review' && canReview && tx.id && <div className="flex gap-2"><Button variant="secondary" disabled={busy} onClick={() => void mutate(`${API}/offline-contributions/${tx.id}/review`, 'post', { decision: 'confirmed' }, 'Offline contribution independently confirmed.', () => { void loadReport(report.collection_id); })}>Confirm</Button><Button variant="secondary" disabled={busy} onClick={() => { const reason = window.prompt('Reason for rejecting this offline contribution:')?.trim(); if (reason) void mutate(`${API}/offline-contributions/${tx.id}/review`, 'post', { decision: 'rejected', reason }, 'Offline contribution rejected with reason.', () => { void loadReport(report.collection_id); }); }}>Reject</Button></div>}</td></tr>)}</tbody></table>{transactions.length === 0 && <p className="py-4 text-sm text-text-secondary">No contribution records found.</p>}</div>
               </Card>
             </>}
             {workspace?.collections.filter((collection) => collection.status === 'closed').map((collection) => <Card key={`carry-${collection.id}`} className="mt-4">

@@ -170,12 +170,6 @@ final class FuneralAssistanceFlowTest extends IntegrationTestCase
         [$service, $context] = $this->approvedCollection();
         config(['payment.mock_bank.local_funeral_ledger_enabled' => true]);
         $walletId = (string) Uuid::uuid7();
-        $collection = DB::connection('community_services')->table('community_services.funeral_collections')->where('id', $context['collection_id'])->first();
-        $beneficiary = PayoutBeneficiaryModel::query()->findOrFail($collection->beneficiary_id);
-        $beneficiary->account_type = 'wallet';
-        $beneficiary->account_number = $walletId;
-        $beneficiary->save();
-
         $service->activateCollection($context['collection_id'], $context['reviewer_id']);
         $obligation = $this->obligation($context['collection_id']);
         DB::connection('community_services')->table('community_services.funeral_payment_receipts')->insert([
@@ -199,14 +193,15 @@ final class FuneralAssistanceFlowTest extends IntegrationTestCase
         });
         $this->app->instance(LedgerModuleContract::class, $ledger);
         $wallet = \Mockery::mock(WalletModuleContract::class);
-        $wallet->shouldReceive('isActive')->once()->with($walletId)->andReturn(true);
-        $wallet->shouldReceive('pocketExists')->once()->with($walletId, 'BWP')->andReturn(true);
+        $wallet->shouldReceive('findPrimaryWalletId')->twice()->with($context['customer_id'])->andReturn($walletId);
+        $wallet->shouldReceive('isActive')->twice()->with($walletId)->andReturn(true);
+        $wallet->shouldReceive('pocketExists')->twice()->with($walletId, 'BWP')->andReturn(true);
         $wallet->shouldReceive('getPocketLedgerAccountRef')->once()->with($walletId, 'BWP')->andReturn('wallet-pocket-ledger-ref');
         $this->app->instance(WalletModuleContract::class, $wallet);
         $this->app->forgetInstance(FuneralAssistanceService::class);
         $service = app(FuneralAssistanceService::class);
 
-        $requested = $service->requestDisbursement($context['collection_id'], $context['manager_id']);
+        $requested = $service->requestDisbursement($context['collection_id'], $context['manager_id'], $context['customer_id']);
         $this->assertSame('awaiting_approval', $requested['status']);
         $this->assertSame(2000, (int) $requested['amount_minor']);
         try {
@@ -224,6 +219,78 @@ final class FuneralAssistanceFlowTest extends IntegrationTestCase
             ->where('resource_id', $paid['id'])->where('action', 'disbursement.paid')->count());
         $this->assertSame(0, DB::connection('community_services')->table('community_services.funeral_audit_events')
             ->where('resource_id', $paid['id'])->where('action', 'disbursement.failed')->count());
+    }
+
+    public function test_local_bank_transfer_uses_verified_separate_bank_beneficiary_and_independent_approval(): void
+    {
+        [$service, $context] = $this->approvedCollection();
+        config(['payment.mock_bank.local_funeral_ledger_enabled' => true]);
+        $bankBeneficiary = PayoutBeneficiaryModel::create([
+            'id' => (string) Uuid::uuid7(), 'organisation_id' => $context['organisation_id'],
+            'account_type' => 'bank_account', 'account_number' => 'SYNTHETIC-POC-ACCOUNT',
+            'bank_name' => 'Local Demo Bank', 'account_holder_name' => 'Bereaved Household POC',
+            'currency_code' => 'BWP', 'status' => 'verified', 'verified_at' => now(),
+            'verification_reference' => 'POC-VERIFIED', 'created_by' => $context['manager_id'],
+        ]);
+        $service->activateCollection($context['collection_id'], $context['reviewer_id']);
+        $obligation = $this->obligation($context['collection_id']);
+        DB::connection('community_services')->table('community_services.funeral_payment_receipts')->insert([
+            'id' => (string) Uuid::uuid7(), 'obligation_id' => $obligation->id, 'payment_intent_id' => (string) Uuid::uuid7(),
+            'gross_amount_minor' => 2000, 'fee_amount_minor' => 0, 'currency_code' => 'BWP', 'domain_status' => 'confirmed',
+            'correlation_id' => 'POC-BANK-PAYOUT-RECEIPT', 'confirmed_at' => now(), 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $service->closeCollection($context['collection_id'], $context['manager_id']);
+
+        $journalId = (string) Uuid::uuid7();
+        $ledger = \Mockery::mock(LedgerModuleContract::class);
+        $ledger->shouldReceive('getBalance')->once()->andReturn(2000);
+        $ledger->shouldReceive('postEntry')->once()->with(\Mockery::on(fn (array $entry): bool =>
+            count($entry['lines']) === 2
+            && str_contains($entry['description'], 'bank_transfer')
+            && $entry['lines'][1]['direction'] === 'credit'
+        ))->andReturn($journalId);
+        $ledger->shouldReceive('findPostedJournalEvidence')->once()->andReturnUsing(fn (string $key): PostedJournalEvidence =>
+            new PostedJournalEvidence($journalId, 'posted', 'debit', 'bank-transfer-ref', $key, 'BWP', []));
+        $this->app->instance(LedgerModuleContract::class, $ledger);
+        $this->app->forgetInstance(FuneralAssistanceService::class);
+        $service = app(FuneralAssistanceService::class);
+
+        $requested = $service->requestDisbursement($context['collection_id'], $context['manager_id'], $context['customer_id'], 'bank_transfer', $bankBeneficiary->id);
+        $this->assertSame('bank_transfer', $requested['destination_type']);
+        $this->assertSame($bankBeneficiary->id, $requested['beneficiary_id']);
+        $this->assertSame('awaiting_approval', $requested['status']);
+        $paid = $service->approveDisbursement($context['collection_id'], $context['reviewer_id']);
+        $this->assertSame('paid', $paid['status']);
+        $this->assertSame('bank_transfer', $paid['destination_type']);
+        $this->assertSame($bankBeneficiary->id, $paid['beneficiary_id']);
+        $this->assertStringStartsWith('MOCK-BANK-FUNERAL-', $paid['provider_reference']);
+        $this->assertNotEmpty($paid['receipt_reference']);
+        $this->assertSame($journalId, $paid['ledger_journal_id']);
+        $this->assertSame('paid', $service->aggregateReport($context['collection_id'], $context['manager_id'])['payout_status']);
+    }
+
+    public function test_offline_contribution_is_audited_reviewed_and_reported_separately_from_ledger_funds(): void
+    {
+        [$service, $context] = $this->approvedCollection();
+        $service->activateCollection($context['collection_id'], $context['reviewer_id']);
+        $record = $service->recordOfflineContribution(
+            $context['collection_id'], $context['household_id'], 2000, 'CASH-RECEIPT-001', 'signed-receipt-001', null, $context['manager_id'],
+        );
+        $this->assertSame('pending_review', $record['status']);
+        $this->assertSame('offline', $service->transactionHistory($context['collection_id'], $context['manager_id'])[0]['channel']);
+        $pending = $service->aggregateReport($context['collection_id'], $context['manager_id']);
+        $this->assertSame(1, $pending['pending_offline_contribution_count']);
+        $this->assertSame(0, $pending['offline_gross_minor']);
+
+        $confirmed = $service->reviewOfflineContribution($record['id'], 'confirmed', null, $context['reviewer_id']);
+        $this->assertSame('confirmed', $confirmed['status']);
+        $this->assertSame('confirmed', $this->obligation($context['collection_id'])->status);
+        $report = $service->aggregateReport($context['collection_id'], $context['manager_id']);
+        $this->assertSame(2000, $report['offline_gross_minor']);
+        $this->assertSame(1, $report['offline_contribution_count']);
+        $this->assertSame(0, $report['digital_payout_available_minor']);
+        $this->assertSame(1, DB::connection('community_services')->table('community_services.funeral_audit_events')
+            ->where('resource_id', $record['id'])->where('action', 'offline_contribution.confirmed')->count());
     }
 
     public function test_transaction_history_classifies_failed_cancelled_full_partial_and_reversed_payments(): void

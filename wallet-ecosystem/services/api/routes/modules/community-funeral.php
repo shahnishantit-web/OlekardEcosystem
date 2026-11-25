@@ -48,6 +48,16 @@ Route::prefix('api/v1/community/funeral')->middleware(['identity.auth', FuneralR
         ->middleware('identity.require-permission:community.funeral.report');
     Route::get('/collections/{collectionId}/transactions/export', [FuneralAssistanceController::class, 'exportTransactions'])
         ->middleware('identity.require-permission:community.funeral.report');
+    Route::get('/collections/{collectionId}/offline-contribution-options', [FuneralAssistanceController::class, 'offlineContributionOptions'])
+        ->middleware('identity.require-permission:community.funeral.manage');
+    Route::post('/collections/{collectionId}/offline-contributions', [FuneralAssistanceController::class, 'recordOfflineContribution'])
+        ->middleware(['identity.require-permission:community.funeral.manage', 'idempotency:require-identity']);
+    Route::post('/offline-contributions/{contributionId}/review', [FuneralAssistanceController::class, 'reviewOfflineContribution'])
+        ->middleware(['identity.require-permission:community.funeral.review', 'idempotency:require-identity']);
+    Route::post('/collections/{collectionId}/offline-disbursements', [FuneralAssistanceController::class, 'requestOfflineDisbursement'])
+        ->middleware(['identity.require-permission:community.funeral.payout.request', 'idempotency:require-identity']);
+    Route::post('/offline-disbursements/{disbursementId}/review', [FuneralAssistanceController::class, 'reviewOfflineDisbursement'])
+        ->middleware(['identity.require-permission:community.funeral.payout.approve', 'idempotency:require-identity']);
     Route::post('/collections/{collectionId}/carry-forward', [FuneralAssistanceController::class, 'requestCarryForward'])
         ->middleware(['identity.require-permission:community.funeral.manage', 'idempotency:require-identity']);
     Route::post('/collections/{collectionId}/carry-forward/approve', [FuneralAssistanceController::class, 'approveCarryForward'])

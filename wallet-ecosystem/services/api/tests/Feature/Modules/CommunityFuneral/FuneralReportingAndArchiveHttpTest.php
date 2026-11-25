@@ -42,6 +42,51 @@ final class FuneralReportingAndArchiveHttpTest extends IntegrationTestCase
         app(FuneralObligationResolver::class)->resolve($obligationId, $customer->id, (string) Uuid::uuid7());
     }
 
+    public function test_offline_contribution_http_flow_records_then_independently_confirms_cash(): void
+    {
+        [$manager, $reviewer, $customer, $collectionId, $obligationId] = $this->setupActiveCollection();
+        $url = '/api/v1/community/funeral';
+        $householdId = (string) DB::connection('community_services')->table('community_services.funeral_obligations')
+            ->where('id', $obligationId)->value('household_id');
+
+        $this->withActorToken($manager, ['Idempotency-Key' => (string) Uuid::uuid7()]);
+        $entry = $this->postJson("$url/collections/$collectionId/offline-contributions", [
+            'household_id' => $householdId, 'amount_minor' => 2000, 'reference' => 'CASH-HTTP-001',
+            'evidence_reference' => 'community-receipt-001',
+        ])->assertCreated()->assertJsonPath('data.status', 'pending_review');
+
+        $this->withActorToken($reviewer, ['Idempotency-Key' => (string) Uuid::uuid7()]);
+        $this->postJson("$url/offline-contributions/{$entry->json('data.id')}/review", [
+            'decision' => 'confirmed',
+        ])->assertOk()->assertJsonPath('data.status', 'confirmed');
+
+        $this->assertSame('confirmed', DB::connection('community_services')->table('community_services.funeral_obligations')
+            ->where('id', $obligationId)->value('status'));
+        $this->withActorToken($manager, ['Idempotency-Key' => (string) Uuid::uuid7()]);
+        $report = $this->getJson("$url/collections/$collectionId/aggregate-report")->assertOk();
+        $this->assertSame(2000, $report->json('data.offline_gross_minor'));
+        $this->assertSame(1, $report->json('data.offline_contribution_count'));
+        $this->assertSame(0, $report->json('data.digital_payout_available_minor'));
+
+        $this->withActorToken($manager, ['Idempotency-Key' => (string) Uuid::uuid7()]);
+        $this->postJson("$url/collections/$collectionId/close")->assertOk();
+        $this->withActorToken($manager, ['Idempotency-Key' => (string) Uuid::uuid7()]);
+        $handover = $this->postJson("$url/collections/$collectionId/offline-disbursements", [
+            'recipient_actor_id' => $customer->id, 'amount_minor' => 2000,
+            'reference' => 'CASH-HANDOVER-001', 'evidence_reference' => 'bereaved-family-receipt-001',
+        ])->assertCreated()->assertJsonPath('data.status', 'pending_review');
+
+        $this->withActorToken($reviewer, ['Idempotency-Key' => (string) Uuid::uuid7()]);
+        $this->postJson("$url/offline-disbursements/{$handover->json('data.id')}/review", [
+            'decision' => 'confirmed',
+        ])->assertOk()->assertJsonPath('data.status', 'confirmed');
+
+        $this->withActorToken($manager, ['Idempotency-Key' => (string) Uuid::uuid7()]);
+        $settled = $this->getJson("$url/collections/$collectionId/aggregate-report")->assertOk();
+        $this->assertSame(2000, $settled->json('data.offline_disbursed_minor'));
+        $this->assertSame(0, $settled->json('data.net_support_minor'));
+    }
+
     public function test_aggregate_report_privacy_and_maker_checker_archive_guard(): void
     {
         [$manager, $reviewer, $customer, $collectionId, $obligationId] = $this->setupActiveCollection();
@@ -114,8 +159,8 @@ final class FuneralReportingAndArchiveHttpTest extends IntegrationTestCase
     /** @return array{0:object, 1:object, 2:object, 3:string, 4:string} */
     private function setupActiveCollection(): array
     {
-        $manager = $this->makeAdminWithPermission('community.funeral.manage', 'community.funeral.report');
-        $reviewer = $this->makeAdminWithPermission('community.funeral.review');
+        $manager = $this->makeAdminWithPermission('community.funeral.manage', 'community.funeral.report', 'community.funeral.payout.request');
+        $reviewer = $this->makeAdminWithPermission('community.funeral.review', 'community.funeral.payout.approve');
         $customer = $this->makeActorWithPermission('CUSTOMER', 'community.funeral.household.read');
         $orgId = (string) Uuid::uuid7();
 

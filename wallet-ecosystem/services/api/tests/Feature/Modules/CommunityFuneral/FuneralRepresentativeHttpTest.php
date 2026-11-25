@@ -38,7 +38,8 @@ final class FuneralRepresentativeHttpTest extends IntegrationTestCase
         $comm = $this->postJson("$url/communities", [
             'organisation_id' => $orgId,
             'display_name' => 'Rep Test Community',
-        ])->assertCreated();
+        ]);
+        $comm->assertCreated();
         $communityId = $comm->json('data.id');
 
         $this->withActorToken($manager, ['Idempotency-Key' => (string) Uuid::uuid7()]);

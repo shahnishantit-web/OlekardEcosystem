@@ -15,6 +15,9 @@ use App\Modules\CommunityFuneral\Http\Requests\CreateCommunityRequest;
 use App\Modules\CommunityFuneral\Http\Requests\CreateHouseholdRequest;
 use App\Modules\CommunityFuneral\Http\Requests\ClaimHouseholdInvitationRequest;
 use App\Modules\CommunityFuneral\Http\Requests\ReviewHouseholdRequest;
+use App\Modules\CommunityFuneral\Http\Requests\RecordOfflineContributionRequest;
+use App\Modules\CommunityFuneral\Http\Requests\RequestFuneralDisbursement;
+use App\Modules\CommunityFuneral\Http\Requests\RequestOfflineDisbursement;
 use App\Modules\CommunityFuneral\Http\Resources\FuneralCollectionResource;
 use App\Modules\CommunityFuneral\Http\Resources\FuneralCommunityResource;
 use App\Modules\CommunityFuneral\Http\Resources\FuneralObligationResource;
@@ -114,10 +117,11 @@ final class FuneralAssistanceController
                 'closure.carry_forward_requested_by', 'closure.carry_forward_approved_by', 'closure.payout_status', 'closure.settlement_status',
             ]);
         $payouts = $db->table('community_services.funeral_disbursements')->whereIn('collection_id', $collections->pluck('id'))
-            ->get(['id', 'collection_id', 'destination_type', 'amount_minor', 'currency_code', 'status', 'requested_by', 'requested_at', 'approved_by', 'approved_at', 'rejected_by', 'rejection_reason', 'provider_reference', 'receipt_reference', 'ledger_journal_id', 'paid_at'])->keyBy('collection_id');
+            ->get(['id', 'collection_id', 'beneficiary_id', 'recipient_actor_id', 'destination_type', 'amount_minor', 'currency_code', 'status', 'requested_by', 'requested_at', 'approved_by', 'approved_at', 'rejected_by', 'rejection_reason', 'provider_reference', 'receipt_reference', 'ledger_journal_id', 'paid_at'])->keyBy('collection_id');
         $identityIds = $staff->pluck('actor_id')
             ->merge($households->pluck('created_by'))->merge($households->pluck('reviewed_by'))
             ->merge($representatives->flatten(1)->pluck('actor_id'))->merge($representatives->flatten(1)->pluck('verified_by'))
+            ->merge($payouts->pluck('recipient_actor_id'))
             ->filter()->unique()->values();
         $identityUsers = DB::connection('identity')->table('identity.users')->whereIn('id', $identityIds)
             ->get(['id', 'email', 'mobile_number'])->keyBy('id');
@@ -129,15 +133,18 @@ final class FuneralAssistanceController
             ->selectRaw('collection_id, COUNT(*) AS total, COUNT(*) FILTER (WHERE status = ?) AS unpaid, COUNT(*) FILTER (WHERE fulfilment_status = ?) AS fulfilled', ['unpaid', 'fulfilled'])
             ->groupBy('collection_id')->get()->keyBy('collection_id');
         $householdById = $households->keyBy('id');
-        $collectionRows = $collections->map(function (object $row) use ($obligationCounts, $beneficiaries, $householdById, $payouts): array {
+        $collectionRows = $collections->map(function (object $row) use ($obligationCounts, $beneficiaries, $householdById, $payouts, $identityUsers): array {
             $counts = $obligationCounts->get($row->id);
+            $payout = $payouts->get($row->id);
             return array_merge((array) $row, [
                 'beneficiary_name' => (string) ($beneficiaries->get($row->beneficiary_id)->account_holder_name ?? 'Verified beneficiary'),
                 'target_household_reference' => $householdById->get($row->target_household_id)->private_reference ?? null,
                 'obligation_count' => (int) ($counts->total ?? 0),
                 'unpaid_count' => (int) ($counts->unpaid ?? 0),
                 'fulfilled_count' => (int) ($counts->fulfilled ?? 0),
-                'disbursement' => $payouts->get($row->id) === null ? null : (array) $payouts->get($row->id),
+                'disbursement' => $payout === null ? null : array_merge((array) $payout, [
+                    'recipient_email' => $identityUsers->get($payout->recipient_actor_id)->email ?? null,
+                ]),
             ]);
         });
         $staff = $staff->map(fn (object $row): array => array_merge((array) $row, (array) ($identityUsers->get($row->actor_id) ?? [])));
@@ -321,13 +328,18 @@ final class FuneralAssistanceController
         return response()->json(['success' => true, 'data' => $this->service->transactionHistory($collectionId, $this->actor($request))]);
     }
 
+    public function offlineContributionOptions(Request $request, string $collectionId): JsonResponse
+    {
+        return response()->json(['success' => true, 'data' => $this->service->offlineContributionOptions($collectionId, $this->actor($request))]);
+    }
+
     public function exportTransactions(Request $request, string $collectionId): \Symfony\Component\HttpFoundation\Response
     {
         $rows = $this->service->transactionHistory($collectionId, $this->actor($request));
         $stream = fopen('php://temp', 'r+');
-        fputcsv($stream, ['Date', 'Channel', 'Reference', 'Payment Intent', 'Obligation', 'Amount Minor', 'Currency', 'Fee Minor', 'Status', 'Review Reason']);
+        fputcsv($stream, ['Date', 'Channel', 'Reference', 'Payment Intent', 'Obligation', 'Amount Minor', 'Currency', 'Fee Minor', 'Status', 'Evidence Reference', 'Review Reason']);
         foreach ($rows as $row) {
-            fputcsv($stream, [$row['occurred_at'], $row['channel'] ?? 'in_app', $row['reference'], $row['payment_intent_id'], $row['obligation_id'], $row['amount_minor'], $row['currency_code'], $row['fee_minor'], $row['status'], $row['review_reason']]);
+            fputcsv($stream, [$row['occurred_at'], $row['channel'] ?? 'in_app', $row['reference'], $row['payment_intent_id'] ?? '', $row['obligation_id'], $row['amount_minor'], $row['currency_code'], $row['fee_minor'], $row['status'], $row['evidence_reference'] ?? '', $row['review_reason'] ?? '']);
         }
         rewind($stream);
         $csv = stream_get_contents($stream) ?: '';
@@ -337,6 +349,46 @@ final class FuneralAssistanceController
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="funeral-collection-'.$collectionId.'-transactions.csv"',
         ]);
+    }
+
+    public function recordOfflineContribution(RecordOfflineContributionRequest $request, string $collectionId): JsonResponse
+    {
+        $data = $request->validated();
+        return response()->json(['success' => true, 'data' => $this->service->recordOfflineContribution(
+            $collectionId, $data['household_id'], (int) $data['amount_minor'], $data['reference'],
+            $data['evidence_reference'] ?? null, $data['received_at'] ?? null, $this->actor($request),
+        )], 201);
+    }
+
+    public function reviewOfflineContribution(Request $request, string $contributionId): JsonResponse
+    {
+        $data = $request->validate([
+            'decision' => ['required', 'in:confirmed,rejected'],
+            'reason' => ['required_if:decision,rejected', 'nullable', 'string', 'min:3', 'max:500'],
+        ]);
+        return response()->json(['success' => true, 'data' => $this->service->reviewOfflineContribution(
+            $contributionId, $data['decision'], $data['reason'] ?? null, $this->actor($request),
+        )]);
+    }
+
+    public function requestOfflineDisbursement(RequestOfflineDisbursement $request, string $collectionId): JsonResponse
+    {
+        $data = $request->validated();
+        return response()->json(['success' => true, 'data' => $this->service->requestOfflineDisbursement(
+            $collectionId, $data['recipient_actor_id'], (int) $data['amount_minor'], $data['reference'],
+            $data['evidence_reference'], $this->actor($request),
+        )], 201);
+    }
+
+    public function reviewOfflineDisbursement(Request $request, string $disbursementId): JsonResponse
+    {
+        $data = $request->validate([
+            'decision' => ['required', 'in:confirmed,rejected'],
+            'reason' => ['required_if:decision,rejected', 'nullable', 'string', 'min:3', 'max:500'],
+        ]);
+        return response()->json(['success' => true, 'data' => $this->service->reviewOfflineDisbursement(
+            $disbursementId, $data['decision'], $data['reason'] ?? null, $this->actor($request),
+        )]);
     }
 
     public function archive(Request $request, string $collectionId): JsonResponse
@@ -358,9 +410,10 @@ final class FuneralAssistanceController
         return response()->json(['success' => true, 'data' => ['collection_id' => $collectionId, 'status' => 'approved']]);
     }
 
-    public function requestDisbursement(Request $request, string $collectionId): JsonResponse
+    public function requestDisbursement(RequestFuneralDisbursement $request, string $collectionId): JsonResponse
     {
-        $payout = $this->service->requestDisbursement($collectionId, $this->actor($request));
+        $data = $request->validated();
+        $payout = $this->service->requestDisbursement($collectionId, $this->actor($request), $data['recipient_actor_id'], $data['destination_type'], $data['beneficiary_id'] ?? null);
         return response()->json(['success' => true, 'data' => $payout], 201);
     }
 

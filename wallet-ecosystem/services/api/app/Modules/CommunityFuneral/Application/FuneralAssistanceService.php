@@ -507,6 +507,9 @@ final class FuneralAssistanceService
             if ($collection === null || $collection->status !== 'active') {
                 throw ValidationException::withMessages(['collection' => 'Only an active collection can be closed.']);
             }
+            if ($this->db()->table('community_services.funeral_offline_contributions')->where('collection_id', $collectionId)->where('status', 'pending_review')->exists()) {
+                throw ValidationException::withMessages(['collection' => 'Review pending offline contributions before closing this collection.']);
+            }
             $community = $this->community((string) $collection->community_id);
             $this->assertCommunityManager((string) $community->id, $actorId, (string) $community->created_by);
             $now = now();
@@ -526,9 +529,176 @@ final class FuneralAssistanceService
     {
         $collection = $this->collection($collectionId);
         $community = $this->community((string) $collection->community_id);
-        $this->assertCommunityManager((string) $community->id, $actorId, (string) $community->created_by);
+        $this->assertCommunityReviewer((string) $community->id, $actorId, (string) $community->created_by);
 
         return $this->refreshAggregate($collectionId);
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function offlineContributionOptions(string $collectionId, string $actorId): array
+    {
+        $collection = $this->collection($collectionId);
+        $community = $this->community((string) $collection->community_id);
+        $this->assertCommunityManager((string) $community->id, $actorId, (string) $community->created_by);
+        return $this->db()->table('community_services.funeral_obligations as obligation')
+            ->join('community_services.funeral_households as household', 'household.id', '=', 'obligation.household_id')
+            ->where('obligation.collection_id', $collectionId)->where('obligation.status', 'unpaid')
+            ->where('household.status', 'eligible')->orderBy('household.private_reference')
+            ->get(['household.id as household_id', 'household.private_reference', 'obligation.amount_minor', 'obligation.currency_code'])
+            ->map(static fn (object $row): array => (array) $row)->all();
+    }
+
+    /** @return array<string, mixed> */
+    public function recordOfflineContribution(
+        string $collectionId,
+        string $householdId,
+        int $amountMinor,
+        string $reference,
+        ?string $evidenceReference,
+        ?string $receivedAt,
+        string $actorId,
+    ): array {
+        return $this->db()->transaction(function () use ($collectionId, $householdId, $amountMinor, $reference, $evidenceReference, $receivedAt, $actorId): array {
+            $collection = $this->db()->table('community_services.funeral_collections')->where('id', $collectionId)->lockForUpdate()->first();
+            abort_if($collection === null, 404);
+            if ($collection->status !== 'active') {
+                throw ValidationException::withMessages(['collection' => 'Offline contributions can only be recorded while the collection is active.']);
+            }
+            $community = $this->community((string) $collection->community_id);
+            $this->assertCommunityManager((string) $community->id, $actorId, (string) $community->created_by);
+            $household = $this->thisHousehold($householdId);
+            $obligation = $this->db()->table('community_services.funeral_obligations')->where('collection_id', $collectionId)
+                ->where('household_id', $householdId)->lockForUpdate()->first();
+            if ($household->community_id !== $community->id || $obligation === null || $obligation->status !== 'unpaid'
+                || (int) $obligation->amount_minor !== $amountMinor || (string) $obligation->currency_code !== (string) $collection->currency_code) {
+                throw ValidationException::withMessages(['household_id' => 'Select an unpaid household obligation and enter its exact contribution amount.']);
+            }
+            $open = $this->db()->table('community_services.funeral_offline_contributions')->where('obligation_id', $obligation->id)
+                ->whereIn('status', ['pending_review', 'confirmed'])->exists();
+            if ($open) {
+                throw ValidationException::withMessages(['household_id' => 'This household obligation already has an offline contribution pending review or confirmed.']);
+            }
+            $intentPending = DB::connection('payment')->table('payment.payment_intents')->where('purpose_type', 'funeral_contribution')
+                ->where('purpose_reference', $obligation->id)->whereIn('status', ['pending', 'processing', 'awaiting_action', 'requires_confirmation'])->exists();
+            if ($intentPending) {
+                throw ValidationException::withMessages(['household_id' => 'Resolve the household payment attempt before recording an offline contribution.']);
+            }
+            $id = (string) Uuid::uuid7();
+            $now = now();
+            $this->db()->table('community_services.funeral_offline_contributions')->insert([
+                'id' => $id, 'collection_id' => $collectionId, 'obligation_id' => $obligation->id,
+                'amount_minor' => $amountMinor, 'currency_code' => $collection->currency_code,
+                'reference' => trim($reference), 'evidence_reference' => $evidenceReference === null ? null : trim($evidenceReference),
+                'received_at' => $receivedAt ?? $now, 'status' => 'pending_review', 'recorded_by' => $actorId,
+                'created_at' => $now, 'updated_at' => $now,
+            ]);
+            $this->audit('offline_contribution.recorded', $actorId, 'offline_contribution', $id, null, 'pending_review');
+            return (array) $this->db()->table('community_services.funeral_offline_contributions')->where('id', $id)->first();
+        });
+    }
+
+    /** @return array<string, mixed> */
+    public function reviewOfflineContribution(string $contributionId, string $decision, ?string $reason, string $reviewerId): array
+    {
+        return $this->db()->transaction(function () use ($contributionId, $decision, $reason, $reviewerId): array {
+            $contribution = $this->db()->table('community_services.funeral_offline_contributions')->where('id', $contributionId)->lockForUpdate()->first();
+            abort_if($contribution === null, 404);
+            $collection = $this->collection((string) $contribution->collection_id);
+            $community = $this->community((string) $collection->community_id);
+            $this->assertCommunityReviewer((string) $community->id, $reviewerId, (string) $community->created_by);
+            if ($contribution->status !== 'pending_review' || $contribution->recorded_by === $reviewerId
+                || ! in_array($decision, ['confirmed', 'rejected'], true)) {
+                throw ValidationException::withMessages(['contribution' => 'A different reviewer must confirm or reject a pending offline contribution.']);
+            }
+            $now = now();
+            $this->db()->table('community_services.funeral_offline_contributions')->where('id', $contributionId)->update([
+                'status' => $decision, 'reviewed_by' => $reviewerId, 'reviewed_at' => $now,
+                'rejection_reason' => $decision === 'rejected' ? trim((string) $reason) : null, 'updated_at' => $now,
+            ]);
+            if ($decision === 'confirmed') {
+                $obligation = $this->db()->table('community_services.funeral_obligations')->where('id', $contribution->obligation_id)->lockForUpdate()->first();
+                if ($obligation === null || $obligation->status !== 'unpaid' || $collection->status !== 'active') {
+                    throw ValidationException::withMessages(['contribution' => 'The collection or household obligation changed before confirmation.']);
+                }
+                $this->db()->table('community_services.funeral_obligations')->where('id', $obligation->id)->update([
+                    'status' => 'confirmed', 'fulfilment_status' => 'fulfilled', 'fulfilled_at' => $now, 'updated_at' => $now,
+                ]);
+            }
+            $this->audit('offline_contribution.'.($decision === 'confirmed' ? 'confirmed' : 'rejected'), $reviewerId,
+                'offline_contribution', $contributionId, 'pending_review', $decision);
+            if ($collection->status === 'closed') $this->refreshAggregate((string) $collection->id);
+            return (array) $this->db()->table('community_services.funeral_offline_contributions')->where('id', $contributionId)->first();
+        });
+    }
+
+    /** @return array<string, mixed> */
+    public function requestOfflineDisbursement(
+        string $collectionId,
+        string $recipientActorId,
+        int $amountMinor,
+        string $reference,
+        string $evidenceReference,
+        string $actorId,
+    ): array {
+        return $this->db()->transaction(function () use ($collectionId, $recipientActorId, $amountMinor, $reference, $evidenceReference, $actorId): array {
+            $collection = $this->db()->table('community_services.funeral_collections')->where('id', $collectionId)->lockForUpdate()->first();
+            if ($collection === null || $collection->status !== 'closed') {
+                throw ValidationException::withMessages(['collection' => 'Offline cash handover can only be recorded after collection close.']);
+            }
+            $community = $this->community((string) $collection->community_id);
+            $this->assertCommunityManager((string) $community->id, $actorId, (string) $community->created_by);
+            $report = $this->refreshAggregate($collectionId);
+            if ((int) $report['pending_payment_count'] > 0 || (int) $report['pending_refund_count'] > 0
+                || (int) $report['late_review_count'] > 0 || (int) $report['pending_offline_contribution_count'] > 0) {
+                throw ValidationException::withMessages(['disbursement' => 'Resolve open payment and contribution reviews before recording cash handover.']);
+            }
+            $recipient = $this->db()->table('community_services.funeral_representatives')
+                ->where('household_id', $collection->target_household_id)->where('actor_id', $recipientActorId)->where('status', 'verified')->first();
+            if ($recipient === null) {
+                throw ValidationException::withMessages(['recipient_actor_id' => 'Select a verified representative of the bereaved household.']);
+            }
+            if ($amountMinor < 1 || $amountMinor > (int) $report['offline_available_for_disbursement_minor']) {
+                throw ValidationException::withMessages(['amount_minor' => 'The handover amount exceeds confirmed offline contributions that have not already been allocated.']);
+            }
+            $id = (string) Uuid::uuid7();
+            $now = now();
+            $this->db()->table('community_services.funeral_offline_disbursements')->insert([
+                'id' => $id, 'collection_id' => $collectionId, 'recipient_actor_id' => $recipientActorId,
+                'amount_minor' => $amountMinor, 'currency_code' => $collection->currency_code,
+                'reference' => trim($reference), 'evidence_reference' => trim($evidenceReference),
+                'status' => 'pending_review', 'recorded_by' => $actorId, 'created_at' => $now, 'updated_at' => $now,
+            ]);
+            $this->audit('offline_disbursement.recorded', $actorId, 'offline_disbursement', $id, null, 'pending_review');
+            return (array) $this->db()->table('community_services.funeral_offline_disbursements')->where('id', $id)->first();
+        });
+    }
+
+    /** @return array<string, mixed> */
+    public function reviewOfflineDisbursement(string $disbursementId, string $decision, ?string $reason, string $reviewerId): array
+    {
+        return $this->db()->transaction(function () use ($disbursementId, $decision, $reason, $reviewerId): array {
+            $disbursement = $this->db()->table('community_services.funeral_offline_disbursements')->where('id', $disbursementId)->lockForUpdate()->first();
+            abort_if($disbursement === null, 404);
+            $collection = $this->db()->table('community_services.funeral_collections')->where('id', $disbursement->collection_id)->lockForUpdate()->first();
+            if ($collection === null || $collection->status !== 'closed') {
+                throw ValidationException::withMessages(['collection' => 'The offline handover requires a closed collection.']);
+            }
+            $community = $this->community((string) $collection->community_id);
+            $this->assertCommunityReviewer((string) $community->id, $reviewerId, (string) $community->created_by);
+            if ($disbursement->status !== 'pending_review' || $disbursement->recorded_by === $reviewerId
+                || ! in_array($decision, ['confirmed', 'rejected'], true)) {
+                throw ValidationException::withMessages(['disbursement' => 'A different reviewer must confirm or reject this cash handover.']);
+            }
+            $now = now();
+            $this->db()->table('community_services.funeral_offline_disbursements')->where('id', $disbursementId)->update([
+                'status' => $decision, 'reviewed_by' => $reviewerId, 'reviewed_at' => $now,
+                'rejection_reason' => $decision === 'rejected' ? trim((string) $reason) : null, 'updated_at' => $now,
+            ]);
+            $this->audit('offline_disbursement.'.($decision === 'confirmed' ? 'confirmed' : 'rejected'), $reviewerId,
+                'offline_disbursement', $disbursementId, 'pending_review', $decision);
+            $this->refreshAggregate((string) $collection->id);
+            return (array) $this->db()->table('community_services.funeral_offline_disbursements')->where('id', $disbursementId)->first();
+        });
     }
 
     public function requestCarryForward(string $collectionId, string $reference, string $actorId): void
@@ -671,7 +841,7 @@ final class FuneralAssistanceService
         });
     }
 
-    /** @return array<string, int|string> */
+    /** @return array<string, mixed> */
     private function refreshAggregate(string $collectionId): array
     {
         $base = $this->db()->table('community_services.funeral_payment_receipts as r')
@@ -679,6 +849,9 @@ final class FuneralAssistanceService
             ->where('o.collection_id', $collectionId);
         $accepted = (clone $base)->where('r.domain_status', 'confirmed')
             ->selectRaw('COALESCE(SUM(r.gross_amount_minor),0) AS gross, COALESCE(SUM(r.fee_amount_minor),0) AS fees')->first();
+        $offline = $this->db()->table('community_services.funeral_offline_contributions')->where('collection_id', $collectionId);
+        $offlineTotals = (clone $offline)->where('status', 'confirmed')->selectRaw('COALESCE(SUM(amount_minor),0) AS gross, COUNT(*) AS total')->first();
+        $pendingOfflineCount = (int) (clone $offline)->where('status', 'pending_review')->count();
         $intentIds = (clone $base)->pluck('r.payment_intent_id')->all();
         $acceptedIntentIds = (clone $base)->where('r.domain_status', 'confirmed')->pluck('r.payment_intent_id')->all();
         $acceptedRefunds = $acceptedIntentIds === [] ? 0 : (int) DB::connection('payment')->table('payment.payment_refunds')
@@ -699,20 +872,33 @@ final class FuneralAssistanceService
         $fees = (int) ($accepted->fees ?? 0);
         $disbursed = (int) $this->db()->table('community_services.funeral_disbursements')
             ->where('collection_id', $collectionId)->where('status', 'paid')->sum('amount_minor');
-        $net = (int) ($accepted->gross ?? 0) - (int) ($accepted->fees ?? 0) - $acceptedRefunds - $disbursed;
-        $payoutLiabilityOpen = $net > 0 ? 1 : 0;
-        $unresolved = $pendingPaymentCount + $pendingRefundCount + $lateReviewCount + $payoutLiabilityOpen;
+        $digitalNet = (int) ($accepted->gross ?? 0) - (int) ($accepted->fees ?? 0) - $acceptedRefunds - $disbursed;
+        $offlineGross = (int) ($offlineTotals->gross ?? 0);
+        $offlineDisbursements = $this->db()->table('community_services.funeral_offline_disbursements')->where('collection_id', $collectionId);
+        $offlineDisbursed = (int) (clone $offlineDisbursements)->where('status', 'confirmed')->sum('amount_minor');
+        $offlinePendingDisbursementCount = (int) (clone $offlineDisbursements)->where('status', 'pending_review')->count();
+        $offlineAvailable = max(0, $offlineGross - $offlineDisbursed - (int) (clone $offlineDisbursements)->where('status', 'pending_review')->sum('amount_minor'));
+        $offlineDisbursementRows = (clone $offlineDisbursements)->orderByDesc('created_at')->get()->map(static fn (object $row): array => (array) $row)->all();
+        $net = $digitalNet + $offlineGross - $offlineDisbursed;
+        $payoutLiabilityOpen = $digitalNet > 0 ? 1 : 0;
+        $offlineDistributionOpen = $offlineAvailable > 0 ? 1 : 0;
+        $unresolved = $pendingPaymentCount + $pendingRefundCount + $lateReviewCount + $pendingOfflineCount + $offlinePendingDisbursementCount + $payoutLiabilityOpen + $offlineDistributionOpen;
         $confirmedCount = (int) (clone $base)->where('r.domain_status', 'confirmed')->count();
         $disbursement = $this->db()->table('community_services.funeral_disbursements')->where('collection_id', $collectionId)->first();
-        $result = ['collection_id' => $collectionId, 'confirmed_gross_minor' => $gross, 'confirmed_contribution_count' => $confirmedCount, 'fee_total_minor' => $fees,
+        $result = ['collection_id' => $collectionId, 'confirmed_gross_minor' => $gross + $offlineGross, 'digital_gross_minor' => $gross,
+            'offline_gross_minor' => $offlineGross, 'offline_contribution_count' => (int) ($offlineTotals->total ?? 0),
+            'offline_disbursed_minor' => $offlineDisbursed, 'offline_available_for_disbursement_minor' => $offlineAvailable,
+            'pending_offline_disbursement_count' => $offlinePendingDisbursementCount, 'offline_disbursements' => $offlineDisbursementRows,
+            'confirmed_contribution_count' => $confirmedCount + (int) ($offlineTotals->total ?? 0), 'digital_payout_available_minor' => max(0, $digitalNet),
+            'pending_offline_contribution_count' => $pendingOfflineCount, 'fee_total_minor' => $fees,
             'confirmed_refunds_minor' => $acceptedRefunds, 'net_support_minor' => $net, 'late_review_gross_minor' => $lateGross, 'unresolved_liability_count' => $unresolved,
             'pending_payment_count' => $pendingPaymentCount, 'pending_refund_count' => $pendingRefundCount,
             'late_review_count' => $lateReviewCount, 'payout_liability_open' => $payoutLiabilityOpen,
-            'settlement_status' => $net === 0 && $pendingPaymentCount === 0 && $pendingRefundCount === 0 && $lateReviewCount === 0 ? 'settled' : 'unresolved',
-            'payout_status' => $net === 0 && $disbursed > 0 ? 'paid' : (string) ($disbursement->status ?? (($pendingPaymentCount + $pendingRefundCount + $lateReviewCount) > 0 || $net < 1 ? 'blocked' : 'ready')),
+            'settlement_status' => $net === 0 && $pendingPaymentCount === 0 && $pendingRefundCount === 0 && $lateReviewCount === 0 && $pendingOfflineCount === 0 && $offlinePendingDisbursementCount === 0 ? 'settled' : 'unresolved',
+            'payout_status' => $net === 0 && ($disbursed + $offlineDisbursed) > 0 ? 'paid' : (string) ($disbursement->status ?? (($pendingPaymentCount + $pendingRefundCount + $lateReviewCount + $pendingOfflineCount) > 0 || $digitalNet < 1 ? 'blocked' : 'ready')),
             'disbursement' => $disbursement === null ? null : (array) $disbursement];
         $this->db()->table('community_services.funeral_closures')->where('collection_id', $collectionId)->update([
-            'confirmed_gross_minor' => $gross, 'fee_total_minor' => $fees, 'confirmed_refunds_minor' => $acceptedRefunds,
+            'confirmed_gross_minor' => $gross + $offlineGross, 'fee_total_minor' => $fees, 'confirmed_refunds_minor' => $acceptedRefunds,
             'net_support_minor' => $net, 'unresolved_liability_count' => $unresolved, 'updated_at' => now(),
             'late_review_gross_minor' => $lateGross,
             'payout_status' => $result['payout_status'], 'settlement_status' => $result['settlement_status'],
@@ -722,10 +908,10 @@ final class FuneralAssistanceService
     }
 
     /** @return array<string, mixed> */
-    public function requestDisbursement(string $collectionId, string $actorId): array
+    public function requestDisbursement(string $collectionId, string $actorId, string $recipientActorId, string $destinationType = 'wallet', ?string $beneficiaryId = null): array
     {
         $this->assertLocalPayoutEnabled();
-        return $this->db()->transaction(function () use ($collectionId, $actorId): array {
+        return $this->db()->transaction(function () use ($collectionId, $recipientActorId, $actorId, $destinationType, $beneficiaryId): array {
             $collection = $this->db()->table('community_services.funeral_collections')->where('id', $collectionId)->lockForUpdate()->first();
             if ($collection === null || $collection->status !== 'closed') {
                 throw ValidationException::withMessages(['collection' => 'Only a closed collection can request beneficiary disbursement.']);
@@ -733,18 +919,32 @@ final class FuneralAssistanceService
             $community = $this->community((string) $collection->community_id);
             $this->assertCommunityManager((string) $community->id, $actorId, (string) $community->created_by);
             $report = $this->refreshAggregate($collectionId);
-            if ((int) $report['pending_payment_count'] > 0 || (int) $report['pending_refund_count'] > 0 || (int) $report['late_review_count'] > 0) {
-                throw ValidationException::withMessages(['disbursement' => 'Resolve pending payments, refunds, and late-review receipts before requesting payout.']);
+            if ((int) $report['pending_payment_count'] > 0 || (int) $report['pending_refund_count'] > 0 || (int) $report['late_review_count'] > 0
+                || (int) $report['pending_offline_contribution_count'] > 0) {
+                throw ValidationException::withMessages(['disbursement' => 'Resolve pending payments, refunds, offline contribution reviews, and late-review receipts before requesting payout.']);
             }
-            if ((int) $report['net_support_minor'] < 1) {
-                throw ValidationException::withMessages(['disbursement' => 'There is no confirmed net support available to disburse.']);
+            if (! in_array($destinationType, ['wallet', 'bank_transfer'], true)) {
+                throw ValidationException::withMessages(['destination_type' => 'Choose an available beneficiary payout destination.']);
             }
-            $beneficiary = PayoutBeneficiaryModel::query()->find((string) $collection->beneficiary_id);
-            if ($beneficiary === null || $beneficiary->status !== PayoutBeneficiaryStatus::Verified
-                || $beneficiary->organisation_id !== $community->organisation_id
-                || ! in_array($beneficiary->account_type, ['bank_account', 'mobile_money', 'wallet'], true)
-                || $beneficiary->currency_code !== $collection->currency_code) {
-                throw ValidationException::withMessages(['beneficiary_id' => 'The collection destination must be verified for its organisation and currency.']);
+            if ((int) $report['digital_payout_available_minor'] < 1) {
+                throw ValidationException::withMessages(['disbursement' => 'There are no digitally settled funds available for payout. Offline contributions are reported separately and are not credited to the platform ledger.']);
+            }
+            $representative = $this->db()->table('community_services.funeral_representatives')
+                ->where('household_id', $collection->target_household_id)->where('actor_id', $recipientActorId)->where('status', 'verified')->first();
+            if ($representative === null) {
+                throw ValidationException::withMessages(['recipient_actor_id' => 'The payout recipient must be a verified representative of the bereaved household.']);
+            }
+            if ($destinationType === 'wallet') {
+                $walletId = $this->wallet->findPrimaryWalletId($recipientActorId);
+                if ($walletId === null || ! $this->wallet->isActive($walletId) || ! $this->wallet->pocketExists($walletId, (string) $collection->currency_code)) {
+                    throw ValidationException::withMessages(['recipient_actor_id' => 'The verified household representative needs an active wallet with a matching currency pocket.']);
+                }
+                $beneficiaryId = null;
+            } else {
+                if ($beneficiaryId === null) {
+                    throw ValidationException::withMessages(['beneficiary_id' => 'Select a verified organisation bank account for this payout.']);
+                }
+                $this->assertVerifiedBankPayoutBeneficiary($beneficiaryId, (string) $community->organisation_id, (string) $collection->currency_code, (string) $collection->beneficiary_id);
             }
             $payout = $this->db()->table('community_services.funeral_disbursements')->where('collection_id', $collectionId)->lockForUpdate()->first();
             if ($payout !== null && in_array($payout->status, ['awaiting_approval', 'processing', 'paid'], true)) {
@@ -753,9 +953,10 @@ final class FuneralAssistanceService
             $id = $payout?->id ?? (string) Uuid::uuid7();
             $now = now();
             $values = [
-                'beneficiary_id' => $beneficiary->id,
-                'destination_type' => $beneficiary->account_type,
-                'amount_minor' => (int) $report['net_support_minor'],
+                'beneficiary_id' => $beneficiaryId,
+                'recipient_actor_id' => $recipientActorId,
+                'destination_type' => $destinationType,
+                'amount_minor' => (int) $report['digital_payout_available_minor'],
                 'currency_code' => $collection->currency_code,
                 'status' => 'awaiting_approval', 'requested_by' => $actorId, 'requested_at' => $now,
                 'approved_by' => null, 'approved_at' => null, 'rejected_by' => null, 'rejection_reason' => null,
@@ -784,6 +985,9 @@ final class FuneralAssistanceService
         abort_if($payout === null, 404);
         $community = $this->community((string) $payout->community_id);
         $this->assertCommunityReviewer((string) $community->id, $reviewerId, (string) $community->created_by);
+        if ($payout->recipient_actor_id === null) {
+            throw ValidationException::withMessages(['disbursement' => 'This legacy request is not linked to a verified representative of the bereaved household. Reject it and submit a new payout request.']);
+        }
         if ($payout->requested_by === $reviewerId) {
             throw ValidationException::withMessages(['disbursement' => 'A different reviewer must approve a pending disbursement.']);
         }
@@ -800,10 +1004,25 @@ final class FuneralAssistanceService
 
         try {
             $collection = $this->collection($collectionId);
-            $beneficiary = PayoutBeneficiaryModel::query()->findOrFail((string) $payout->beneficiary_id);
-            $journalId = $this->postDisbursementJournal($collection, $payout, $beneficiary);
+            $recipient = $this->db()->table('community_services.funeral_representatives')
+                ->where('household_id', $collection->target_household_id)->where('actor_id', $payout->recipient_actor_id)->where('status', 'verified')->first();
+            if ($recipient === null) throw ValidationException::withMessages(['recipient_actor_id' => 'The household payout representative is no longer verified.']);
+            $walletId = null;
+            if ($payout->destination_type === 'wallet') {
+                $walletId = $this->wallet->findPrimaryWalletId((string) $payout->recipient_actor_id);
+                if ($walletId === null || ! $this->wallet->isActive($walletId) || ! $this->wallet->pocketExists($walletId, (string) $payout->currency_code)) {
+                    throw ValidationException::withMessages(['recipient_actor_id' => 'The household payout wallet is no longer active.']);
+                }
+            } elseif ($payout->destination_type === 'bank_transfer') {
+                $this->assertVerifiedBankPayoutBeneficiary((string) $payout->beneficiary_id, (string) $community->organisation_id, (string) $payout->currency_code, (string) $collection->beneficiary_id);
+            } else {
+                throw ValidationException::withMessages(['destination_type' => 'This payout destination is not supported.']);
+            }
+            $journalId = $this->postDisbursementJournal($collection, $payout, $walletId);
             $receipt = 'FUNERAL-PAYOUT-'.strtoupper(substr(str_replace('-', '', (string) $payout->id), 0, 16));
-            $providerReference = $payout->destination_type === 'wallet' ? null : 'MOCK-BANK-'.strtoupper(substr(str_replace('-', '', (string) Uuid::uuid7()), 0, 16));
+            $providerReference = $payout->destination_type === 'bank_transfer'
+                ? 'MOCK-BANK-FUNERAL-'.strtoupper(substr(str_replace('-', '', (string) $payout->id), 0, 16))
+                : null;
             $this->db()->table('community_services.funeral_disbursements')->where('id', $payout->id)->update([
                 'status' => 'paid', 'ledger_journal_id' => $journalId, 'provider_reference' => $providerReference,
                 'receipt_reference' => $receipt, 'paid_at' => now(), 'updated_at' => now(),
@@ -840,11 +1059,11 @@ final class FuneralAssistanceService
     private function assertLocalPayoutEnabled(): void
     {
         if (! app()->environment('local', 'development', 'testing') || config('payment.mock_bank.local_funeral_ledger_enabled') !== true) {
-            abort(503, 'Funeral payouts require the local mock-bank ledger configuration. No external bank payout adapter is configured.');
+            abort(503, 'Funeral household payout requires the local demo ledger configuration. No external wallet or bank transfer is sent by this demo flow.');
         }
     }
 
-    private function postDisbursementJournal(object $collection, object $payout, PayoutBeneficiaryModel $beneficiary): string
+    private function postDisbursementJournal(object $collection, object $payout, ?string $walletId): string
     {
         $suspenseRef = Uuid::uuid5(Uuid::NAMESPACE_URL,
             'olekard.local/mock-bank/funeral-contribution-suspense/'.$this->community((string) $collection->community_id)->organisation_id.'/'.$collection->currency_code)->toString();
@@ -853,20 +1072,14 @@ final class FuneralAssistanceService
             throw ValidationException::withMessages(['disbursement' => 'The funeral contribution suspense ledger does not have enough posted funds.']);
         }
         $lines = [['ledger_account_reference' => $suspenseRef, 'direction' => 'debit', 'amount' => $amount]];
-        if ($beneficiary->account_type === 'wallet') {
-            $walletId = (string) $beneficiary->account_number;
-            if (! Uuid::isValid($walletId) || ! $this->wallet->isActive($walletId)
-                || ! $this->wallet->pocketExists($walletId, (string) $payout->currency_code)) {
-                throw ValidationException::withMessages(['beneficiary_id' => 'The verified wallet beneficiary is not active or has no matching currency pocket.']);
-            }
-            $walletRef = $this->wallet->getPocketLedgerAccountRef($walletId, (string) $payout->currency_code);
-            if ($walletRef === null) throw ValidationException::withMessages(['beneficiary_id' => 'The wallet payout pocket could not be resolved.']);
+        if ($payout->destination_type === 'wallet') {
+            $walletRef = $walletId === null ? null : $this->wallet->getPocketLedgerAccountRef($walletId, (string) $payout->currency_code);
+            if ($walletRef === null) throw ValidationException::withMessages(['recipient_actor_id' => 'The household payout pocket could not be resolved.']);
             $lines[] = ['ledger_account_reference' => $walletRef, 'direction' => 'credit', 'amount' => $amount];
         } else {
-            $sources = $this->mockBankSourceAccounts((string) $payout->collection_id, (string) $payout->currency_code, $amount);
-            foreach ($sources as $source) {
-                $lines[] = ['ledger_account_reference' => $source['reference'], 'direction' => 'credit', 'amount' => $source['amount']];
-            }
+            $bankClearingRef = Uuid::uuid5(Uuid::NAMESPACE_URL,
+                'olekard.local/mock-bank/funeral-beneficiary-clearing/'.$payout->beneficiary_id.'/'.$payout->currency_code)->toString();
+            $lines[] = ['ledger_account_reference' => $bankClearingRef, 'direction' => 'credit', 'amount' => $amount];
         }
         $key = 'funeral:disbursement:'.$payout->id;
         $journalId = $this->ledger->postEntry([
@@ -883,38 +1096,12 @@ final class FuneralAssistanceService
         return $journalId;
     }
 
-    /** @return list<array{reference:string, amount:int}> */
-    private function mockBankSourceAccounts(string $collectionId, string $currencyCode, int $amount): array
-    {
-        $obligationIds = $this->db()->table('community_services.funeral_obligations')->where('collection_id', $collectionId)->pluck('id')->all();
-        $providerAccountIds = $obligationIds === [] ? collect() : DB::connection('payment')->table('payment.payment_intents as pi')
-            ->join('payment.payment_attempts as pa', 'pa.payment_intent_id', '=', 'pi.id')
-            ->join('payment.payment_provider_accounts as ppa', 'ppa.id', '=', 'pa.provider_account_id')
-            ->join('payment.payment_providers as pp', 'pp.id', '=', 'ppa.provider_id')
-            ->join('community_services.funeral_payment_receipts as receipt', 'receipt.payment_intent_id', '=', 'pi.id')
-            ->join('community_services.funeral_obligations as obligation', 'obligation.id', '=', 'receipt.obligation_id')
-            ->whereIn('obligation.id', $obligationIds)->where('receipt.domain_status', 'confirmed')
-            ->where('pp.code', 'mock_bank')->where('pa.status', 'succeeded')->distinct()->pluck('pa.provider_account_id');
-        $left = $amount;
-        $sources = [];
-        foreach ($providerAccountIds as $providerAccountId) {
-            $reference = Uuid::uuid5(Uuid::NAMESPACE_URL, 'olekard.local/mock-bank/provider-clearing/'.$providerAccountId.'/'.$currencyCode)->toString();
-            $balance = max(0, $this->ledger->getBalance($reference));
-            $allocated = min($left, $balance);
-            if ($allocated > 0) $sources[] = ['reference' => $reference, 'amount' => $allocated];
-            $left -= $allocated;
-            if ($left === 0) break;
-        }
-        if ($left > 0) throw ValidationException::withMessages(['disbursement' => 'Available mock-bank clearing funds do not cover this payout.']);
-        return $sources;
-    }
-
     /** @return list<array<string, mixed>> */
     public function transactionHistory(string $collectionId, string $actorId): array
     {
         $collection = $this->collection($collectionId);
         $community = $this->community((string) $collection->community_id);
-        $this->assertCommunityManager((string) $community->id, $actorId, (string) $community->created_by);
+        $this->assertCommunityReviewer((string) $community->id, $actorId, (string) $community->created_by);
         $obligations = $this->db()->table('community_services.funeral_obligations as o')
             ->leftJoin('community_services.funeral_payment_receipts as r', 'r.obligation_id', '=', 'o.id')
             ->leftJoin('community_services.funeral_late_reviews as lr', 'lr.payment_intent_id', '=', 'r.payment_intent_id')
@@ -965,6 +1152,18 @@ final class FuneralAssistanceService
                 'currency_code' => $row->currency_code, 'status' => (string) $row->status, 'review_reason' => null,
                 'occurred_at' => $row->created_at];
         }
+        $offlineRows = $this->db()->table('community_services.funeral_offline_contributions as offline')
+            ->join('community_services.funeral_obligations as obligation', 'obligation.id', '=', 'offline.obligation_id')
+            ->where('offline.collection_id', $collectionId)->orderByDesc('offline.received_at')
+            ->get(['offline.id', 'offline.obligation_id', 'offline.reference', 'offline.amount_minor', 'offline.currency_code',
+                'offline.status', 'offline.evidence_reference', 'offline.rejection_reason', 'offline.received_at']);
+        foreach ($offlineRows as $row) {
+            $receipts[] = ['id' => (string) $row->id, 'obligation_id' => (string) $row->obligation_id, 'payment_intent_id' => null,
+                'reference' => (string) $row->reference, 'channel' => 'offline', 'amount_minor' => (int) $row->amount_minor,
+                'fee_minor' => 0, 'currency_code' => (string) $row->currency_code, 'status' => (string) $row->status,
+                'review_reason' => $row->rejection_reason, 'evidence_reference' => $row->evidence_reference,
+                'occurred_at' => $row->received_at];
+        }
         usort($receipts, static fn (array $a, array $b): int => strcmp((string) $b['occurred_at'], (string) $a['occurred_at']));
         return $receipts;
     }
@@ -974,6 +1173,16 @@ final class FuneralAssistanceService
         $beneficiary = PayoutBeneficiaryModel::query()->where('id', $beneficiaryId)->first();
         if ($beneficiary === null || $beneficiary->status !== PayoutBeneficiaryStatus::Verified || $beneficiary->organisation_id !== $organisationId) {
             throw ValidationException::withMessages(['beneficiary_id' => 'Beneficiary must be verified and belong to this organisation.']);
+        }
+    }
+
+    private function assertVerifiedBankPayoutBeneficiary(string $beneficiaryId, string $organisationId, string $currencyCode, string $collectionBeneficiaryId): void
+    {
+        $beneficiary = PayoutBeneficiaryModel::query()->where('id', $beneficiaryId)->first();
+        if ($beneficiary === null || $beneficiary->status !== PayoutBeneficiaryStatus::Verified
+            || $beneficiary->organisation_id !== $organisationId || $beneficiary->account_type !== 'bank_account'
+            || $beneficiary->currency_code !== $currencyCode || $beneficiary->id === $collectionBeneficiaryId) {
+            throw ValidationException::withMessages(['beneficiary_id' => 'Choose a verified bank account for this organisation and currency, separate from the collection receiving account.']);
         }
     }
 
