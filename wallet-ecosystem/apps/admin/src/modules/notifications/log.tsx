@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Loading } from '@/components/ui/Loading';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { NotificationsApi, errorMessage, type Delivery, type Page } from './api';
-import { NotificationNav, field } from './shared';
+import { NotificationNav, field, notificationEventLabel } from './shared';
 export function NotificationLogPage() {
     const { authenticatedClient: client, hasPermission } = useAuth(), api = useMemo(() => client ? new NotificationsApi(client) : null, [client]);
     const read = hasPermission('notifications.log.read'), retry = hasPermission('notifications.retry');
@@ -46,7 +46,7 @@ export function NotificationLogPage() {
  {(['from', 'to'] as const).map(k => <label key={k}>{k === 'from' ? 'From date (UTC)' : 'To date (UTC)'}<input aria-label={k === 'from' ? 'From date (UTC)' : 'To date (UTC)'} className={field} type="date" value={filters[k]} onChange={e => { setFilters({ ...filters, [k]: e.target.value }); setPage(1); }}/></label>)}</div>
  {invalid && <p role="alert">To date must be on or after From date.</p>}{error && <ErrorState message={error} onRetry={() => setReload(n => n + 1)}/>}<p role="status" aria-label="Delivery action status">{notice}</p>
  {!invalid && (!data ? <Loading label="Loading deliveries"/> : <>{data.data.length === 0 ? <p className="py-8 text-center text-text-secondary">No deliveries match these filters.</p> : <Table data={data.data} getRowKey={r => r.id} emptyMessage="No deliveries match these filters." columns={[
-                { key: 'recipient', header: 'Recipient', render: r => <span className="block min-w-[14rem] break-all">{r.recipient}</span> }, { key: 'channel', header: 'Channel' }, { key: 'event', header: 'Event' },
+                { key: 'recipient', header: 'Recipient', render: r => <span className="block min-w-[14rem] break-all">{r.recipient}</span> }, { key: 'channel', header: 'Channel' }, { key: 'event', header: 'Notification', render: r => notificationEventLabel(r.event) },
                 { key: 'status', header: 'Status', render: r => <Badge>{r.status.replaceAll('_', ' ')}</Badge> }, { key: 'timestamp', header: 'Timestamp', render: r => new Date(r.timestamp).toLocaleString() },
                 { key: 'attempt_count', header: 'Attempts' }, { key: 'retry', header: 'Action', render: r => retry && ['failed', 'permanently_failed'].includes(r.status) ? <Button variant="secondary" disabled={busy !== null} onClick={() => retryDelivery(r.id)}>Retry</Button> : null }
             ]}/>}<div className="flex gap-3 items-center mt-4"><Button variant="secondary" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Previous</Button><span>Page {page} of {data.meta.last_page}</span><Button variant="secondary" disabled={page >= data.meta.last_page} onClick={() => setPage(p => p + 1)}>Next</Button></div></>)}</PageContainer>;

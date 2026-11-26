@@ -2,17 +2,23 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/lib/auth/context';
-import { NAV_SECTIONS } from '@/src/lib/navigation/nav-items';
+import { isNavGroup, NAV_SECTIONS, type NavEntry } from '@/src/lib/navigation/nav-items';
 
 function getInitials(name?: string | null, email?: string | null): string {
-  if (name) {
+  if (name !== undefined && name !== null && name !== '') {
     const parts = name.trim().split(/\s+/);
     return parts.length >= 2
       ? ((parts[0]?.[0] ?? '') + (parts[parts.length - 1]?.[0] ?? '')).toUpperCase()
       : (parts[0]?.slice(0, 2) ?? '').toUpperCase();
   }
-  return email ? email[0]!.toUpperCase() : 'A';
+  return email !== undefined && email !== null && email !== '' ? email[0]!.toUpperCase() : 'A';
+}
+
+function pathIsActive(currentPath: string, href: string): boolean {
+  return currentPath === href || currentPath.startsWith(href + '/');
 }
 
 interface AdminSidebarProps {
@@ -23,12 +29,32 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ currentPath, collapsed, onToggle: _onToggle }: AdminSidebarProps) {
   const { isAuthenticated, user, hasPermission: checkPermission } = useAuth();
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   const hasPermission = (permission?: string) =>
-    isAuthenticated && (!permission || checkPermission(permission));
+    isAuthenticated && (permission === undefined || permission === '' || checkPermission(permission));
 
-  const isActive = (href: string) =>
-    currentPath === href || currentPath.startsWith(href + '/');
+  useEffect(() => {
+    setOpenGroups((current) => {
+      const next = { ...current };
+      NAV_SECTIONS.forEach((section) => section.items.forEach((entry) => {
+        if (isNavGroup(entry)
+          && entry.items.some((item) => pathIsActive(currentPath, item.href))) {
+          next[section.title + ':' + entry.label] = true;
+        }
+      }));
+      return next;
+    });
+  }, [currentPath]);
+
+  const toggleGroup = (key: string) => {
+    if (collapsed) {
+      setOpenGroups((current) => ({ ...current, [key]: true }));
+      _onToggle();
+      return;
+    }
+    setOpenGroups((current) => ({ ...current, [key]: current[key] !== true }));
+  };
 
   return (
     <aside
@@ -75,9 +101,16 @@ export function AdminSidebar({ currentPath, collapsed, onToggle: _onToggle }: Ad
       >
         {NAV_SECTIONS.map((section) => {
           if (!hasPermission(section.requiredPermission)) return null;
-          const visibleItems = section.items.filter((item) =>
-            hasPermission(item.requiredPermission)
-          );
+          const visibleItems = section.items.reduce<NavEntry[]>((visible, entry) => {
+            if (isNavGroup(entry)) {
+              if (!hasPermission(entry.requiredPermission)) return visible;
+              const items = entry.items.filter((item) => hasPermission(item.requiredPermission));
+              if (items.length > 0) visible.push({ ...entry, items });
+              return visible;
+            }
+            if (hasPermission(entry.requiredPermission)) visible.push(entry);
+            return visible;
+          }, []);
           if (visibleItems.length === 0) return null;
 
           return (
@@ -88,17 +121,55 @@ export function AdminSidebar({ currentPath, collapsed, onToggle: _onToggle }: Ad
                 </div>
               )}
 
-              {visibleItems.map((item) => {
-                const active = isActive(item.href);
-                const Icon = item.icon;
+              {visibleItems.map((entry) => {
+                if (isNavGroup(entry)) {
+                  const groupKey = section.title + ':' + entry.label;
+                  const active = entry.items.some((item) => pathIsActive(currentPath, item.href));
+                  const open = !collapsed && Boolean(openGroups[groupKey]);
+                  const Icon = entry.icon;
+                  return (
+                    <div key={groupKey}>
+                      <button
+                        type="button"
+                        aria-expanded={open}
+                        aria-controls={'nav-group-' + groupKey.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}
+                        aria-label={collapsed ? entry.label : undefined}
+                        title={collapsed ? entry.label : undefined}
+                        onClick={() => toggleGroup(groupKey)}
+                        className={[
+                          'relative flex items-center gap-3 mx-2.5 rounded-lg text-sm transition-colors w-[calc(100%-20px)]',
+                          'h-[38px]',
+                          active ? 'text-ok-nav-active-fg font-semibold' : 'text-ok-nav-text hover:bg-ok-nav-hover hover:text-text-primary font-[530]',
+                          collapsed ? 'justify-center px-0' : 'px-3',
+                        ].join(' ')}
+                      >
+                        {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r bg-ok-primary -ml-2.5" aria-hidden="true"/>}
+                        {Icon && <Icon className="shrink-0" size={16} aria-hidden="true"/>}
+                        {!collapsed && <><span className="truncate flex-1 text-left">{entry.label}</span>{open ? <ChevronDown size={14} aria-hidden="true"/> : <ChevronRight size={14} aria-hidden="true"/>}</>}
+                      </button>
+                      {open && <div id={'nav-group-' + groupKey.replace(/[^a-z0-9]+/gi, '-').toLowerCase()} className="ml-6 pl-2 border-l border-ok-sidebar-border mt-1 mb-2">
+                        {entry.items.map((item) => {
+                          const itemActive = pathIsActive(currentPath, item.href);
+                          const ItemIcon = item.icon;
+                          return <Link key={item.href} href={item.href} aria-current={itemActive ? 'page' : undefined} className={[
+                            'flex items-center gap-2.5 mx-1 rounded-md text-[13px] transition-colors h-[34px] px-2.5',
+                            itemActive ? 'bg-ok-nav-active text-ok-nav-active-fg font-semibold' : 'text-ok-nav-text hover:bg-ok-nav-hover hover:text-text-primary',
+                          ].join(' ')}>{ItemIcon && <ItemIcon className="shrink-0" size={14} aria-hidden="true"/>}<span className="truncate">{item.label}</span></Link>;
+                        })}
+                      </div>}
+                    </div>
+                  );
+                }
 
+                const active = pathIsActive(currentPath, entry.href);
+                const Icon = entry.icon;
                 return (
                   <Link
-                    key={item.href}
-                    href={item.href}
+                    key={entry.href}
+                    href={entry.href}
                     aria-current={active ? 'page' : undefined}
-                    aria-label={collapsed ? item.label : undefined}
-                    title={collapsed ? item.label : undefined}
+                    aria-label={collapsed ? entry.label : undefined}
+                    title={collapsed ? entry.label : undefined}
                     className={[
                       'relative flex items-center gap-3 mx-2.5 rounded-lg text-sm transition-colors',
                       'h-[38px]',
@@ -108,22 +179,9 @@ export function AdminSidebar({ currentPath, collapsed, onToggle: _onToggle }: Ad
                       collapsed ? 'justify-center px-0' : 'px-3',
                     ].join(' ')}
                   >
-                    {active && (
-                      <span
-                        className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r bg-ok-primary -ml-2.5"
-                        aria-hidden="true"
-                      />
-                    )}
-                    {Icon && (
-                      <Icon
-                        className="shrink-0"
-                        size={16}
-                        aria-hidden="true"
-                      />
-                    )}
-                    {!collapsed && (
-                      <span className="truncate">{item.label}</span>
-                    )}
+                    {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r bg-ok-primary -ml-2.5" aria-hidden="true"/>}
+                    {Icon && <Icon className="shrink-0" size={16} aria-hidden="true"/>}
+                    {!collapsed && <span className="truncate">{entry.label}</span>}
                   </Link>
                 );
               })}

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\CommunityFuneral\Application\Jobs;
 
-use App\Modules\Notification\Application\Services\NotificationTemplateService;
+use App\Modules\Notification\Application\Services\NotificationService;
+use App\Modules\Notification\Domain\DTO\CreateNotificationCommand;
+use App\Modules\Notification\Domain\Enums\NotificationCategory;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -20,7 +22,7 @@ final class DispatchFuneralPrivateNotice implements ShouldQueue
 
     public function __construct(private readonly string $noticeId) {}
 
-    public function handle(NotificationTemplateService $templates): void
+    public function handle(NotificationService $notifications): void
     {
         $db = DB::connection('community_services');
         $notice = $db->table('community_services.funeral_private_notices')->where('id', $this->noticeId)->first();
@@ -38,27 +40,23 @@ final class DispatchFuneralPrivateNotice implements ShouldQueue
             ->first(['collection.id as collection_id', 'collection.purpose', 'collection.amount_minor', 'collection.currency_code', 'community.display_name as community_name', 'community.organisation_id']);
         if ($context === null) return;
         $organisationName = DB::connection('identity')->table('identity.organisations')->where('id', $context->organisation_id)->value('display_name') ?: 'Organisation';
-        $content = $templates->render('funeral.collection.opened', [
-            'organisation_name' => $organisationName,
-            'community_name' => $context->community_name,
-            'purpose' => $context->purpose,
-            'amount' => $context->currency_code.' '.number_format(((int) $context->amount_minor) / 100, 2, '.', ''),
-            'collection_id' => $context->collection_id,
-        ]);
-        DB::connection('notification')->table('notification.notifications')->insertOrIgnore([
-            'id' => $this->noticeId,
-            'source_event_id' => $this->noticeId,
-            'source_event_type' => 'funeral.collection.activated',
-            'notification_type' => 'funeral.collection.opened',
-            'category' => 'operational', 'mandatory' => false,
-            'recipient_id' => (string) $notice->recipient_actor_id,
-            'subject' => $content->renderedSubject,
-            'body' => $content->renderedBody,
-            'deep_link' => '/services/funeral?collection_id='.$context->collection_id,
-            'status' => 'delivered', 'rule_channels' => json_encode(['in_app']),
-            'correlation_id' => $this->noticeId,
-            'created_at' => now(), 'updated_at' => now(),
-        ]);
+        $notifications->createFromEvent(new CreateNotificationCommand(
+            sourceEventId: $this->noticeId,
+            sourceEventType: 'funeral.collection.activated',
+            notificationType: 'funeral.collection.opened',
+            category: NotificationCategory::Financial,
+            mandatory: true,
+            recipientId: (string) $notice->recipient_actor_id,
+            variables: [
+                'organisation_name' => $organisationName,
+                'community_name' => $context->community_name,
+                'purpose' => $context->purpose,
+                'amount' => $context->currency_code.' '.number_format(((int) $context->amount_minor) / 100, 2, '.', ''),
+                'collection_id' => $context->collection_id,
+            ],
+            correlationId: $this->noticeId,
+            deepLink: '/services/funeral?collection_id='.$context->collection_id,
+        ));
         $db->table('community_services.funeral_private_notices')->where('id', $this->noticeId)
             ->update(['status' => 'delivered', 'delivered_at' => now(), 'updated_at' => now()]);
     }

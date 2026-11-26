@@ -13,16 +13,20 @@ final class NotificationRuleService
 {
     public function snapshot(string $key, NotificationCategory $category, bool $mandatory): ?array
     {
-        if ($mandatory || $category->isMandatory()) {
-            return null;
-        }
         $template = NotificationTemplateModel::where('key', $key)->first();
         if (! $template) {
             return null;
         }
+        $supported = array_values(array_intersect(
+            array_map(static fn (NotificationChannel $channel) => $channel->value, NotificationChannel::cases()),
+            $template->supported_channels,
+        ));
+        if ($mandatory || $category->isMandatory()) {
+            return $supported;
+        }
         $disabled = DB::connection('notification')->table('notification.admin_rules')->where('template_id', $template->id)->where('enabled', false)->pluck('channel')->all();
 
-        return array_values(array_diff(array_map(fn (NotificationChannel $c) => $c->value, NotificationChannel::cases()), $disabled));
+        return array_values(array_diff($supported, $disabled));
     }
 
     public function listing(): array

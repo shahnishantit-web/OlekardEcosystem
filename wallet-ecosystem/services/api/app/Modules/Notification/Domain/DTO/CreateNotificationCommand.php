@@ -17,5 +17,6 @@ final readonly class CreateNotificationCommand
         public string               $recipientId,
         public array                $variables,
         public string               $correlationId,
+        public ?string              $deepLink = null,
     ) {}
 }

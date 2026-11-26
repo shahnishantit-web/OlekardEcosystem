@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Events\Application;
 
+use App\Modules\Notification\Application\Services\NotificationService;
+use App\Modules\Notification\Domain\DTO\CreateNotificationCommand;
+use App\Modules\Notification\Domain\Enums\NotificationCategory;
 use App\Modules\Events\Domain\Contracts\ComplimentaryAllocationApprovalContract;
 use App\Modules\Events\Domain\Contracts\InvitationRecipientVerifier;
 use App\Modules\Events\Domain\Permissions\EventPermissions;
@@ -22,6 +25,7 @@ final class FreeEventRegistrationService
         private readonly AdmissionCredentialVault $credentials,
         private readonly InvitationRecipientVerifier $recipientVerifier,
         private readonly ComplimentaryAllocationApprovalContract $complimentaryApproval,
+        private readonly NotificationService $notifications,
     ) {}
 
     private function db(): Connection
@@ -49,7 +53,7 @@ final class FreeEventRegistrationService
         abort_unless($expiry->gt($now), 422, 'Invitation expiry must be in the future.');
         $requestHash = hash('sha256', json_encode([$categoryId, $recipientActorId, $expiry->toIso8601String(), $maxUses], JSON_THROW_ON_ERROR));
 
-        return $this->db()->transaction(function () use (
+        $invitation = $this->db()->transaction(function () use (
             $eventId, $categoryId, $recipientActorId, $expiry, $maxUses, $actorId, $idempotencyKey,
             $correlationId, $now, $requestHash,
         ): array {
@@ -93,6 +97,26 @@ final class FreeEventRegistrationService
 
             return ['invitation_id' => $id, 'token' => $secret['plaintext'], 'expires_at' => $expiry->toIso8601String(), 'max_uses' => $maxUses];
         }, 3);
+
+        $event = $this->db()->table('community_services.event_drafts')->where('id', $eventId)
+            ->first(['title', 'workflow_state', 'lifecycle_state', 'published_version', 'version']);
+        if ($event !== null && $event->workflow_state === 'published'
+            && ($event->lifecycle_state ?? 'active') === 'active'
+            && (int) $event->published_version === (int) $event->version) {
+            $this->notifications->createFromEvent(new CreateNotificationCommand(
+                sourceEventId: $invitation['invitation_id'],
+                sourceEventType: 'Events.Invitation.Issued',
+                notificationType: 'events.invitation.received',
+                category: NotificationCategory::Operational,
+                mandatory: false,
+                recipientId: $recipientActorId,
+                variables: ['event_title' => (string) $event->title, 'expires_at' => $invitation['expires_at']],
+                correlationId: $correlationId ?? $invitation['invitation_id'],
+            ));
+        }
+
+        return $invitation;
+
     }
 
     /** @return array{invitation_id:string,status:string} */
@@ -162,7 +186,7 @@ final class FreeEventRegistrationService
         $tokenHash = $invitationToken === null ? null : hash('sha256', $invitationToken);
         $requestHash = hash('sha256', json_encode([$categoryId, $tokenHash], JSON_THROW_ON_ERROR));
 
-        return $this->db()->transaction(function () use (
+        $registration = $this->db()->transaction(function () use (
             $eventId, $categoryId, $actorId, $tokenHash, $idempotencyKey, $correlationId, $requestHash,
         ): array {
             $db = $this->db();
@@ -270,6 +294,26 @@ final class FreeEventRegistrationService
             return ['registration_id' => $registrationId, 'ticket_id' => $ticketId, 'event_id' => $eventId,
                 'category' => (string) $category->name, 'source' => $source];
         }, 3);
+
+        $event = $this->db()->table('community_services.event_drafts')->where('id', $eventId)->first(['title', 'starts_at']);
+        if ($event !== null) {
+            $this->notifications->createFromEvent(new CreateNotificationCommand(
+                sourceEventId: $registration['registration_id'],
+                sourceEventType: 'Events.FreeRegistration.Confirmed',
+                notificationType: 'events.registration.confirmed',
+                category: NotificationCategory::Operational,
+                mandatory: false,
+                recipientId: $actorId,
+                variables: [
+                    'event_title' => (string) $event->title,
+                    'event_starts_at' => (string) $event->starts_at,
+                    'allocation_type' => $registration['source'],
+                ],
+                correlationId: $correlationId ?? $registration['registration_id'],
+            ));
+        }
+
+        return $registration;
     }
 
     /** @return array{registration_id:string,ticket_id:string,event_id:string,category:string,source:string} */

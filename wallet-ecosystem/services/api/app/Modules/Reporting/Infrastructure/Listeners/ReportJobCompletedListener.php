@@ -12,6 +12,7 @@ use App\Modules\Reporting\Infrastructure\Models\ReportScheduleModel;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Ramsey\Uuid\Uuid;
 
 final class ReportJobCompletedListener implements ShouldQueue
 {
@@ -50,7 +51,7 @@ final class ReportJobCompletedListener implements ShouldQueue
             }
 
             $this->notificationService->createFromEvent(new CreateNotificationCommand(
-                sourceEventId:    $event->jobId,
+                sourceEventId:    Uuid::uuid5(Uuid::NAMESPACE_URL, 'report-completed:'.$event->jobId.':'.$userId)->toString(),
                 sourceEventType:  ReportJobCompletedEvent::class,
                 notificationType: 'report.job.completed',
                 category:         NotificationCategory::Operational,

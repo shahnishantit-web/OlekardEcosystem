@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Loading } from '@/components/ui/Loading';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { NotificationsApi, errorMessage, type Template } from './api';
-import { NotificationNav, field } from './shared';
+import { NotificationNav, field, notificationEventDescription, notificationEventLabel } from './shared';
 export function NotificationTemplatesPage() {
     const { authenticatedClient: client, hasPermission } = useAuth(), api = useMemo(() => client ? new NotificationsApi(client) : null, [client]);
     const read = hasPermission('notifications.templates.read'), write = hasPermission('notifications.templates.write');
@@ -17,7 +17,7 @@ export function NotificationTemplatesPage() {
         subject: string;
         body: string;
     } | null>(null);
-    const [event, setEvent] = useState(''), [channel, setChannel] = useState(''), [language, setLanguage] = useState('');
+    const [event, setEvent] = useState(''), [channel, setChannel] = useState('push'), [language, setLanguage] = useState('');
     const editor = useRef<HTMLInputElement>(null), testId = useRef<string | null>(null);
     useEffect(() => { let active = true; if (api && read) {
         setRows(null);
@@ -64,11 +64,13 @@ export function NotificationTemplatesPage() {
  {error && <ErrorState message={error} onRetry={() => { setError(''); setReload(n => n + 1); }}/>}<p role="status" className="text-sm mb-3">{notice}</p>
  {!rows ? <Loading label="Loading templates"/> : <>
  <div className="grid gap-3 sm:grid-cols-3 mb-5">
- <label>Event type<select aria-label="Event type" className={field} value={event} onChange={e => setEvent(e.target.value)}><option value="">All events</option>{rows.map(t => <option key={t.id}>{t.key}</option>)}</select></label>
- <label>Channel<select aria-label="Channel" className={field} value={channel} onChange={e => setChannel(e.target.value)}><option value="">All channels</option>{['email', 'sms', 'push', 'in_app'].map(c => <option key={c}>{c}</option>)}</select></label>
+ <label>Notification<select aria-label="Notification" className={field} value={event} onChange={e => setEvent(e.target.value)}><option value="">All notifications</option>{rows.map(t => <option key={t.id} value={t.key}>{notificationEventLabel(t.key)}</option>)}</select></label>
  <label>Language<select aria-label="Language" className={field} value={language} onChange={e => setLanguage(e.target.value)}><option value="">All languages</option>{Array.from(new Set(rows.map(t => t.language ?? 'Unspecified'))).map(l => <option key={l}>{l}</option>)}</select></label></div>
- <div className="grid gap-5 xl:grid-cols-2"><div className="space-y-3">{!groups.length ? <Card>No templates match these filters.</Card> : groups.map(g => <Card key={g.template.id + g.channel}><h2 className="font-semibold break-all">{g.template.key}</h2><p className="text-sm text-text-secondary mb-3">{g.channel.toUpperCase()} · {g.language}</p><Button variant="secondary" onClick={() => choose(g.template)} aria-label={'Edit ' + g.template.key + ' ' + g.channel}>Edit template</Button></Card>)}</div>
- {selected && <Card><h2 className="text-lg font-semibold mb-2">Edit {selected.key}</h2><p className="text-sm text-text-secondary mb-4">Content is shared across the supported channels. Test sends use the saved version and your own account.</p>
+ <div role="tablist" aria-label="Notification channels" className="flex flex-wrap gap-2 border-b border-ok-border mb-5">
+ {['push', 'email', 'sms', 'in_app'].map(c => <button key={c} id={'notification-channel-' + c} role="tab" aria-selected={channel === c} aria-controls="notification-channel-panel" className={'px-4 py-3 text-sm font-semibold border-b-2 transition-colors ' + (channel === c ? 'border-ok-primary text-ok-primary' : 'border-transparent text-text-secondary hover:text-text-primary')} onClick={() => { setChannel(c); setSelected(null); }}>{c.toUpperCase()}</button>)}
+ </div>
+ <div id="notification-channel-panel" role="tabpanel" aria-labelledby={'notification-channel-' + channel} className="grid gap-5 xl:grid-cols-2"><div className="space-y-3">{!groups.length ? <Card>No templates configured for this channel and filter.</Card> : groups.map(g => <Card key={g.template.id + g.channel}><h2 className="font-semibold">{notificationEventLabel(g.template.key)}</h2><p className="mt-1 text-sm text-text-secondary">{notificationEventDescription(g.template.key)}</p><p className="text-xs text-text-secondary mb-3 mt-2">{g.channel.toUpperCase()} · {g.language}</p><Button variant="secondary" onClick={() => choose(g.template)} aria-label={'Edit ' + notificationEventLabel(g.template.key) + ' ' + g.channel}>Edit template</Button></Card>)}</div>
+ {selected && <Card><h2 className="text-lg font-semibold mb-1">Edit {notificationEventLabel(selected.key)}</h2><p className="text-sm text-text-secondary mb-3">{notificationEventDescription(selected.key)}</p><p className="text-xs text-text-secondary mb-4">Content is shared across the supported channels. Test sends use the saved version and your own account.</p>
  <label className="block mb-3">Subject<input aria-label="Subject" ref={editor} className={field} maxLength={500} value={selected.subject_template} readOnly={!write} onChange={e => { setSelected({ ...selected, subject_template: e.target.value }); setPreview(null); }}/></label>
  <label className="block mb-3">Body<textarea aria-label="Body" className={field} rows={5} maxLength={20000} value={selected.body_template} readOnly={!write} onChange={e => { setSelected({ ...selected, body_template: e.target.value }); setPreview(null); }}/></label>
  <label className="block mb-4">Language tag<input className={field} aria-label="Language tag" placeholder="Unspecified" value={selected.language ?? ''} readOnly={!write} onChange={e => setSelected({ ...selected, language: e.target.value || null })}/></label>

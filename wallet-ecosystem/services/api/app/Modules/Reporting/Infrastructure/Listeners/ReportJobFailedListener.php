@@ -12,6 +12,7 @@ use App\Modules\Reporting\Infrastructure\Models\ReportScheduleModel;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Ramsey\Uuid\Uuid;
 
 final class ReportJobFailedListener implements ShouldQueue
 {
@@ -50,7 +51,7 @@ final class ReportJobFailedListener implements ShouldQueue
             }
 
             $this->notificationService->createFromEvent(new CreateNotificationCommand(
-                sourceEventId:    $event->jobId,
+                sourceEventId:    Uuid::uuid5(Uuid::NAMESPACE_URL, 'report-failed:'.$event->jobId.':'.$userId)->toString(),
                 sourceEventType:  ReportJobFailedEvent::class,
                 notificationType: 'report.job.failed',
                 category:         NotificationCategory::Operational,

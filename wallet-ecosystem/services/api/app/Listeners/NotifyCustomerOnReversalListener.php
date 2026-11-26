@@ -9,6 +9,7 @@ use App\Modules\Notification\Domain\DTO\CreateNotificationCommand;
 use App\Modules\Notification\Domain\Enums\NotificationCategory;
 use App\Modules\Platform\Domain\Events\TransactionReversedEvent;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -29,13 +30,24 @@ final class NotifyCustomerOnReversalListener implements ShouldQueue
         Log::withContext(['correlation_id' => $event->correlationId]);
 
         try {
+            $ownerActorId = DB::connection('wallet')->table('wallet.wallets')
+                ->where('id', $event->walletId)->value('owner_id');
+            if (! is_string($ownerActorId) || $ownerActorId === '') {
+                Log::warning('platform.transaction_reversed.notification_owner_not_found', [
+                    'transaction_id' => $event->transactionId,
+                    'correlation_id' => $event->correlationId,
+                ]);
+
+                return;
+            }
+
             $this->notificationService->createFromEvent(new CreateNotificationCommand(
                 sourceEventId:    $event->transactionId,
                 sourceEventType:  TransactionReversedEvent::class,
                 notificationType: 'transaction.reversed',
-                category:         NotificationCategory::Transactional,
+                category:         NotificationCategory::Financial,
                 mandatory:        true,
-                recipientId:      $event->walletId,
+                recipientId:      $ownerActorId,
                 variables:        [
                     'transaction_id' => $event->transactionId,
                     'module_type'    => $event->moduleType,

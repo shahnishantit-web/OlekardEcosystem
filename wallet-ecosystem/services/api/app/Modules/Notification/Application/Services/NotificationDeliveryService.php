@@ -37,7 +37,7 @@ final class NotificationDeliveryService
             $notification->id,
         );
 
-        if (! $notification->mandatory && ! $notification->category->isMandatory() && $notification->rule_channels !== null) {
+        if ($notification->rule_channels !== null) {
             $enabledChannels = array_values(array_filter($enabledChannels, fn (NotificationChannel $channel) => in_array($channel->value, $notification->rule_channels, true)));
         }
 

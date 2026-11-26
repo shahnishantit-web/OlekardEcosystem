@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { NAV_SECTIONS } from '@/src/lib/navigation/nav-items';
+import { isNavGroup, NAV_SECTIONS } from '@/src/lib/navigation/nav-items';
 
 interface BreadcrumbItem {
   label: string;
@@ -16,15 +16,19 @@ export function useBreadcrumbs(): BreadcrumbItem[] {
   if (pathname === '/dashboard') return crumbs;
 
   for (const section of NAV_SECTIONS) {
-    for (const item of section.items) {
-      if (pathname === item.href || pathname.startsWith(item.href + '/')) {
-        crumbs.push({ label: section.title });
-        crumbs.push(
-          pathname === item.href
-            ? { label: item.label }
-            : { label: item.label, href: item.href },
-        );
-        return crumbs;
+    for (const entry of section.items) {
+      const items = isNavGroup(entry) ? entry.items : [entry];
+      for (const item of items) {
+        if (pathname === item.href || pathname.startsWith(item.href + '/')) {
+          crumbs.push({ label: section.title });
+          if (isNavGroup(entry)) crumbs.push({ label: entry.label });
+          crumbs.push(
+            pathname === item.href
+              ? { label: item.label }
+              : { label: item.label, href: item.href },
+          );
+          return crumbs;
+        }
       }
     }
   }

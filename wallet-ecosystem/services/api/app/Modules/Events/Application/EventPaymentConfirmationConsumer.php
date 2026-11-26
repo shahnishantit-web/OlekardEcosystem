@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Events\Application;
 
 use App\Modules\Events\Domain\Contracts\EventsPaymentServiceActorProvider;
+use App\Modules\Notification\Application\Services\NotificationService;
+use App\Modules\Notification\Domain\DTO\CreateNotificationCommand;
+use App\Modules\Notification\Domain\Enums\NotificationCategory;
 use App\Modules\Payment\Domain\Contracts\PaymentInternalConfirmationContract;
 use App\Modules\Platform\Domain\Contracts\OutboxVersionCheckerInterface;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +21,7 @@ final class EventPaymentConfirmationConsumer
         private readonly EventsPaymentServiceActorProvider $serviceActor,
         private readonly AdmissionCredentialVault $credentials,
         private readonly OutboxVersionCheckerInterface $versionChecker,
+        private readonly NotificationService $notifications,
     ) {}
 
     /** @param array<string,mixed> $payload */
@@ -207,6 +211,28 @@ final class EventPaymentConfirmationConsumer
         $db->table('community_services.event_payment_inbox')->where('payment_intent_id', $evidence->paymentIntentId)->update([
             'ack_state' => 'complete', 'updated_at' => now(),
         ]);
+
+        $issuedOrder = $db->table('community_services.event_orders as o')
+            ->join('community_services.event_drafts as e', 'e.id', '=', 'o.event_id')
+            ->where('o.id', $result['order'])
+            ->first(['o.id', 'o.purchaser_actor_id', 'e.title', 'e.starts_at']);
+        if ($issuedOrder !== null) {
+            $ticketCount = (int) $db->table('community_services.event_tickets')->where('order_id', $issuedOrder->id)->count();
+            $this->notifications->createFromEvent(new CreateNotificationCommand(
+                sourceEventId: (string) $issuedOrder->id,
+                sourceEventType: 'Events.PaidTickets.Issued',
+                notificationType: 'events.paid_tickets.issued',
+                category: NotificationCategory::Operational,
+                mandatory: false,
+                recipientId: (string) $issuedOrder->purchaser_actor_id,
+                variables: [
+                    'event_title' => (string) $issuedOrder->title,
+                    'event_starts_at' => (string) $issuedOrder->starts_at,
+                    'ticket_count' => $ticketCount,
+                ],
+                correlationId: (string) ($payload['correlation_id'] ?? $issuedOrder->id),
+            ));
+        }
     }
 
     private function persistInbox(array $payload, string $hash, ?string $eventId, ?object $order, mixed $evidence, string $state, string $reason): void
