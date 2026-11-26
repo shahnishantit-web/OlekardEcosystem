@@ -107,33 +107,35 @@ final class EventAdmissionService
             ])->all();
     }
 
-    /** @return list<array{ticket_id:string,event_id:string,event_title:string,event_starts_at:string,image_url:string|null,category:string,status:string,credential:string}> */
+    /** @return list<array{ticket_id:string,event_id:string,event_title:string,event_starts_at:string,image_url:string|null,event_category:string,category:string,status:string,venue_name:string|null,venue_city:string|null}> */
     public function ticketsForPurchaser(string $actorId): array
     {
         return $this->db()->table('community_services.event_tickets as t')
             ->join('community_services.event_drafts as e', 'e.id', '=', 't.event_id')
             ->where('t.owner_actor_id', $actorId)->whereIn('t.status', ['valid', 'revoked'])
             ->orderByDesc('t.issued_at')->orderByDesc('t.created_at')->orderByDesc('t.id')->get([
-                't.id', 't.event_id', 'e.title as event_title', 'e.starts_at as event_starts_at', 'e.image_url', 't.category_name', 't.status', 't.cancellation_request_id', 't.credential_encrypted',
+                't.id', 't.event_id', 'e.title as event_title', 'e.starts_at as event_starts_at', 'e.image_url', 'e.event_category', 'e.venue_name', 'e.venue_city', 't.category_name', 't.status', 't.cancellation_request_id',
             ])->map(fn (object $ticket): array => [
                 'ticket_id' => (string) $ticket->id,
                 'event_id' => (string) $ticket->event_id,
                 'event_title' => (string) $ticket->event_title,
                 'event_starts_at' => (string) $ticket->event_starts_at,
                 'image_url' => $ticket->image_url === null ? null : (string) $ticket->image_url,
+                'event_category' => $ticket->event_category === null ? 'other' : (string) $ticket->event_category,
                 'category' => (string) $ticket->category_name,
                 'status' => $this->ticketStatus((string) $ticket->id, (string) $ticket->status, $ticket->cancellation_request_id),
-                'credential' => $ticket->status === 'revoked' ? '' : $this->credentials->recoverForDisplay((string) $ticket->credential_encrypted),
+                'venue_name' => $ticket->venue_name === null ? null : (string) $ticket->venue_name,
+                'venue_city' => $ticket->venue_city === null ? null : (string) $ticket->venue_city,
             ])->all();
     }
 
-    /** @return array{ticket_id:string,event_id:string,event_title:string,event_starts_at:string,image_url:string|null,category:string,status:string,credential:string} */
+    /** @return array{ticket_id:string,event_id:string,event_title:string,event_starts_at:string,image_url:string|null,event_category:string,category:string,status:string,credential:string} */
     public function ticketForPurchaser(string $ticketId, string $actorId): array
     {
         $ticket = $this->db()->table('community_services.event_tickets as t')
             ->join('community_services.event_drafts as e', 'e.id', '=', 't.event_id')
             ->where('t.id', $ticketId)->where('t.owner_actor_id', $actorId)
-            ->first(['t.id', 't.event_id', 'e.title as event_title', 'e.starts_at as event_starts_at', 'e.image_url', 't.category_name', 't.status', 't.cancellation_request_id', 't.credential_encrypted']);
+            ->first(['t.id', 't.event_id', 'e.title as event_title', 'e.starts_at as event_starts_at', 'e.image_url', 'e.event_category', 't.category_name', 't.status', 't.cancellation_request_id', 't.credential_encrypted']);
         abort_if($ticket === null, 404, 'Ticket was not found.');
         abort_unless(in_array($ticket->status, ['valid', 'revoked'], true), 404, 'Ticket was not found.');
 
@@ -142,6 +144,7 @@ final class EventAdmissionService
             'event_title' => (string) $ticket->event_title,
             'event_starts_at' => (string) $ticket->event_starts_at,
             'image_url' => $ticket->image_url === null ? null : (string) $ticket->image_url,
+            'event_category' => $ticket->event_category === null ? 'other' : (string) $ticket->event_category,
             'category' => (string) $ticket->category_name,
             'status' => $this->ticketStatus((string) $ticket->id, (string) $ticket->status, $ticket->cancellation_request_id),
             'credential' => $ticket->status === 'revoked' ? '' : $this->credentials->recoverForDisplay((string) $ticket->credential_encrypted),

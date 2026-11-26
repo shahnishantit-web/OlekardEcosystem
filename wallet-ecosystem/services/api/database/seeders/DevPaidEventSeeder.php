@@ -48,6 +48,10 @@ final class DevPaidEventSeeder extends Seeder
             $endsAt = $startsAt->copy()->addHours(4);
             $salesStartAt = $now->copy()->subDay();
             $salesEndAt = $startsAt->copy()->subHours(2);
+            $city = ['Gaborone', 'Francistown', 'Maun'][$index];
+            $description = "{$title} is a local OleKard POC event for demonstrating paid ticket selection and checkout, hosted by {$name}. The event programme and exact venue details are demo placeholders and will be confirmed by the organiser.";
+            $venueName = 'Venue details to be confirmed';
+            $venueAddress = 'The organiser will share the confirmed venue address and directions before the event.';
             $priceMinor = [2500, 5000, 7500][$index];
             $category = [
                 'id' => $categoryId,
@@ -61,12 +65,17 @@ final class DevPaidEventSeeder extends Seeder
                 'id' => $eventId,
                 'title' => $title,
                 'organiser_name' => $name,
+                'description' => $description,
+                'event_category' => 'other',
                 'starts_at' => $startsAt->toIso8601String(),
                 'ends_at' => $endsAt->toIso8601String(),
                 'timezone' => 'Africa/Gaborone',
                 'capacity' => 100,
                 'event_format' => 'physical',
                 'venue_country_code' => 'BW',
+                'venue_name' => $venueName,
+                'venue_city' => $city,
+                'venue_address' => $venueAddress,
                 'currency_code' => 'BWP',
                 'currency_precision' => 2,
                 'categories' => [$category],
@@ -77,6 +86,8 @@ final class DevPaidEventSeeder extends Seeder
                 'created_by' => $creatorId,
                 'title' => $title,
                 'organiser_name' => $name,
+                'description' => $description,
+                'event_category' => 'other',
                 'sponsors' => json_encode([], JSON_THROW_ON_ERROR),
                 'capacity' => 100,
                 'currency_code' => 'BWP',
@@ -95,6 +106,9 @@ final class DevPaidEventSeeder extends Seeder
                 'hold_duration_seconds' => 600,
                 'event_format' => 'physical',
                 'venue_country_code' => 'BW',
+                'venue_name' => $venueName,
+                'venue_city' => $city,
+                'venue_address' => $venueAddress,
                 'workflow_state' => 'published',
                 'sales_state' => 'active',
                 'lifecycle_state' => 'active',

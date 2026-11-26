@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Events\Application;
 
 use App\Modules\Events\Domain\Contracts\EventDraftAuthorizer;
+use App\Modules\Events\Domain\Permissions\EventPermissions;
 use App\Modules\Events\Domain\ValueObjects\EventVenueCountryCode;
+use App\Modules\Identity\Domain\Contracts\IdentityModuleContract;
 use App\Modules\Identity\Domain\Contracts\OrganisationMembershipAuthority;
 use App\Modules\Platform\Domain\Contracts\AuditServiceInterface;
 use App\Modules\Platform\Domain\ValueObjects\AuditEventData;
@@ -13,6 +15,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Ramsey\Uuid\Uuid;
@@ -23,6 +26,7 @@ final class EventDraftService
     public function __construct(
         private readonly OrganisationMembershipAuthority $membership,
         private readonly EventDraftAuthorizer $authorizer,
+        private readonly IdentityModuleContract $identity,
     ) {}
 
     private function db(): Connection
@@ -114,17 +118,71 @@ final class EventDraftService
     }
 
     /** @return list<array<string, mixed>> */
-    public function listForOrganisation(string $organisationId, string $actorId): array
+    public function listForOrganisation(string $organisationId, string $actorId, ?string $search = null): array
     {
         $this->membership->assertActiveMembership($actorId, $organisationId);
-        $rows = $this->db()->table('community_services.event_drafts')->where('organisation_id', $organisationId)
-            ->orderByDesc('updated_at')->get(['id']);
+        $this->authorizer->assertCanList($actorId, $organisationId);
+        $this->reportUnverifiedCreators($organisationId);
+
+        $query = $this->db()->table('community_services.event_drafts as event')
+            ->where('event.organisation_id', $organisationId);
+        if ($this->isCreatorScopedActor($actorId)) {
+            $query->where('event.created_by', $actorId);
+        } else {
+            $query->where(static function ($scope) use ($actorId): void {
+                $scope->where('event.created_by', $actorId)
+                    ->orWhereExists(static function ($assignment) use ($actorId): void {
+                        $assignment->selectRaw('1')->from('community_services.event_authority_assignments as authority')
+                            ->whereColumn('authority.event_id', 'event.id')
+                            ->whereColumn('authority.organisation_id', 'event.organisation_id')
+                            ->where('authority.scope_type', 'event')->where('authority.actor_id', $actorId)
+                            ->where('authority.permission_slug', EventPermissions::READ)
+                            ->whereNull('authority.revoked_at');
+                    });
+            });
+        }
+        $search = trim((string) $search);
+        if ($search !== '') {
+            $query->where(static function ($filter) use ($search): void {
+                $filter->where('event.title', 'ilike', '%'.$search.'%')
+                    ->orWhere('event.organiser_name', 'ilike', '%'.$search.'%');
+            });
+        }
+        // Scope ownership/authority before search and ordering so counts and
+        // future pagination cannot disclose another creator's records.
+        $rows = $query->orderByDesc('event.updated_at')->orderBy('event.id')->get(['event.id']);
         $events = [];
         foreach ($rows as $row) {
             $this->authorizer->assertCanRead($actorId, $organisationId, (string) $row->id);
             $events[] = $this->present((string) $row->id);
         }
         return $events;
+    }
+
+    private function isCreatorScopedActor(string $actorId): bool
+    {
+        return $this->identity->hasPermission($actorId, EventPermissions::CREATE)
+            && ! $this->identity->hasPermission($actorId, EventPermissions::REVIEW)
+            && ! $this->identity->hasPermission($actorId, EventPermissions::PRICE_APPROVE)
+            && ! $this->identity->hasPermission($actorId, EventPermissions::PUBLISH);
+    }
+
+    /** Log a count only; never guess or log a replacement creator. */
+    private function reportUnverifiedCreators(string $organisationId): void
+    {
+        $rows = $this->db()->table('community_services.event_drafts')->where('organisation_id', $organisationId)
+            ->get(['created_by']);
+        $creatorIds = $rows->pluck('created_by')->filter()->map(static fn ($id): string => (string) $id)->unique()->values();
+        $knownIds = $creatorIds->isEmpty() ? collect() : DB::connection('identity')->table('identity.users')
+            ->whereIn('id', $creatorIds)->pluck('id')->map(static fn ($id): string => (string) $id)->flip();
+        $unverifiedCount = $rows->filter(static fn (object $row): bool => $row->created_by === null
+            || ! $knownIds->has((string) $row->created_by))->count();
+        if ($unverifiedCount > 0) {
+            Log::warning('Events drafts contain records with an unverified creator; creator-scoped lists exclude them.', [
+                'organisation_id' => $organisationId,
+                'unverified_creator_records' => $unverifiedCount,
+            ]);
+        }
     }
 
     /** @return array<string, mixed> */
@@ -134,6 +192,9 @@ final class EventDraftService
         abort_if($draft === null, 404);
         $result = (array) $draft;
         $result['sponsors'] = json_decode((string) $draft->sponsors, true, 512, JSON_THROW_ON_ERROR);
+        $result['gallery_image_urls'] = $draft->gallery_image_urls === null
+            ? []
+            : json_decode((string) $draft->gallery_image_urls, true, 512, JSON_THROW_ON_ERROR);
         $result['status'] = $draft->workflow_state ?? 'draft';
         $result['sales_state'] = $draft->sales_state ?? 'not_published';
         $result['published_snapshot'] = $draft->published_snapshot === null
@@ -162,6 +223,22 @@ final class EventDraftService
                     $scheme = strtolower((string) parse_url($value, PHP_URL_SCHEME));
                     if (! in_array($scheme, ['http', 'https'], true)) {
                         $fail('The event image URL must use HTTP or HTTPS.');
+                    }
+                },
+            ],
+            'event_category' => ['sometimes', 'nullable', 'string', 'in:community,music,sports,club_game,business,arts,family,other'],
+            'description' => ['sometimes', 'nullable', 'string', 'max:5000'],
+            'lineup' => ['sometimes', 'nullable', 'string', 'max:5000'],
+            'gallery_image_urls' => ['sometimes', 'array', 'max:8'],
+            'gallery_image_urls.*' => [
+                'required', 'string', 'url', 'max:2048',
+                static function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! is_string($value)) {
+                        return;
+                    }
+                    $scheme = strtolower((string) parse_url($value, PHP_URL_SCHEME));
+                    if (! in_array($scheme, ['http', 'https'], true)) {
+                        $fail('Event gallery image URLs must use HTTP or HTTPS.');
                     }
                 },
             ],
@@ -196,6 +273,9 @@ final class EventDraftService
             'categories.*.complimentary_quota' => ['sometimes', 'nullable', 'integer', 'min:1'],
             'categories.*.max_per_person' => ['sometimes', 'nullable', 'integer', 'min:1'],
         ])->validate();
+        // Keep older clients/events compatible while allowing Customer discovery
+        // to filter using organiser-selected event categories.
+        $data['event_category'] = $data['event_category'] ?? 'other';
         $this->validateSchedule($data);
         $total = 0;
         foreach ($data['categories'] as &$category) {
@@ -349,6 +429,7 @@ final class EventDraftService
             $data['currency_code'] = null;
         }
         $data['sponsors'] = json_encode($data['sponsors'], JSON_THROW_ON_ERROR);
+        $data['gallery_image_urls'] = json_encode($data['gallery_image_urls'] ?? [], JSON_THROW_ON_ERROR);
 
         return $data;
     }

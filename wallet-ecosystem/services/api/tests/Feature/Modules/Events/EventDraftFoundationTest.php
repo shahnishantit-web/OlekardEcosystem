@@ -56,6 +56,7 @@ use App\Modules\Platform\Application\Services\OleKardFinancialTermsService;
 use App\Modules\Platform\Domain\Contracts\OleKardTermsAcceptanceQuery;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -1110,6 +1111,30 @@ final class EventDraftFoundationTest extends IntegrationTestCase
             ->where('organisation_id', $this->organisation)->count());
     }
 
+    public function test_event_category_defaults_for_legacy_clients_and_accepts_supported_categories(): void
+    {
+        $this->allowTestAuthorizer();
+        $service = app(EventDraftService::class);
+
+        $legacy = $service->create($this->organisation, $this->actor, $this->input());
+        $this->assertSame('other', $legacy['event_category']);
+
+        $input = $this->input();
+        $input['event_category'] = 'music';
+        $music = $service->create($this->organisation, $this->actor, $input);
+        $this->assertSame('music', $music['event_category']);
+
+        $input['event_category'] = 'club_game';
+        $clubGame = $service->create($this->organisation, $this->actor, $input);
+        $this->assertSame('club_game', $clubGame['event_category']);
+
+        $input['event_category'] = 'unlisted-category';
+        $this->assertValidationError(
+            fn () => $service->create($this->organisation, $this->actor, $input),
+            'event_category',
+        );
+    }
+
     public function test_approved_event_payment_context_uses_server_country_and_accepted_identifiers(): void
     {
         $this->allowTestAuthorizer();
@@ -1312,14 +1337,15 @@ final class EventDraftFoundationTest extends IntegrationTestCase
             },
         );
         $this->app->instance(IdentityModuleContract::class, $identity);
+        $reader = $this->addMember();
         $this->getJson('/v1/events/'.$draft['id'])->assertUnauthorized();
         $this->assertInstanceOf(ScopedEventDraftAuthorizer::class, app(EventDraftAuthorizer::class));
-        $this->assertHttp(403, fn () => app(EventDraftService::class)->get($draft['id'], $this->actor));
-        $this->requestAs($this->actor)->getJson('/v1/events/'.$draft['id'])->assertForbidden();
+        $this->assertSame($draft['id'], app(EventDraftService::class)->get($draft['id'], $this->actor)['id']);
+        $this->requestAs($reader)->getJson('/v1/events/'.$draft['id'])->assertForbidden();
 
-        $this->grantScope($this->actor, $this->organisation, $draft['id'], 'event', 'events.event.read');
+        $this->grantScope($reader, $this->organisation, $draft['id'], 'event', 'events.event.read');
         $permissions = [];
-        $this->requestAs($this->actor)->getJson('/v1/events/'.$draft['id'])->assertForbidden();
+        $this->requestAs($reader)->getJson('/v1/events/'.$draft['id'])->assertForbidden();
 
         $this->assertSame($auditCount, DB::connection('community_services')->table('community_services.event_draft_audit')
             ->where('event_id', $draft['id'])->count());
@@ -1330,34 +1356,101 @@ final class EventDraftFoundationTest extends IntegrationTestCase
     public function test_authoring_routes_deny_cross_organisation_and_cross_event_scope(): void
     {
         $first = $this->routeDraft();
-        $sameOrganisationOtherEvent = app(EventDraftService::class)->create(
-            $this->organisation, $this->actor, $this->input(),
-        );
+        $sameOrganisationOtherCreator = $this->addMember();
+        $sameOrganisationOtherEvent = app(EventDraftService::class)->create($this->organisation, $sameOrganisationOtherCreator, $this->input());
         $otherOrganisation = (string) Uuid::uuid7();
+        $otherOrganisationCreator = $this->addMember();
         DB::connection('identity')->table('identity.organisations')->insert([
             'id' => $otherOrganisation, 'registry_reference' => 'p25-route-'.Uuid::uuid7(),
             'display_name' => 'Other test organisation', 'status' => 'active', 'evidence_reference' => 'test-only',
-            'requested_by' => $this->actor, 'reviewed_by' => (string) Uuid::uuid7(), 'created_at' => now(), 'updated_at' => now(),
+            'requested_by' => $otherOrganisationCreator, 'reviewed_by' => (string) Uuid::uuid7(), 'created_at' => now(), 'updated_at' => now(),
         ]);
         DB::connection('identity')->table('identity.organisation_memberships')->insert([
-            'id' => (string) Uuid::uuid7(), 'organisation_id' => $otherOrganisation, 'user_id' => $this->actor,
-            'status' => 'active', 'evidence_reference' => 'test-only', 'requested_by' => $this->actor,
-            'reviewed_by' => $this->actor, 'created_at' => now(), 'updated_at' => now(),
+            'id' => (string) Uuid::uuid7(), 'organisation_id' => $otherOrganisation, 'user_id' => $otherOrganisationCreator,
+            'status' => 'active', 'evidence_reference' => 'test-only', 'requested_by' => $otherOrganisationCreator,
+            'reviewed_by' => $otherOrganisationCreator, 'created_at' => now(), 'updated_at' => now(),
         ]);
         $this->allowTestAuthorizer();
         $otherInput = $this->input();
         $otherInput['title'] = 'Other organisation event';
-        $other = app(EventDraftService::class)->create($otherOrganisation, $this->actor, $otherInput);
+        $other = app(EventDraftService::class)->create($otherOrganisation, $otherOrganisationCreator, $otherInput);
         $this->useScopedEventAuthorizers();
         $this->allowPermissions(['events.event.read', 'events.event.create']);
         $this->grantScope($this->actor, $this->organisation, $first['id'], 'event', 'events.event.read');
 
-        $this->requestAs($this->actor)->getJson('/v1/events/'.$sameOrganisationOtherEvent['id'])->assertForbidden();
-        $this->requestAs($this->actor)->getJson('/v1/events/'.$other['id'])->assertForbidden();
+        $this->requestAs($this->actor)->getJson('/v1/events/'.$sameOrganisationOtherEvent['id'])->assertNotFound();
+        $this->requestAs($this->actor)->getJson('/v1/events/'.$other['id'])->assertNotFound();
         $this->requestAs($this->actor)->postJson('/v1/events/organisations/'.$otherOrganisation.'/drafts', $this->input())
             ->assertForbidden();
         $this->assertSame(1, DB::connection('community_services')->table('community_services.event_draft_audit')
             ->where('event_id', $other['id'])->count());
+    }
+
+    public function test_creator_lists_searches_and_manages_only_events_they_created(): void
+    {
+        $this->allowTestAuthorizer();
+        $eventAInput = $this->input();
+        $eventAInput['title'] = 'Creator A community event';
+        $eventA = app(EventDraftService::class)->create($this->organisation, $this->actor, $eventAInput);
+
+        $creatorB = $this->addMember();
+        $eventBInput = $this->input();
+        $eventBInput['title'] = 'Creator B community event';
+        $eventB = app(EventDraftService::class)->create($this->organisation, $creatorB, $eventBInput);
+
+        // Simulate a legacy row whose creator reference no longer resolves.
+        $legacyInput = $this->input();
+        $legacyInput['title'] = 'Legacy event with unknown creator';
+        $legacy = app(EventDraftService::class)->create($this->organisation, $creatorB, $legacyInput);
+        $orphanCreator = (string) Uuid::uuid7();
+        DB::connection('community_services')->table('community_services.event_drafts')
+            ->where('id', $legacy['id'])->update(['created_by' => $orphanCreator]);
+
+        $this->useScopedEventAuthorizers();
+        $this->allowPermissions(['events.event.create', 'events.event.read', 'events.event.update']);
+        $this->grantScope($this->actor, $this->organisation, $eventB['id'], 'event', EventPermissions::READ);
+        $this->grantScope($this->actor, $this->organisation, $eventB['id'], 'event', EventPermissions::UPDATE);
+        Log::spy();
+
+        $this->requestAs($this->actor)
+            ->getJson('/v1/events/organisations/'.$this->organisation.'/drafts?search=Creator%20A')
+            ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $eventA['id']);
+        $this->requestAs($this->actor)
+            ->getJson('/v1/events/organisations/'.$this->organisation.'/drafts?search=Creator%20B')
+            ->assertOk()->assertJsonCount(0, 'data');
+        $this->requestAs($this->actor)
+            ->getJson('/v1/events/organisations/'.$this->organisation.'/drafts')
+            ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $eventA['id']);
+
+        $this->requestAs($this->actor)->getJson('/v1/events/'.$eventB['id'])->assertNotFound();
+        $forgedUpdate = $this->input();
+        $forgedUpdate['created_by'] = $this->actor;
+        $this->requestAs($this->actor)->putJson('/v1/events/'.$eventB['id'], [
+            ...$forgedUpdate, 'expected_version' => 1,
+        ])->assertNotFound();
+        $this->assertSame($creatorB, DB::connection('community_services')->table('community_services.event_drafts')
+            ->where('id', $eventB['id'])->value('created_by'));
+
+        $forgedUpdate['created_by'] = $creatorB;
+        $this->requestAs($this->actor)->putJson('/v1/events/'.$eventA['id'], [
+            ...$forgedUpdate, 'expected_version' => 1,
+        ])->assertOk()->assertJsonPath('data.created_by', $this->actor);
+        Log::shouldHaveReceived('warning')->withArgs(static fn (string $message, array $context): bool =>
+            str_contains($message, 'unverified creator') && ($context['unverified_creator_records'] ?? 0) === 1
+        )->atLeast()->once();
+    }
+
+    public function test_assigned_reviewer_still_lists_another_creators_event(): void
+    {
+        $this->allowTestAuthorizer();
+        $draft = app(EventDraftService::class)->create($this->organisation, $this->actor, $this->input());
+        $reviewer = $this->addMember();
+        $this->useScopedEventAuthorizers();
+        $this->allowPermissions(['events.event.read', 'events.event.review']);
+        $this->grantScope($reviewer, $this->organisation, $draft['id'], 'event', EventPermissions::READ);
+
+        $this->requestAs($reviewer)->getJson('/v1/events/organisations/'.$this->organisation.'/drafts')
+            ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $draft['id']);
     }
 
     public function test_review_route_rejects_contributor_without_mutating_event(): void
@@ -2343,6 +2436,9 @@ final class EventDraftFoundationTest extends IntegrationTestCase
         $this->grantScope($this->actor, $this->organisation, $fixture['gate_id'], 'gate', EventPermissions::GATE_VALIDATE, $fixture['event_id']);
         $this->grantScope($this->actor, $this->organisation, $fixture['event_id'], 'event', EventPermissions::ATTENDANCE_READ);
         $this->assertSame($fixture['credential'], app(EventAdmissionService::class)->ticketForPurchaser($fixture['ticket_id'], $this->actor)['credential']);
+        $ticketList = app(EventAdmissionService::class)->ticketsForPurchaser($this->actor);
+        $this->assertCount(1, $ticketList);
+        $this->assertArrayNotHasKey('credential', $ticketList[0], 'Ticket lists must not expose admission credentials.');
         $otherPurchaser = (string) Uuid::uuid7();
         $this->assertHttp(404, fn () => app(EventAdmissionService::class)->ticketForPurchaser($fixture['ticket_id'], $otherPurchaser));
         $this->assertSame([], app(EventAdmissionService::class)->ticketsForPurchaser($otherPurchaser));
@@ -2510,6 +2606,8 @@ final class EventDraftFoundationTest extends IntegrationTestCase
         $this->app->instance(EventDraftAuthorizer::class, new class implements EventDraftAuthorizer
         {
             public function assertCanCreate(string $actorId, string $organisationId): void {}
+
+            public function assertCanList(string $actorId, string $organisationId): void {}
 
             public function assertCanRead(string $actorId, string $organisationId, string $eventId): void {}
 
@@ -2727,6 +2825,7 @@ final class EventDraftFoundationTest extends IntegrationTestCase
     private function input(): array
     {
         return ['title' => 'Test event', 'event_format' => 'physical', 'venue_country_code' => 'BW',
+            'venue_name' => 'Test venue', 'venue_address' => 'Test address, Gaborone',
             'organiser_name' => 'Test organiser', 'sponsors' => ['Example sponsor'],
             'capacity' => 10, 'currency_code' => 'BWP', 'timezone' => 'Africa/Gaborone',
             'max_tickets_per_order' => 6,

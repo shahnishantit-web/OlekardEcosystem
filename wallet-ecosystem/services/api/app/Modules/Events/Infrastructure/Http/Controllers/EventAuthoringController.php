@@ -28,7 +28,11 @@ final class EventAuthoringController extends Controller
 
     public function index(Request $request, string $organisationId): JsonResponse
     {
-        return response()->json(['data' => $this->drafts->listForOrganisation($organisationId, $this->actor($request))]);
+        $filters = $request->validate(['search' => ['sometimes', 'nullable', 'string', 'max:200']]);
+
+        return response()->json(['data' => $this->drafts->listForOrganisation(
+            $organisationId, $this->actor($request), $filters['search'] ?? null,
+        )]);
     }
 
     public function show(Request $request, string $eventId): JsonResponse

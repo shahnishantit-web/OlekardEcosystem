@@ -11,26 +11,59 @@ class EventCheckoutScreen extends StatefulWidget {
   const EventCheckoutScreen({
     super.key,
     required this.event,
-    required this.category,
+    required this.selectedQuantities,
     required this.dio,
+    required this.session,
   });
 
   final Map<String, dynamic> event;
-  final Map<String, dynamic> category;
+  final Map<String, int> selectedQuantities;
   final Dio dio;
+  final EventCheckoutSession session;
+
+  static Future<void> showPaymentSheet({
+    required BuildContext context,
+    required Map<String, dynamic> event,
+    required Map<String, int> selectedQuantities,
+    required Dio dio,
+    required EventCheckoutSession session,
+  }) =>
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: false,
+        backgroundColor: Colors.transparent,
+        builder: (_) => FractionallySizedBox(
+          heightFactor: .94,
+          child: EventCheckoutScreen(
+            event: event,
+            selectedQuantities: selectedQuantities,
+            dio: dio,
+            session: session,
+          ),
+        ),
+      );
 
   @override
   State<EventCheckoutScreen> createState() => _EventCheckoutScreenState();
 }
 
+class EventCheckoutSession {
+  EventCheckoutSession({required Map<String, int> selectedQuantities})
+      : selectedQuantities = Map.unmodifiable(selectedQuantities);
+
+  final Map<String, int> selectedQuantities;
+  Map<String, dynamic>? snapshot;
+}
+
 class _EventCheckoutScreenState extends State<EventCheckoutScreen>
     with WidgetsBindingObserver {
-  int _quantity = 1;
   bool _busy = false;
   bool _refreshing = false;
   Timer? _statusTimer;
   String? _error;
   String? _selectedOptionId;
+  bool _confirmedUpdatedPrice = false;
   String? _paymentIntentId;
   String? _orderId;
   Map<String, dynamic>? _order;
@@ -38,16 +71,52 @@ class _EventCheckoutScreenState extends State<EventCheckoutScreen>
   Map<String, dynamic>? _paymentStatus;
   List<Map<String, dynamic>> _paymentOptions = [];
 
-  final _holdKey = const Uuid().v4();
-  final _quoteKey = const Uuid().v4();
-  final _orderKey = const Uuid().v4();
-  final _intentKey = const Uuid().v4();
+  late final Map<String, String> _holdKeys;
+  late String _quoteKey;
+  late String _orderKey;
+  late String _intentKey;
   String _attemptKey = const Uuid().v4();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    final snapshot = widget.session.snapshot;
+    _holdKeys = snapshot?['hold_keys'] is Map
+        ? (snapshot!['hold_keys'] as Map)
+            .map((key, value) => MapEntry(key.toString(), value.toString()))
+        : {
+            for (final categoryId in widget.selectedQuantities.keys)
+              categoryId: const Uuid().v4(),
+          };
+    _quoteKey = snapshot?['quote_key']?.toString() ?? const Uuid().v4();
+    _orderKey = snapshot?['order_key']?.toString() ?? const Uuid().v4();
+    _intentKey = snapshot?['intent_key']?.toString() ?? const Uuid().v4();
+    _attemptKey = snapshot?['attempt_key']?.toString() ?? const Uuid().v4();
+    _orderId = snapshot?['order_id']?.toString();
+    _paymentIntentId = snapshot?['payment_intent_id']?.toString();
+    _order = snapshot?['order'] is Map
+        ? Map<String, dynamic>.from(snapshot!['order'] as Map)
+        : null;
+    _attempt = snapshot?['attempt'] is Map
+        ? Map<String, dynamic>.from(snapshot!['attempt'] as Map)
+        : null;
+    _paymentStatus = snapshot?['payment_status'] is Map
+        ? Map<String, dynamic>.from(snapshot!['payment_status'] as Map)
+        : null;
+    _paymentOptions =
+        (snapshot?['payment_options'] as List<dynamic>? ?? const [])
+            .whereType<Map>()
+            .map(Map<String, dynamic>.from)
+            .toList();
+    _selectedOptionId = snapshot?['selected_option_id']?.toString();
+    _confirmedUpdatedPrice = snapshot?['confirmed_updated_price'] == true;
+    if (_order == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _prepareCheckout());
+    } else if (_attempt != null && !_isCompleted) {
+      _startStatusPolling();
+      unawaited(_refreshOrder());
+    }
   }
 
   @override
@@ -93,6 +162,24 @@ class _EventCheckoutScreenState extends State<EventCheckoutScreen>
     return body['data'] as Map<String, dynamic>;
   }
 
+  void _persistSession() {
+    widget.session.snapshot = {
+      'hold_keys': _holdKeys,
+      'quote_key': _quoteKey,
+      'order_key': _orderKey,
+      'intent_key': _intentKey,
+      'attempt_key': _attemptKey,
+      'order_id': _orderId,
+      'payment_intent_id': _paymentIntentId,
+      'order': _order,
+      'attempt': _attempt,
+      'payment_status': _paymentStatus,
+      'payment_options': _paymentOptions,
+      'selected_option_id': _selectedOptionId,
+      'confirmed_updated_price': _confirmedUpdatedPrice,
+    };
+  }
+
   String? _errorMessage(DioException error) {
     final body = error.response?.data;
     if (body is Map) {
@@ -114,19 +201,19 @@ class _EventCheckoutScreenState extends State<EventCheckoutScreen>
     });
     try {
       final eventId = widget.event['id'].toString();
-      final hold = _responseData(await widget.dio.post<Object?>(
-        '/v1/events/$eventId/inventory-holds',
-        data: {
-          'category_id': widget.category['id'],
-          'quantity': _quantity,
-        },
-        options: Options(headers: {'Idempotency-Key': _holdKey}),
-      ));
+      final holdIds = <String>[];
+      for (final selection in widget.selectedQuantities.entries) {
+        final hold = _responseData(await widget.dio.post<Object?>(
+          '/v1/events/$eventId/inventory-holds',
+          data: {'category_id': selection.key, 'quantity': selection.value},
+          options:
+              Options(headers: {'Idempotency-Key': _holdKeys[selection.key]}),
+        ));
+        holdIds.add(hold['id'].toString());
+      }
       final quote = _responseData(await widget.dio.post<Object?>(
         '/v1/events/$eventId/quotes',
-        data: {
-          'hold_ids': [hold['id']],
-        },
+        data: {'hold_ids': holdIds},
         options: Options(headers: {'Idempotency-Key': _quoteKey}),
       ));
       final order = _responseData(await widget.dio.post<Object?>(
@@ -150,6 +237,7 @@ class _EventCheckoutScreenState extends State<EventCheckoutScreen>
         _orderId = orderId;
         _paymentIntentId = intent['payment_intent_id']?.toString();
         _paymentOptions = options;
+        _confirmedUpdatedPrice = false;
         final defaultOption =
             options.where((option) => option['is_default'] == true).firstOrNull;
         _selectedOptionId = defaultOption?['provider_account_id']?.toString() ??
@@ -159,15 +247,19 @@ class _EventCheckoutScreenState extends State<EventCheckoutScreen>
               'No bank or card payment method is available for this event yet.';
         }
       });
+      _persistSession();
     } on DioException catch (error) {
       if (mounted) {
         setState(() => _error = _errorMessage(error) ??
             'Checkout could not be prepared. Please try again.');
+        _persistSession();
       }
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(
             () => _error = 'Checkout could not be prepared. Please try again.');
+        _persistSession();
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -199,6 +291,7 @@ class _EventCheckoutScreenState extends State<EventCheckoutScreen>
       ));
       if (!mounted) return;
       setState(() => _attempt = attempt);
+      _persistSession();
       _startStatusPolling();
       final actionData = attempt['next_action_data'];
       final actionUrl = actionData is Map
@@ -226,9 +319,13 @@ class _EventCheckoutScreenState extends State<EventCheckoutScreen>
       if (mounted) {
         setState(() =>
             _error = _errorMessage(error) ?? 'Payment could not be started.');
+        _persistSession();
       }
     } catch (_) {
-      if (mounted) setState(() => _error = 'Payment could not be started.');
+      if (mounted) {
+        setState(() => _error = 'Payment could not be started.');
+        _persistSession();
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -259,11 +356,13 @@ class _EventCheckoutScreenState extends State<EventCheckoutScreen>
         '/v1/events/orders/$orderId',
       ));
       if (mounted) setState(() => _order = order);
+      if (mounted) _persistSession();
       if (_isCompleted) _statusTimer?.cancel();
     } on DioException catch (error) {
       if (mounted) {
         setState(() =>
             _error = _errorMessage(error) ?? 'Could not refresh order status.');
+        _persistSession();
       }
     } finally {
       _refreshing = false;
@@ -340,125 +439,293 @@ class _EventCheckoutScreenState extends State<EventCheckoutScreen>
   @override
   Widget build(BuildContext context) {
     final event = widget.event;
-    final category = widget.category;
-    final precision =
-        ((event['currency_precision'] as num?)?.toInt() ?? 2).clamp(0, 4);
-    final perPerson = (category['max_per_person'] as num?)?.toInt() ?? 10;
-    final eventOrderLimit =
-        (event['max_tickets_per_order'] as num?)?.toInt() ?? 10;
-    final maxQuantity =
-        (perPerson < eventOrderLimit ? perPerson : eventOrderLimit)
-            .clamp(1, 50);
-    final unitPrice = (category['price_minor'] as num).toInt();
-    final totalMinor =
-        (_order?['total_minor'] as num?)?.toInt() ?? unitPrice * _quantity;
+    final pricing = _order?['pricing'] is Map
+        ? Map<String, dynamic>.from(_order!['pricing'] as Map)
+        : const <String, dynamic>{};
+    final precision = ((pricing['currency_precision'] as num?)?.toInt() ??
+            (event['currency_precision'] as num?)?.toInt() ??
+            2)
+        .clamp(0, 4);
     final currency = _order?['currency_code']?.toString() ??
+        pricing['currency_code']?.toString() ??
         event['currency_code']?.toString() ??
         'BWP';
+    final lines = (_order?['line_snapshot'] as List<dynamic>? ?? const [])
+        .whereType<Map>()
+        .map(Map<String, dynamic>.from)
+        .toList();
+    final eventCategories = (event['categories'] as List<dynamic>? ?? const [])
+        .whereType<Map>()
+        .map(Map<String, dynamic>.from)
+        .toList();
+    final priceChanged = lines.any((line) {
+      final category = eventCategories
+          .where((item) =>
+              item['id']?.toString() == line['category_id']?.toString())
+          .firstOrNull;
+      final currentPrice = category?['price_minor'];
+      final quotedPrice = line['unit_price_minor'];
+      return currentPrice is num &&
+          quotedPrice is num &&
+          currentPrice.toInt() != quotedPrice.toInt();
+    });
+    final policies = <(String, String)>[
+      if (event['entry_policy'] is String &&
+          (event['entry_policy'] as String).trim().isNotEmpty)
+        ('Entry', event['entry_policy'] as String),
+      if (event['cancellation_policy'] is String &&
+          (event['cancellation_policy'] as String).trim().isNotEmpty)
+        ('Cancellation', event['cancellation_policy'] as String),
+      if (event['transfer_policy'] is String &&
+          (event['transfer_policy'] as String).trim().isNotEmpty)
+        ('Transfer', event['transfer_policy'] as String),
+    ];
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Ticket checkout')),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Text(event['title']?.toString() ?? 'Event',
-              style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 4),
-          Text('${category['name']}  •  ${event['organiser_name'] ?? ''}'),
-          if (_order == null) ...[
-            const SizedBox(height: 24),
-            Text('Quantity', style: Theme.of(context).textTheme.titleMedium),
-            Row(children: [
-              IconButton(
-                onPressed: _busy || _quantity <= 1
-                    ? null
-                    : () => setState(() => _quantity--),
-                icon: const Icon(Icons.remove_circle_outline),
-              ),
-              Text('$_quantity'),
-              IconButton(
-                onPressed: _busy || _quantity >= maxQuantity
-                    ? null
-                    : () => setState(() => _quantity++),
-                icon: const Icon(Icons.add_circle_outline),
-              ),
-              const Spacer(),
-              Text(_formatMoney(unitPrice * _quantity, currency, precision)),
-            ]),
-            const SizedBox(height: 18),
-            FilledButton(
-              onPressed: _busy ? null : _prepareCheckout,
-              child: Text(_busy ? 'Preparing checkout…' : 'Continue'),
+    Widget priceLine(String label, int minor, {bool emphasize = false}) {
+      final style = emphasize
+          ? Theme.of(context).textTheme.titleMedium
+          : Theme.of(context).textTheme.bodyMedium;
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(children: [
+          Expanded(child: Text(label, style: style)),
+          Text(_formatMoney(minor, currency, precision), style: style),
+        ]),
+      );
+    }
+
+    final totalMinor = (_order?['total_minor'] as num?)?.toInt() ??
+        (pricing['total_minor'] as num?)?.toInt() ??
+        0;
+    return PopScope(
+      canPop: !_busy,
+      child: Material(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        clipBehavior: Clip.antiAlias,
+        child: SafeArea(
+          top: false,
+          child: Column(children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 14, 12, 8),
+              child: Row(children: [
+                Expanded(
+                    child: Text('Payment',
+                        style: Theme.of(context).textTheme.titleLarge)),
+                IconButton(
+                  tooltip: 'Close payment',
+                  onPressed: _busy ? null : () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close_rounded),
+                ),
+              ]),
             ),
-          ] else ...[
-            const SizedBox(height: 20),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Order total'),
-              trailing: Text(
-                _formatMoney(totalMinor, currency, precision),
-                style: Theme.of(context).textTheme.titleMedium,
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+                children: [
+                  Text(event['title']?.toString() ?? 'Event',
+                      style: Theme.of(context).textTheme.titleMedium),
+                  if ((event['organiser_name']?.toString() ?? '').isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 3),
+                      child: Text(event['organiser_name'].toString(),
+                          style: Theme.of(context).textTheme.bodySmall),
+                    ),
+                  const SizedBox(height: 18),
+                  if (_order == null) ...[
+                    if (_busy) ...[
+                      const LinearProgressIndicator(),
+                      const SizedBox(height: 12),
+                      const Text(
+                          'Checking availability and preparing your order...'),
+                    ],
+                    if (_error != null) ...[
+                      Text(_error!,
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.error)),
+                      OutlinedButton.icon(
+                        onPressed: _busy ? null : _prepareCheckout,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Try again'),
+                      ),
+                    ],
+                  ] else ...[
+                    Text('Your tickets',
+                        style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 8),
+                    ...lines.map((line) => ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(line['category_name'].toString() +
+                              ' × ' +
+                              line['quantity'].toString()),
+                          subtitle: Text(_formatMoney(
+                                  (line['unit_price_minor'] as num? ?? 0)
+                                      .toInt(),
+                                  currency,
+                                  precision) +
+                              ' each'),
+                          trailing: Text(_formatMoney(
+                              (line['subtotal_minor'] as num? ?? 0).toInt(),
+                              currency,
+                              precision)),
+                        )),
+                    const Divider(height: 20),
+                    priceLine('Subtotal',
+                        (pricing['subtotal_minor'] as num? ?? 0).toInt()),
+                    priceLine(
+                        'Fees', (pricing['fees_minor'] as num? ?? 0).toInt()),
+                    priceLine(
+                        'Taxes', (pricing['taxes_minor'] as num? ?? 0).toInt()),
+                    const Divider(height: 20),
+                    priceLine('Total', totalMinor, emphasize: true),
+                    if (priceChanged) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .secondaryContainer,
+                            borderRadius: BorderRadius.circular(12)),
+                        child: CheckboxListTile(
+                          contentPadding: EdgeInsets.zero,
+                          value: _confirmedUpdatedPrice,
+                          onChanged: _busy
+                              ? null
+                              : (value) => setState(() {
+                                    _confirmedUpdatedPrice = value ?? false;
+                                    _persistSession();
+                                  }),
+                          title: const Text(
+                              'I reviewed the updated ticket price.'),
+                          controlAffinity: ListTileControlAffinity.leading,
+                        ),
+                      ),
+                    ],
+                    if (policies.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Text('Event terms',
+                          style: Theme.of(context).textTheme.titleSmall),
+                      const SizedBox(height: 4),
+                      for (final policy in policies)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 3),
+                          child: Text(policy.$1 + ': ' + policy.$2),
+                        ),
+                    ],
+                    if (!_isCompleted && !_isPaid && !_isPaymentAccepted) ...[
+                      const SizedBox(height: 18),
+                      Text('Payment method',
+                          style: Theme.of(context).textTheme.titleMedium),
+                      const SizedBox(height: 6),
+                      if (_paymentOptions.isEmpty)
+                        Text(
+                            _error ??
+                                'No payment methods are available for this order.',
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.error)),
+                      ..._paymentOptions.map((option) {
+                        final accountId =
+                            option['provider_account_id']?.toString() ?? '';
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: RadioListTile<String>(
+                            value: accountId,
+                            groupValue: _selectedOptionId,
+                            onChanged: _busy
+                                ? null
+                                : (value) => setState(() {
+                                      _selectedOptionId = value;
+                                      _attemptKey = const Uuid().v4();
+                                      _attempt = null;
+                                      _persistSession();
+                                    }),
+                            secondary: Icon(_paymentIcon(option)),
+                            title: Text(_paymentLabel(option)),
+                            subtitle: option['display_description'] is String
+                                ? Text(option['display_description'] as String)
+                                : null,
+                          ),
+                        );
+                      }),
+                    ],
+                    if (_attempt != null || _isPaid || _isPaymentAccepted) ...[
+                      const SizedBox(height: 12),
+                      _paymentStatusCard(context),
+                    ],
+                    if ((_attempt != null || _isPaid || _isPaymentAccepted) &&
+                        !_isCompleted)
+                      TextButton.icon(
+                        onPressed: _refreshing ? null : _refreshOrder,
+                        icon: const Icon(Icons.refresh),
+                        label: Text(
+                            _refreshing ? 'Refreshing...' : 'Refresh status'),
+                      ),
+                  ],
+                  if (_error != null && _order != null) ...[
+                    const SizedBox(height: 10),
+                    Text(_error!,
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.error)),
+                  ],
+                  if (_busy && _order != null) ...[
+                    const SizedBox(height: 8),
+                    const LinearProgressIndicator(),
+                  ],
+                ],
               ),
             ),
-            if (_attempt != null || _isPaid) _paymentStatusCard(context),
-            const SizedBox(height: 12),
-            if (!_isCompleted && !_isPaid && !_isPaymentAccepted) ...[
-              Text('Choose how to pay',
-                  style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              ..._paymentOptions.map((option) {
-                final accountId =
-                    option['provider_account_id']?.toString() ?? '';
-                return Card(
-                  child: RadioListTile<String>(
-                    value: accountId,
-                    groupValue: _selectedOptionId,
-                    onChanged: _busy
-                        ? null
-                        : (value) => setState(() {
-                              _selectedOptionId = value;
-                              _attemptKey = const Uuid().v4();
-                              _attempt = null;
-                            }),
-                    secondary: Icon(_paymentIcon(option)),
-                    title: Text(_paymentLabel(option)),
-                    subtitle: option['display_description'] is String
-                        ? Text(option['display_description'] as String)
-                        : null,
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 8),
+              decoration: const BoxDecoration(
+                  border: Border(top: BorderSide(color: Colors.black12))),
+              child: SafeArea(
+                top: false,
+                child: Row(children: [
+                  Expanded(
+                      child: OutlinedButton(
+                    onPressed: _busy ? null : () => Navigator.of(context).pop(),
+                    child: const Text('Cancel'),
+                  )),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: FilledButton(
+                      onPressed: _busy
+                          ? null
+                          : _isCompleted
+                              ? () {
+                                  Navigator.of(context).pop();
+                                  context.go('/events/tickets');
+                                }
+                              : _order == null
+                                  ? null
+                                  : _isPaid || _isPaymentAccepted
+                                      ? _refreshing
+                                          ? null
+                                          : _refreshOrder
+                                      : _paymentOptions.isEmpty ||
+                                              _selectedOptionId == null ||
+                                              (priceChanged &&
+                                                  !_confirmedUpdatedPrice)
+                                          ? null
+                                          : _startPayment,
+                      child: Text(_busy
+                          ? 'Processing...'
+                          : _isCompleted
+                              ? 'View my tickets'
+                              : _isPaid || _isPaymentAccepted
+                                  ? 'Refresh status'
+                                  : _isFailedAttempt
+                                      ? 'Retry payment'
+                                      : 'Pay now'),
+                    ),
                   ),
-                );
-              }),
-              const SizedBox(height: 12),
-              FilledButton(
-                onPressed:
-                    _busy || _selectedOptionId == null ? null : _startPayment,
-                child: Text(_busy ? 'Starting payment…' : 'Pay securely'),
+                ]),
               ),
-            ],
-            if (_isCompleted)
-              FilledButton.icon(
-                onPressed: () => context.go('/events/tickets'),
-                icon: const Icon(Icons.confirmation_number_outlined),
-                label: const Text('View my tickets'),
-              ),
-            if ((_attempt != null || _isPaid || _isPaymentAccepted) &&
-                !_isCompleted)
-              OutlinedButton.icon(
-                onPressed: _refreshing ? null : _refreshOrder,
-                icon: const Icon(Icons.refresh),
-                label: Text(_refreshing ? 'Refreshing…' : 'Refresh status'),
-              ),
-          ],
-          if (_busy) ...[
-            const SizedBox(height: 12),
-            const LinearProgressIndicator(),
-          ],
-          if (_error != null) ...[
-            const SizedBox(height: 12),
-            Text(_error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error)),
-          ],
-        ],
+            ),
+          ]),
+        ),
       ),
     );
   }

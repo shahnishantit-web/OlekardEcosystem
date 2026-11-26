@@ -10,47 +10,60 @@ import 'package:wallet_customer/modules/events/presentation/screens/customer_eve
 
 class _TicketsAdapter implements HttpClientAdapter {
   _TicketsAdapter(
-      {this.status = 'active', this.credential = 'POC-DEMO-QR-NOT-VALID'});
+      {this.status = 'valid', this.credential = 'POC-DEMO-QR-NOT-VALID'});
   final String status;
   final String credential;
+  final List<String> paths = [];
+  Map<String, dynamic>? listPayload;
 
   @override
   Future<ResponseBody> fetch(RequestOptions options,
-          Stream<Uint8List>? requestStream, Future<void>? cancelFuture) async =>
-      ResponseBody.fromString(
-        jsonEncode({
-          'data': [
-            {
-              'ticket_id': 'ticket-demo-1',
-              'event_id': 'event-demo-1',
-              'event_title': 'Community Music Day',
-              'category': 'General admission',
-              'status': status,
-              'credential': credential,
-              'event_starts_at': '2027-04-18T14:30:00+02:00',
-            },
-          ]
-        }),
-        200,
-        headers: {
-          Headers.contentTypeHeader: [Headers.jsonContentType]
-        },
-      );
+      Stream<Uint8List>? requestStream, Future<void>? cancelFuture) async {
+    paths.add(options.path);
+    final row = <String, dynamic>{
+      'ticket_id': 'ticket-demo-1',
+      'event_id': 'event-demo-1',
+      'event_title': 'Community Music Day',
+      'category': 'General admission',
+      'status': status,
+      'event_starts_at': '2027-04-18T14:30:00+02:00',
+      'event_category': 'music',
+      'image_url': null,
+      'venue_name': 'Main Hall',
+      'venue_city': 'Gaborone',
+    };
+    final payload = options.path.endsWith('/customer/invitations')
+        ? {'data': <Object>[]}
+        : options.path.endsWith('/tickets')
+            ? {
+                'data': [listPayload = row]
+              }
+            : {
+                'data': {
+                  ...row,
+                  'credential': status == 'revoked' ? '' : credential,
+                }
+              };
+    return ResponseBody.fromString(jsonEncode(payload), 200, headers: {
+      Headers.contentTypeHeader: [Headers.jsonContentType]
+    });
+  }
 
   @override
   void close({bool force = false}) {}
 }
 
-Future<void> _showTickets(WidgetTester tester,
-    {String status = 'active',
+Future<_TicketsAdapter> _showTickets(WidgetTester tester,
+    {String status = 'valid',
     String credential = 'POC-DEMO-QR-NOT-VALID'}) async {
+  final adapter = _TicketsAdapter(status: status, credential: credential);
   final dio = Dio(BaseOptions(baseUrl: 'http://demo.invalid'))
-    ..httpClientAdapter =
-        _TicketsAdapter(status: status, credential: credential);
+    ..httpClientAdapter = adapter;
   await tester.pumpWidget(ProviderScope(
       overrides: [eventTicketsApiProvider.overrideWithValue(dio)],
       child: const MaterialApp(home: CustomerEventTicketsScreen())));
   await tester.pumpAndSettle();
+  return adapter;
 }
 
 void main() {
@@ -77,9 +90,9 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.drag(find.byType(ListView), const Offset(0, -600));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Show ticket at the entrance'));
+    await tester.ensureVisible(find.byTooltip('Show ticket QR'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Show ticket at the entrance'));
+    await tester.tap(find.byTooltip('Show ticket QR'));
     await tester.pumpAndSettle();
     expect(find.byType(QrImageView), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -88,18 +101,28 @@ void main() {
   testWidgets(
       'ticket list shows event date and status; details render the unchanged QR payload without exposing it as text',
       (tester) async {
-    await _showTickets(tester);
+    final adapter = await _showTickets(tester);
     expect(find.text('Community Music Day'), findsOneWidget);
     expect(find.textContaining('Apr 18, 2027'), findsOneWidget);
-    expect(find.text('Upcoming'), findsOneWidget);
     expect(find.text('POC-DEMO-QR-NOT-VALID'), findsNothing);
+    expect(find.text('Main Hall \u00B7 Gaborone'), findsOneWidget);
+    expect(find.byType(QrImageView), findsNothing);
+    expect(adapter.listPayload?.containsKey('credential'), isFalse);
+    expect(adapter.paths,
+        ['/v1/events/tickets', '/v1/events/customer/invitations']);
 
-    await tester.tap(find.text('Show ticket at the entrance'));
+    await tester.tap(find.byTooltip('Show ticket QR'));
     await tester.pumpAndSettle();
+    expect(adapter.paths, contains('/v1/events/tickets/ticket-demo-1'));
     expect(find.byType(QrImageView), findsOneWidget);
-    expect(find.text('Present this code to event staff at the gate.'),
-        findsOneWidget);
+    expect(find.text('Show this QR code at the entrance.'), findsOneWidget);
     expect(find.text('POC-DEMO-QR-NOT-VALID'), findsNothing);
+    expect(find.text('Ticket details'), findsOneWidget);
+    expect(find.text('Main Hall \u00B7 Gaborone'), findsOneWidget);
+    expect(find.byTooltip('Close ticket details'), findsOneWidget);
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    expect(find.text('My Tickets'), findsOneWidget);
   });
 
   testWidgets(
@@ -107,7 +130,7 @@ void main() {
       (tester) async {
     await _showTickets(tester, status: 'cancelled', credential: '');
     expect(find.text('Cancelled'), findsOneWidget);
-    await tester.tap(find.text('Show ticket at the entrance'));
+    await tester.tap(find.text('Community Music Day'));
     await tester.pumpAndSettle();
     expect(find.text('This event was cancelled. This ticket cannot be used.'),
         findsOneWidget);
@@ -119,10 +142,28 @@ void main() {
       (tester) async {
     await _showTickets(tester, status: 'revoked', credential: '');
     expect(find.text('Revoked'), findsOneWidget);
-    await tester.tap(find.text('Show ticket at the entrance'));
+    await tester.tap(find.text('Community Music Day'));
     await tester.pumpAndSettle();
     expect(find.text('This ticket is no longer valid.'), findsOneWidget);
     expect(find.byType(QrImageView), findsNothing);
     expect(find.text('Replace ticket code'), findsNothing);
+  });
+
+  testWidgets('expired and used tickets show status without an admission QR',
+      (tester) async {
+    await _showTickets(tester, status: 'expired', credential: '');
+    expect(find.text('Expired'), findsOneWidget);
+    expect(find.byTooltip('Show ticket QR'), findsNothing);
+    await tester.tap(find.text('Community Music Day'));
+    await tester.pumpAndSettle();
+    expect(find.text('This ticket has expired.'), findsOneWidget);
+    expect(find.byType(QrImageView), findsNothing);
+
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _showTickets(tester, status: 'admitted', credential: '');
+    expect(find.text('Used'), findsOneWidget);
+    expect(find.byTooltip('Show ticket QR'), findsNothing);
   });
 }

@@ -13,6 +13,11 @@ final class DenyEventDraftAuthorizer implements EventDraftAuthorizer
         abort(403, 'Approved event organiser authority is unavailable.');
     }
 
+    public function assertCanList(string $actorId, string $organisationId): void
+    {
+        abort(403, 'Approved event organiser authority is unavailable.');
+    }
+
     public function assertCanRead(string $actorId, string $organisationId, string $eventId): void
     {
         abort(403, 'Approved event organiser authority is unavailable.');

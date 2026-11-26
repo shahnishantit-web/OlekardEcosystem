@@ -13,6 +13,10 @@ type EventDraft = {
   version: number;
   title: string;
   image_url: string | null;
+  event_category?: 'community' | 'music' | 'sports' | 'club_game' | 'business' | 'arts' | 'family' | 'other';
+  description?: string | null;
+  lineup?: string | null;
+  gallery_image_urls?: string[] | null;
   status: string;
   sales_state: string;
   lifecycle_state?: string;
@@ -52,7 +56,7 @@ type POCSettlement = { id: string; requested_by_actor_id: string; approved_by_ac
 type POCRefund = { id: string; cancellation_request_id: string; amount_minor: number; currency_code: string; status: string; poc_reference: string };
 type POCEventEnd = { id: string; actor_id: string; simulated_at: string };
 type EventForm = {
-  title: string; image_url: string; event_format: 'physical' | 'online' | 'hybrid'; venue_country_code: string; venue_name: string; venue_city: string; venue_address: string;
+  title: string; image_url: string; gallery_image_urls: string; description: string; lineup: string; event_category: 'community' | 'music' | 'sports' | 'club_game' | 'business' | 'arts' | 'family' | 'other'; event_format: 'physical' | 'online' | 'hybrid'; venue_country_code: string; venue_name: string; venue_city: string; venue_address: string;
   organiser_name: string; sponsors: string; capacity: string; timezone: string; starts_at: string;
   ends_at: string; sales_start_at: string; sales_end_at: string; max_tickets_per_order: string;
   cancellation_policy: string; transfer_policy: string; entry_policy: string; categories: Array<{
@@ -62,7 +66,7 @@ type EventForm = {
 };
 
 const emptyEventForm: EventForm = {
-  title: '', image_url: '', event_format: 'physical', venue_country_code: '', venue_name: '', venue_city: '', venue_address: '', organiser_name: '', sponsors: '', capacity: '',
+  title: '', image_url: '', gallery_image_urls: '', description: '', lineup: '', event_category: 'community', event_format: 'physical', venue_country_code: '', venue_name: '', venue_city: '', venue_address: '', organiser_name: '', sponsors: '', capacity: '',
   timezone: 'Africa/Gaborone', starts_at: '', ends_at: '', sales_start_at: '', sales_end_at: '',
   max_tickets_per_order: '', cancellation_policy: '', transfer_policy: '', entry_policy: '', categories: [],
 };
@@ -129,6 +133,7 @@ export function EventAuthoringPage() {
   const [pocRefunds, setPocRefunds] = useState<POCRefund[]>([]);
   const [pocEventEnd, setPocEventEnd] = useState<POCEventEnd | null>(null);
   const [eventRows, setEventRows] = useState<EventDraft[]>([]);
+  const [eventSearch, setEventSearch] = useState('');
   const [eventId, setEventId] = useState('');
   const [draft, setDraft] = useState<EventDraft | null>(null);
   const [eventForm, setEventForm] = useState<EventForm>(emptyEventForm);
@@ -180,9 +185,6 @@ export function EventAuthoringPage() {
 
   useEffect(() => {
     if (!authenticatedClient || !organisationId) { setEventRows([]); setEventId(''); setOrganisationMembers([]); setSponsorReportViewers([]); return; }
-    void authenticatedClient.get<EventDraft[]>(`/v1/events/organisations/${organisationId}/drafts`)
-      .then(response => setEventRows(response.data))
-      .catch(showError);
     if (hasPermission('events.assignment.grant')) {
       void authenticatedClient.get<ActorOption[]>(`/v1/events/organisations/${organisationId}/members`)
         .then(response => setOrganisationMembers(response.data))
@@ -197,6 +199,22 @@ export function EventAuthoringPage() {
       .then(response => { setSponsors(response.data); setSponsorPocEnabled(true); })
       .catch(() => { setSponsors([]); setSponsorPocEnabled(false); });
   }, [authenticatedClient, organisationId, hasPermission]);
+
+  useEffect(() => {
+    if (!authenticatedClient || !organisationId) {
+      setEventRows([]);
+      return;
+    }
+    const params = new URLSearchParams();
+    if (eventSearch.trim()) params.set('search', eventSearch.trim());
+    const encoded = params.toString();
+    const query = encoded ? `?${encoded}` : '';
+    let active = true;
+    void authenticatedClient.get<EventDraft[]>(`/v1/events/organisations/${organisationId}/drafts${query}`)
+      .then(response => { if (active) setEventRows(response.data); })
+      .catch(error => { if (active) showError(error); });
+    return () => { active = false; };
+  }, [authenticatedClient, organisationId, eventSearch]);
 
   const createSponsor = async () => {
     if (!authenticatedClient || !organisationId) return;
@@ -384,7 +402,7 @@ export function EventAuthoringPage() {
     setEventId(value.id);
     setOrganisationId(value.organisation_id);
     setEventForm({
-      title: value.title, image_url: value.image_url ?? '', event_format: value.event_format ?? 'physical', venue_country_code: value.venue_country_code ?? '', venue_name: value.venue_name ?? '', venue_city: value.venue_city ?? '', venue_address: value.venue_address ?? '',
+      title: value.title, image_url: value.image_url ?? '', gallery_image_urls: Array.isArray(value.gallery_image_urls) ? value.gallery_image_urls.join('\n') : '', description: value.description ?? '', lineup: value.lineup ?? '', event_category: value.event_category ?? 'other', event_format: value.event_format ?? 'physical', venue_country_code: value.venue_country_code ?? '', venue_name: value.venue_name ?? '', venue_city: value.venue_city ?? '', venue_address: value.venue_address ?? '',
       organiser_name: value.organiser_name, sponsors: (value.sponsors ?? []).join(', '), capacity: String(value.capacity),
       timezone: value.timezone, starts_at: toLocalDateTime(value.starts_at, value.timezone), ends_at: toLocalDateTime(value.ends_at, value.timezone),
       sales_start_at: toLocalDateTime(value.sales_start_at, value.timezone), sales_end_at: toLocalDateTime(value.sales_end_at, value.timezone),
@@ -666,6 +684,7 @@ export function EventAuthoringPage() {
               const selectedOrganisation = organisations.find(org => org.id === event.target.value);
               createDraftIdempotencyKey.current = null;
               setOrganisationId(event.target.value);
+              setEventSearch('');
               setDraft(null);
               setEventForm({ ...emptyEventForm, organiser_name: selectedOrganisation?.display_name ?? '' });
             }} className="rounded border border-border px-3 py-2">
@@ -675,11 +694,15 @@ export function EventAuthoringPage() {
           </label>
           <label className="flex flex-col gap-1 text-sm">Existing event
             <select value={eventId} onChange={event => setEventId(event.target.value)} disabled={!organisationId} className="rounded border border-border px-3 py-2">
-              <option value="">Create a new event or choose an existing draft</option>
+              <option value="">{eventRows.length === 0 && hasPermission('events.event.create') && eventSearch.trim() === '' ? 'You haven’t created any events yet' : 'Create a new event or choose an existing event'}</option>
               {eventRows.map(row => <option key={row.id} value={row.id}>{row.title} · {row.status} · version {row.version}</option>)}
             </select>
           </label>
+          <label className="flex flex-col gap-1 text-sm">Search events
+            <input value={eventSearch} onChange={event => setEventSearch(event.target.value)} disabled={!organisationId} placeholder="Search event or organiser" className="rounded border border-border px-3 py-2" />
+          </label>
         </div>
+        {organisationId && eventSearch.trim() !== '' && eventRows.length === 0 && <p role="status" className="mt-3 text-sm text-text-secondary">No events match your filters.</p>}
         {eventId && <Button className="mt-3" variant="secondary" onClick={loadDraft} disabled={busy || !hasPermission('events.event.read')}>Load selected event</Button>}
         {organisations.length === 0 && <p className="mt-3 text-sm text-text-secondary">No active organisations are available to this account. Complete organisation approval and membership setup first, or refresh after signing in with an authorised account.</p>}
       </Card>
@@ -840,6 +863,9 @@ export function EventAuthoringPage() {
 function buildEventPayload(form: EventForm): Record<string, unknown> {
   const payload: Record<string, unknown> = {
     title: form.title.trim(), image_url: form.image_url.trim() || null,
+    gallery_image_urls: form.gallery_image_urls.split(/\r?\n/).map(url => url.trim()).filter(Boolean),
+    description: form.description.trim() || null, lineup: form.lineup.trim() || null,
+    event_category: form.event_category,
     event_format: form.event_format, organiser_name: form.organiser_name.trim(),
     sponsors: form.sponsors.split(',').map(name => name.trim()).filter(Boolean), capacity: Number(form.capacity),
     timezone: form.timezone.trim(), starts_at: toZonedIso(form.starts_at, form.timezone), ends_at: toZonedIso(form.ends_at, form.timezone),
@@ -913,12 +939,18 @@ function EventDraftFields({ value, onChange }: { value: EventForm; onChange: <K 
   const capacity = Number(value.capacity) || 0;
   const categoryCapacityExceeded = capacity > 0 && categoryCapacityTotal > capacity;
   const scheduleErrors = getScheduleErrors(value);
+  const galleryImageUrls = value.gallery_image_urls.split(/\r?\n/).map(url => url.trim()).filter(Boolean).slice(0, 8);
   const setCategory = (index: number, patch: Partial<EventForm['categories'][number]>) =>
     onChange('categories', value.categories.map((item, current) => current === index ? { ...item, ...patch } : item));
   return <div className="grid gap-4">
     <div className="grid gap-3 md:grid-cols-2">
       <label className="flex flex-col gap-1 text-sm">Event name<input required maxLength={200} value={value.title} onChange={e => onChange('title', e.target.value)} className="rounded border border-border px-3 py-2" /></label>
-      <label className="flex flex-col gap-1 text-sm">Event image URL<input type="url" maxLength={2048} placeholder="Enter the event image address" value={value.image_url} onChange={e => onChange('image_url', e.target.value)} className="rounded border border-border px-3 py-2" /><span className="text-xs text-text-secondary">Optional. If the image cannot be loaded, customers see the default event image.</span></label>
+      <label className="flex flex-col gap-1 text-sm">Event category<select value={value.event_category} onChange={e => onChange('event_category', e.target.value as EventForm['event_category'])} className="rounded border border-border px-3 py-2"><option value="community">Community</option><option value="music">Music</option><option value="sports">Sports</option><option value="club_game">Club game</option><option value="business">Business</option><option value="arts">Arts &amp; culture</option><option value="family">Family</option><option value="other">Other</option></select></label>
+      <label className="flex flex-col gap-1 text-sm">Event image URL<input type="url" maxLength={2048} placeholder="Enter the event image address" value={value.image_url} onChange={e => onChange('image_url', e.target.value)} className="rounded border border-border px-3 py-2" /><span className="text-xs text-text-secondary">Optional cover image. Use landscape artwork (16:9 recommended); customer cards crop to landscape and square thumbnails. If it cannot load, customers see artwork for the selected event category.</span></label>
+      <label className="flex flex-col gap-1 text-sm md:col-span-2">Additional gallery image URLs<textarea rows={3} maxLength={16384} placeholder="https://example.com/event-photo-2.jpg&#10;https://example.com/event-photo-3.jpg" value={value.gallery_image_urls} onChange={e => onChange('gallery_image_urls', e.target.value)} className="rounded border border-border px-3 py-2" /><span className="text-xs text-text-secondary">Optional. Enter up to 8 HTTP/HTTPS image URLs, one per line. Use landscape images; the Event Detail screen lets customers swipe through the gallery.</span></label>
+      <div className="flex flex-col gap-2 text-sm md:col-span-2"><span>Customer artwork preview</span><div className="flex flex-wrap items-end gap-3"><div className="h-24 w-40 overflow-hidden rounded border border-border bg-background bg-cover bg-center" style={value.image_url ? { backgroundImage: `url("${value.image_url.replaceAll('"', '')}")` } : undefined} role="img" aria-label="Landscape event artwork preview">{!value.image_url && <span className="grid h-full place-items-center text-xs text-text-secondary">Landscape crop</span>}</div><div className="h-20 w-20 overflow-hidden rounded border border-border bg-background bg-cover bg-center" style={value.image_url ? { backgroundImage: `url("${value.image_url.replaceAll('"', '')}")` } : undefined} role="img" aria-label="Square event thumbnail preview">{!value.image_url && <span className="grid h-full place-items-center text-center text-xs text-text-secondary">Square crop</span>}</div>{galleryImageUrls.map((url, index) => <div key={`${url}-${index}`} className="h-20 w-20 overflow-hidden rounded border border-border bg-background bg-cover bg-center" style={{ backgroundImage: `url("${url.replaceAll('"', '')}")` }} role="img" aria-label={`Gallery image ${index + 1} preview`} />)}</div></div>
+      <label className="flex flex-col gap-1 text-sm md:col-span-2">About this event<textarea rows={4} maxLength={5000} value={value.description} onChange={e => onChange('description', e.target.value)} className="rounded border border-border px-3 py-2" placeholder="Describe the event for attendees" /></label>
+      <label className="flex flex-col gap-1 text-sm md:col-span-2">Lineup or programme<textarea rows={4} maxLength={5000} value={value.lineup} onChange={e => onChange('lineup', e.target.value)} className="rounded border border-border px-3 py-2" placeholder="Optional, one item per line" /></label>
       <label className="flex flex-col gap-1 text-sm">Organiser name<input required maxLength={200} value={value.organiser_name} onChange={e => onChange('organiser_name', e.target.value)} className="rounded border border-border px-3 py-2" /></label>
       <label className="flex flex-col gap-1 text-sm">Event format<select value={value.event_format} onChange={e => onChange('event_format', e.target.value as EventForm['event_format'])} className="rounded border border-border px-3 py-2"><option value="physical">Physical</option><option value="online">Online</option><option value="hybrid">Hybrid</option></select></label>
       {(value.event_format === 'physical' || value.event_format === 'hybrid') && <>

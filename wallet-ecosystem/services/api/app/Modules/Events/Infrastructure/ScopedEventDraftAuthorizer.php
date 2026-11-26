@@ -17,6 +17,11 @@ final class ScopedEventDraftAuthorizer implements EventDraftAuthorizer
         $this->authorization->assertOrganisation($actorId, $organisationId, EventPermissions::CREATE);
     }
 
+    public function assertCanList(string $actorId, string $organisationId): void
+    {
+        $this->authorization->assertPermission($actorId, EventPermissions::READ);
+    }
+
     public function assertCanRead(string $actorId, string $organisationId, string $eventId): void
     {
         $this->authorization->assertEvent($actorId, $organisationId, $eventId, EventPermissions::READ);

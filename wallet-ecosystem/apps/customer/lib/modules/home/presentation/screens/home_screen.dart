@@ -288,6 +288,7 @@ class _HomeEventCard extends StatelessWidget {
               EventImage(
                 imageUrl: event['image_url']?.toString(),
                 eventId: event['id']?.toString(),
+                eventCategory: event['event_category']?.toString(),
                 width: 72,
                 height: 72,
                 label: 'Event image',

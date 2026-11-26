@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/design_tokens.dart';
+
 class EventImage extends StatelessWidget {
   const EventImage({
     required this.imageUrl,
     required this.width,
     required this.height,
     this.eventId,
+    this.eventCategory,
     this.label = 'Event image',
     this.iconSize = 32,
+    this.borderRadius = 12,
     super.key,
   });
 
@@ -15,15 +19,10 @@ class EventImage extends StatelessWidget {
   final double width;
   final double height;
   final String? eventId;
+  final String? eventCategory;
   final String label;
   final double iconSize;
-
-  static const _dummyImages = [
-    'assets/events/community-fair.png',
-    'assets/events/live-music.png',
-    'assets/events/sports-day.png',
-    'assets/events/cultural-event.png',
-  ];
+  final double borderRadius;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +35,7 @@ class EventImage extends StatelessWidget {
       image: true,
       label: label,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(borderRadius),
         child: SizedBox(
           width: width,
           height: height,
@@ -60,17 +59,38 @@ class EventImage extends StatelessWidget {
 
   Widget _placeholder(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final seed = eventId ?? label;
-    final imageIndex = seed.codeUnits.fold<int>(0, (sum, unit) => sum + unit) %
-        _dummyImages.length;
+    final category = eventCategory?.trim().toLowerCase();
+    final asset = switch (category) {
+      'community' => 'assets/events/community-fair.png',
+      'music' => 'assets/events/live-music.png',
+      'sports' || 'club_game' => 'assets/events/sports-day.png',
+      'arts' => 'assets/events/cultural-event.png',
+      'family' => 'assets/events/community-fair.png',
+      _ => null,
+    };
+
+    if (asset == null) {
+      return ColoredBox(
+        color: AppColors.secondary,
+        child: Center(
+          child: Icon(
+            category == 'business'
+                ? Icons.business_center_outlined
+                : Icons.event_available_outlined,
+            size: iconSize,
+            color: colors.primary,
+          ),
+        ),
+      );
+    }
 
     return Image.asset(
-      _dummyImages[imageIndex],
+      asset,
       width: width,
       height: height,
       fit: BoxFit.cover,
       errorBuilder: (context, error, stackTrace) => ColoredBox(
-        color: colors.surfaceContainerHighest,
+        color: AppColors.secondary,
         child: Center(
           child: Icon(
             Icons.event_available_outlined,

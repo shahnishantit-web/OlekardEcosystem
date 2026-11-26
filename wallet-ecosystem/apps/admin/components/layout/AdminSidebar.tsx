@@ -31,8 +31,16 @@ export function AdminSidebar({ currentPath, collapsed, onToggle: _onToggle }: Ad
   const { isAuthenticated, user, hasPermission: checkPermission } = useAuth();
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
-  const hasPermission = (permission?: string) =>
-    isAuthenticated && (permission === undefined || permission === '' || checkPermission(permission));
+  const hasPermission = (item: { requiredPermission?: string; requiredPermissions?: string[] }) => {
+    if (!isAuthenticated) return false;
+    if (item.requiredPermission !== undefined && item.requiredPermission !== '') {
+      return checkPermission(item.requiredPermission);
+    }
+    if (item.requiredPermissions !== undefined && item.requiredPermissions.length > 0) {
+      return item.requiredPermissions.some((permission) => checkPermission(permission));
+    }
+    return false;
+  };
 
   useEffect(() => {
     setOpenGroups((current) => {
@@ -100,15 +108,17 @@ export function AdminSidebar({ currentPath, collapsed, onToggle: _onToggle }: Ad
         aria-label="Admin navigation"
       >
         {NAV_SECTIONS.map((section) => {
-          if (!hasPermission(section.requiredPermission)) return null;
+          if (section.requiredPermission !== undefined && section.requiredPermission !== ''
+            && !checkPermission(section.requiredPermission)) return null;
           const visibleItems = section.items.reduce<NavEntry[]>((visible, entry) => {
             if (isNavGroup(entry)) {
-              if (!hasPermission(entry.requiredPermission)) return visible;
-              const items = entry.items.filter((item) => hasPermission(item.requiredPermission));
+              if (entry.requiredPermission !== undefined && entry.requiredPermission !== ''
+                && !hasPermission(entry)) return visible;
+              const items = entry.items.filter((item) => hasPermission(item));
               if (items.length > 0) visible.push({ ...entry, items });
               return visible;
             }
-            if (hasPermission(entry.requiredPermission)) visible.push(entry);
+            if (hasPermission(entry)) visible.push(entry);
             return visible;
           }, []);
           if (visibleItems.length === 0) return null;

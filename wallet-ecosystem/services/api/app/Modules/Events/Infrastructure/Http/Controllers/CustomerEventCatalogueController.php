@@ -23,27 +23,70 @@ final class CustomerEventCatalogueController extends Controller
         $events = DB::connection('community_services')->table('community_services.event_drafts')
             ->where('workflow_state', 'published')->where('sales_state', 'active')->where('lifecycle_state', 'active')
             ->where('starts_at', '>', $now)->where('sales_end_at', '>', $now)
+            // Invitation-only events stay visible through the recipient-specific
+            // invitations endpoint, never through public discovery.
+            ->whereExists(static function ($query): void {
+                $query->selectRaw('1')->from('community_services.event_draft_categories as public_categories')
+                    ->whereColumn('public_categories.event_id', 'community_services.event_drafts.id')
+                    ->where(static function ($allocations): void {
+                        $allocations->where(static function ($free): void {
+                            $free->where('allocation_type', 'free')->where('price_minor', 0);
+                        })->orWhere(static function ($paid): void {
+                            $paid->where('allocation_type', 'paid')->where('price_minor', '>', 0);
+                        });
+                    });
+            })
             ->whereColumn('published_version', 'version')->orderBy('starts_at')->get();
         $data = $events->map(function ($event): array {
             $categories = DB::connection('community_services')->table('community_services.event_draft_categories')
                 ->where('event_id', $event->id)
                 ->where(function ($query): void {
                     $query->where(function ($free): void {
-                        $free->whereIn('allocation_type', ['free', 'complimentary'])->where('price_minor', 0);
+                        $free->where('allocation_type', 'free')->where('price_minor', 0);
                     })->orWhere(function ($paid): void {
                         $paid->where('allocation_type', 'paid')->where('price_minor', '>', 0);
                     });
                 })
-                ->get(['id', 'name', 'capacity', 'price_minor', 'max_per_person', 'allocation_type']);
+                ->get(['id', 'name', 'capacity', 'issued_quantity', 'price_minor', 'max_per_person', 'allocation_type']);
+            $activeHolds = DB::connection('community_services')->table('community_services.event_inventory_holds')
+                ->where('event_id', $event->id)->where('status', 'held')->where('expires_at', '>', now())
+                ->selectRaw('category_id, SUM(quantity) as quantity')->groupBy('category_id')
+                ->pluck('quantity', 'category_id');
+            $categories = $categories->map(static function (object $category) use ($activeHolds): array {
+                $available = max(0, (int) $category->capacity - (int) $category->issued_quantity
+                    - (int) ($activeHolds->get((string) $category->id) ?? 0));
+
+                return [
+                    'id' => (string) $category->id,
+                    'name' => (string) $category->name,
+                    'capacity' => (int) $category->capacity,
+                    'price_minor' => (int) $category->price_minor,
+                    'max_per_person' => $category->max_per_person === null ? null : (int) $category->max_per_person,
+                    'allocation_type' => (string) $category->allocation_type,
+                    'available_quantity' => $available,
+                ];
+            });
+            $isSoldOut = $categories->isNotEmpty()
+                && $categories->every(static fn (array $category): bool => $category['available_quantity'] < 1);
+            $galleryImageUrls = $event->gallery_image_urls === null
+                ? []
+                : json_decode((string) $event->gallery_image_urls, true, 512, JSON_THROW_ON_ERROR);
             return [
                 'id' => $event->id, 'title' => $event->title, 'image_url' => $event->image_url,
+                'gallery_image_urls' => is_array($galleryImageUrls) ? array_values($galleryImageUrls) : [],
+                'description' => $event->description ?? null,
+                'lineup' => $event->lineup ?? null,
+                'event_category' => $event->event_category ?? 'other',
                 'organiser_name' => $event->organiser_name,
                 'starts_at' => $event->starts_at, 'ends_at' => $event->ends_at, 'timezone' => $event->timezone,
                 'sales_start_at' => $event->sales_start_at, 'sales_end_at' => $event->sales_end_at,
                 'booking_status' => now()->lt($event->sales_start_at) ? 'upcoming' : 'open',
+                'availability_status' => $isSoldOut ? 'sold_out' : 'available',
                 'event_format' => $event->event_format, 'venue_country_code' => $event->venue_country_code,
                 'venue_name' => $event->venue_name, 'venue_city' => $event->venue_city ?? null,
                 'venue_address' => $event->venue_address,
+                'entry_policy' => $event->entry_policy ?? null,
+                'cancellation_policy' => $event->cancellation_policy ?? null,
                 'currency_code' => $event->currency_code,
                 'currency_precision' => (int) ($event->currency_precision_snapshot ?? 2),
                 'max_tickets_per_order' => $event->max_tickets_per_order,
@@ -75,6 +118,7 @@ final class CustomerEventCatalogueController extends Controller
             ->get([
                 'i.id as invitation_id', 'i.expires_at', 'i.max_uses', 'i.uses_count',
                 'e.id as event_id', 'e.title as event_title', 'e.image_url', 'e.starts_at', 'e.ends_at',
+                'e.event_category',
                 'e.sales_start_at', 'e.venue_name', 'e.venue_city', 'e.venue_address', 'e.organiser_name',
                 'e.currency_code', 'e.currency_precision_snapshot', 'c.id as category_id',
                 'c.name as category_name', 'c.price_minor', 'c.allocation_type',
@@ -86,6 +130,7 @@ final class CustomerEventCatalogueController extends Controller
                 'event_id' => (string) $row->event_id,
                 'event_title' => (string) $row->event_title,
                 'image_url' => $row->image_url === null ? null : (string) $row->image_url,
+                'event_category' => $row->event_category === null ? 'other' : (string) $row->event_category,
                 'starts_at' => (string) $row->starts_at,
                 'ends_at' => (string) $row->ends_at,
                 'sales_start_at' => (string) $row->sales_start_at,

@@ -280,6 +280,8 @@ final class P25IntegratedJourneyTest extends TestCase
         {
             public function assertCanCreate(string $actorId, string $organisationId): void {}
 
+            public function assertCanList(string $actorId, string $organisationId): void {}
+
             public function assertCanRead(string $actorId, string $organisationId, string $eventId): void {}
 
             public function assertCanUpdate(string $actorId, string $organisationId, string $eventId): void {}

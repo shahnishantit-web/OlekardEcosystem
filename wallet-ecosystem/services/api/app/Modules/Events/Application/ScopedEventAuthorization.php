@@ -26,9 +26,15 @@ final class ScopedEventAuthorization
     {
         $this->assertPermission($actorId, $permission);
         $db = DB::connection('community_services');
-        $belongsToOrganisation = $db->table('community_services.event_drafts')
-            ->where('id', $eventId)->where('organisation_id', $organisationId)->exists();
-        abort_unless($belongsToOrganisation, 404, 'Event was not found in the requested organisation.');
+        $event = $db->table('community_services.event_drafts')
+            ->where('id', $eventId)->where('organisation_id', $organisationId)->first(['created_by']);
+        abort_if($event === null, 404, 'Event was not found in the requested organisation.');
+        $this->assertCreatorBoundary($actorId, (string) $event->created_by);
+        if ((string) $event->created_by === $actorId) {
+            // Ownership supplies visibility and record access. The action's
+            // global permission above and its lifecycle checks remain required.
+            return;
+        }
         $assigned = $db->table('community_services.event_authority_assignments')
             ->where('scope_type', 'event')->where('scope_id', $eventId)
             ->where('event_id', $eventId)->where('organisation_id', $organisationId)
@@ -45,8 +51,13 @@ final class ScopedEventAuthorization
         if ($db->transactionLevel() < 1) {
             throw new \LogicException('Event assignment locking must share the protected write transaction.');
         }
-        abort_unless($db->table('community_services.event_drafts')
-            ->where('id', $eventId)->where('organisation_id', $organisationId)->exists(), 404, 'Event was not found.');
+        $event = $db->table('community_services.event_drafts')
+            ->where('id', $eventId)->where('organisation_id', $organisationId)->first(['created_by']);
+        abort_if($event === null, 404, 'Event was not found.');
+        $this->assertCreatorBoundary($actorId, (string) $event->created_by);
+        if ((string) $event->created_by === $actorId) {
+            return;
+        }
         $assignment = $db->table('community_services.event_authority_assignments')
             ->where('scope_type', 'event')->where('scope_id', $eventId)->where('event_id', $eventId)
             ->where('organisation_id', $organisationId)->where('actor_id', $actorId)
@@ -107,5 +118,24 @@ final class ScopedEventAuthorization
     public function assertPermission(string $actorId, string $permission): void
     {
         abort_unless($this->identity->hasPermission($actorId, $permission), 403, 'Events permission is required.');
+    }
+
+    private function assertCreatorBoundary(string $actorId, string $creatorId): void
+    {
+        if ($creatorId === $actorId || ! $this->isCreatorScopedActor($actorId)) {
+            return;
+        }
+
+        // Keep resource existence private to a creator who is not an assigned
+        // reviewer/admin; review-capable actors continue through normal scope checks.
+        abort(404, 'Event was not found.');
+    }
+
+    private function isCreatorScopedActor(string $actorId): bool
+    {
+        return $this->identity->hasPermission($actorId, EventPermissions::CREATE)
+            && ! $this->identity->hasPermission($actorId, EventPermissions::REVIEW)
+            && ! $this->identity->hasPermission($actorId, EventPermissions::PRICE_APPROVE)
+            && ! $this->identity->hasPermission($actorId, EventPermissions::PUBLISH);
     }
 }

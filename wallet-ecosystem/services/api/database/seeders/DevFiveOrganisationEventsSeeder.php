@@ -52,20 +52,35 @@ final class DevFiveOrganisationEventsSeeder extends Seeder
                 $start = $now->copy()->addDays(14 + ($index * 3) + $eventNumber)->setTime(10, 0);
                 $end = $start->copy()->addHours(5);
                 $saleEnd = $start->copy()->subHour();
+                $city = ['Gaborone', 'Francistown', 'Maun', 'Kanye', 'Molepolole'][$index];
+                $category = match ($index) {
+                    0 => 'arts',
+                    1 => 'community',
+                    2 => $eventNumber === 1 ? 'arts' : 'music',
+                    3 => 'family',
+                    default => $eventNumber === 1 ? 'sports' : 'club_game',
+                };
+                $description = $this->description($category, $name, "{$name} Community Event {$eventNumber}");
+                $venueName = 'Venue details to be confirmed';
+                $venueAddress = 'The organiser will share the confirmed venue address and directions before the event.';
                 $snapshot = ['id' => $eventId, 'title' => "{$name} Community Event {$eventNumber}", 'organiser_name' => $name,
+                    'description' => $description, 'event_category' => $category,
                     'starts_at' => $start->toIso8601String(), 'ends_at' => $end->toIso8601String(), 'timezone' => 'Africa/Gaborone',
-                    'capacity' => 100, 'event_format' => 'physical', 'venue_country_code' => 'BW', 'categories' => [[
+                    'capacity' => 100, 'event_format' => 'physical', 'venue_country_code' => 'BW',
+                    'venue_name' => $venueName, 'venue_city' => $city, 'venue_address' => $venueAddress, 'categories' => [[
                         'id' => $this->id("category/{$index}/{$eventNumber}"), 'name' => 'General Admission', 'capacity' => 100,
                         'price_minor' => 0, 'allocation_type' => 'free', 'max_per_person' => 2,
                     ]]];
                 $events->table('community_services.event_drafts')->updateOrInsert(['id' => $eventId], [
                     'organisation_id' => $orgId, 'created_by' => $creator, 'title' => $snapshot['title'], 'organiser_name' => $name,
+                    'description' => $description, 'event_category' => $category,
                     'sponsors' => json_encode([], JSON_THROW_ON_ERROR), 'capacity' => 100, 'currency_code' => null,
                     'timezone' => 'Africa/Gaborone', 'starts_at' => $start, 'ends_at' => $end,
                     'sales_start_at' => $now->copy()->subDay(), 'sales_end_at' => $saleEnd,
                     'cancellation_policy' => 'Local demo fixture.', 'transfer_policy' => 'Ticket transfers are disabled in the local demo.',
                     'entry_policy' => 'Show your ticket at the event entrance.', 'max_tickets_per_order' => 2,
-                    'event_format' => 'physical', 'venue_country_code' => 'BW', 'workflow_state' => 'published',
+                    'event_format' => 'physical', 'venue_country_code' => 'BW', 'venue_name' => $venueName,
+                    'venue_city' => $city, 'venue_address' => $venueAddress, 'workflow_state' => 'published',
                     'sales_state' => 'active', 'lifecycle_state' => 'active', 'version' => 1,
                     'reviewed_version' => 1, 'price_approved_version' => 1, 'published_version' => 1,
                     'event_reviewer_id' => $reviewer, 'price_approver_id' => $approver,
@@ -93,5 +108,20 @@ final class DevFiveOrganisationEventsSeeder extends Seeder
             'subject_id' => $subjectId, 'action' => $action, 'actor_id' => $actorId,
             'previous_status' => $previous, 'new_status' => $next, 'created_at' => now(),
         ]);
+    }
+
+    private function description(string $category, string $organiser, string $title): string
+    {
+        $purpose = match ($category) {
+            'community' => 'a community gathering bringing local residents together',
+            'music' => 'a music event for local audiences',
+            'sports' => 'a community sports event',
+            'club_game' => 'a club game for local supporters',
+            'arts' => 'a community arts and culture event',
+            'family' => 'a family-focused community event',
+            default => 'a community event',
+        };
+
+        return "{$title} is {$purpose}, hosted by {$organiser}. The organiser will confirm the programme and any event-specific arrangements. Please check the event details again before attending.";
     }
 }

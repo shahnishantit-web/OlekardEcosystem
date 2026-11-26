@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_payment/shared_payment.dart';
 import 'package:uuid/uuid.dart';
@@ -289,6 +290,7 @@ class _CustomerEventTicketsScreenState
                 EventImage(
                   imageUrl: invitation['image_url']?.toString(),
                   eventId: invitation['event_id']?.toString(),
+                  eventCategory: invitation['event_category']?.toString(),
                   width: 76,
                   height: 76,
                   label: 'Invitation event image',
@@ -350,158 +352,397 @@ class _CustomerEventTicketsScreenState
     final status = ticket['status']?.toString() ?? '';
     final start =
         DateTime.tryParse(ticket['event_starts_at']?.toString() ?? '');
+    final canShowQr = status == 'valid';
+    final ticketId = ticket['ticket_id']?.toString() ?? '';
+
+    void openTicket() {
+      Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => _TicketDetailScreen(
+          ticket: ticket,
+          api: ref.read(eventTicketsApiProvider),
+          onReplace: () => _replaceCredential(ticketId),
+        ),
+      ));
+    }
+
     return Card(
       margin: const EdgeInsets.only(bottom: 14),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
-            builder: (_) => _TicketDetailScreen(
-                ticket: ticket,
-                onReplace: () =>
-                    _replaceCredential(ticket['ticket_id'] as String)))),
+        onTap: openTicket,
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          EventImage(
-              imageUrl: ticket['image_url']?.toString(),
-              eventId: ticket['event_id']?.toString(),
-              label: 'Event image',
-              width: double.infinity,
-              height: 140),
           Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                              child: Text(
-                                  ticket['event_title']?.toString() ?? 'Event',
-                                  style:
-                                      Theme.of(context).textTheme.titleLarge)),
-                          const SizedBox(width: 8),
-                          _StatusPill(status: status),
-                        ]),
-                    if (start != null) ...[
-                      const SizedBox(height: 10),
-                      _DateLine(date: start)
+            padding: const EdgeInsets.fromLTRB(14, 14, 8, 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                EventImage(
+                  imageUrl: ticket['image_url']?.toString(),
+                  eventId: ticket['event_id']?.toString(),
+                  eventCategory: ticket['event_category']?.toString(),
+                  label: 'Artwork for ${ticket['event_title'] ?? 'event'}',
+                  width: 72,
+                  height: 72,
+                  borderRadius: 12,
+                  iconSize: 26,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (start != null)
+                        Text(
+                          _formatDate(start),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelMedium
+                              ?.copyWith(color: AppColors.textSecondary),
+                        ),
+                      const SizedBox(height: 4),
+                      Text(
+                        ticket['event_title']?.toString() ?? 'Event',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      if (status != 'valid') ...[
+                        const SizedBox(height: 5),
+                        _StatusPill(status: status),
+                      ],
                     ],
-                    const SizedBox(height: 6),
-                    Text(ticket['category']?.toString() ?? 'Ticket',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(color: AppColors.textSecondary)),
-                    const SizedBox(height: 12),
-                    Row(children: [
-                      const Icon(Icons.qr_code_2_rounded,
-                          size: 19, color: AppColors.primary),
-                      const SizedBox(width: 7),
-                      Expanded(
-                          child: Text('Show ticket at the entrance',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelLarge
-                                  ?.copyWith(color: AppColors.primary))),
-                      const Spacer(),
-                      const Icon(Icons.chevron_right_rounded,
-                          color: AppColors.textSecondary)
-                    ]),
-                  ])),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                if (canShowQr)
+                  IconButton(
+                    tooltip: 'Show ticket QR',
+                    onPressed: openTicket,
+                    icon: const Icon(Icons.qr_code_2_rounded,
+                        color: AppColors.primary),
+                  ),
+              ],
+            ),
+          ),
+          CustomPaint(
+            painter: _TicketDividerPainter(
+              lineColor: AppColors.outline,
+              notchColor: Theme.of(context).scaffoldBackgroundColor,
+            ),
+            child: const SizedBox(height: 18, width: double.infinity),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 2),
+                    child: Icon(Icons.place_outlined,
+                        size: 18, color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _ticketLocation(ticket),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                    ),
+                  ),
+                ]),
+                if ((ticket['category']?.toString() ?? '').isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 26, top: 5),
+                    child: Text(ticket['category'].toString(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.labelSmall),
+                  ),
+              ],
+            ),
+          ),
         ]),
       ),
     );
   }
 }
 
-class _TicketDetailScreen extends StatelessWidget {
-  const _TicketDetailScreen({required this.ticket, required this.onReplace});
+class _TicketDetailScreen extends ConsumerStatefulWidget {
+  const _TicketDetailScreen({
+    required this.ticket,
+    required this.api,
+    required this.onReplace,
+  });
+
   final Map<String, dynamic> ticket;
+  final Dio api;
   final Future<void> Function() onReplace;
 
   @override
+  ConsumerState<_TicketDetailScreen> createState() =>
+      _TicketDetailScreenState();
+}
+
+class _TicketDetailScreenState extends ConsumerState<_TicketDetailScreen> {
+  late Map<String, dynamic> _ticket;
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticket = Map<String, dynamic>.from(widget.ticket);
+    if (_ticket['status'] == 'valid') {
+      _loadCredential();
+    }
+  }
+
+  Future<void> _loadCredential() async {
+    final ticketId = _ticket['ticket_id']?.toString();
+    if (ticketId == null || ticketId.isEmpty) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final response = await widget.api.get<Object?>(
+        '/v1/events/tickets/$ticketId',
+      );
+      final body = response.data as Map<String, dynamic>;
+      final detail = Map<String, dynamic>.from(body['data'] as Map);
+      if (mounted) setState(() => _ticket = detail);
+    } on DioException {
+      if (mounted) setState(() => _error = 'Could not load the ticket QR.');
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Could not load the ticket QR.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final status = ticket['status']?.toString() ?? '';
-    final credential = ticket['credential']?.toString() ?? '';
+    final status = _ticket['status']?.toString() ?? '';
+    final credential = _ticket['credential']?.toString() ?? '';
+    final holderName = _ticket['ticket_holder_name']?.toString().trim() ?? '';
     final start =
-        DateTime.tryParse(ticket['event_starts_at']?.toString() ?? '');
-    final admitted = status == 'admitted';
-    final unavailable = status == 'cancelled' || status == 'revoked';
+        DateTime.tryParse(_ticket['event_starts_at']?.toString() ?? '');
+    final canShowQr = status == 'valid' && credential.isNotEmpty;
     return Scaffold(
-      appBar: AppBar(title: const Text('Ticket details')),
-      body: ListView(
-          padding: const EdgeInsets.fromLTRB(22, 12, 22, 28),
-          children: [
-            Text(ticket['event_title']?.toString() ?? 'Event',
-                style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 10),
-            if (start != null) _DateLine(date: start),
-            const SizedBox(height: 14),
-            Row(children: [
-              Expanded(
-                child: Text(ticket['category']?.toString() ?? 'Ticket',
-                    style: Theme.of(context).textTheme.bodyLarge),
+      appBar: AppBar(
+        title: const Text('Ticket details'),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(22, 10, 22, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (start != null)
+                Text(
+                  _formatDate(start),
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall
+                      ?.copyWith(color: AppColors.textSecondary),
+                ),
+              const SizedBox(height: 10),
+              Text(
+                _ticket['event_title']?.toString() ?? 'Event',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
-              const Spacer(),
-              _StatusPill(status: status)
-            ]),
-            const SizedBox(height: 22),
-            if (unavailable)
-              Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                      color: AppColors.errorBg,
-                      borderRadius: BorderRadius.circular(18)),
-                  child: Row(children: [
-                    const Icon(Icons.event_busy_rounded,
-                        color: AppColors.error),
-                    const SizedBox(width: 12),
-                    Expanded(
-                        child: Text(
-                            status == 'cancelled'
-                                ? 'This event was cancelled. This ticket cannot be used.'
-                                : 'This ticket is no longer valid.',
-                            style: const TextStyle(color: AppColors.error)))
-                  ]))
-            else ...[
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: AppColors.outline)),
-                child: Column(children: [
-                  QrImageView(
-                      data: credential,
-                      size: 240,
-                      backgroundColor: Colors.white,
-                      semanticsLabel: 'Event ticket QR code'),
-                  const SizedBox(height: 12),
-                  Text(admitted ? 'Entry recorded' : 'Ready for entry',
+              const SizedBox(height: 10),
+              Center(child: _StatusPill(status: status)),
+              const SizedBox(height: 22),
+              if (canShowQr)
+                LayoutBuilder(builder: (context, constraints) {
+                  final qrSize = (constraints.maxWidth - 40).clamp(180, 300);
+                  return Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(color: AppColors.outline),
+                      ),
+                      child: QrImageView(
+                        data: credential,
+                        size: qrSize.toDouble(),
+                        backgroundColor: Colors.white,
+                        semanticsLabel: 'Event ticket QR code',
+                      ),
+                    ),
+                  );
+                })
+              else if (_loading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 92),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (_error != null)
+                _TicketMessage(
+                  icon: Icons.qr_code_2_rounded,
+                  message: _error!,
+                  action: TextButton.icon(
+                    onPressed: _loadCredential,
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Try again'),
+                  ),
+                )
+              else
+                _TicketMessage(
+                  icon: status == 'cancelled' || status == 'revoked'
+                      ? Icons.event_busy_rounded
+                      : status == 'admitted'
+                          ? Icons.verified_rounded
+                          : Icons.info_outline_rounded,
+                  message: switch (status) {
+                    'cancelled' =>
+                      'This event was cancelled. This ticket cannot be used.',
+                    'revoked' => 'This ticket is no longer valid.',
+                    'admitted' => 'This ticket has already been used.',
+                    'expired' => 'This ticket has expired.',
+                    _ => 'This ticket is not available for admission.',
+                  },
+                ),
+              if (canShowQr) ...[
+                const SizedBox(height: 18),
+                if (holderName.isNotEmpty) ...[
+                  Text(holderName,
+                      textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                ],
+                Text(
+                  'Show this QR code at the entrance.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 12),
+                if ((_ticket['category']?.toString() ?? '').isNotEmpty)
+                  Text(
+                    _ticket['category'].toString(),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: AppColors.textSecondary),
+                  ),
+                if (_ticketLocation(_ticket).isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(
-                      admitted
-                          ? 'This ticket has already been checked in.'
-                          : 'Present this code to event staff at the gate.',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall),
-                ]),
-              ),
-              if (!admitted) ...[
-                const SizedBox(height: 16),
+                    _ticketLocation(_ticket),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: AppColors.textSecondary),
+                  ),
+                ],
+                const SizedBox(height: 8),
                 OutlinedButton.icon(
-                    onPressed: () async {
-                      await onReplace();
-                      if (context.mounted) Navigator.of(context).pop();
-                    },
-                    icon: const Icon(Icons.refresh_rounded),
-                    label: const Text('Replace ticket code')),
+                  onPressed: _loading
+                      ? null
+                      : () async {
+                          await widget.onReplace();
+                          if (context.mounted) Navigator.of(context).pop();
+                        },
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Replace ticket code'),
+                ),
               ],
             ],
-          ]),
+          ),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
+          child: Tooltip(
+            message: 'Close ticket details',
+            child: OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).maybePop(),
+              icon: const Icon(Icons.close_rounded),
+              label: const Text('Close'),
+            ),
+          ),
+        ),
+      ),
     );
   }
+}
+
+String _ticketLocation(Map<String, dynamic> ticket) {
+  final venue = ticket['venue_name']?.toString().trim() ?? '';
+  final city = ticket['venue_city']?.toString().trim() ?? '';
+  if (venue.isEmpty && city.isEmpty) return 'Venue details to be confirmed';
+  if (venue.isEmpty) return city;
+  if (city.isEmpty) return venue;
+  return '$venue \u00B7 $city';
+}
+
+class _TicketMessage extends StatelessWidget {
+  const _TicketMessage(
+      {required this.icon, required this.message, this.action});
+
+  final IconData icon;
+  final String message;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.outline),
+        ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, size: 34, color: AppColors.textSecondary),
+          const SizedBox(height: 12),
+          Text(message, textAlign: TextAlign.center),
+          if (action != null) ...[const SizedBox(height: 8), action!],
+        ]),
+      );
+}
+
+class _TicketDividerPainter extends CustomPainter {
+  const _TicketDividerPainter(
+      {required this.lineColor, required this.notchColor});
+
+  final Color lineColor;
+  final Color notchColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final centerY = size.height / 2;
+    final line = Paint()
+      ..color = lineColor
+      ..strokeWidth = 1;
+    for (var x = 12.0; x < size.width - 12; x += 8) {
+      canvas.drawLine(Offset(x, centerY), Offset(x + 4, centerY), line);
+    }
+    final notch = Paint()..color = notchColor;
+    canvas.drawCircle(Offset(0, centerY), 9, notch);
+    canvas.drawCircle(Offset(size.width, centerY), 9, notch);
+  }
+
+  @override
+  bool shouldRepaint(_TicketDividerPainter oldDelegate) =>
+      oldDelegate.lineColor != lineColor ||
+      oldDelegate.notchColor != notchColor;
 }
 
 class _DateLine extends StatelessWidget {
@@ -526,24 +767,29 @@ class _StatusPill extends StatelessWidget {
   final String status;
   @override
   Widget build(BuildContext context) {
-    final ok = status == 'admitted' || status == 'active' || status == 'issued';
-    final color = ok
+    final isAvailable =
+        status == 'valid' || status == 'active' || status == 'issued';
+    final isUnavailable =
+        status == 'cancelled' || status == 'revoked' || status == 'expired';
+    final color = isAvailable
         ? AppColors.success
-        : status == 'cancelled' || status == 'revoked'
+        : isUnavailable
             ? AppColors.error
             : AppColors.primary;
-    final bg = ok
+    final bg = isAvailable
         ? AppColors.successBg
-        : status == 'cancelled' || status == 'revoked'
+        : isUnavailable
             ? AppColors.errorBg
             : AppColors.infoBg;
-    final label = status == 'admitted'
-        ? 'Used'
-        : status == 'cancelled'
-            ? 'Cancelled'
-            : status == 'revoked'
-                ? 'Revoked'
-                : 'Upcoming';
+    final label = switch (status) {
+      'admitted' => 'Used',
+      'cancelled' => 'Cancelled',
+      'revoked' => 'Revoked',
+      'expired' => 'Expired',
+      'valid' || 'active' || 'issued' => 'Upcoming',
+      '' => 'Unavailable',
+      _ => _readableStatus(status),
+    };
     return Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration:
@@ -554,21 +800,13 @@ class _StatusPill extends StatelessWidget {
   }
 }
 
+String _readableStatus(String status) => status
+    .split(RegExp(r'[_\s]+'))
+    .where((part) => part.isNotEmpty)
+    .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+    .join(' ');
+
 String _formatDate(DateTime value) {
-  final date = value.toLocal();
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec'
-  ];
-  return '${months[date.month - 1]} ${date.day}, ${date.year} · ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  final locale = Intl.getCurrentLocale();
+  return DateFormat.yMMMd(locale).add_jm().format(value.toLocal());
 }
